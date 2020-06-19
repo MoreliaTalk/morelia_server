@@ -6,8 +6,8 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 messages = [
-	{"username": "Jack", "text":"hello", "timestamp":time()},
-	{"username": "Jack2", "text":"helloyyyyy", "timestamp":time()}
+	{"username": "Jack", "text":"hello", "timestamp":time(),"time": str(datetime.now().time())[:8]},
+	{"username": "Jack2", "text":"helloyyyyy", "timestamp":time(),"time": str(datetime.now().time())[:8]}
 ]
 users ={
 	"jack": "12345",
@@ -49,7 +49,7 @@ def send_message():
 	# Поменять имя в сообщении
 	if text == "/chname":
 		username = "Шашлык недоеденный("+username+")"
-	messages.append({"username": username, "text":text, "timestamp":time()})
+	messages.append({"username": username, "text":text, "timestamp":time(),"time": str(datetime.now().time())[:8]})
 	# Територия Ботов
 	if text == "/status":
 		for i in status():
