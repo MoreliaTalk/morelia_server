@@ -2,9 +2,9 @@
 
 ## В репозитории 2 бранча: ##
 
-[master](https://github.com/MoreliaTalk/Server/tree/master) - Основная ветка.
+[master](https://github.com/MoreliaTalk/morelia_server/tree/master) - Основная ветка.
 
-[develop](https://github.com/MoreliaTalk/Server/tree/develop) - Ветка для разработчиков.
+[develop](https://github.com/MoreliaTalk/morelia_server/tree/develop) - Ветка для разработчиков.
 
 ## В разработке применяется: ##
 
@@ -22,17 +22,17 @@
 
 Настроить Git или GitHub Desktop введя свои `username` и `email` от аккаунта созданного на [github](https://www.github.com).
 
-Форкнуть к себе репозиторий Morelia-Qt перейдя по ссылке [Fork](https://github.com/MoreliaTalk/Server/fork).
+Форкнуть к себе репозиторий Morelia-Qt перейдя по ссылке [Fork](https://github.com/MoreliaTalk/morelia_server/fork).
 
-Клонировать репозиторий к себе на локальный компьютер [Clone](https://github.com/MoreliaTalk/Server.git).
+Клонировать репозиторий к себе на локальный компьютер [Clone](https://github.com/MoreliaTalk/morelia_server.git).
 ```
-git clone https://github.com/MoreliaTalk/Server.git
-cd Server
+git clone https://github.com/MoreliaTalk/morelia_server.git
+cd morelia_server
 ```
 
 Добавит свой форк. Заменить `{username}` на свой username созданный в гитхабе.
 ```
-git remote add fork https://github.com/{username}/Server.git
+git remote add fork https://github.com/{username}/morelia_server.git
 ```
 
 Создать виртуальное окружение (предварительно установить pipenv).
@@ -57,14 +57,14 @@ git branch {имя бранча}
 
 ### Начинай кодить! ###
 
-Для добавления своего кода в ветку [develop](https://github.com/MoreliaTalk/Server/tree/develop)
+Для добавления своего кода в ветку [develop](https://github.com/MoreliaTalk/morelia_server/tree/develop)
 ```
 git pull request origin develop
 ```
 
 ## Требования к стилю кода ##
 
-Перед началом работы рекомендуется прочитать [PEP 8 - руководство по написанию кода на Python](https://pythonworld.ru/osnovy/pep-8-rukovodstvo-po-napisaniyu-koda-na-python.html). Обязательно использовать линтер (flake8, pylint или подобные)
+Перед началом работы рекомендуется прочитать [PEP 8 - руководство по написанию кода на Python](https://pythonworld.ru/osnovy/pep-8-rukovodstvo-po-napisaniyu-koda-na-python.html). Обязательно использовать линтер (flake8, pylint или подобный).
 
 ### дополнительные требования к коду ###
 Отсутствуют
