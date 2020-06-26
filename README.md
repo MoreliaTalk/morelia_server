@@ -28,9 +28,7 @@
 
 Настроить Git или GitHub Desktop введя свои `username` и `email` от аккаунта созданного на [github](https://www.github.com).
 
-Загрузить и установить [Qt Designer](https://build-system.fman.io/qt-designer-download)
-
-## Форк репозитория Morelia Qt ##
+## Форк репозитория Morelia Server ##
 
 Если ты не включен в команду на GitHub'е проекта, то тебе необходимо сначала форкнуть к себе репозиторий Morelia Qt перейдя по [ссылке](https://github.com/MoreliaTalk/morelia_server/fork).
 
@@ -40,7 +38,7 @@
 
 ```cmd
 git clone https://github.com/{username}/morelia_server.git
-cd morelia_client_qt
+cd morelia_server
 ```
 
 Переключаемся на ветку develop
@@ -49,7 +47,7 @@ cd morelia_client_qt
 git checkout develop
 ```
 
-Синхронизируем свой форк с оригинальным репозиторием `upstream` Morelia Qt
+Синхронизируем свой форк с оригинальным репозиторием `upstream` Morelia Server
 
 ```cmd
 git remote add upstream https://github.com/MoreliaTalk/morelia_server.git
@@ -94,12 +92,12 @@ pipenv install --ignore-pipfile
 Для запуска используйте команду
 
 ```cmd
-python ./messenger.py
+python ./server.py
 ```
 
-## Создание пулл-реквеста для внесенния изменений в develop-ветку Morelia Qt ##
+## Создание пулл-реквеста для внесенния изменений в develop-ветку Morelia Server ##
 
-Получение последних изменнений из develop-ветки Morelia Qt
+Получение последних изменнений из develop-ветки Morelia Server
 
 ```cmd
 git pull upstream develop
