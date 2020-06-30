@@ -1,0 +1,42 @@
+#zag{
+	text-align: center;
+}
+
+#userdata{
+	margin-bottom:10px;
+}
+
+#username{
+	margin-right:8px;
+}
+
+#password{
+	margin-left:8px;
+}
+
+#view{
+	outline: none;
+	-moz-appearance: none;
+	border: 1px solid #999;
+	resize: none;
+}
+
+#vodiv{
+	position: relative;
+	width: 373px;
+
+}
+
+#input{
+	position: absolute;
+	resize: none;
+	left:0px;
+}
+
+#buttoninput{
+	position: absolute;
+	left:238px;
+	width:135px;
+	height:51px;
+}
+
