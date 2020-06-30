@@ -1,2 +1,2 @@
 # morelia_server
-Server for MoreliaTalk network1
+Server for MoreliaTalk network
