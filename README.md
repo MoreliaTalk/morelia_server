@@ -1,4 +1,4 @@
-# Morelia Server - мессенджер (сервер) для Morelia Network #
+# Morelia Server - мессенджер (сервер) для Morelia NETWORK #
 
 ![]() *тут скриншот*
 
