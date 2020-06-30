@@ -41,7 +41,7 @@ async def reg_user(data):
 			return "false"
 	else:
 		list_userdata[data["username"]] = data["password"]
-		return "true"
+		return "newreg"
 
 
 @app.websocket("/ws")
@@ -49,19 +49,27 @@ async def websocket_endpoint(websocket: WebSocket):
 	await websocket.accept()
 
 	clients.append(websocket)
-
+	client=websocket
 	await get_all_messages(websocket)
 	try:
 		while True:
 			data = await websocket.receive_json()
-			message = {
-				"username":data["username"],
-				"text":data["text"],
-				"timestamp":time()
-			}
-			save_message(message)
-			print(message)
-			await send_message(message)
+			if data["mode"] == "message":
+				message = {
+						"mode": "message",
+						"username":data["username"],
+						"text":data["text"],
+						"timestamp":time()
+						}
+				save_message(message)
+				print(message)
+				await send_message(message)
+			elif data["mode"] == "reg":
+				message = {
+						"mode": "reg",
+						"status":await reg_user(data)
+						}
+				await client.send_json(message)
 
 	except WebSocketDisconnect as e:
 		clients.remove(websocket)
