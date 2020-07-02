@@ -11,6 +11,7 @@ uvicorn = "*"
 fastapi = "*"
 jinja2 = "*"
 aiofiles = "*"
+pyjwt = "*"
 
 [requires]
 python_version = "3.8"
