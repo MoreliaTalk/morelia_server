@@ -11,6 +11,9 @@ uvicorn = "*"
 fastapi = "*"
 jinja2 = "*"
 aiofiles = "*"
+email-validator = "*"
+typing-extensions = "*"
+python-dotenv = "*"
 
 [requires]
 python_version = "3.8"
