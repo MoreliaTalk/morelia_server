@@ -4,8 +4,17 @@ from hashlib import blake2b
 from os import urandom
 from hmac import compare_digest
 
+from pydantic import BaseModel
+
 
 API_VERSION: bool = 1.0
+
+
+class PasswordValidate(BaseModel):
+    password: bytes
+    salt: bytes = None
+    key: bytes = None
+    hash_password: bytes = None
 
 
 def password_hash(password: str, salt: bytes = None,
@@ -24,18 +33,18 @@ def password_hash(password: str, salt: bytes = None,
         to the function and password hash.
 
     """
-    data = password.encode('utf-8')
+    valid = PasswordValidate(password=password, salt=salt, key=key)
     size: int = 32
-    if salt is None:
+    if valid.salt is None:
         salt = urandom(16)
-    if key is None:
+    if valid.key is None:
         key = b''
-    hash_password = blake2b(data, digest_size=size, key=key, salt=salt)
+    hash_password = blake2b(valid.password, digest_size=size, key=key, salt=salt)
     result = {
-        'password': password,
+        'password': valid.password,
         'hash_password': hash_password.hexdigest().encode('utf-8'),
-        'salt': salt,
-        'key': key
+        'salt': valid.salt,
+        'key': valid.key
     }
     return result
 
@@ -63,51 +72,3 @@ def check_password(hash_password: bytes, password: str,
     result = blake2b(data, digest_size=size, key=key, salt=salt)
     good_password = result.hexdigest()
     return compare_digest(hash_password, good_password.encode('utf-8'))
-
-
-async def response(request: dict) -> bytes:
-    if request['type'] == 'get_update':
-        result = {
-            'type': request['type'],
-            'data': {
-                'time': request['data']['time'],
-                'chat': {
-                    'id': request['data']['chat']['id'],
-                    'time': request['data']['time'],
-                    'type': 'chat',
-                    'title': 'Name Chat',
-                    'info': 'Info about this chat'
-                },
-                'message': {
-                    'id': 1,
-                    'text': 'some text...',
-                    'from_user': {'user': 'User'},
-                    'time': request['data']['time'],
-                    'file': {
-                        'picture': None,
-                        'video': None,
-                        'audio': None,
-                        'document': None
-                    },
-                    'emoji': None,
-                    'edited': {
-                        'time': None,
-                        'status': False
-                    },
-                    'reply_to': None
-                },
-                'user': 'User',
-                'meta': None
-            },
-            'errors': {
-                'id': '',
-                'time': time(),
-                'status': 'OK',
-                'code': 200,
-                'detail': 'successfully'
-            },
-            'jsonapi': API_VERSION,
-            'meta': None
-        }
-    result_bytes = json.JSONEncoder().encode(result)
-    return result_bytes.encode()
