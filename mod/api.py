@@ -72,3 +72,42 @@ def check_password(hash_password: bytes, password: str,
     result = blake2b(data, digest_size=size, key=key, salt=salt)
     good_password = result.hexdigest()
     return compare_digest(hash_password, good_password.encode('utf-8'))
+
+
+dict_json = {
+    'type_': 'function',
+    'data': None,
+    'name': {
+        'user': 'user'
+    },
+    'meta': True
+}
+
+encode_json = json.JSONEncoder().encode(dict_json)
+print(encode_json)
+
+
+class ValidateJSONrequest(BaseModel):
+    type_: str
+    data: str = None
+    name: dict
+    meta: bool
+
+
+class ValidateJSONresponse(BaseModel):
+    status: str
+    code: int
+
+
+def response(obj):
+    decoded_json = json.JSONDecoder().decode(obj)
+    valid_json = ValidateJSONrequest.parse_obj(decoded_json)
+    if valid_json.dict()['type_'] == 'function':
+        result = ValidateJSONresponse(status='OK', code=200)
+    else:
+        result = ValidateJSONresponse(status='ERROR', code=400)
+    encoded_json = json.JSONEncoder().encode(result.dict())
+    return encoded_json
+
+
+print(response(encode_json))
