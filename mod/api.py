@@ -3,9 +3,12 @@ from time import time
 from hashlib import blake2b
 from os import urandom
 from hmac import compare_digest
+from typing import Any
+from typing import Optional
 
 from pydantic import BaseModel
-
+from pydantic import ValidationError
+from pydantic import EmailStr
 
 API_VERSION: bool = 1.0
 
@@ -74,72 +77,78 @@ def check_password(hash_password: bytes, password: str,
     return compare_digest(hash_password, good_password.encode('utf-8'))
 
 
-
 dict_json = {
-            'type': 'user_info',
-            'data': {
-                'time': time(),
-                'chat': {
-                    'id': 1254,
-                    'time': time(),
-                    'type': 'chat',
-                    'title': 'Name Chat',
-                    'info': 'Info about this chat'
-                    },
-                'message': {
-                    'id': 1,
-                    'text': 'some text...',
-                    'from_user': {'user': 'User'},
-                    'time': time(),
-                    'chat': {},
-                    'file': {
-                        'picture': 'jkfikdkdsd',
-                        'video': 'sdfsdfsdf',
-                        'audio': '\fgf\sdfsdf\sdf',
-                        'document': ''
-                        },
-                    'emoji': 'sfdfsdfsdf',
-                    'edited': {
-                        'time': time(),
-                        'status': True
-                        },
-                    'reply_to': None
-                    },
-                'user': {
-                    'id': 5855,
-                    'login': 'username1',
-                    'password': 'lksdjflksjfsd',
-                    'username': 'Vasya',
-                    'is_bot': True,
-                    'auth_id': '464645646464',
-                    'email': 'stepan.skrjabin@gmail.com',
-                    'avatar': '\fff\ddd\ddd',
-                    'bio': 'My bio'
-                    },
-                'meta': None
+    'type': 'user_info',
+    'data': {
+        'time': time(),
+        'chat': {
+            'id': 1254,
+            'time': time(),
+            'type': 'chat',
+            'title': 'Name Chat',
+            'info': 'Info about this chat'
+            },
+        'message': {
+            'id': 1,
+            'text': 'some text...',
+            'from_user': {
+                'id': 1254,
+                'username': 'Vasya'
                 },
-            'errors': {
-                'id': 25665546,
-                'time': time(),
-                'status': 'OK',
-                'code': 200,
-                'detail': 'successfully'
+            'time': time(),
+            'from_chat': {
+                'id': 123655455
                 },
-            'jsonapi': {
-                'version': 1.0
-                    },
-            'meta': None
-        }
+            'file': {
+                'picture': 'jkfikdkdsd',
+                'video': 'sdfsdfsdf',
+                'audio': 'fgfsdfsdfsdf',
+                'document': ''
+                },
+            'emoji': 'sfdfsdfsdf',
+            'edited': {
+                'time': time(),
+                'status': True
+                },
+            'reply_to': None
+            },
+        'user': {
+            'id': 5855,
+            'login': 'username1',
+            'password': 'lksdjflksjfsd',
+            'username': 'Vasya',
+            'is_bot': True,
+            'auth_id': '464645646464',
+            'email': 'stepan.skrjabin@gmail.com',
+            'avatar': 'fffdddddd',
+            'bio': 'My bio'
+            },
+        'meta': None
+        },
+    'errors': {
+        'id': 25665546,
+        'time': time(),
+        'status': 'OK',
+        'code': 200,
+        'detail': 'successfully'
+        },
+    'jsonapi': {
+        'version': None
+        },
+    'meta': None
+    }
 
+print('Size dict=', asizeof.asizeof(dict_json))
 encode_json = json.JSONEncoder().encode(dict_json)
+print('Size json=', asizeof.asizeof(encode_json))
 print('Encode=', encode_json)
 
 
 class APIEditedMessage(BaseModel):
     class Config:
         title = 'Time of editing the message'
-    time: int = None
-    status: bool = None
+    time: int
+    status: bool
 
 
 class APIFile(BaseModel):
@@ -151,24 +160,37 @@ class APIFile(BaseModel):
     document: bytes = None
 
 
+class APIFromChat(BaseModel):
+    class Config:
+        title = 'Information from chat id'
+    id: int
+
 class APIChat(BaseModel):
     class Config:
         title = 'List of chat rooms with their description and type'
-    id: int = None
+    id: int
     time: int = None
     type: str = None
     title: str = None
     info: str = None
 
+
+class APIFromUser(BaseModel):
+    class Config:
+        title = 'Information about forwarded message user'
+    id: int
+    username: str
+
+
 class APIUser(BaseModel):
     class Config:
         title = 'User information'
-    id: int = None
+    id: int
     login: str = None
     password: str = None
-    username: str = None
+    username: str
     is_bot: Optional[bool] = None
-    auth_id: int = None
+    auth_id: int
     email: EmailStr = None
     avatar: bytes = None
     bio: str = None
@@ -177,71 +199,71 @@ class APIUser(BaseModel):
 class APIMessage(BaseModel):
     class Config:
         title = 'Message options'
-    id: int = None
+    id: int
     text: str = None
-    from_user: APIUser
-    time: int = None
-    chat: APIChat = None
-    file: APIFile = None
-    emoji: bytes = None
-    edited: APIEditedMessage = None
-    # Заглушка, потом удалить.
+    from_user: Optional[APIFromUser] = None
+    time: int
+    from_chat: APIFromChat = None
+    file: Optional[APIFile] = None
+    emoji: Optional[bytes] = None
+    edited: Optional[APIEditedMessage] = None
     reply_to: Optional[Any] = None
 
 
 class APIData(BaseModel):
     class Config:
-        title = 'The main object with the data. There is a reserved \'meta\' field.'
+        title = 'Main data-object'
     time: int
-    chat: APIChat = None
-    message: APIMessage = None
-    user: APIUser
-    meta: Any = None
+    chat: Optional[APIChat] = None
+    message: Optional[APIMessage] = None
+    user: Optional[APIUser] = None
+    meta: Optional[Any] = None
 
 
 class APIErrors(BaseModel):
     class Config:
         title = 'Error information and statuses of request processing'
-    id: Optional[int] = None
-    time: Optional[int] = None
-    status: Optional[int] = None
-    code: Optional[int] = None
-    detail: Optional[int] = None
+    id: int
+    time: int
+    status: str
+    code: int
+    detail: str
 
 
 class APIVersion(BaseModel):
     class Config:
         title = 'Protocol version'
-    version: float
+        
+    version: float = None
 
 
 class JsonAPI(BaseModel):
     class Config:
-        title = 'MoreliaTalk protocol version 1'
+        title = 'MoreliaTalk protocol v1.0'
     type: str
     data: Optional[APIData] = None
-    errors: APIErrors = None
+    errors: Optional[APIErrors] = None
     jsonapi: APIVersion
-    meta: Any = None
+    meta: Optional[Any] = None
 
 
 def response(obj):
     try:
-        valid_json = JsonAPI.parse_raw(obj)
+        validate = JsonAPI.parse_raw(obj)
     except ValidationError as error:
         return error.json()
-    if valid_json.dict()['type'] == 'user_info':
+    if validate.dict()['type'] == 'user_info':
         try:
-            result = APIErrors(status='OK', code=200)
+            result = APIErrors(id=1, time=time(), status='OK', code=200, detail='Hello')
         except ValidationError as error:
             result = error
     else:
         try:
-            result = APIErrors(status='ERROR', code=400)
+            result = APIErrors(id=2, time=time(), status='ERROR', code=400, detail='Hello')
         except ValidationError as error:
             result = error
     return result.json()
-    
+
+
 print('Response=', response(encode_json))
 #print('Shema=', JsonAPI.schema_json(indent=2))
-
