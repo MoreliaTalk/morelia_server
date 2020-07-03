@@ -154,10 +154,10 @@ class APIEditedMessage(BaseModel):
 class APIFile(BaseModel):
     class Config:
         title = 'Files attached to the message'
-    picture: bytes = None
-    video: bytes = None
-    audio: bytes = None
-    document: bytes = None
+    picture: Optional[bytes] = None
+    video: Optional[bytes] = None
+    audio: Optional[bytes] = None
+    document: Optional[bytes] = None
 
 
 class APIFromChat(BaseModel):
@@ -169,13 +169,13 @@ class APIChat(BaseModel):
     class Config:
         title = 'List of chat rooms with their description and type'
     id: int
-    time: int = None
-    type: str = None
-    title: str = None
-    info: str = None
+    time: Optional[int] = None
+    type: Optional[str] = None
+    title: Optional[str] = None
+    info: Optional[str] = None
 
 
-class APIFromUser(BaseModel):
+class APIMessageFromUser(BaseModel):
     class Config:
         title = 'Information about forwarded message user'
     id: int
@@ -186,22 +186,22 @@ class APIUser(BaseModel):
     class Config:
         title = 'User information'
     id: int
-    login: str = None
-    password: str = None
-    username: str
+    login: Optional[str] = None
+    password: Optional[str] = None
+    username: Optional[str] = None
     is_bot: Optional[bool] = None
     auth_id: int
-    email: EmailStr = None
-    avatar: bytes = None
-    bio: str = None
+    email: Optional[EmailStr] = None
+    avatar: Optional[bytes] = None
+    bio: Optional[str] = None
 
 
 class APIMessage(BaseModel):
     class Config:
         title = 'Message options'
     id: int
-    text: str = None
-    from_user: Optional[APIFromUser] = None
+    text: Optional[str] = None
+    from_user: Optional[APIMessageFromUser] = None
     time: int
     from_chat: APIFromChat = None
     file: Optional[APIFile] = None
@@ -213,7 +213,7 @@ class APIMessage(BaseModel):
 class APIData(BaseModel):
     class Config:
         title = 'Main data-object'
-    time: int
+    time: Optional[int] = None
     chat: Optional[APIChat] = None
     message: Optional[APIMessage] = None
     user: Optional[APIUser] = None
@@ -233,8 +233,7 @@ class APIErrors(BaseModel):
 class APIVersion(BaseModel):
     class Config:
         title = 'Protocol version'
-        
-    version: float = None
+    version: float
 
 
 class JsonAPI(BaseModel):
