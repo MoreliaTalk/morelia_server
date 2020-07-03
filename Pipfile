@@ -12,7 +12,7 @@ fastapi = "*"
 jinja2 = "*"
 aiofiles = "*"
 email-validator = "*"
-python-dotenv = "*"
+pyjwt = "*"
 
 [requires]
 python_version = "3.8"
