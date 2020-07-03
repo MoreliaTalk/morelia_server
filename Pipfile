@@ -12,7 +12,6 @@ fastapi = "*"
 jinja2 = "*"
 aiofiles = "*"
 email-validator = "*"
-typing-extensions = "*"
 python-dotenv = "*"
 
 [requires]
