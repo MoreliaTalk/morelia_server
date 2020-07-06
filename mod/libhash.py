@@ -17,24 +17,22 @@ def password_hash(password: str, salt: bytes = None,
         will set it to 'byte-like object' equal to an empty string.
 
     Returns:
-        dict: Returns the dictionary with the original parameters passed
-        to the function and password hash.
+        dict: Returns a dictionary containing hash password, salt, key.
 
     """
-    valid = PasswordValidate(password=password, salt=salt, key=key)
+    password = password.encode('utf-8')
     size: int = 32
-    if valid.salt is None:
+    if salt is None:
         salt = urandom(16)
-    if valid.key is None:
+    if key is None:
         key = b''
-    hash_password = blake2b(valid.password,
+    hash_password = blake2b(password,
                             digest_size=size,
                             key=key, salt=salt)
     result = {
-        'password': valid.password,
         'hash_password': hash_password.hexdigest().encode('utf-8'),
-        'salt': valid.salt,
-        'key': valid.key
+        'salt': salt,
+        'key': key
     }
     return result
 

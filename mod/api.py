@@ -10,23 +10,6 @@ from pydantic import EmailStr
 API_VERSION: bool = 1.0
 
 
-class PasswordValidate(BaseModel):
-    """Checks data type and converts it to 'bytes' type
-
-    Args:
-        password (str, int, bytes): Required parameter
-        salt (str, int, bytes): optional parameter
-        key (str, int, bytes): optional parameter
-        hash_password (str, int, bytes): optional parameter
-    """
-    class Config:
-        title = 'Password object'
-    password: bytes
-    salt: Optional[bytes] = None
-    key: Optional[bytes] = None
-    hash_password: Optional[bytes] = None
-
-
 dict_json = {
     'type': 'user_info',
     'data': {
