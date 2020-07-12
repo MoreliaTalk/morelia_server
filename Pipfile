@@ -5,11 +5,14 @@ verify_ssl = true
 
 [dev-packages]
 flake8 = "*"
-autopep8 = "*"
 
 [packages]
-flask = "==1.1.2"
-flask-sqlalchemy = "==2.4.3"
+uvicorn = "*"
+fastapi = "*"
+jinja2 = "*"
+aiofiles = "*"
+email-validator = "*"
+pyjwt = "*"
 
 [requires]
 python_version = "3.8"

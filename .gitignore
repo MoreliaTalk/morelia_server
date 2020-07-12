@@ -1,3 +1,5 @@
+# Created by .ignore support plugin (hsz.mobi)
+### Python template
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -128,9 +130,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# PyCharm stuff
-/.idea
-
-# VSCode stuff
-/.VSCode
+### VisualStudioCode template
+.vscode/
 *.code-workspace
+
