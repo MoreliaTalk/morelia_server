@@ -1,6 +1,0 @@
-uvicorn
-fastapi
-jinja2
-aiofiles
-email-validator
-pyjwt
