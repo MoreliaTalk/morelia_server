@@ -9,6 +9,7 @@ from fastapi import WebSocket
 from starlette.templating import Jinja2Templates
 from starlette.websockets import WebSocketDisconnect
 
+server_started = datetime.now()
 
 app = FastAPI()
 
@@ -28,8 +29,9 @@ def home_page(request: Request):
 def status_page(request: Request):
     stats = {
         'Server time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'Server uptime': str(datetime.now()-server_started),
         'Users': len(clients),
-        'Messages': len(list_message)
+        'Messages': len(db.get_messages())
     }
     return templates.TemplateResponse('status.html',
                                       {'request': request,

@@ -1,5 +1,5 @@
 import sqlite3
-conn = sqlite3.connect('database/database.db')
+conn = sqlite3.connect('database/database.db', check_same_thread = False)
 cursor = conn.cursor()
 def save_userdata(username,password):
     userdata = [username,password]
