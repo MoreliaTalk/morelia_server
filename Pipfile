@@ -13,6 +13,7 @@ jinja2 = "*"
 aiofiles = "*"
 email-validator = "*"
 pyjwt = "*"
+sqlobject = "*"
 
 [requires]
 python_version = "3.8"
