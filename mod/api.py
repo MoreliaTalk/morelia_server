@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from pydantic import ValidationError
 from pydantic import EmailStr
 
-API_VERSION: bool = 1.0
+from mod import config
 
 
 dict_json = {
@@ -66,7 +66,7 @@ dict_json = {
         'detail': 'successfully'
         },
     'jsonapi': {
-        'version': None
+        'version': config.API_VERSION
         },
     'meta': None
     }
@@ -74,14 +74,14 @@ dict_json = {
 encode_json = json.JSONEncoder().encode(dict_json)
 
 
-class APIEditedMessage(BaseModel):
+class EditedMessage(BaseModel):
     class Config:
         title = 'Time of editing the message'
     time: int
     status: bool
 
 
-class APIFile(BaseModel):
+class File(BaseModel):
     class Config:
         title = 'Files attached to the message'
     picture: Optional[bytes] = None
@@ -90,13 +90,13 @@ class APIFile(BaseModel):
     document: Optional[bytes] = None
 
 
-class APIFromChat(BaseModel):
+class FromFlow(BaseModel):
     class Config:
         title = 'Information from chat id'
     id: int
 
 
-class APIChat(BaseModel):
+class Flow(BaseModel):
     class Config:
         title = 'List of chat rooms with their description and type'
     id: int
@@ -106,14 +106,14 @@ class APIChat(BaseModel):
     info: Optional[str] = None
 
 
-class APIMessageFromUser(BaseModel):
+class MessageFromUser(BaseModel):
     class Config:
         title = 'Information about forwarded message user'
     id: int
     username: str
 
 
-class APIUser(BaseModel):
+class User(BaseModel):
     class Config:
         title = 'User information'
     id: int
@@ -127,31 +127,31 @@ class APIUser(BaseModel):
     bio: Optional[str] = None
 
 
-class APIMessage(BaseModel):
+class Message(BaseModel):
     class Config:
         title = 'Message options'
     id: int
     text: Optional[str] = None
-    from_user: Optional[APIMessageFromUser] = None
+    from_user: Optional[MessageFromUser] = None
     time: int
-    from_chat: APIFromChat = None
-    file: Optional[APIFile] = None
+    from_chat: FromFlow = None
+    file: Optional[File] = None
     emoji: Optional[bytes] = None
-    edited: Optional[APIEditedMessage] = None
+    edited: Optional[EditedMessage] = None
     reply_to: Optional[Any] = None
 
 
-class APIData(BaseModel):
+class Data(BaseModel):
     class Config:
         title = 'Main data-object'
     time: Optional[int] = None
-    chat: Optional[APIChat] = None
-    message: Optional[APIMessage] = None
-    user: Optional[APIUser] = None
+    chat: Optional[Flow] = None
+    message: Optional[Message] = None
+    user: Optional[User] = None
     meta: Optional[Any] = None
 
 
-class APIErrors(BaseModel):
+class Errors(BaseModel):
     class Config:
         title = 'Error information and statuses of request processing'
     id: int
@@ -161,69 +161,69 @@ class APIErrors(BaseModel):
     detail: str
 
 
-class APIVersion(BaseModel):
+class Version(BaseModel):
     class Config:
         title = 'Protocol version'
     version: float
 
 
-class JsonAPI(BaseModel):
+class ValidJSON(BaseModel):
     class Config:
         title = 'MoreliaTalk protocol v1.0'
     type: str
-    data: Optional[APIData] = None
-    errors: Optional[APIErrors] = None
-    jsonapi: APIVersion
+    data: Optional[Data] = None
+    errors: Optional[Errors] = None
+    jsonapi: Version
     meta: Optional[Any] = None
 
 
 def response(obj):
     try:
-        validate = JsonAPI.parse_raw(obj)
+        validate = ValidJSON.parse_raw(obj)
     except ValidationError as error:
         return error.json()
     if validate.dict()['type'] == 'all_messages':
         try:
-            result = APIErrors(id=validate.dict()['data']['user']['id'], time=time(), status='OK', code=200, detail='Hello')
+            result = Errors(id=validate.dict()['data']['user']['id'], time=time(), status='OK', code=200, detail='Hello')
         except ValidationError as error:
             result = error
     elif validate.dict()['type'] == 'auth':
         try:
-            result = APIErrors(id=validate.dict()['data']['user']['id'], time=time(), status='OK', code=200, detail='Hello')
+            result = Errors(id=validate.dict()['data']['user']['id'], time=time(), status='OK', code=200, detail='Hello')
         except ValidationError as error:
             result = error
     elif validate.dict()['type'] == 'all_chat':
         try:
-            result = APIErrors(id=validate.dict()['data']['user']['id'], time=time(), status='OK', code=200, detail='Hello')
+            result = Errors(id=validate.dict()['data']['user']['id'], time=time(), status='OK', code=200, detail='Hello')
         except ValidationError as error:
             result = error
     elif validate.dict()['type'] == 'reg_user':
         try:
-            result = APIErrors(id=validate.dict()['data']['user']['id'], time=time(), status='OK', code=200, detail='Hello')
+            result = Errors(id=validate.dict()['data']['user']['id'], time=time(), status='OK', code=200, detail='Hello')
         except ValidationError as error:
             result = error
     elif validate.dict()['type'] == 'user_info':
         try:
-            result = APIErrors(id=validate.dict()['data']['user']['id'], time=time(), status='OK', code=200, detail='Hello')
+            result = Errors(id=validate.dict()['data']['user']['id'], time=time(), status='OK', code=200, detail='Hello')
         except ValidationError as error:
             result = error
     elif validate.dict()['type'] == 'send_message':
         try:
-            result = APIErrors(id=validate.dict()['data']['user']['id'], time=time(), status='OK', code=200, detail='Hello')
+            result = Errors(id=validate.dict()['data']['user']['id'], time=time(), status='OK', code=200, detail='Hello')
         except ValidationError as error:
             result = error
     elif validate.dict()['type'] == 'get_update':
         try:
-            result = APIErrors(id=validate.dict()['data']['user']['id'], time=time(), status='OK', code=200, detail='Hello')
+            result = Errors(id=validate.dict()['data']['user']['id'], time=time(), status='OK', code=200, detail='Hello')
         except ValidationError as error:
             result = error
     else:
         try:
-            result = APIErrors(id=2, time=time(), status='ERROR', code=400, detail='Hello')
+            result = Errors(id=2, time=time(), status='ERROR', code=400, detail='Hello')
         except ValidationError as error:
             result = error
     return result.json()
 
 
 print('Response=', response(encode_json))
-print('Shema=', JsonAPI.schema_json(indent=2))
+print('Shema=', ValidJSON.schema_json(indent=2))

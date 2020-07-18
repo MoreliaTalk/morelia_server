@@ -1,13 +1,26 @@
+# Section to import standart module
 from time import time
 from datetime import datetime
 
+# Section to import external module
 import uvicorn
-from database import main as db
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi import WebSocket
 from starlette.templating import Jinja2Templates
 from starlette.websockets import WebSocketDisconnect
+
+import sqlobject as orm
+
+# Section to import morelia module
+from mod import config
+# import database.main as db
+from mod import controller as db
+
+
+# Connect to database
+connection = orm.connectionForURI(config.LOCAL_SQLITE)
+orm.sqlhub.processConnection = connection
 
 server_started = datetime.now()
 
@@ -15,7 +28,7 @@ app = FastAPI()
 
 templates = Jinja2Templates(directory='templates')
 
-# Сохраняем сессии клиентов
+# Save clients session
 # TODO:   При отключении нужно реализовать их удаление  подумать как их хранить
 clients = []
 
@@ -38,7 +51,7 @@ def status_page(request: Request):
                                        'stats': stats})
 
 
-# Отправляем все сообщения чата
+# Send all message from DB
 async def get_all_messages(newclient):
     for message in db.get_messages():
         await newclient.send_json(message)
@@ -51,15 +64,23 @@ async def send_message(mes):
 
 
 # TODO: надо релизовать регистрацию
-async def reg_user(data):
-    if (password := db.get_userdata(data["username"])) != None:
-        if data["password"] == password:
-            return "true"
-        else:
-            return "false"
+async def reg_user(data: dict) -> str:
+    """The function registers the user who is not in the database.
+
+    Args:
+        data (dict): [description]
+
+    Returns:
+        str: returns a string value: 'true' or 'newreg'
+    """
+    password = data['password']
+    username = data['username']
+    if db.get_userdata(username):
+        return 'true'
     else:
-        db.save_userdata(data["username"], data["password"])
-        return "newreg"
+        db.save_userdata(username, password)
+        return 'newreg'
+
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
