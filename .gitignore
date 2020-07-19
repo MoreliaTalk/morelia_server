@@ -134,3 +134,6 @@ dmypy.json
 .vscode/
 *.code-workspace
 
+## Morelia stuff
+/database/database.db
+db_sqlite.db
