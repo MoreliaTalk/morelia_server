@@ -68,7 +68,7 @@ def get_messages() -> list:
             'time': int
         }
     """
-    dbquery = models.Message.select(models.Message.q.messageID != '')
+    dbquery = models.Message.select(models.Message.q.messageID > 0)
     messages = []
     for data in dbquery:
         messages.append({
