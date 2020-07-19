@@ -14,7 +14,7 @@ dict_json = {
     'type': 'user_info',
     'data': {
         'time': time(),
-        'chat': {
+        'flow': {
             'id': 1254,
             'time': time(),
             'type': 'chat',
