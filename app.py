@@ -10,12 +10,17 @@ from fastapi import WebSocket
 from starlette.templating import Jinja2Templates
 from starlette.websockets import WebSocketDisconnect
 
-import sqlobject as orm
-
 # Section to import morelia module
 from mod import config
+
+# Раскомментировать строчку ниже
+# для перехода на работу с SQLite без ОРМ SQLObject
 # import database.main as db
+
+# Раскомментировать строчки ниже
+# для перехода на работу с SQLite через ОРМ SQLObject
 from mod import controller as db
+import sqlobject as orm
 
 
 # Connect to database
