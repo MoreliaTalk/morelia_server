@@ -8,7 +8,7 @@ class User(orm.SQLObject):
     login = orm.StringCol(default=None)
     password = orm.StringCol()
     username = orm.StringCol()
-    isBot = orm.Bool(default=False)
+    isBot = orm.BoolCol(default=False)
     autId = orm.StringCol(default=None)
     email = orm.StringCol(default=None)
     avatar = orm.BLOBCol(default=None)
