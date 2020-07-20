@@ -34,6 +34,10 @@
 
 * templates - шаблоны для вывода статистики сервера в браузере
 
+* app.py - основной код сервера
+
+* manage.py - менеджер миграции для БД
+
 ## Установка ##
 
 Установить [Python](https://www.python.org/downloads/) версии 3.8.
@@ -112,6 +116,11 @@ pipenv install --ignore-pipfile
 
 ```cmd
 python3 ./manage.py --table create
+```
+
+Для дополнительной информации о возможностях менеджера миграций
+```cmd
+python3 ./manage.py --help
 ```
 
 Для запуска используйте команду
