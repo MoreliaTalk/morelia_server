@@ -19,7 +19,7 @@ def save_userdata(username: str, password: str) -> None:
     return
 
 
-def get_userdata(username: str) -> bool:
+def get_userdata(username: str):
     """The function checks the presence of the user in the database.
 
     Args:
@@ -30,9 +30,9 @@ def get_userdata(username: str) -> bool:
     """
     password = models.User.select(models.User.q.username == username)
     if password.count() != 0:
-        return True
+        return password[0]
     else:
-        return False
+        return None
 
 
 def save_message(message: dict) -> None:

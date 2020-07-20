@@ -80,8 +80,11 @@ async def reg_user(data: dict) -> str:
     """
     password = data['password']
     username = data['username']
-    if db.get_userdata(username):
-        return 'true'
+    if (dbpassword := db.get_userdata(username)):
+        if password == dbpassword:
+            return 'true'
+        else:
+            return 'false'
     else:
         db.save_userdata(username, password)
         return 'newreg'
