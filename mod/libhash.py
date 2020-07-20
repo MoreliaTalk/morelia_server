@@ -2,15 +2,13 @@ from hashlib import blake2b
 from os import urandom
 from hmac import compare_digest
 
-from .api import PasswordValidate
-
 
 def password_hash(password: str, salt: bytes = None,
                   key: bytes = None) -> dict:
-    """Function generates a a password hash.
+    """Function generates a password hash.
 
     Args:
-        password (str): password
+        password (str, required): password
         salt (bytes, optional): Salt. Defaults to None.
         key (bytes, optional): Additional argument. Defaults to None.
         If the value of the 'key' parameter is 'None' then the function
