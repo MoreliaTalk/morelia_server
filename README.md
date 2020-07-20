@@ -12,11 +12,27 @@
 
 * [Python 3.8](https://www.python.org/) - язык программирования
 
-* [Flask](https://flask.palletsprojects.com/en/1.1.x/) - основной фреймворк
+* [FastAPI](https://fastapi.tiangolo.com) - основной фреймворк
 
-* [SQLAlchemy](https://www.sqlalchemy.org/) - ORM для работы с Базой данный
+* [SQLObject](http://sqlobject.org) - ORM для работы с базой данный
 
-* [psycopg2](https://www.psycopg.org/docs/) - драйвер базы данных PostgreSQL
+* [pydantic](https://pydantic-docs.helpmanual.io) - валидация данных
+
+* [starlette](https://www.starlette.io) - лёгковесный ASGI фреймворк/тулкит.
+
+## Описание репозитория ##
+
+* database
+  * main.py - прямая работа с БД SQLite3
+
+* mod
+  * api.py - модуль отвечает за описание АПИ, а так же валидацию данных
+  * config.py - модуль отвечает за хранение настроек (констант)
+  * controller.py - модуль отвечает за запросы к БД
+  * libhash.py - модуль отвечает за хэширования пароля и сравнения пароля с его хэш-суммой.
+  * models.py - мудоль отвечает за описание таблиц БД для работы через ОРМ
+
+* templates - шаблоны для вывода статистики сервера в браузере
 
 ## Установка ##
 
@@ -30,7 +46,7 @@
 
 ## Форк репозитория Morelia Server ##
 
-Если ты не включен в команду на GitHub'е проекта, то тебе необходимо сначала форкнуть к себе репозиторий Morelia Qt перейдя по [ссылке](https://github.com/MoreliaTalk/morelia_server/fork).
+Если ты не включен в команду на GitHub'е проекта, то необходимо сначала форкнуть к себе репозиторий Morelia Server перейдя по [ссылке](https://github.com/MoreliaTalk/morelia_server/fork).
 
 ## Клонирование репозитория на локальный компьютер ##
 
@@ -87,12 +103,21 @@ pipenv shell
 pipenv install --ignore-pipfile
 ```
 
-## Запуск приложения ##
+## Запуск сервера ##
+
+В случае если работать необходимо не через ОРМ SQLObject, а напрямую с базой данных,
+необходимо раскомментировать строчку №18 и закомментировать строчки №22, 23, 27, 28 в файле app.py
+
+Перед запуском необходимо создать базу данных с пустыми таблицами, командой
+
+```cmd
+python3 ./manage.py --table create
+```
 
 Для запуска используйте команду
 
 ```cmd
-python ./server.py
+python3 ./app.py
 ```
 
 ## Создание пулл-реквеста для внесенния изменений в develop-ветку Morelia Server ##
