@@ -28,9 +28,9 @@ def get_userdata(username: str):
     Returns:
         bool: True or False
     """
-    password = models.User.select(models.User.q.username == username)
-    if password.count() != 0:
-        return password[0]
+    dbdata = models.User.select(models.User.q.username == username)
+    if dbdata.count() != 0:
+        return dbdata[0].password
     else:
         return None
 
