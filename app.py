@@ -1,6 +1,8 @@
 # Section to import standart module
+import logging
 from time import time
 from datetime import datetime
+
 
 # Section to import external module
 import uvicorn
@@ -10,8 +12,10 @@ from fastapi import WebSocket
 from starlette.templating import Jinja2Templates
 from starlette.websockets import WebSocketDisconnect
 
+
 # Section to import morelia module
 from mod import config
+from settings import setup_logging
 
 # Раскомментировать строчку ниже
 # для перехода на работу с SQLite без ОРМ SQLObject
@@ -22,6 +26,24 @@ from mod import config
 from mod import controller as db
 import sqlobject as orm
 
+# # Подключаем логирование
+# # DEBUG 	Детальная информация, интересная только при отладке
+# # INFO 	    Подтверждение, что все работает как надо
+# # WARNING 	Индикация того, что что-то пошло не так, и возможны проблемы в будущем
+# #           (заканчивается место на диске, етс)
+# #           Программа продолжает работать как надо.
+# # ERROR 	Относительно серьезная проблема, программа не смогла выполнить некоторый функционал.
+# # CRITICAL 	Реально серьезная проблема, программа не может работать дальше.
+# #
+# # вместо принтов используем logging.debug('сообщение')
+# # Ошибки выводим logging.error('сообщение')
+# # Предупреждения logging.warning('сообщение')
+# #
+# # в настройках 2 файла логов для ошибок и для информации
+# # так же инфа дублируется в консоль
+# #
+
+setup_logging()  # Подключение логирования
 
 # Connect to database
 connection = orm.connectionForURI(config.LOCAL_SQLITE)
@@ -107,7 +129,7 @@ async def websocket_endpoint(websocket: WebSocket):
                         "timestamp": time()
                         }
                 db.save_message(message)
-                print(message)
+                logging.debug(f'{message}')
                 await send_message(message)
             elif data["mode"] == "reg":
                 message = {
@@ -118,7 +140,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
     except WebSocketDisconnect as e:
         clients.remove(websocket)
-        print(e)
+        logging.info(e)
 
 
 if __name__ == "__main__":

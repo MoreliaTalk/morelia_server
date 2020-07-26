@@ -15,6 +15,7 @@ email-validator = "*"
 pyjwt = "*"
 sqlobject = "*"
 click = "*"
+pyyaml = "*"
 
 [requires]
 python_version = "3.8"
