@@ -29,7 +29,7 @@ dict_json = {
                 'username': 'Vasya'
                 },
             'time': time(),
-            'from_chat': {
+            'from_flow': {
                 'id': 123655455
                 },
             'file': {
