@@ -1,7 +1,7 @@
 import random
 from time import time
 
-from mod import models
+from mod import models, config
 from mod import api
 
 
