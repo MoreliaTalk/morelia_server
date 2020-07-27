@@ -116,12 +116,12 @@ class MessageFromUser(BaseModel):
 class User(BaseModel):
     class Config:
         title = 'User information'
-    id: int
+    id: int = None
     login: Optional[str] = None
     password: Optional[str] = None
     username: Optional[str] = None
     is_bot: Optional[bool] = None
-    auth_id: int
+    auth_id: int = None
     email: Optional[EmailStr] = None
     avatar: Optional[bytes] = None
     bio: Optional[str] = None
@@ -176,6 +176,13 @@ class ValidJSON(BaseModel):
     jsonapi: Version
     meta: Optional[Any] = None
 
+
+def request(json_request):
+    try:
+        return ValidJSON.parse_raw(json_request)
+    except ValidationError as error:
+        print(error.json())
+        return None
 
 def response(obj):
     try:

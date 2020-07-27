@@ -1,6 +1,7 @@
 import random
 
 from mod import models
+from mod import api
 
 
 def save_userdata(username: str, password: str) -> None:
@@ -81,17 +82,44 @@ def get_messages() -> list:
         })
     return messages
 
-def serve_request(request_json) -> bool:
+def register_user(username: str, password: str) -> str:
+    """The function registers the user who is not in the database.
+
+    Args:
+        username (str): required
+        password (str): required
+
+    Returns:
+        str: returns a string value: 'true' or 'newreg'
+    """
+    if dbpassword := get_userdata(username):
+        if password == dbpassword:
+            return 'true'
+        else:
+            return 'false'
+    else:
+        save_userdata(username, password)
+        return 'newreg'
+
+
+def serve_request(request_json) -> dict:
     """The function try serve user request and return result status.
 
     Args:
         No args.
 
     Returns:
-        True - successfully served
-        False - any kind of problems
+        Response for sending to user  - successfully served
+        {} - any kind of problems
     """
-    if type := request_json.get("type"):
-        if type == "register_user":
-            return True
-    return False
+    print(request_json)
+    if request := api.request(request_json):
+        print(request)
+        if request.type == 'register_user':
+            message = {
+                "mode": "reg",
+                "status": register_user(request.data.user.login, request.data.user.password)
+            }
+            print(message)
+            return message
+    return {}
