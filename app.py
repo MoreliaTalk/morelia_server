@@ -1,5 +1,6 @@
 # Section to import standart module
 import logging
+import json
 from time import time
 from datetime import datetime
 
@@ -121,7 +122,7 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             data = await websocket.receive_json()
-            if data["mode"] == "message":
+            if data.get("mode") == "message":
                 message = {
                         "mode": "message",
                         "username": data["username"],
@@ -131,12 +132,17 @@ async def websocket_endpoint(websocket: WebSocket):
                 db.save_message(message)
                 logging.debug(f'{message}')
                 await send_message(message)
-            elif data["mode"] == "reg":
+            elif data.get("mode") == "reg":
                 message = {
                         "mode": "reg",
                         "status": await reg_user(data)
                         }
                 await client.send_json(message)
+            else:
+                message = db.serve_request(json.dumps(data))
+                if message != {}:
+                    logging.debug(f'{message}')
+                    await send_message(message)
 
     except WebSocketDisconnect as e:
         clients.remove(websocket)

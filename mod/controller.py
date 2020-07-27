@@ -1,6 +1,9 @@
 import random
+from time import time
 
 from mod import models
+from mod import config
+from mod import api
 
 
 def save_userdata(username: str, password: str) -> None:
@@ -15,7 +18,7 @@ def save_userdata(username: str, password: str) -> None:
         None
     """
     userID = random.getrandbits(64)
-    models.User(userID=userID, password=password, username=username)
+    models.User(UUID=userID, password=password, login=username, username=username)
     return
 
 
@@ -44,10 +47,10 @@ def save_message(message: dict) -> None:
     Returns:
         None
     """
-    numbers = random.getrandbits(256)
-    models.Message(messageID=numbers,
-                   text=message['text'],
-                   fromUserUsername=message['username'],
+    user = models.User.select(models.User.q.username == message['username'])
+    models.Message(text=message['text'],
+                   userID=user[0].UUID,
+                   flowID=0,
                    time=message['timestamp'])
     return
 
@@ -71,10 +74,82 @@ def get_messages() -> list:
     dbquery = models.Message.select(models.Message.q.id > 0)
     messages = []
     for data in dbquery:
+        user = models.User.select(models.User.q.UUID == data.userID)
         messages.append({
-                    "mode": "message",
-                    "username": data.fromUserUsername,
-                    "text": data.text,
-                    "timestamp": data.time
-                        })
+            "mode": "message",
+            "username": user[0].username,
+            "text": data.text,
+            "timestamp": data.time
+        })
     return messages
+
+
+def register_user(username: str, password: str) -> str:
+    """The function registers the user who is not in the database.
+
+    Args:
+        username (str): required
+        password (str): required
+
+    Returns:
+        str: returns a string value: 'true' or 'newreg'
+    """
+    if dbpassword := get_userdata(username):
+        if password == dbpassword:
+            return 'true'
+        else:
+            return 'false'
+    else:
+        save_userdata(username, password)
+        return 'newreg'
+
+
+def serve_request(request_json) -> dict:
+    """The function try serve user request and return result status.
+
+    Args:
+        No args.
+
+    Returns:
+        Response for sending to user  - successfully served
+        (error response - if any kind of problems)
+    """
+    try:
+        request = api.ValidJSON.parse_raw(request_json)
+    except api.ValidationError as error:
+        message = {
+            'type': 'error',
+            'errors': {
+                'time': time(),
+                'status': 'Bad Request',
+                'code': 400,
+                'detail': 'JSON validation error'
+            },
+            'jsonapi': {
+                'version': config.API_VERSION
+            },
+            'meta': None
+        }
+        return message
+    if request.type == 'register_user':
+        message = {
+            "mode": "reg",
+            "status": register_user(request.data.user.login, request.data.user.password)
+        }
+        return message
+    else:
+        message = {
+            'type': request.type,
+            'errors': {
+                'time': time(),
+                'status': 'Bad Request',
+                'code': 400,
+                'detail': 'Method not supported by server'
+            },
+            'jsonapi': {
+                'version': config.API_VERSION
+            },
+            'meta': None
+        }
+        return message
+

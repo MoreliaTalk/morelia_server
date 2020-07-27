@@ -116,12 +116,12 @@ class MessageFromUser(BaseModel):
 class User(BaseModel):
     class Config:
         title = 'User information'
-    id: int
+    id: int = None
     login: Optional[str] = None
     password: Optional[str] = None
     username: Optional[str] = None
     is_bot: Optional[bool] = None
-    auth_id: int
+    auth_id: int = None
     email: Optional[EmailStr] = None
     avatar: Optional[bytes] = None
     bio: Optional[str] = None
@@ -225,5 +225,6 @@ def response(obj):
     return result.json()
 
 
-print('Response=', response(encode_json))
-print('Shema=', ValidJSON.schema_json(indent=2))
+if __name__ == "__main__":
+    print('Response=', response(encode_json))
+    print('Shema=', ValidJSON.schema_json(indent=2))
