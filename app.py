@@ -121,22 +121,23 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             data = await websocket.receive_json()
-            if data["mode"] == "message":
-                message = {
-                        "mode": "message",
-                        "username": data["username"],
-                        "text": data["text"],
-                        "timestamp": time()
-                        }
-                db.save_message(message)
-                logging.debug(f'{message}')
-                await send_message(message)
-            elif data["mode"] == "reg":
-                message = {
-                        "mode": "reg",
-                        "status": await reg_user(data)
-                        }
-                await client.send_json(message)
+            if not db.serve_request(data):
+                if data.get("mode") == "message":
+                    message = {
+                            "mode": "message",
+                            "username": data["username"],
+                            "text": data["text"],
+                            "timestamp": time()
+                            }
+                    db.save_message(message)
+                    logging.debug(f'{message}')
+                    await send_message(message)
+                elif data.get("mode") == "reg":
+                    message = {
+                            "mode": "reg",
+                            "status": await reg_user(data)
+                            }
+                    await client.send_json(message)
 
     except WebSocketDisconnect as e:
         clients.remove(websocket)

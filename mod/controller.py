@@ -15,7 +15,7 @@ def save_userdata(username: str, password: str) -> None:
         None
     """
     userID = random.getrandbits(64)
-    models.User(userID=userID, password=password, username=username)
+    models.User(UUID=userID, password=password, login=username, username=username)
     return
 
 
@@ -45,9 +45,10 @@ def save_message(message: dict) -> None:
         None
     """
     numbers = random.getrandbits(256)
-    models.Message(messageID=numbers,
-                   text=message['text'],
-                   fromUserUsername=message['username'],
+    user = models.User.select(models.User.q.username == message['username'])
+    models.Message(text=message['text'],
+                   userID=user[0].UUID,
+                   flowID=0,
                    time=message['timestamp'])
     return
 
@@ -71,10 +72,26 @@ def get_messages() -> list:
     dbquery = models.Message.select(models.Message.q.id > 0)
     messages = []
     for data in dbquery:
+        user = models.User.select(models.User.q.UUID == data.userID)
         messages.append({
-                    "mode": "message",
-                    "username": data.fromUserUsername,
-                    "text": data.text,
-                    "timestamp": data.time
-                        })
+            "mode": "message",
+            "username": user[0].username,
+            "text": data.text,
+            "timestamp": data.time
+        })
     return messages
+
+def serve_request(request_json) -> bool:
+    """The function try serve user request and return result status.
+
+    Args:
+        No args.
+
+    Returns:
+        True - successfully served
+        False - any kind of problems
+    """
+    if type := request_json.get("type"):
+        if type == "register_user":
+            return True
+    return False

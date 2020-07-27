@@ -225,5 +225,6 @@ def response(obj):
     return result.json()
 
 
-print('Response=', response(encode_json))
-print('Shema=', ValidJSON.schema_json(indent=2))
+if __name__ == "__main__":
+    print('Response=', response(encode_json))
+    print('Shema=', ValidJSON.schema_json(indent=2))
