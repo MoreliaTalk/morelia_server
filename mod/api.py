@@ -177,13 +177,6 @@ class ValidJSON(BaseModel):
     meta: Optional[Any] = None
 
 
-def request(json_request):
-    try:
-        return ValidJSON.parse_raw(json_request)
-    except ValidationError as error:
-        print(error.json())
-        return None
-
 def response(obj):
     try:
         validate = ValidJSON.parse_raw(obj)

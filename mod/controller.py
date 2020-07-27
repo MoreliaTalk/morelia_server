@@ -1,4 +1,5 @@
 import random
+from time import time
 
 from mod import models
 from mod import api
@@ -45,7 +46,6 @@ def save_message(message: dict) -> None:
     Returns:
         None
     """
-    numbers = random.getrandbits(256)
     user = models.User.select(models.User.q.username == message['username'])
     models.Message(text=message['text'],
                    userID=user[0].UUID,
@@ -82,6 +82,7 @@ def get_messages() -> list:
         })
     return messages
 
+
 def register_user(username: str, password: str) -> str:
     """The function registers the user who is not in the database.
 
@@ -110,16 +111,44 @@ def serve_request(request_json) -> dict:
 
     Returns:
         Response for sending to user  - successfully served
-        {} - any kind of problems
+        (error response - if any kind of problems)
     """
-    print(request_json)
-    if request := api.request(request_json):
-        print(request)
-        if request.type == 'register_user':
-            message = {
-                "mode": "reg",
-                "status": register_user(request.data.user.login, request.data.user.password)
-            }
-            print(message)
-            return message
-    return {}
+    try:
+        request = api.ValidJSON.parse_raw(request_json)
+    except api.ValidationError as error:
+        message = {
+            'type': 'error',
+            'errors': {
+                'time': time(),
+                'status': 'Bad Request',
+                'code': 400,
+                'detail': 'JSON validation error'
+            },
+            'jsonapi': {
+                'version': config.API_VERSION
+            },
+            'meta': None
+        }
+        return message
+    if request.type == 'register_user':
+        message = {
+            "mode": "reg",
+            "status": register_user(request.data.user.login, request.data.user.password)
+        }
+        return message
+    else:
+        message = {
+            'type': request.type,
+            'errors': {
+                'time': time(),
+                'status': 'Bad Request',
+                'code': 400,
+                'detail': 'Method not supported by server'
+            },
+            'jsonapi': {
+                'version': config.API_VERSION
+            },
+            'meta': None
+        }
+        return message
+
