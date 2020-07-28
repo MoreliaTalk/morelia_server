@@ -145,6 +145,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     await send_message(message)
 
     except WebSocketDisconnect as e:
+        logging.info('Disconnected '+websocket.client.host)
         clients.remove(websocket)
         logging.info(e)
 
