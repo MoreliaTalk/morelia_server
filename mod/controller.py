@@ -153,3 +153,42 @@ def serve_request(request_json) -> dict:
         }
         return message
 
+
+def get_update():
+    pass
+
+
+def send_message():
+    pass
+
+
+def all_message():
+    pass
+
+
+def all_flow():
+    pass
+
+
+def user_info():
+    pass
+
+
+def authentication():
+    pass
+
+
+def delete_user():
+    pass
+
+
+def delete_message():
+    pass
+
+
+def edited_message():
+    pass
+
+
+def ping_pong():
+    pass
