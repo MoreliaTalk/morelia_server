@@ -53,7 +53,11 @@ orm.sqlhub.processConnection = connection
 
 server_started = datetime.now()
 
+host = "0.0.0.0"
+port = 8000
+
 app = FastAPI()
+logging.info("SERVER STARTED ON "+host+":"+str(port))
 
 templates = Jinja2Templates(directory='templates')
 
@@ -94,14 +98,7 @@ async def send_message(mes):
 
 # TODO: надо релизовать регистрацию
 async def reg_user(data: dict) -> str:
-    """The function registers the user who is not in the database.
 
-    Args:
-        data (dict): [description]
-
-    Returns:
-        str: returns a string value: 'true' or 'newreg'
-    """
     password = data['password']
     username = data['username']
     if (dbpassword := db.get_userdata(username)):
@@ -152,4 +149,4 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host=host, port=port, use_colors=False)
