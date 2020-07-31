@@ -116,7 +116,7 @@ def serve_request(request_json) -> dict:
     """
     try:
         request = api.ValidJSON.parse_raw(request_json)
-    except api.ValidationError as error:
+    except api.ValidationError:
         message = {
             'type': 'error',
             'errors': {
@@ -137,6 +137,10 @@ def serve_request(request_json) -> dict:
             "status": register_user(request.data.user.login, request.data.user.password)
         }
         return message
+    elif request.type == 'all_flow':
+        return all_flow(request)
+    elif request.type == 'add_flow':
+        return add_flow(request)
     else:
         message = {
             'type': request.type,
@@ -153,3 +157,99 @@ def serve_request(request_json) -> dict:
         }
         return message
 
+
+def get_update():
+    pass
+
+
+def send_message():
+    pass
+
+
+def all_message():
+    pass
+
+
+def add_flow(type_f, title_f, info_f):
+    id_f = random.getrandbits(64)
+    models.Flow(flowId=id_f,
+                timeCreated=time(),
+                flowType=type_f,
+                title=title_f,
+                info=info_f
+                )
+    message = {
+        'type': 'add_flow',
+        'data': {
+            'time': time(),
+            'meta': None
+        },
+        'errors': {
+            'code': 200,
+            'status': 'OK',
+            'time': 1594492370,
+            'detail': 'successfully'
+        },
+        'jsonapi': {
+            'version': '1.0'
+        },
+        'meta': None
+    }
+    return message
+
+
+def all_flow():
+    flow_list = []
+    dbquery = models.Flow.select(models.Flow.q.id > 0)
+    for db_flow in dbquery:
+        data_flow = {
+           "flowId": db_flow.flowId,
+           "timeCreated": db_flow.timeCreated,
+           "flowType": db_flow.flowType,
+           "title": db_flow.title,
+           "info": db_flow.info
+        }
+        flow_list.append(data_flow)
+    message = {
+        'type': 'all_flow',
+        'data': {
+            'time': time(),
+            'flows': flow_list,
+            'meta': None
+        },
+        'errors': {
+            'code': 200,
+            'status': 'OK',
+            'time': 1594492370,
+            'detail': 'successfully'
+        },
+        'jsonapi': {
+            'version': '1.0'
+        },
+        'meta': None
+    }
+    return message
+
+
+def user_info():
+    pass
+
+
+def authentication():
+    pass
+
+
+def delete_user():
+    pass
+
+
+def delete_message():
+    pass
+
+
+def edited_message():
+    pass
+
+
+def ping_pong():
+    pass

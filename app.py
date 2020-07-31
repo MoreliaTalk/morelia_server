@@ -30,10 +30,12 @@ import sqlobject as orm
 # # Подключаем логирование
 # # DEBUG 	Детальная информация, интересная только при отладке
 # # INFO 	    Подтверждение, что все работает как надо
-# # WARNING 	Индикация того, что что-то пошло не так, и возможны проблемы в будущем
+# # WARNING 	Индикация того, что что-то пошло не так
+# # И возможны проблемы в будущем
 # #           (заканчивается место на диске, етс)
 # #           Программа продолжает работать как надо.
-# # ERROR 	Относительно серьезная проблема, программа не смогла выполнить некоторый функционал.
+# # ERROR 	Относительно серьезная проблема
+# # Программа не смогла выполнить некоторый функционал.
 # # CRITICAL 	Реально серьезная проблема, программа не может работать дальше.
 # #
 # # вместо принтов используем logging.debug('сообщение')
@@ -45,14 +47,17 @@ import sqlobject as orm
 # #
 
 setup_logging()  # Подключение логирования
-
 # Connect to database
 connection = orm.connectionForURI(config.LOCAL_SQLITE)
 orm.sqlhub.processConnection = connection
 
 server_started = datetime.now()
 
+host = "0.0.0.0"
+port = 8000
+
 app = FastAPI()
+logging.info("SERVER STARTED ON "+host+":"+str(port))
 
 templates = Jinja2Templates(directory='templates')
 
@@ -93,14 +98,7 @@ async def send_message(mes):
 
 # TODO: надо релизовать регистрацию
 async def reg_user(data: dict) -> str:
-    """The function registers the user who is not in the database.
 
-    Args:
-        data (dict): [description]
-
-    Returns:
-        str: returns a string value: 'true' or 'newreg'
-    """
     password = data['password']
     username = data['username']
     if (dbpassword := db.get_userdata(username)):
@@ -151,4 +149,4 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host=host, port=port, use_colors=False)

@@ -40,7 +40,8 @@ class Flow(orm.SQLObject):
     Returns:
         None
     """
-    time = orm.IntCol(default=None)
+    flowId = orm.IntCol(alternateID=True, unique=True, notNone=True)
+    timeCreated = orm.IntCol(default=None)
     flowType = orm.StringCol(default=None)
     title = orm.StringCol(default=None)
     info = orm.StringCol(default=None)
