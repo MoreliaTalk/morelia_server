@@ -10,5 +10,5 @@ LOCAL_POSTGRESQL = 'postgres://testdb:123456@127.0.0.1/test_morelia_server'
 # Online PostgreSQL
 ONLINE_POSTGRESQL = os.getenv('DATABASE_URL')
 
-
-API_VERSION = 1.0
+# Version of Morelia Protocol
+API_VERSION = '1.0'
