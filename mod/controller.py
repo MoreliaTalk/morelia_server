@@ -316,3 +316,6 @@ def edited_message():
 
 def ping_pong():
     pass
+
+def error():
+    pass
