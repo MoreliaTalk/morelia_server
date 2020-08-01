@@ -177,54 +177,5 @@ class ValidJSON(BaseModel):
     meta: Optional[Any] = None
 
 
-def response(obj):
-    try:
-        validate = ValidJSON.parse_raw(obj)
-    except ValidationError as error:
-        return error.json()
-    if validate.dict()['type'] == 'all_messages':
-        try:
-            result = Errors(id=validate.dict()['data']['user']['id'], time=time(), status='OK', code=200, detail='Hello')
-        except ValidationError as error:
-            result = error
-    elif validate.dict()['type'] == 'auth':
-        try:
-            result = Errors(id=validate.dict()['data']['user']['id'], time=time(), status='OK', code=200, detail='Hello')
-        except ValidationError as error:
-            result = error
-    elif validate.dict()['type'] == 'all_chat':
-        try:
-            result = Errors(id=validate.dict()['data']['user']['id'], time=time(), status='OK', code=200, detail='Hello')
-        except ValidationError as error:
-            result = error
-    elif validate.dict()['type'] == 'reg_user':
-        try:
-            result = Errors(id=validate.dict()['data']['user']['id'], time=time(), status='OK', code=200, detail='Hello')
-        except ValidationError as error:
-            result = error
-    elif validate.dict()['type'] == 'user_info':
-        try:
-            result = Errors(id=validate.dict()['data']['user']['id'], time=time(), status='OK', code=200, detail='Hello')
-        except ValidationError as error:
-            result = error
-    elif validate.dict()['type'] == 'send_message':
-        try:
-            result = Errors(id=validate.dict()['data']['user']['id'], time=time(), status='OK', code=200, detail='Hello')
-        except ValidationError as error:
-            result = error
-    elif validate.dict()['type'] == 'get_update':
-        try:
-            result = Errors(id=validate.dict()['data']['user']['id'], time=time(), status='OK', code=200, detail='Hello')
-        except ValidationError as error:
-            result = error
-    else:
-        try:
-            result = Errors(id=2, time=time(), status='ERROR', code=400, detail='Hello')
-        except ValidationError as error:
-            result = error
-    return result.json()
-
-
 if __name__ == "__main__":
-    print('Response=', response(encode_json))
     print('Shema=', ValidJSON.schema_json(indent=2))
