@@ -18,7 +18,10 @@ def save_userdata(username: str, password: str) -> None:
         None
     """
     userID = random.getrandbits(64)
-    models.User(UUID=userID, password=password, login=username, username=username)
+    models.User(UUID=userID,
+                password=password,
+                login=username,
+                username=username)
     return
 
 
@@ -294,8 +297,57 @@ def all_flow():
     return message
 
 
-def user_info():
-    pass
+def user_info(request: api.ValidJSON) -> dict:
+    """This function provides information about all personal settings of the user.
+
+    Args:
+        request (api.ValidJSON): client request - a set of data that was
+        validated by "pydantic".
+
+    Returns:
+        dict: [description]
+    """
+    get_time = time()
+    response = request.dict(include={'type'})
+    if dbquery := models.User(models.User.q.select == request.data.user.UUID):
+        data = {
+            'data': {
+                'time': get_time,
+                'user': {
+                    'UUID': dbquery[0].UUID,
+                    'login': dbquery[0].login,
+                    'password': dbquery[0].password,
+                    'username': dbquery[0].username,
+                    'is_bot': dbquery[0].isBot,
+                    'auth_id': dbquery[0].authId,
+                    'email': dbquery[0].email,
+                    'avatar': dbquery[0].avatar,
+                    'bio': dbquery[0].bio
+                    },
+                'meta': None
+                },
+            'errors': {
+                'code': 200,
+                'status': 'OK',
+                'time': get_time,
+                'detail': 'successfully'
+                },
+            'jasonapi': {
+                'version': config.API_VERSION
+                },
+            'meta': None
+            }
+        return response.update(data)
+    else:
+        data = {
+            'errors': {
+                'code': 404,
+                'status': 'Not Found',
+                'time': get_time,
+                'detail': 'User Not Found'
+            }
+        }
+        return response.update(data)
 
 
 def authentication():
