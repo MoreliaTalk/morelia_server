@@ -4,12 +4,12 @@ from typing import Any
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import ValidationError
 from pydantic import EmailStr
 
 from mod import config
 
 
+""" Full JSON-object
 dict_json = {
     'type': 'user_info',
     'data': {
@@ -70,8 +70,7 @@ dict_json = {
         },
     'meta': None
     }
-
-encode_json = json.JSONEncoder().encode(dict_json)
+"""
 
 
 class EditedMessage(BaseModel):
