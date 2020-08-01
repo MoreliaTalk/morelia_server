@@ -84,24 +84,53 @@ def get_messages() -> list:
     return messages
 
 
-def register_user(username: str, password: str) -> str:
+def register_user(request) -> dict:
     """The function registers the user who is not in the database.
 
+    Note: This version also authentificate user, that exist in database
+    Future version will return error if login exist in database
+
     Args:
-        username (str): required
-        password (str): required
+        request (class ValidJSON): required
 
     Returns:
-        str: returns a string value: 'true' or 'newreg'
+        Dict: returns JSON reply to client
     """
-    if dbpassword := get_userdata(username):
-        if password == dbpassword:
-            return 'true'
+    response = {
+        'type': 'register_user',
+        'errors': {
+            'status': 'Created',
+            'code': 201,
+            'detail': 'Registered successfully'
+        },
+        'jsonapi': {
+            'version': config.API_VERSION
+        },
+        'meta': None
+    }
+    if dbpassword := get_userdata(request.data.user.login):
+        if dbpassword == request.data.user.password:
+            # TODO
+            # generate authID: store and return to user
+            response['errors']['code'] = 200
+            response['errors']['status'] = 'Ok'
+            response['errors']['detail'] = 'Authentificated'
+            return response
         else:
-            return 'false'
+            response['errors']['code'] = 401
+            response['errors']['status'] = 'Unauthorized'
+            response['errors']['detail'] = 'Bad username or password'
+            return response
     else:
-        save_userdata(username, password)
-        return 'newreg'
+        # TODO
+        # generate authID: store and return to user
+        # generate salt, and create hash password
+        userID = random.getrandbits(64)
+        models.User(UUID=userID,
+                    password=request.data.user.password,
+                    login=request.data.user.login,
+                    username=request.data.user.login)
+        return response
 
 
 def serve_request(request_json) -> dict:
@@ -132,11 +161,9 @@ def serve_request(request_json) -> dict:
         }
         return message
     if request.type == 'register_user':
-        message = {
-            "mode": "reg",
-            "status": register_user(request.data.user.login, request.data.user.password)
-        }
-        return message
+        return register_user(request)
+    elif request.type == 'send_message':
+        return send_message(request)
     elif request.type == 'all_flow':
         return all_flow(request)
     elif request.type == 'add_flow':
@@ -162,8 +189,44 @@ def get_update():
     pass
 
 
-def send_message():
-    pass
+def send_message(request) -> dict:
+    """The function saves user message in the database.
+
+    Args:
+        request (class ValidJSON): required
+
+    Returns:
+        Dict: returns JSON reply to client
+    """
+    response = {
+            'type': 'send_message',
+            'data': {
+                'time': time(),
+                'meta': None
+            },
+            'errors': {
+                'code': 200,
+                'status': 'OK',
+                'time': time(),
+                'detail': 'successfully'
+            },
+            'jsonapi': {
+                'version': config.API_VERSION
+            },
+            'meta': None
+    }
+    flowid = request.data.message.from_flow.id
+    user = models.User.select(models.User.q.username == request.data.user.login)
+    # TODO
+    # check existance of flow
+    # check if user is member of flow
+    # check can user send to channel
+    # check is user banned to write in group
+    models.Message(text=request.data.message.text,
+                   userID=user[0].UUID,
+                   flowID=flowid,
+                   time=time())
+    return response
 
 
 def all_message():

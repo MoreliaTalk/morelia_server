@@ -134,7 +134,7 @@ class Message(BaseModel):
     text: Optional[str] = None
     from_user: Optional[MessageFromUser] = None
     time: int
-    from_chat: FromFlow = None
+    from_flow: FromFlow = None
     file: Optional[File] = None
     emoji: Optional[bytes] = None
     edited: Optional[EditedMessage] = None
