@@ -331,13 +331,9 @@ def user_info(request: api.ValidJSON) -> dict:
                 'status': 'OK',
                 'time': get_time,
                 'detail': 'successfully'
-                },
-            'jasonapi': {
-                'version': config.API_VERSION
-                },
-            'meta': None
+                }
             }
-        return response.update(data)
+        response.update(data)
     else:
         data = {
             'errors': {
@@ -347,7 +343,16 @@ def user_info(request: api.ValidJSON) -> dict:
                 'detail': 'User Not Found'
             }
         }
-        return response.update(data)
+        response.update(data)
+
+    jsonapi = {
+        'jsonapi': {
+            'version': config.API_VERSION
+        },
+        'meta': None
+    }
+    response.update(jsonapi)
+    return response
 
 
 def authentication():
