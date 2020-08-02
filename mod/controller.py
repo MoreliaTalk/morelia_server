@@ -164,7 +164,9 @@ def serve_request(request_json) -> dict:
             'meta': None
         }
         return message
-    if request.type == 'register_user':
+    if request.type == 'ping-pong':
+        return ping_pong(request)
+    elif request.type == 'register_user':
         return register_user(request)
     elif request.type == 'send_message':
         return send_message(request)
@@ -465,5 +467,30 @@ def edited_message():
     pass
 
 
-def ping_pong():
-    pass
+def ping_pong(request: api.ValidJSON) -> dict:
+    """The function generates a response to a client's request
+    for communication between the server and the client.
+
+    Args:
+        request (api.ValidJSON): client request - a set of data that was
+        validated by "pydantic".
+
+    Returns:
+        dict: [description]
+    """
+    get_time = time()
+    response = request.dict(include={type})
+    data = {
+        'data': None,
+        'errors': {
+            'code': 200,
+            'status': 'OK',
+            'time': get_time,
+            'detail': 'successfully'
+        },
+        'jsonapi': {
+            'version': config.API_VERSION
+            },
+        'meta': None
+        }
+    return response.update(data)
