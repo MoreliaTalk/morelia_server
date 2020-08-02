@@ -88,7 +88,7 @@ def get_messages() -> list:
     return messages
 
 
-def register_user(request) -> dict:
+def register_user(request: api.ValidJSON) -> dict:
     """The function registers the user who is not in the database.
 
     Note: This version also authentificate user, that exist in database
@@ -147,15 +147,16 @@ def serve_request(request_json) -> dict:
         Response for sending to user  - successfully served
         (error response - if any kind of problems)
     """
+    get_time = time()
     try:
         request = api.ValidJSON.parse_raw(request_json)
     except api.ValidationError:
         message = {
             'type': 'error',
             'errors': {
-                'time': time(),
-                'status': 'Bad Request',
-                'code': 400,
+                'time': get_time,
+                'status': 'Unsupported Media Type',
+                'code': 415,
                 'detail': 'JSON validation error'
             },
             'jsonapi': {
@@ -182,9 +183,9 @@ def serve_request(request_json) -> dict:
         message = {
             'type': request.type,
             'errors': {
-                'time': time(),
-                'status': 'Bad Request',
-                'code': 400,
+                'time': get_time,
+                'status': 'Method Not Allowed',
+                'code': 405,
                 'detail': 'Method not supported by server'
             },
             'jsonapi': {
@@ -199,7 +200,7 @@ def get_update():
     pass
 
 
-def send_message(request) -> dict:
+def send_message(request: api.ValidJSON) -> dict:
     """The function saves user message in the database.
 
     Args:
@@ -208,16 +209,17 @@ def send_message(request) -> dict:
     Returns:
         Dict: returns JSON reply to client
     """
+    get_time = time()
     response = {
             'type': 'send_message',
             'data': {
-                'time': time(),
+                'time': get_time,
                 'meta': None
             },
             'errors': {
                 'code': 200,
                 'status': 'OK',
-                'time': time(),
+                'time': get_time,
                 'detail': 'successfully'
             },
             'jsonapi': {
@@ -235,7 +237,7 @@ def send_message(request) -> dict:
     models.Message(text=request.data.message.text,
                    userID=user[0].uuid,
                    flowID=flowid,
-                   time=time())
+                   time=get_time)
     return response
 
 

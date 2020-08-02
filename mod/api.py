@@ -111,7 +111,7 @@ class MessageFromUser(BaseModel):
 class User(BaseModel):
     class Config:
         title = 'User information'
-    UUID: int = None
+    uuid: int = None
     login: Optional[str] = None
     password: Optional[str] = None
     username: Optional[str] = None
