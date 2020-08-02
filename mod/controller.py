@@ -322,6 +322,8 @@ def user_info(request: api.ValidJSON) -> dict:
         }
     dbquery = models.User.select(models.User.q.UUID == request.data.user.UUID)
     if bool(dbquery.count()):
+        # Create an instance of the Hash class with
+        # help of which we check the password.
         generator = libhash.Hash(dbquery[0].password,
                                  dbquery[0].salt,
                                  request.data.user.password,
@@ -399,12 +401,16 @@ def authentication(request: api.ValidJSON) -> dict:
     }
     dbquery = models.User.select(models.User.q.UUID == request.data.user.UUID)
     if bool(dbquery.count()):
+        # Create an instance of the Hash class with
+        # help of which we check the password and generating auth_id
         generator = libhash.Hash(dbquery[0].password,
                                  dbquery[0].salt,
                                  request.data.user.password,
                                  dbquery[0].key,
                                  dbquery[0].UUID)
         if generator.check_password():
+            # generate a session hash ('auth_id') and immediately
+            # add it to user parameters in database
             dbquery[0].authId = generator.auth_id()
             data = {
                 'data': {

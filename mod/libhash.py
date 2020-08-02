@@ -93,8 +93,8 @@ class Hash:
         else:
             salt = self.salt.encode('utf-8')
             # TODO
-            # конвертировать в байты используя встроенную функцию to_bytes
-            # но нужно определиться с настройками конвертирования
+            # Convert to bytes using the embedded 'to_bytes' function.
+            # In future we will have to decide on the conversion settings.
             uuid = str(self.uuid).encode('utf-8')
             result = blake2b(uuid,
                              digest_size=self.size_auth_id,
