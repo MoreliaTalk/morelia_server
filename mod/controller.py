@@ -4,6 +4,7 @@ from time import time
 from mod import models
 from mod import config
 from mod import api
+from mod import libhash
 
 
 def save_userdata(username: str, password: str) -> None:
@@ -171,6 +172,10 @@ def serve_request(request_json) -> dict:
         return all_flow(request)
     elif request.type == 'add_flow':
         return add_flow(request)
+    elif request.type == 'user_info':
+        return user_info(request)
+    elif request.type == 'auth':
+        return authentication(request)
     else:
         message = {
             'type': request.type,
@@ -298,7 +303,7 @@ def all_flow():
 
 
 def user_info(request: api.ValidJSON) -> dict:
-    """This function provides information about all personal settings of the user.
+    """Provides information about all personal settings of user.
 
     Args:
         request (api.ValidJSON): client request - a set of data that was
@@ -309,33 +314,56 @@ def user_info(request: api.ValidJSON) -> dict:
     """
     get_time = time()
     response = request.dict(include={'type'})
-    if dbquery := models.User(models.User.q.select == request.data.user.UUID):
-        data = {
-            'data': {
-                'time': get_time,
-                'user': {
-                    'UUID': dbquery[0].UUID,
-                    'login': dbquery[0].login,
-                    'password': dbquery[0].password,
-                    'username': dbquery[0].username,
-                    'is_bot': dbquery[0].isBot,
-                    'auth_id': dbquery[0].authId,
-                    'email': dbquery[0].email,
-                    'avatar': dbquery[0].avatar,
-                    'bio': dbquery[0].bio
+    jsonapi = {
+        'jsonapi': {
+            'version': config.API_VERSION
+            },
+        'meta': None
+        }
+    dbquery = models.User.select(models.User.q.UUID == request.data.user.UUID)
+    if bool(dbquery.count()):
+        generator = libhash.Hash(dbquery[0].password,
+                                 dbquery[0].salt,
+                                 request.data.user.password,
+                                 dbquery[0].key,
+                                 dbquery[0].UUID)
+        if generator.check_password():
+            data = {
+                'data': {
+                    'time': get_time,
+                    'user': {
+                        'UUID': dbquery[0].UUID,
+                        'login': dbquery[0].login,
+                        'password': dbquery[0].password,
+                        'username': dbquery[0].username,
+                        'is_bot': dbquery[0].isBot,
+                        'auth_id': dbquery[0].authId,
+                        'email': dbquery[0].email,
+                        'avatar': dbquery[0].avatar,
+                        'bio': dbquery[0].bio
+                        },
+                    'meta': None
                     },
-                'meta': None
-                },
-            'errors': {
-                'code': 200,
-                'status': 'OK',
-                'time': get_time,
-                'detail': 'successfully'
+                'errors': {
+                    'code': 200,
+                    'status': 'OK',
+                    'time': get_time,
+                    'detail': 'successfully'
+                    }
                 }
+            response.update(data)
+        else:
+            errors = {
+                'errors': {
+                    'code': 401,
+                    'status': 'Unauthorized',
+                    'time': get_time,
+                    'detail': 'Unauthorized'
+                    }
             }
-        response.update(data)
+            response.update(errors)
     else:
-        data = {
+        errors = {
             'errors': {
                 'code': 404,
                 'status': 'Not Found',
@@ -343,20 +371,80 @@ def user_info(request: api.ValidJSON) -> dict:
                 'detail': 'User Not Found'
             }
         }
-        response.update(data)
+        response.update(errors)
 
+    return response.update(jsonapi)
+
+
+def authentication(request: api.ValidJSON) -> dict:
+    """Performs authentication of registered client,
+    with issuance of a unique hash number of connection session.
+    During authentication password transmitted by client
+    and password contained in server database are verified.
+
+    Args:
+        request (api.ValidJSON): client request - a set of data that was
+        validated by "pydantic".
+
+    Returns:
+        dict: [description]
+    """
+    get_time = time()
+    response = request.dict(include={'type'})
     jsonapi = {
         'jsonapi': {
             'version': config.API_VERSION
         },
         'meta': None
     }
-    response.update(jsonapi)
-    return response
+    dbquery = models.User.select(models.User.q.UUID == request.data.user.UUID)
+    if bool(dbquery.count()):
+        generator = libhash.Hash(dbquery[0].password,
+                                 dbquery[0].salt,
+                                 request.data.user.password,
+                                 dbquery[0].key,
+                                 dbquery[0].UUID)
+        if generator.check_password():
+            dbquery[0].authId = generator.auth_id()
+            data = {
+                'data': {
+                    'time': get_time,
+                    'user': {
+                        'UUID': dbquery[0].UUID,
+                        'auth_id': dbquery[0].authId
+                        },
+                    'meta': None
+                    },
+                'errors': {
+                    'code': 200,
+                    'status': 'OK',
+                    'time': get_time,
+                    'detail': 'successfully'
+                    }
+                }
+            response.upadate(data)
+        else:
+            errors = {
+                'errors': {
+                    'code': 401,
+                    'status': 'Unauthorized',
+                    'time': get_time,
+                    'detail': 'Unauthorized'
+                    }
+                }
+            response.update(errors)
+    else:
+        errors = {
+            'errors': {
+                'code': 404,
+                'status': 'Not Found',
+                'time': get_time,
+                'detail': 'User Not Found'
+                }
+            }
+        response.update(errors)
 
-
-def authentication():
-    pass
+    return response.update(jsonapi)
 
 
 def delete_user():
