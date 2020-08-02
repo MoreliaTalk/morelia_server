@@ -19,7 +19,7 @@ def save_userdata(username: str, password: str) -> None:
         None
     """
     userID = random.getrandbits(64)
-    models.User(UUID=userID,
+    models.User(uuid=userID,
                 password=password,
                 login=username,
                 username=username)
@@ -53,7 +53,7 @@ def save_message(message: dict) -> None:
     """
     user = models.User.select(models.User.q.username == message['username'])
     models.Message(text=message['text'],
-                   userID=user[0].UUID,
+                   userID=user[0].uuid,
                    flowID=0,
                    time=message['timestamp'])
     return
@@ -78,7 +78,7 @@ def get_messages() -> list:
     dbquery = models.Message.select(models.Message.q.id > 0)
     messages = []
     for data in dbquery:
-        user = models.User.select(models.User.q.UUID == data.userID)
+        user = models.User.select(models.User.q.uuid == data.userID)
         messages.append({
             "mode": "message",
             "username": user[0].username,
@@ -130,7 +130,7 @@ def register_user(request) -> dict:
         # generate authID: store and return to user
         # generate salt, and create hash password
         userID = random.getrandbits(64)
-        models.User(UUID=userID,
+        models.User(uuid=userID,
                     password=request.data.user.password,
                     login=request.data.user.login,
                     username=request.data.user.login)
@@ -233,7 +233,7 @@ def send_message(request) -> dict:
     # check can user send to channel
     # check is user banned to write in group
     models.Message(text=request.data.message.text,
-                   userID=user[0].UUID,
+                   userID=user[0].uuid,
                    flowID=flowid,
                    time=time())
     return response
@@ -322,7 +322,7 @@ def user_info(request: api.ValidJSON) -> dict:
             },
         'meta': None
         }
-    dbquery = models.User.select(models.User.q.UUID == request.data.user.UUID)
+    dbquery = models.User.select(models.User.q.uuid == request.data.user.uuid)
     if bool(dbquery.count()):
         # Create an instance of the Hash class with
         # help of which we check the password.
@@ -330,13 +330,13 @@ def user_info(request: api.ValidJSON) -> dict:
                                  dbquery[0].salt,
                                  request.data.user.password,
                                  dbquery[0].key,
-                                 dbquery[0].UUID)
+                                 dbquery[0].uuid)
         if generator.check_password():
             data = {
                 'data': {
                     'time': get_time,
                     'user': {
-                        'UUID': dbquery[0].UUID,
+                        'uuid': dbquery[0].uuid,
                         'login': dbquery[0].login,
                         'password': dbquery[0].password,
                         'username': dbquery[0].username,
@@ -409,7 +409,7 @@ def authentication(request: api.ValidJSON) -> dict:
                                  dbquery[0].salt,
                                  request.data.user.password,
                                  dbquery[0].key,
-                                 dbquery[0].UUID)
+                                 dbquery[0].uuid)
         if generator.check_password():
             # generate a session hash ('auth_id') and immediately
             # add it to user parameters in database
@@ -418,7 +418,7 @@ def authentication(request: api.ValidJSON) -> dict:
                 'data': {
                     'time': get_time,
                     'user': {
-                        'UUID': dbquery[0].UUID,
+                        'uuid': dbquery[0].uuid,
                         'auth_id': dbquery[0].authId
                         },
                     'meta': None
