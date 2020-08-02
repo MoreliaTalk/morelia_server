@@ -399,7 +399,7 @@ def authentication(request: api.ValidJSON) -> dict:
         },
         'meta': None
     }
-    dbquery = models.User.select(models.User.q.UUID == request.data.user.UUID)
+    dbquery = models.User.select(models.User.q.login == request.data.user.login)
     if bool(dbquery.count()):
         # Create an instance of the Hash class with
         # help of which we check the password and generating auth_id
