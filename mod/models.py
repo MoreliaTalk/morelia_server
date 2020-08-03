@@ -15,7 +15,7 @@ class User(orm.SQLObject):
     """
     # added alternateID for added class method @byUUID
     # which will return that object
-    UUID = orm.IntCol(alternateID=True, unique=True, notNone=True)
+    uuid = orm.IntCol(alternateID=True, unique=True, notNone=True)
     login = orm.StringCol()
     password = orm.StringCol()
     username = orm.StringCol(default=None)

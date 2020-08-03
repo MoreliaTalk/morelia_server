@@ -6,7 +6,7 @@
 
 [master](https://github.com/MoreliaTalk/morelia_server/tree/master) - Основная и стабильная ветка.
 
-[develop](https://github.com/MoreliaTalk/morelia_server/tree/develop) - Ветка для добавления нового функционала.
+[master-develop](https://github.com/MoreliaTalk/morelia_server/tree/develop) - Ветка для добавления нового функционала.
 
 ## В разработке применяется ##
 
@@ -22,21 +22,25 @@
 
 ## Описание репозитория ##
 
-* /database
+* /old/database
   * main.py - прямая работа с БД SQLite3
 
 * /mod
-  * api.py - модуль отвечает за описание АПИ, а так же валидацию данных
-  * config.py - модуль отвечает за хранение настроек (констант)
-  * controller.py - модуль отвечает за запросы к БД
-  * libhash.py - модуль отвечает за хэширования пароля и сравнения пароля с его хэш-суммой.
-  * models.py - модуль отвечает за описание таблиц БД для работы через ОРМ
+  * api.py - модуль отвечает за описание АПИ, а так же валидацию данных.
+  * config.py - модуль отвечает за хранение настроек (констант).
+  * controller.py - модуль отвечает за реализацию методов описанных в [Morelia Protocol](https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md)
+  * libhash.py - модуль отвечает за хэширования пароля, сравнения пароля с его хэш-суммой, создание хэша для auth_id.
+  * models.py - модуль отвечает за описание таблиц БД для работы через ОРМ.
 
 * /templates - шаблоны для вывода статистики сервера в браузере
+
+* /settings - настройки логирования
 
 * app.py - основной код сервера
 
 * manage.py - менеджер миграции для БД
+
+* settings.py - настройки логирования
 
 ## Установка ##
 
@@ -125,6 +129,7 @@ python3 ./app.py
 ```
 
 Для дополнительной информации о возможностях менеджера миграций
+
 ```cmd
 python3 ./manage.py --help
 ```
@@ -154,3 +159,5 @@ git push
 [Telegram](https://t.me/joinchat/LImHShzAmIWvpMxDTr5Vxw) - группа где обсуждаются насущные вопросы.
 
 [Trello](https://trello.com/b/qXjJFTP3/develop) - kanban-доска для проекта.
+
+[Slack](www.moreliatalk.slack.com) - альтернативный вариант обсуждения проекта.

@@ -4,6 +4,7 @@ from time import time
 from mod import models
 from mod import config
 from mod import api
+from mod import libhash
 
 
 def save_userdata(username: str, password: str) -> None:
@@ -18,7 +19,7 @@ def save_userdata(username: str, password: str) -> None:
         None
     """
     userID = random.getrandbits(64)
-    models.User(UUID=userID,
+    models.User(uuid=userID,
                 password=password,
                 login=username,
                 username=username)
@@ -52,7 +53,7 @@ def save_message(message: dict) -> None:
     """
     user = models.User.select(models.User.q.username == message['username'])
     models.Message(text=message['text'],
-                   userID=user[0].UUID,
+                   userID=user[0].uuid,
                    flowID=0,
                    time=message['timestamp'])
     return
@@ -77,7 +78,7 @@ def get_messages() -> list:
     dbquery = models.Message.select(models.Message.q.id > 0)
     messages = []
     for data in dbquery:
-        user = models.User.select(models.User.q.UUID == data.userID)
+        user = models.User.select(models.User.q.uuid == data.userID)
         messages.append({
             "mode": "message",
             "username": user[0].username,
@@ -87,7 +88,7 @@ def get_messages() -> list:
     return messages
 
 
-def register_user(request) -> dict:
+def register_user(request: api.ValidJSON) -> dict:
     """The function registers the user who is not in the database.
 
     Note: This version also authentificate user, that exist in database
@@ -129,7 +130,7 @@ def register_user(request) -> dict:
         # generate authID: store and return to user
         # generate salt, and create hash password
         userID = random.getrandbits(64)
-        models.User(UUID=userID,
+        models.User(uuid=userID,
                     password=request.data.user.password,
                     login=request.data.user.login,
                     username=request.data.user.login)
@@ -146,15 +147,16 @@ def serve_request(request_json) -> dict:
         Response for sending to user  - successfully served
         (error response - if any kind of problems)
     """
+    get_time = time()
     try:
         request = api.ValidJSON.parse_raw(request_json)
     except api.ValidationError:
         message = {
             'type': 'error',
             'errors': {
-                'time': time(),
-                'status': 'Bad Request',
-                'code': 400,
+                'time': get_time,
+                'status': 'Unsupported Media Type',
+                'code': 415,
                 'detail': 'JSON validation error'
             },
             'jsonapi': {
@@ -163,7 +165,9 @@ def serve_request(request_json) -> dict:
             'meta': None
         }
         return message
-    if request.type == 'register_user':
+    if request.type == 'ping-pong':
+        return ping_pong(request)
+    elif request.type == 'register_user':
         return register_user(request)
     elif request.type == 'send_message':
         return send_message(request)
@@ -171,13 +175,17 @@ def serve_request(request_json) -> dict:
         return all_flow(request)
     elif request.type == 'add_flow':
         return add_flow(request)
+    elif request.type == 'user_info':
+        return user_info(request)
+    elif request.type == 'auth':
+        return authentication(request)
     else:
         message = {
             'type': request.type,
             'errors': {
-                'time': time(),
-                'status': 'Bad Request',
-                'code': 400,
+                'time': get_time,
+                'status': 'Method Not Allowed',
+                'code': 405,
                 'detail': 'Method not supported by server'
             },
             'jsonapi': {
@@ -192,7 +200,7 @@ def get_update():
     pass
 
 
-def send_message(request) -> dict:
+def send_message(request: api.ValidJSON) -> dict:
     """The function saves user message in the database.
 
     Args:
@@ -201,16 +209,17 @@ def send_message(request) -> dict:
     Returns:
         Dict: returns JSON reply to client
     """
+    get_time = time()
     response = {
             'type': 'send_message',
             'data': {
-                'time': time(),
+                'time': get_time,
                 'meta': None
             },
             'errors': {
                 'code': 200,
                 'status': 'OK',
-                'time': time(),
+                'time': get_time,
                 'detail': 'successfully'
             },
             'jsonapi': {
@@ -226,9 +235,9 @@ def send_message(request) -> dict:
     # check can user send to channel
     # check is user banned to write in group
     models.Message(text=request.data.message.text,
-                   userID=user[0].UUID,
+                   userID=user[0].uuid,
                    flowID=flowid,
-                   time=time())
+                   time=get_time)
     return response
 
 
@@ -298,7 +307,7 @@ def all_flow():
 
 
 def user_info(request: api.ValidJSON) -> dict:
-    """This function provides information about all personal settings of the user.
+    """Provides information about all personal settings of user.
 
     Args:
         request (api.ValidJSON): client request - a set of data that was
@@ -309,33 +318,58 @@ def user_info(request: api.ValidJSON) -> dict:
     """
     get_time = time()
     response = request.dict(include={'type'})
-    if dbquery := models.User(models.User.q.select == request.data.user.UUID):
-        data = {
-            'data': {
-                'time': get_time,
-                'user': {
-                    'UUID': dbquery[0].UUID,
-                    'login': dbquery[0].login,
-                    'password': dbquery[0].password,
-                    'username': dbquery[0].username,
-                    'is_bot': dbquery[0].isBot,
-                    'auth_id': dbquery[0].authId,
-                    'email': dbquery[0].email,
-                    'avatar': dbquery[0].avatar,
-                    'bio': dbquery[0].bio
+    jsonapi = {
+        'jsonapi': {
+            'version': config.API_VERSION
+            },
+        'meta': None
+        }
+    dbquery = models.User.select(models.User.q.uuid == request.data.user.uuid)
+    if bool(dbquery.count()):
+        # Create an instance of the Hash class with
+        # help of which we check the password.
+        generator = libhash.Hash(dbquery[0].password,
+                                 dbquery[0].salt,
+                                 request.data.user.password,
+                                 dbquery[0].key,
+                                 dbquery[0].uuid)
+        if generator.check_password():
+            data = {
+                'data': {
+                    'time': get_time,
+                    'user': {
+                        'uuid': dbquery[0].uuid,
+                        'login': dbquery[0].login,
+                        'password': dbquery[0].password,
+                        'username': dbquery[0].username,
+                        'is_bot': dbquery[0].isBot,
+                        'auth_id': dbquery[0].authId,
+                        'email': dbquery[0].email,
+                        'avatar': dbquery[0].avatar,
+                        'bio': dbquery[0].bio
+                        },
+                    'meta': None
                     },
-                'meta': None
-                },
-            'errors': {
-                'code': 200,
-                'status': 'OK',
-                'time': get_time,
-                'detail': 'successfully'
+                'errors': {
+                    'code': 200,
+                    'status': 'OK',
+                    'time': get_time,
+                    'detail': 'successfully'
+                    }
                 }
+            response.update(data)
+        else:
+            errors = {
+                'errors': {
+                    'code': 401,
+                    'status': 'Unauthorized',
+                    'time': get_time,
+                    'detail': 'Unauthorized'
+                    }
             }
-        response.update(data)
+            response.update(errors)
     else:
-        data = {
+        errors = {
             'errors': {
                 'code': 404,
                 'status': 'Not Found',
@@ -343,20 +377,84 @@ def user_info(request: api.ValidJSON) -> dict:
                 'detail': 'User Not Found'
             }
         }
-        response.update(data)
+        response.update(errors)
 
+    return response.update(jsonapi)
+
+
+def authentication(request: api.ValidJSON) -> dict:
+    """Performs authentication of registered client,
+    with issuance of a unique hash number of connection session.
+    During authentication password transmitted by client
+    and password contained in server database are verified.
+
+    Args:
+        request (api.ValidJSON): client request - a set of data that was
+        validated by "pydantic".
+
+    Returns:
+        dict: [description]
+    """
+    get_time = time()
+    response = request.dict(include={'type'})
     jsonapi = {
         'jsonapi': {
             'version': config.API_VERSION
         },
         'meta': None
     }
-    response.update(jsonapi)
-    return response
+    dbquery = models.User.select(models.User.q.login == request.data.user.login)
+    if bool(dbquery.count()):
+        # Create an instance of the Hash class with
+        # help of which we check the password and generating auth_id
+        generator = libhash.Hash(dbquery[0].password,
+                                 dbquery[0].salt,
+                                 request.data.user.password,
+                                 dbquery[0].key,
+                                 dbquery[0].uuid)
+        if generator.check_password():
+            # generate a session hash ('auth_id') and immediately
+            # add it to user parameters in database
+            dbquery[0].authId = generator.auth_id()
+            data = {
+                'data': {
+                    'time': get_time,
+                    'user': {
+                        'uuid': dbquery[0].uuid,
+                        'auth_id': dbquery[0].authId
+                        },
+                    'meta': None
+                    },
+                'errors': {
+                    'code': 200,
+                    'status': 'OK',
+                    'time': get_time,
+                    'detail': 'successfully'
+                    }
+                }
+            response.upadate(data)
+        else:
+            errors = {
+                'errors': {
+                    'code': 401,
+                    'status': 'Unauthorized',
+                    'time': get_time,
+                    'detail': 'Unauthorized'
+                    }
+                }
+            response.update(errors)
+    else:
+        errors = {
+            'errors': {
+                'code': 404,
+                'status': 'Not Found',
+                'time': get_time,
+                'detail': 'User Not Found'
+                }
+            }
+        response.update(errors)
 
-
-def authentication():
-    pass
+    return response.update(jsonapi)
 
 
 def delete_user():
@@ -371,5 +469,30 @@ def edited_message():
     pass
 
 
-def ping_pong():
-    pass
+def ping_pong(request: api.ValidJSON) -> dict:
+    """The function generates a response to a client's request
+    for communication between the server and the client.
+
+    Args:
+        request (api.ValidJSON): client request - a set of data that was
+        validated by "pydantic".
+
+    Returns:
+        dict: [description]
+    """
+    get_time = time()
+    response = request.dict(include={type})
+    data = {
+        'data': None,
+        'errors': {
+            'code': 200,
+            'status': 'OK',
+            'time': get_time,
+            'detail': 'successfully'
+        },
+        'jsonapi': {
+            'version': config.API_VERSION
+            },
+        'meta': None
+        }
+    return response.update(data)

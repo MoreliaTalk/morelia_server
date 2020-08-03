@@ -1,12 +1,8 @@
-import json
-from time import time
 from typing import Any
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import EmailStr
-
-from mod import config
 
 
 """ Full JSON-object
@@ -115,7 +111,7 @@ class MessageFromUser(BaseModel):
 class User(BaseModel):
     class Config:
         title = 'User information'
-    id: int = None
+    uuid: int = None
     login: Optional[str] = None
     password: Optional[str] = None
     username: Optional[str] = None
