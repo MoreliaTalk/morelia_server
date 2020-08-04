@@ -112,19 +112,11 @@ def register_user(request: api.ValidJSON) -> dict:
         },
         'meta': None
     }
-    if dbpassword := get_userdata(request.data.user.login):
-        if dbpassword == request.data.user.password:
-            # TODO
-            # generate authID: store and return to user
-            response['errors']['code'] = 200
-            response['errors']['status'] = 'Ok'
-            response['errors']['detail'] = 'Authentificated'
-            return response
-        else:
-            response['errors']['code'] = 401
-            response['errors']['status'] = 'Unauthorized'
-            response['errors']['detail'] = 'Bad username or password'
-            return response
+    if get_userdata(request.data.user.login):
+        response['errors']['code'] = 409
+        response['errors']['status'] = 'error'
+        response['errors']['detail'] = 'User already exists'
+        return response
     else:
         # TODO
         # generate authID: store and return to user
@@ -175,6 +167,8 @@ def serve_request(request_json) -> dict:
         return all_flow(request)
     elif request.type == 'add_flow':
         return add_flow(request)
+    elif request.type == 'all_messages':
+        return all_messages(request)
     elif request.type == 'user_info':
         return user_info(request)
     elif request.type == 'auth':
@@ -241,17 +235,13 @@ def send_message(request: api.ValidJSON) -> dict:
     return response
 
 
-def all_message():
-    pass
-
-
-def add_flow(type_f, title_f, info_f):
+def add_flow(request):
     id_f = random.getrandbits(64)
     models.Flow(flowId=id_f,
                 timeCreated=time(),
-                flowType=type_f,
-                title=title_f,
-                info=info_f
+                flowType=request.data.type,
+                title=request.data.title,
+                info=request.data.info
                 )
     message = {
         'type': 'add_flow',
@@ -273,7 +263,7 @@ def add_flow(type_f, title_f, info_f):
     return message
 
 
-def all_flow():
+def all_flow(request):
     flow_list = []
     dbquery = models.Flow.select(models.Flow.q.id > 0)
     for db_flow in dbquery:
@@ -467,6 +457,46 @@ def delete_message():
 
 def edited_message():
     pass
+
+
+def all_messages():
+    dbquery = models.Message.select()
+    messages = []
+    for i in dbquery:
+        message = {
+            "flowID": i.flowID,
+            "userID": i.userID,
+            "text": i.text,
+            "time": i.time,
+            "filePicture": i.filePicture,
+            "fileVideo": i.fileVideo,
+            "fileAudio": i.fileAudio,
+            "fileDocument": i.fileDocument,
+            "emoji": i.emoji,
+            "editedTime": i.editedTime,
+            "editedStatus": i.editedStatus
+        }
+        messages.append(message)
+    data = {
+        'type': 'all_messages',
+        'data': {
+            'time': 1594492370,
+            'messages': messages,
+            'reply_to': None
+            },
+        'meta': None,
+        'errors': {
+            'code': 200,
+            'status': 'OK',
+            'time': 1594492370,
+            'detail': 'successfully'
+        },
+        'jsonapi': {
+            'version': '1.0'
+        },
+        'meta': None
+        }
+    return data
 
 
 def ping_pong(request: api.ValidJSON) -> dict:
