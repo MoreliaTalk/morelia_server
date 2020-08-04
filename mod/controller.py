@@ -459,7 +459,7 @@ def edited_message():
     pass
 
 
-def all_messages():
+def all_messages(request):
     dbquery = models.Message.select()
     messages = []
     for i in dbquery:
