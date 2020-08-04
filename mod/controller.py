@@ -457,8 +457,19 @@ def authentication(request: api.ValidJSON) -> dict:
     return response.update(jsonapi)
 
 
-def delete_user():
-    pass
+def delete_user(request: api.ValidJSON) -> dict:
+    get_time = time()
+    response = request.dict(include={'type'})
+    try:
+        dbquery = models.User.selectBy(uuid=request.data.user.uuid,
+                                       auth_id=request.data.user.auth_id)
+        dbquery_to_delete = models.Message.selectBy(id=request.data.message.id,
+                                                    time=request.data.message.time,
+                                                    )
+    except IndexError as errors:
+        print(errors)
+        
+    return response
 
 
 def delete_message():
