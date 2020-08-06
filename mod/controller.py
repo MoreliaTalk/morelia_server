@@ -26,18 +26,10 @@ def save_userdata(username: str, password: str) -> None:
     return
 
 
-def get_userdata(username: str):
-    """The function checks the presence of the user in the database.
-
-    Args:
-        username (str): required
-
-    Returns:
-        bool: True or False
-    """
-    dbdata = models.User.select(models.User.q.username == username)
-    if dbdata.count() != 0:
-        return dbdata[0].password
+def get_authid(uuid):
+    dbdata = models.User.select(models.User.q.uuid == uuid)
+    if bool(dbdata.count()):
+        return int(dbdata[0].authId)
     else:
         return None
 
@@ -112,6 +104,7 @@ def register_user(request: api.ValidJSON) -> dict:
         },
         'meta': None
     }
+    # TODO: пофиксить баги
     if get_userdata(request.data.user.login):
         response['errors']['code'] = 409
         response['errors']['status'] = 'error'
@@ -459,44 +452,98 @@ def edited_message():
     pass
 
 
-def all_messages(request):
+def all_messages(request: api.ValidJSON) -> dict:
+    """
+    Эта функция выдаёт все сообщения определённого чата(flow)
+    Достаёт их из бд и выдаёт ввиде масива состоящего из JSON
+
+    Args:request
+
+    Returns:dict
+    """
+    uuid = request["data"]["user"]["uuid"]
+    auth_id = request["data"]["user"]["auth_id"]
+    get_time = time()
     dbquery = models.Message.select()
-    messages = []
-    for i in dbquery:
-        message = {
-            "flowID": i.flowID,
-            "userID": i.userID,
-            "text": i.text,
-            "time": i.time,
-            "filePicture": i.filePicture,
-            "fileVideo": i.fileVideo,
-            "fileAudio": i.fileAudio,
-            "fileDocument": i.fileDocument,
-            "emoji": i.emoji,
-            "editedTime": i.editedTime,
-            "editedStatus": i.editedStatus
-        }
-        messages.append(message)
-    data = {
-        'type': 'all_messages',
+    shablon = {
+        'type': request["type"],
         'data': {
-            'time': 1594492370,
-            'messages': messages,
-            'reply_to': None
+            'time': get_time,
+            'user': {
+                'uuid': uuid,
+                'auth_id': auth_id
+                },
+            'reply_to': None,
+            'meta': None
             },
-        'meta': None,
-        'errors': {
-            'code': 200,
-            'status': 'OK',
-            'time': 1594492370,
-            'detail': 'successfully'
-        },
         'jsonapi': {
-            'version': '1.0'
+            'version': config.API_VERSION
         },
         'meta': None
         }
-    return data
+        
+    if db_auth_id := get_authid(uuid):
+        if db_auth_id != auth_id:
+            data = {
+                'errors': {
+                    'code': 401,
+                    'status': 'invalid auth_id',
+                    'time': get_time,
+                    'detail': 'Invalid auth_id'
+                }}
+            shablon.update(data)
+            return shablon
+    else:
+        data = {
+                'errors': {
+                    'code': 401,
+                    'status': 'Invalid uuid',
+                    'time': get_time,
+                    'detail': 'Invalid uuid'
+                }}
+        shablon.update(data)
+        return shablon
+
+    if bool(dbquery.count()):
+        messages = []
+        for i in dbquery:
+            message = {
+                "flowID": i.flowID,
+                "userID": i.userID,
+                "text": i.text,
+                "time": i.time,
+                "filePicture": i.filePicture,
+                "fileVideo": i.fileVideo,
+                "fileAudio": i.fileAudio,
+                "fileDocument": i.fileDocument,
+                "emoji": i.emoji,
+                "editedTime": i.editedTime,
+                "editedStatus": i.editedStatus
+            }
+            messages.append(message)
+        data = [{
+            'errors': {
+                'code': 200,
+                'status': 'OK',
+                'time': get_time,
+                'detail': 'successfully'
+                }},
+                {
+                'data': {
+                    'messages': messages
+                    }}]
+        shablon.update(data[0])
+        shablon["data"].update(data[1])
+        return shablon
+    else:
+        data = {'errors': {
+                    'code': 404,
+                    'status': 'Not Found',
+                    'time': get_time,
+                    'detail': 'Message Not Found'
+                }}
+        shablon.update(data)
+        return shablon
 
 
 def ping_pong(request: api.ValidJSON) -> dict:
