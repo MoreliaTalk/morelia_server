@@ -457,8 +457,55 @@ def authentication(request: api.ValidJSON) -> dict:
     return response.update(jsonapi)
 
 
-def delete_user():
-    pass
+def delete_user(request: api.ValidJSON) -> dict:
+    """Function irretrievably deletes the user from the database.
+
+    Args:
+        request (api.ValidJSON):  client request - a set of data that was
+        validated by "pydantic".
+
+    Returns:
+        dict: [description]
+    """
+    get_time = time()
+    response = request.dict(include={'type'})
+    jsonapi = {
+        'jsonapi': {
+            'version': config.API_VERSION
+        },
+        'meta': None
+    }
+    try:
+        dbquery = models.User.selectBy(login=request.data.user.login,
+                                       password=request.data.user.password,
+                                       username=request.data.user.username)
+        data = {
+            'data': {
+                'user': {
+                    'uuid': dbquery[0].uuid,
+                    'login': dbquery[0].login
+                },
+                'meta': None
+            },
+            'errors': {
+                'code': 200,
+                'status': 'OK',
+                'time': get_time,
+                'detail': 'successfully'
+            }
+        }
+        dbquery[0].delete(dbquery[0].id)
+        response.update(data)
+    except IndexError:
+        errors = {
+            'code': 404,
+            'status': 'Not Found',
+            'time': get_time,
+            'detail': 'User Not Found'
+        }
+        response.update(errors)
+
+    return response.update(jsonapi)
 
 
 def delete_message():
