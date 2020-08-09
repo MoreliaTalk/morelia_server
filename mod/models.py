@@ -20,7 +20,7 @@ class User(orm.SQLObject):
     password = orm.StringCol()
     username = orm.StringCol(default=None)
     isBot = orm.BoolCol(default=False)
-    authId = orm.StringCol(default=None)
+    authId = orm.IntCol(default=None)
     email = orm.StringCol(default=None)
     avatar = orm.BLOBCol(default=None)
     bio = orm.StringCol(default=None)
