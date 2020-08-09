@@ -179,6 +179,12 @@ def serve_request(request_json) -> dict:
         return user_info(request)
     elif request.type == 'auth':
         return authentication(request)
+    elif request.type == 'delete_user':
+        return delete_user(request)
+    elif request.type == 'delete_message':
+        return delete_message(request)
+    elif request.type == 'edited_message':
+        return edited_message(request)
     else:
         message = {
             'type': request.type,
@@ -324,59 +330,42 @@ def user_info(request: api.ValidJSON) -> dict:
             },
         'meta': None
         }
-    dbquery = models.User.select(models.User.q.uuid == request.data.user.uuid)
+    dbquery = models.User.selectBy(uuid=request.data.user.uuid,
+                                   auth_id=request.data.user.auth_id)
     if bool(dbquery.count()):
-        # Create an instance of the Hash class with
-        # help of which we check the password.
-        generator = libhash.Hash(dbquery[0].password,
-                                 dbquery[0].salt,
-                                 request.data.user.password,
-                                 dbquery[0].key,
-                                 dbquery[0].uuid)
-        if generator.check_password():
-            data = {
-                'data': {
-                    'time': get_time,
-                    'user': {
-                        'uuid': dbquery[0].uuid,
-                        'login': dbquery[0].login,
-                        'password': dbquery[0].password,
-                        'username': dbquery[0].username,
-                        'is_bot': dbquery[0].isBot,
-                        'auth_id': dbquery[0].authId,
-                        'email': dbquery[0].email,
-                        'avatar': dbquery[0].avatar,
-                        'bio': dbquery[0].bio
-                        },
-                    'meta': None
+        data = {
+            'data': {
+                'time': get_time,
+                'user': {
+                    'uuid': dbquery[0].uuid,
+                    'login': dbquery[0].login,
+                    'password': dbquery[0].password,
+                    'username': dbquery[0].username,
+                    'is_bot': dbquery[0].isBot,
+                    'auth_id': dbquery[0].authId,
+                    'email': dbquery[0].email,
+                    'avatar': dbquery[0].avatar,
+                    'bio': dbquery[0].bio
                     },
-                'errors': {
-                    'code': 200,
-                    'status': 'OK',
-                    'time': get_time,
-                    'detail': 'successfully'
-                    }
+                'meta': None
+                },
+            'errors': {
+                'code': 200,
+                'status': 'OK',
+                'time': get_time,
+                'detail': 'successfully'
                 }
-            response.update(data)
-        else:
-            errors = {
-                'errors': {
-                    'code': 401,
-                    'status': 'Unauthorized',
-                    'time': get_time,
-                    'detail': 'Unauthorized'
-                    }
             }
-            response.update(errors)
+        response.update(data)
     else:
         errors = {
             'errors': {
-                'code': 404,
-                'status': 'Not Found',
+                'code': 401,
+                'status': 'Unauthorized',
                 'time': get_time,
-                'detail': 'User Not Found'
+                'detail': 'Unauthorized'
+                }
             }
-        }
         response.update(errors)
 
     return response.update(jsonapi)
@@ -400,9 +389,9 @@ def authentication(request: api.ValidJSON) -> dict:
     jsonapi = {
         'jsonapi': {
             'version': config.API_VERSION
-        },
+            },
         'meta': None
-    }
+        }
     dbquery = models.User.select(models.User.q.login == request.data.user.login)
     if bool(dbquery.count()):
         # Create an instance of the Hash class with
@@ -461,7 +450,7 @@ def delete_user(request: api.ValidJSON) -> dict:
     """Function irretrievably deletes the user from the database.
 
     Args:
-        request (api.ValidJSON):  client request - a set of data that was
+        request (api.ValidJSON): client request - a set of data that was
         validated by "pydantic".
 
     Returns:
@@ -475,45 +464,174 @@ def delete_user(request: api.ValidJSON) -> dict:
         },
         'meta': None
     }
-    try:
+    check_user_in_db = models.User.selectBy(
+        uuid=request.data.user.uuid, auth_id=request.data.user.auth_id)
+    if bool(check_user_in_db.count()):
         dbquery = models.User.selectBy(login=request.data.user.login,
-                                       password=request.data.user.password,
-                                       username=request.data.user.username)
-        data = {
-            'data': {
-                'user': {
-                    'uuid': dbquery[0].uuid,
-                    'login': dbquery[0].login
-                },
-                'meta': None
-            },
-            'errors': {
-                'code': 200,
-                'status': 'OK',
-                'time': get_time,
-                'detail': 'successfully'
-            }
-        }
-        dbquery[0].delete(dbquery[0].id)
-        response.update(data)
-    except IndexError:
+                                       password=request.data.user.password)
+        if bool(dbquery.count()):
+            data = {
+                'data': {
+                    'user': {
+                        'uuid': dbquery[0].uuid,
+                        'login': dbquery[0].login
+                        },
+                    'meta': None
+                    },
+                'errors': {
+                    'code': 200,
+                    'status': 'OK',
+                    'time': get_time,
+                    'detail': 'successfully'
+                    }
+                }
+            dbquery[0].delete(dbquery[0].id)
+            response.update(data)
+        else:
+            errors = {
+                'errors': {
+                    'code': 404,
+                    'status': 'Not Found',
+                    'time': get_time,
+                    'detail': 'User Not Found'
+                    }
+                }
+            response.update(errors)
+    else:
         errors = {
-            'code': 404,
-            'status': 'Not Found',
-            'time': get_time,
-            'detail': 'User Not Found'
-        }
+            'errors': {
+                'code': 401,
+                'status': 'Unauthorized',
+                'time': get_time,
+                'detail': 'Unauthorized'
+                }
+            }
         response.update(errors)
 
     return response.update(jsonapi)
 
 
-def delete_message():
-    pass
+def delete_message(request: api.ValidJSON) -> dict:
+    """function deletes the message from the database Message table by its ID.
+
+    Args:
+        request (api.ValidJSON): client request - a set of data that was
+        validated by "pydantic".
+
+    Returns:
+        dict: [description]
+    """
+    get_time = time()
+    response = request.dict(include={type})
+    jsonapi = {
+        'jsonapi': {
+            'version': config.API_VERSION
+            },
+        'meta': None
+        }
+    # TODO
+    # check auth_id needs converting to single function
+    check_user_in_db = models.User.selectBy(
+        uuid=request.data.user.uuid, auth_id=request.data.user.auth_id)
+    if bool(check_user_in_db.count()):
+        dbquery = models.Message.select(
+            models.User.q.messageID == request.data.message.id)
+        if bool(dbquery.count()):
+            dbquery[0].delete(dbquery[0].id)
+            errors = {
+                'errors': {
+                    'code': 200,
+                    'status': 'OK',
+                    'time': get_time,
+                    'detail': 'successfully'
+                }
+            }
+        else:
+            errors = {
+                'errors': {
+                    'code': 404,
+                    'status': 'Not Found',
+                    'time': get_time,
+                    'detail': 'Message Not Found'
+                }
+            }
+    else:
+        errors = {
+            'errors': {
+                'code': 401,
+                'status': 'Unauthorized',
+                'time': get_time,
+                'detail': 'Unauthorized'
+                }
+            }
+
+    response.update(errors)
+    return response.update(jsonapi)
 
 
-def edited_message():
-    pass
+def edited_message(request: api.ValidJSON) -> dict:
+    """Function changes the text and time in the database Message table.
+    The value of the editedStatus column changes from None to True.
+
+    Args:
+        request (api.ValidJSON): client request - a set of data that was
+        validated by "pydantic".
+
+    Returns:
+        dict: [description]
+    """
+    get_time = time()
+    response = request.dict(include={type})
+    jsonapi = {
+        'jsonapi': {
+            'version': config.API_VERSION
+            },
+        'meta': None
+        }
+    # TODO
+    # check auth_id needs converting to single function
+    check_user_in_db = models.User.selectBy(
+        uuid=request.data.user.uuid, auth_id=request.data.user.auth_id)
+    if bool(check_user_in_db.count()):
+        dbquery = models.Message.select(
+            models.User.q.messageID == request.data.message.id)
+        # TODO
+        # added a comparison of time contained in query
+        # with time specified in Message database
+        if bool(dbquery.count()):
+            # changing in DB text, time and status
+            dbquery[0].text = request.data.message.text
+            dbquery[0].editedTime = get_time
+            dbquery[0].editedStatus = True
+            errors = {
+                'errors': {
+                    'code': 200,
+                    'status': 'OK',
+                    'time': get_time,
+                    'detail': 'successfully'
+                    }
+                }
+        else:
+            errors = {
+                'errors': {
+                    'code': 404,
+                    'status': 'Not Found',
+                    'time': get_time,
+                    'detail': 'User Not Found'
+                    }
+                }
+    else:
+        errors = {
+            'errors': {
+                'code': 401,
+                'status': 'Unauthorized',
+                'time': get_time,
+                'detail': 'Unauthorized'
+                }
+            }
+
+    response.update(errors)
+    return response.update(jsonapi)
 
 
 def ping_pong(request: api.ValidJSON) -> dict:
@@ -536,7 +654,7 @@ def ping_pong(request: api.ValidJSON) -> dict:
             'status': 'OK',
             'time': get_time,
             'detail': 'successfully'
-        },
+            },
         'jsonapi': {
             'version': config.API_VERSION
             },
