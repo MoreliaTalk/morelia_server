@@ -595,10 +595,13 @@ def edited_message(request: api.ValidJSON) -> dict:
     if bool(check_user_in_db.count()):
         dbquery = models.Message.select(
             models.User.q.messageID == request.data.message.id)
+        # TODO
+        # added a comparison of time contained in query
+        # with time specified in Message database
         if bool(dbquery.count()):
             # changing in DB text, time and status
             dbquery[0].text = request.data.message.text
-            dbquery[0].editedTime = request.data.message.time
+            dbquery[0].editedTime = get_time
             dbquery[0].editedStatus = True
             errors = {
                 'errors': {
