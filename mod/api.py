@@ -116,7 +116,7 @@ class User(BaseModel):
     password: Optional[str] = None
     username: Optional[str] = None
     is_bot: Optional[bool] = None
-    auth_id: int = None
+    auth_id: Optional[str] = None
     email: Optional[EmailStr] = None
     avatar: Optional[bytes] = None
     bio: Optional[str] = None
