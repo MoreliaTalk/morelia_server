@@ -25,6 +25,7 @@ def save_userdata(username: str, password: str) -> None:
                 username=username)
     return
 
+
 def save_message(message: dict) -> None:
     """The function stores the message in the database.
 
@@ -443,7 +444,7 @@ def edited_message():
     pass
 
 
-def user_info_for_server(uuid):
+def user_info_for_server(uuid: str) -> dict:
     """Provides information about all personal settings of user(in a server-friendly form).
 
     Args:
@@ -468,6 +469,45 @@ def user_info_for_server(uuid):
                 'bio': dbquery[0].bio
             }
         return data_user
+    else:
+        return None
+
+
+def check_uuid_and_auth_id(uuid: int, auth_id=str) -> dict:
+    """
+    This function checks the correctness of uuid and auth_id
+    Args:
+        uuid,auth_id
+
+    Returns:
+        dict
+
+    """
+    get_time = time()
+    dbquery = models.User.select(models.User.q.uuid == uuid)
+    if bool(dbquery.count()):
+        if auth_id == dbquery[0].authId:
+            errors = {
+                'code': 200,
+                'status': 'OK',
+                'time': get_time,
+                'detail': 'successfully'
+                }
+        else:
+            errors = {
+                    'code': 401,
+                    'status': 'Unauthorized',
+                    'time': get_time,
+                    'detail': 'Invalid auth_id'
+                }
+    else:
+        errors = {
+                'code': 401,
+                'status': 'Unauthorized',
+                'time': get_time,
+                'detail': 'Invalid uuid'
+                }
+    return errors
 
 
 def all_messages(request: api.ValidJSON) -> dict:
@@ -479,8 +519,6 @@ def all_messages(request: api.ValidJSON) -> dict:
 
     Returns:dict
     """
-    uuid = request.data.user.uuid
-    auth_id = request.data.user.auth_id
     get_time = time()
     template = {
         'type': request.type,
@@ -494,71 +532,40 @@ def all_messages(request: api.ValidJSON) -> dict:
         'meta': None
         }
 
-    if db_auth_id := user_info_for_server(uuid)["auth_id"]:
-        if db_auth_id == auth_id:
-            dbquery = models.Message.select()
-            if bool(dbquery.count()):
-                messages = []
-                for i in dbquery:
-                    message = {
-                        "flowID": i.flowID,
-                        "userID": i.userID,
-                        "text": i.text,
-                        "time": i.time,
-                        "filePicture": i.filePicture,
-                        "fileVideo": i.fileVideo,
-                        "fileAudio": i.fileAudio,
-                        "fileDocument": i.fileDocument,
-                        "emoji": i.emoji,
-                        "editedTime": i.editedTime,
-                        "editedStatus": i.editedStatus
-                    }
-                    messages.append(message)
-                    data = {
-                            'time': get_time,
-                            'user': {
-                                'uuid': uuid,
-                                'auth_id': auth_id
-                            },
-                            'messages': messages,
-                            'meta': None
-                        }
+    if (errors := check_uuid_and_auth_id(request.data.user.uuid, request.data.user.auth_id))["code"] != 200:
+        template["errors"].update(errors)
+        return template
 
-                    errors = {
-                            'code': 200,
-                            'status': 'OK',
-                            'time': get_time,
-                            'detail': 'successfully'
-                        }
+    dbquery = models.Message.select()
+    if bool(dbquery.count()):
+        messages = []
+        for i in dbquery:
+            message = {
+                "flowID": i.flowID,
+                "userID": i.userID,
+                "text": i.text,
+                "time": i.time,
+                "filePicture": i.filePicture,
+                "fileVideo": i.fileVideo,
+                "fileAudio": i.fileAudio,
+                "fileDocument": i.fileDocument,
+                "emoji": i.emoji,
+                "editedTime": i.editedTime,
+                "editedStatus": i.editedStatus
+            }
+            messages.append(message)
 
-                template["data"].update(data)
-                template["errors"].update(errors)
-                return template
-            else:
-                errors = {
-                        'code': 404,
-                        'status': 'Not Found',
-                        'time': get_time,
-                        'detail': 'Message Not Found'
-                    }
-                template["errors"].update(errors)
-                return template
-        else:
-            errors = {
-                    'code': 401,
-                    'status': 'Unauthorized',
-                    'time': get_time,
-                    'detail': 'Invalid auth_id'
-                }
-            template["errors"].update(errors)
-            return template
-    else:
-        errors = {
-                'code': 401,
-                'status': 'Unauthorized',
+        data = {
                 'time': get_time,
-                'detail': 'Invalid uuid'
-                }
+                'user': {
+                    'uuid': request.data.user.uuid,
+                    'auth_id': request.data.user.auth_id
+                },
+                'messages': messages,
+                'meta': None
+            }
+
+        template["data"].update(data)
         template["errors"].update(errors)
         return template
 
