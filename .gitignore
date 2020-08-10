@@ -133,6 +133,8 @@ dmypy.json
 ### VisualStudioCode template
 .vscode/
 *.code-workspace
+### Pycharm
+.idea
 
 ## Morelia stuff
 /database/database.db
