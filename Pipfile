@@ -16,6 +16,7 @@ pyjwt = "*"
 sqlobject = "*"
 click = "*"
 pyyaml = "*"
+loguru = "*"
 
 [requires]
 python_version = "3.8"

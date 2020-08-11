@@ -154,6 +154,27 @@ git push
 
 Перед началом работы рекомендуется прочитать [PEP 8 - руководство по написанию кода на Python](https://pythonworld.ru/osnovy/pep-8-rukovodstvo-po-napisaniyu-koda-na-python.html). Обязательно использовать линтер (flake8, pylint или подобный).
 
+## Логирование ##
+
+Используется библиотека [loguru](https://github.com/Delgan/loguru)
+
+Уровни логирования которыми 
+можно пользоваться в коде:
+```py
+Level name | Logger method
+
+DEBUG      | logger.debug()
+INFO       | logger.info()
+SUCCESS    | logger.success()
+WARNING    | logger.warning()
+ERROR      | logger.error()
+CRITICAL   | logger.critical()
+```
+
+Для включения **DEBUG** режима, запускать сервер с параметром:
+```cmd
+uvicorn app:app --log-level debug
+``` 
 ## Контакты ##
 
 [Telegram](https://t.me/joinchat/LImHShzAmIWvpMxDTr5Vxw) - группа где обсуждаются насущные вопросы.
