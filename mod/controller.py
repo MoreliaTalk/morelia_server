@@ -97,7 +97,7 @@ def register_user(request: api.ValidJSON) -> dict:
         'meta': None
     }
     # TODO: пофиксить строку
-    if get_userdata(request.data.user.login):
+    if user_info_for_server(login=request.data.user.login):
         response['errors']['code'] = 409
         response['errors']['status'] = 'error'
         response['errors']['detail'] = 'User already exists'
@@ -444,18 +444,25 @@ def edited_message():
     pass
 
 
-def user_info_for_server(uuid: str) -> dict:
+def user_info_for_server(uuid=None, login=None) -> dict:
     """Provides information about all personal settings of user(in a server-friendly form).
 
     Args:
-        uuid
+        uuid - Unique User ID(int)
+            or
+        login(str)
 
     Returns:
         dict
 
     """
+    if uuid:
+        dbquery = models.User.select(models.User.q.uuid == uuid)
+    elif login:
+        dbquery = models.User.select(models.User.q.login == login)
+    else:
+        return None
 
-    dbquery = models.User.select(models.User.q.uuid == uuid)
     if bool(dbquery.count()):
         data_user = {
                 'uuid': dbquery[0].uuid,
@@ -473,11 +480,12 @@ def user_info_for_server(uuid: str) -> dict:
         return None
 
 
-def check_uuid_and_auth_id(uuid: int, auth_id=str) -> dict:
+def check_uuid_and_auth_id(uuid: int, auth_id: str) -> dict:
     """
     This function checks the correctness of uuid and auth_id
     Args:
-        uuid,auth_id
+        uuid - Unique User ID(int)
+        auth_id - AUTHentication ID(str)
 
     Returns:
         dict
@@ -495,18 +503,18 @@ def check_uuid_and_auth_id(uuid: int, auth_id=str) -> dict:
                 }
         else:
             errors = {
-                    'code': 401,
-                    'status': 'Unauthorized',
-                    'time': get_time,
-                    'detail': 'Invalid auth_id'
-                }
-    else:
-        errors = {
                 'code': 401,
                 'status': 'Unauthorized',
                 'time': get_time,
-                'detail': 'Invalid uuid'
+                'detail': 'Invalid auth_id'
                 }
+    else:
+        errors = {
+            'code': 401,
+            'status': 'Unauthorized',
+            'time': get_time,
+            'detail': 'Invalid uuid'
+            }
     return errors
 
 
@@ -522,10 +530,8 @@ def all_messages(request: api.ValidJSON) -> dict:
     get_time = time()
     template = {
         'type': request.type,
-        'data': {
-        },
-        'errors': {
-        },
+        'data': None,
+        'errors': None,
         'jsonapi': {
             'version': config.API_VERSION
         },
@@ -533,7 +539,7 @@ def all_messages(request: api.ValidJSON) -> dict:
         }
 
     if (errors := check_uuid_and_auth_id(request.data.user.uuid, request.data.user.auth_id))["code"] != 200:
-        template["errors"].update(errors)
+        template["errors"] = errors
         return template
 
     dbquery = models.Message.select()
@@ -556,17 +562,17 @@ def all_messages(request: api.ValidJSON) -> dict:
             messages.append(message)
 
         data = {
-                'time': get_time,
-                'user': {
-                    'uuid': request.data.user.uuid,
-                    'auth_id': request.data.user.auth_id
-                },
-                'messages': messages,
-                'meta': None
+            'time': get_time,
+            'user': {
+                'uuid': request.data.user.uuid,
+                'auth_id': request.data.user.auth_id
+            },
+            'messages': messages,
+            'meta': None
             }
 
-        template["data"].update(data)
-        template["errors"].update(errors)
+        template["data"] = data
+        template["errors"] = errors
         return template
 
 
