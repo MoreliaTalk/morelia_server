@@ -26,22 +26,6 @@ def save_userdata(username: str, password: str) -> None:
     return
 
 
-def get_userdata(username: str):
-    """The function checks the presence of the user in the database.
-
-    Args:
-        username (str): required
-
-    Returns:
-        bool: True or False
-    """
-    dbdata = models.User.select(models.User.q.username == username)
-    if dbdata.count() != 0:
-        return dbdata[0].password
-    else:
-        return None
-
-
 def save_message(message: dict) -> None:
     """The function stores the message in the database.
 
@@ -112,19 +96,12 @@ def register_user(request: api.ValidJSON) -> dict:
         },
         'meta': None
     }
-    if dbpassword := get_userdata(request.data.user.login):
-        if dbpassword == request.data.user.password:
-            # TODO
-            # generate authID: store and return to user
-            response['errors']['code'] = 200
-            response['errors']['status'] = 'Ok'
-            response['errors']['detail'] = 'Authentificated'
-            return response
-        else:
-            response['errors']['code'] = 401
-            response['errors']['status'] = 'Unauthorized'
-            response['errors']['detail'] = 'Bad username or password'
-            return response
+    # TODO: пофиксить строку
+    if user_info_for_server(login=request.data.user.login):
+        response['errors']['code'] = 409
+        response['errors']['status'] = 'error'
+        response['errors']['detail'] = 'User already exists'
+        return response
     else:
         # TODO
         # generate authID: store and return to user
@@ -175,6 +152,8 @@ def serve_request(request_json) -> dict:
         return all_flow(request)
     elif request.type == 'add_flow':
         return add_flow(request)
+    elif request.type == 'all_messages':
+        return all_messages(request)
     elif request.type == 'user_info':
         return user_info(request)
     elif request.type == 'auth':
@@ -247,17 +226,13 @@ def send_message(request: api.ValidJSON) -> dict:
     return response
 
 
-def all_message():
-    pass
-
-
-def add_flow(type_f, title_f, info_f):
+def add_flow(request):
     id_f = random.getrandbits(64)
     models.Flow(flowId=id_f,
                 timeCreated=time(),
-                flowType=type_f,
-                title=title_f,
-                info=info_f
+                flowType=request.data.type,
+                title=request.data.title,
+                info=request.data.info
                 )
     message = {
         'type': 'add_flow',
@@ -279,7 +254,7 @@ def add_flow(type_f, title_f, info_f):
     return message
 
 
-def all_flow():
+def all_flow(request):
     flow_list = []
     dbquery = models.Flow.select(models.Flow.q.id > 0)
     for db_flow in dbquery:
@@ -632,6 +607,138 @@ def edited_message(request: api.ValidJSON) -> dict:
 
     response.update(errors)
     return response.update(jsonapi)
+
+
+def user_info_for_server(uuid=None, login=None) -> dict:
+    """Provides information about all personal settings of user(in a server-friendly form).
+
+    Args:
+        uuid - Unique User ID(int)
+            or
+        login(str)
+
+    Returns:
+        dict
+
+    """
+    if uuid:
+        dbquery = models.User.select(models.User.q.uuid == uuid)
+    elif login:
+        dbquery = models.User.select(models.User.q.login == login)
+    else:
+        return None
+
+    if bool(dbquery.count()):
+        data_user = {
+                'uuid': dbquery[0].uuid,
+                'login': dbquery[0].login,
+                'password': dbquery[0].password,
+                'username': dbquery[0].username,
+                'is_bot': dbquery[0].isBot,
+                'auth_id': dbquery[0].authId,
+                'email': dbquery[0].email,
+                'avatar': dbquery[0].avatar,
+                'bio': dbquery[0].bio
+            }
+        return data_user
+    else:
+        return None
+
+
+def check_uuid_and_auth_id(uuid: int, auth_id: str) -> dict:
+    """
+    This function checks the correctness of uuid and auth_id
+    Args:
+        uuid - Unique User ID(int)
+        auth_id - AUTHentication ID(str)
+
+    Returns:
+        dict
+
+    """
+    get_time = time()
+    dbquery = models.User.select(models.User.q.uuid == uuid)
+    if bool(dbquery.count()):
+        if auth_id == dbquery[0].authId:
+            errors = {
+                'code': 200,
+                'status': 'OK',
+                'time': get_time,
+                'detail': 'successfully'
+                }
+        else:
+            errors = {
+                'code': 401,
+                'status': 'Unauthorized',
+                'time': get_time,
+                'detail': 'Invalid auth_id'
+                }
+    else:
+        errors = {
+            'code': 401,
+            'status': 'Unauthorized',
+            'time': get_time,
+            'detail': 'Invalid uuid'
+            }
+    return errors
+
+
+def all_messages(request: api.ValidJSON) -> dict:
+    """
+    This function displays all messages of a specific chat(flow)
+    Retrieves them from the database and issues them as an array consisting of JSON
+
+    Args:request
+
+    Returns:dict
+    """
+    get_time = time()
+    template = {
+        'type': request.type,
+        'data': None,
+        'errors': None,
+        'jsonapi': {
+            'version': config.API_VERSION
+        },
+        'meta': None
+        }
+
+    if (errors := check_uuid_and_auth_id(request.data.user.uuid, request.data.user.auth_id))["code"] != 200:
+        template["errors"] = errors
+        return template
+
+    dbquery = models.Message.select()
+    if bool(dbquery.count()):
+        messages = []
+        for i in dbquery:
+            message = {
+                "flowID": i.flowID,
+                "userID": i.userID,
+                "text": i.text,
+                "time": i.time,
+                "filePicture": i.filePicture,
+                "fileVideo": i.fileVideo,
+                "fileAudio": i.fileAudio,
+                "fileDocument": i.fileDocument,
+                "emoji": i.emoji,
+                "editedTime": i.editedTime,
+                "editedStatus": i.editedStatus
+            }
+            messages.append(message)
+
+        data = {
+            'time': get_time,
+            'user': {
+                'uuid': request.data.user.uuid,
+                'auth_id': request.data.user.auth_id
+            },
+            'messages': messages,
+            'meta': None
+            }
+
+        template["data"] = data
+        template["errors"] = errors
+        return template
 
 
 def ping_pong(request: api.ValidJSON) -> dict:
