@@ -1,8 +1,7 @@
 import sqlobject as orm
 
+
 # Create table in database using ORM SQLobject
-
-
 class User(orm.SQLObject):
     """The class generates a table containing data
     about the user and his settings.
