@@ -22,3 +22,12 @@ PASSWORD_HASH_SIZE = 32
 
 # size of output auth_id digest in bytes
 AUTH_ID_HASH_SIZE = 16
+
+# Settings uvicorn
+UVICORN_HOST = "0.0.0.0"
+
+UVICORN_PORT = 8000
+
+# Settings Jinja2
+
+TEMPLATE_FOLDER = 'templates'

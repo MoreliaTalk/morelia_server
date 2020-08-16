@@ -1,27 +1,33 @@
-# Section to import standart module
+# ************** Standart module *********************
 import json
 from time import time
 from datetime import datetime
+# ************** Standart module end *****************
 
-# Section to import external module
+
+# ************** External module *********************
 import uvicorn
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi import WebSocket
 from starlette.templating import Jinja2Templates
 from starlette.websockets import WebSocketDisconnect
+# ************** External module end *****************
 
-# Section to import morelia module
+
+# ************** Morelia module **********************
 from mod import config
 
-# Раскомментировать строчку ниже
-# для перехода на работу с SQLite без ОРМ SQLObject
+# Comment on the line below to start working
+# with SQLite without SQLObject ORM
 # import database.main as db
 
-# Раскомментировать строчки ниже
-# для перехода на работу с SQLite через ОРМ SQLObject
+# Comment on the lines below to switch to
+# working with SQLite via SQLObject ORM
 from mod import controller as db
 import sqlobject as orm
+# ************** Morelia module end ********************
+
 
 # ************** Logging beginning *********************
 from loguru import logger
@@ -35,29 +41,30 @@ from settings.logging import add_logging
 add_logging(debug_status=uvicorn.config.logger.level)
 # ************** Logging end **************************
 
+
 # Connect to database
 connection = orm.connectionForURI(config.LOCAL_SQLITE)
 orm.sqlhub.processConnection = connection
 
 server_started = datetime.now()
 
-host = "0.0.0.0"
-port = 8000
-
 app = FastAPI()
 
-templates = Jinja2Templates(directory='templates')
+templates = Jinja2Templates(directory=config.TEMPLATE_FOLDER)
+
 
 # Save clients session
-# TODO:   При отключении нужно реализовать их удаление  подумать как их хранить
+# TODO: При отключении нужно реализовать их удаление подумать как их хранить
 clients = []
 
 
+# Server home page
 @app.get('/')
 def home_page(request: Request):
     return templates.TemplateResponse('index.html', {'request': request})
 
 
+# Page of server with statistics of it's work
 @app.get('/status')
 def status_page(request: Request):
     stats = {
@@ -72,15 +79,15 @@ def status_page(request: Request):
 
 
 # Send all message from DB
-async def get_all_messages(newclient):
+async def get_all_messages(newclient) -> None:
     for message in db.get_messages():
         await newclient.send_json(message)
 
 
-# Посылаем сообщение всем клиентам
-async def send_message(mes):
+# Sending a message to all clients
+async def send_message(message) -> None:
     for client in clients:
-        await client.send_json(mes)
+        await client.send_json(message)
 
 
 # TODO: надо релизовать регистрацию
@@ -128,11 +135,13 @@ async def websocket_endpoint(websocket: WebSocket):
                     logger.debug(f'{message}')
                     await send_message(message)
 
-    except WebSocketDisconnect as e:
+    except WebSocketDisconnect as error:
         logger.info('Disconnected ' + websocket.client.host)
         clients.remove(websocket)
-        logger.info(e)
+        logger.info(error)
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host=host, port=port, use_colors=False)
+    uvicorn.run(app, host=config.UVICORN_HOST,
+                port=config.UVICORN_PORT,
+                use_colors=False)
