@@ -40,7 +40,7 @@ class Flow(BaseModel):
 class MessageFromUser(BaseModel):
     class Config:
         title = 'Information about forwarded message user'
-    id: int
+    uuid: int
     username: str
 
 
@@ -48,14 +48,14 @@ class User(BaseModel):
     class Config:
         title = 'User information'
     uuid: int = None
-    login: Optional[str] = None
+    bio: Optional[str] = None
+    avatar: Optional[bytes] = None
     password: Optional[str] = None
-    username: Optional[str] = None
+    login: Optional[str] = None
     is_bot: Optional[bool] = None
     auth_id: Optional[str] = None
     email: Optional[EmailStr] = None
-    avatar: Optional[bytes] = None
-    bio: Optional[str] = None
+    username: Optional[str] = None
 
 
 class Message(BaseModel):
@@ -76,7 +76,7 @@ class Data(BaseModel):
     class Config:
         title = 'Main data-object'
     time: Optional[int] = None
-    chat: Optional[Flow] = None
+    flow: Optional[Flow] = None
     message: Optional[Message] = None
     user: Optional[User] = None
     meta: Optional[Any] = None
@@ -85,10 +85,9 @@ class Data(BaseModel):
 class Errors(BaseModel):
     class Config:
         title = 'Error information and statuses of request processing'
-    id: int
-    time: int
-    status: str
     code: int
+    status: str
+    time: int
     detail: str
 
 
