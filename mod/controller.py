@@ -474,7 +474,8 @@ def authentication(request: api.ValidJSON) -> dict:
             },
         'meta': None
         }
-    dbquery = models.User.select(models.User.q.login == request.data.user.login)
+    dbquery = models.User.select(models.User.q.login ==
+                                 request.data.user.login)
     if bool(dbquery.count()):
         # Create an instance of the Hash class with
         # help of which we check the password and generating auth_id
@@ -738,8 +739,9 @@ def all_messages(request: api.ValidJSON) -> dict:
         'meta': None
         }
 
-    if (errors := check_uuid_and_auth_id(request.data.user.uuid,
-                                         request.data.user.auth_id))["code"] != 200:
+    if (errors :=
+        check_uuid_and_auth_id(request.data.user.uuid,
+                               request.data.user.auth_id))["code"] != 200:
         template["errors"] = errors
         return response.upadate(template)
 
