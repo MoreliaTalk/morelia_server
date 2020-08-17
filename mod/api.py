@@ -5,70 +5,6 @@ from pydantic import BaseModel
 from pydantic import EmailStr
 
 
-""" Full JSON-object
-dict_json = {
-    'type': 'user_info',
-    'data': {
-        'time': time(),
-        'flow': {
-            'id': 1254,
-            'time': time(),
-            'type': 'chat',
-            'title': 'Name Chat',
-            'info': 'Info about this chat'
-            },
-        'message': {
-            'id': 1,
-            'text': 'some text...',
-            'from_user': {
-                'id': 1254,
-                'username': 'Vasya'
-                },
-            'time': time(),
-            'from_flow': {
-                'id': 123655455
-                },
-            'file': {
-                'picture': 'jkfikdkdsd',
-                'video': 'sdfsdfsdf',
-                'audio': 'fgfsdfsdfsdf',
-                'document': ''
-                },
-            'emoji': 'sfdfsdfsdf',
-            'edited': {
-                'time': time(),
-                'status': True
-                },
-            'reply_to': None
-            },
-        'user': {
-            'id': 5855,
-            'login': 'username1',
-            'password': 'lksdjflksjfsd',
-            'username': 'Vasya',
-            'is_bot': True,
-            'auth_id': '464645646464',
-            'email': 'stepan.skrjabin@gmail.com',
-            'avatar': 'fffdddddd',
-            'bio': 'My bio'
-            },
-        'meta': None
-        },
-    'errors': {
-        'id': 25665546,
-        'time': time(),
-        'status': 'OK',
-        'code': 200,
-        'detail': 'successfully'
-        },
-    'jsonapi': {
-        'version': config.API_VERSION
-        },
-    'meta': None
-    }
-"""
-
-
 class EditedMessage(BaseModel):
     class Config:
         title = 'Time of editing the message'
@@ -104,7 +40,7 @@ class Flow(BaseModel):
 class MessageFromUser(BaseModel):
     class Config:
         title = 'Information about forwarded message user'
-    id: int
+    uuid: int
     username: str
 
 
@@ -112,14 +48,14 @@ class User(BaseModel):
     class Config:
         title = 'User information'
     uuid: int = None
-    login: Optional[str] = None
+    bio: Optional[str] = None
+    avatar: Optional[bytes] = None
     password: Optional[str] = None
-    username: Optional[str] = None
+    login: Optional[str] = None
     is_bot: Optional[bool] = None
     auth_id: Optional[str] = None
     email: Optional[EmailStr] = None
-    avatar: Optional[bytes] = None
-    bio: Optional[str] = None
+    username: Optional[str] = None
 
 
 class Message(BaseModel):
@@ -140,7 +76,7 @@ class Data(BaseModel):
     class Config:
         title = 'Main data-object'
     time: Optional[int] = None
-    chat: Optional[Flow] = None
+    flow: Optional[Flow] = None
     message: Optional[Message] = None
     user: Optional[User] = None
     meta: Optional[Any] = None
@@ -149,10 +85,9 @@ class Data(BaseModel):
 class Errors(BaseModel):
     class Config:
         title = 'Error information and statuses of request processing'
-    id: int
-    time: int
-    status: str
     code: int
+    status: str
+    time: int
     detail: str
 
 

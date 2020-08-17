@@ -8,12 +8,14 @@ import sqlobject as orm
 from mod import config
 from mod import models
 
-
+# Connect to database
 connection = orm.connectionForURI(config.LOCAL_SQLITE)
 orm.sqlhub.processConnection = connection
 
-
-classes = [cls_name for cls_name, cls_obj in inspect.getmembers(sys.modules['mod.models']) if inspect.isclass(cls_obj)]
+# looking for all Classes listed in the models.py file.
+classes = [cls_name for cls_name, cls_obj
+           in inspect.getmembers(sys.modules['mod.models'])
+           if inspect.isclass(cls_obj)]
 
 
 @click.command()
