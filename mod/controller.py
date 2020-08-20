@@ -197,6 +197,8 @@ def serve_request(request_json) -> dict:
         return delete_message(request)
     elif request.type == 'edited_message':
         return edited_message(request)
+    elif request.type == "get_update":
+        return get_update(request)
     else:
         message = {
             'type': request.type,
@@ -228,8 +230,8 @@ def register_user(request: api.ValidJSON) -> dict:
         dict: returns JSON reply to client
     """
     get_time = time()
-    response = request.dict(include={type})
-    data = {
+    response = {
+        "type": request.type,
         'data': None,
         'errors': {
             'status': 'Created',
@@ -241,18 +243,7 @@ def register_user(request: api.ValidJSON) -> dict:
             },
         'meta': None
         }
-    if user_info_for_server(login=request.data.user.login):
-        errors = {
-            'errors': {
-                'code': 409,
-                'status': 'error',
-                'time': get_time,
-                'detail': 'User already exists'
-                }
-            }
-        data['errors'] = errors
-        return response.update(data)
-    else:
+    if user_info_for_server(login=request.data.user.login) is None:
         # TODO
         # generate authID: store and return to user
         # generate salt, and create hash password
@@ -261,11 +252,31 @@ def register_user(request: api.ValidJSON) -> dict:
                     password=request.data.user.password,
                     login=request.data.user.login,
                     username=request.data.user.login)
-        return response.update(data)
+        return response
+    else:
+        errors = {
+                'code': 409,
+                'status': 'error',
+                'time': get_time,
+                'detail': 'User already exists'
+            }
+        response['errors'] = errors
+        return response
 
 
-def get_update():
-    pass
+def get_update(request: api.ValidJSON) -> dict:
+    """The function displays messages of a specific flow,
+    from the timestamp recorded in the request to the server timestamp,
+    retrieves them from the database
+    and issues them as an array consisting of JSON
+
+    Args:
+        request (api.ValidJSON): client request - a set of data that was
+        validated by "pydantic".
+
+    Returns:
+        dict: [description]
+    """
 
 
 def send_message(request: api.ValidJSON) -> dict:
@@ -279,8 +290,8 @@ def send_message(request: api.ValidJSON) -> dict:
         dict: returns JSON reply to client
     """
     get_time = time()
-    response = request.dict(include={type})
-    data = {
+    response = {
+        'type': request.type,
         'data': {
             'time': get_time,
             'meta': None
@@ -307,7 +318,7 @@ def send_message(request: api.ValidJSON) -> dict:
                    userID=dbquery[0].uuid,
                    flowID=request.data.message.from_flow.id,
                    time=get_time)
-    return response.update(data)
+    return response
 
 
 def add_flow(request: api.ValidJSON) -> dict:
@@ -321,7 +332,6 @@ def add_flow(request: api.ValidJSON) -> dict:
         dict: [description]
     """
     get_time = time()
-    response = request.dict(include={type})
     flow_id = random.getrandbits(64)
     models.Flow(flowId=flow_id,
                 timeCreated=get_time,
@@ -329,7 +339,8 @@ def add_flow(request: api.ValidJSON) -> dict:
                 title=request.data.flow.title,
                 info=request.data.flow.info
                 )
-    data = {
+    response = {
+        'type': request.type,
         'data': {
             'time': get_time,
             'meta': None
@@ -345,7 +356,6 @@ def add_flow(request: api.ValidJSON) -> dict:
         },
         'meta': None
     }
-    response.update(data)
     return response
 
 
@@ -361,7 +371,6 @@ def all_flow(request: api.ValidJSON) -> dict:
         dict: [description]
     """
     get_time = time()
-    response = request.dict(include={type})
     flow_list = []
     dbquery = models.Flow.select(models.Flow.q.id > 0)
     for flow in dbquery:
@@ -373,7 +382,8 @@ def all_flow(request: api.ValidJSON) -> dict:
            "info": flow.info
         }
         flow_list.append(data_flow)
-    data = {
+    response = {
+        'type': request.type,
         'data': {
             'time': get_time,
             'flows': flow_list,
@@ -390,7 +400,6 @@ def all_flow(request: api.ValidJSON) -> dict:
         },
         'meta': None
     }
-    response.update(data)
     return response
 
 
@@ -405,18 +414,24 @@ def user_info(request: api.ValidJSON) -> dict:
         dict: [description]
     """
     get_time = time()
-    response = request.dict(include={'type'})
-    jsonapi = {
+    response = {
+        "type": request.type,
+        "data": None,
+        'errors': {
+            'code': 200,
+            'status': 'OK',
+            'time': get_time,
+            'detail': 'successfully'
+        },
         'jsonapi': {
             'version': config.API_VERSION
-            },
+        },
         'meta': None
-        }
+    }
     dbquery = models.User.selectBy(uuid=request.data.user.uuid,
                                    auth_id=request.data.user.auth_id)
     if bool(dbquery.count()):
         data = {
-            'data': {
                 'time': get_time,
                 'user': {
                     'uuid': dbquery[0].uuid,
@@ -430,15 +445,8 @@ def user_info(request: api.ValidJSON) -> dict:
                     'bio': dbquery[0].bio
                     },
                 'meta': None
-                },
-            'errors': {
-                'code': 200,
-                'status': 'OK',
-                'time': get_time,
-                'detail': 'successfully'
-                }
             }
-        response.update(data)
+        response["data"] = data
     else:
         errors = {
             'errors': {
@@ -448,9 +456,8 @@ def user_info(request: api.ValidJSON) -> dict:
                 'detail': 'Unauthorized'
                 }
             }
-        response.update(errors)
-
-    return response.update(jsonapi)
+        response["errors"] = errors
+    return response
 
 
 def authentication(request: api.ValidJSON) -> dict:
@@ -467,13 +474,20 @@ def authentication(request: api.ValidJSON) -> dict:
         dict: [description]
     """
     get_time = time()
-    response = request.dict(include={'type'})
-    jsonapi = {
+    response = {
+        "type": request.type,
+        "data": None,
+        'errors': {
+            'code': 200,
+            'status': 'OK',
+            'time': get_time,
+            'detail': 'successfully'
+        },
         'jsonapi': {
             'version': config.API_VERSION
-            },
+        },
         'meta': None
-        }
+    }
     dbquery = models.User.select(models.User.q.login ==
                                  request.data.user.login)
     if bool(dbquery.count()):
@@ -489,22 +503,14 @@ def authentication(request: api.ValidJSON) -> dict:
             # add it to user parameters in database
             dbquery[0].authId = generator.auth_id()
             data = {
-                'data': {
                     'time': get_time,
                     'user': {
                         'uuid': dbquery[0].uuid,
                         'auth_id': dbquery[0].authId
                         },
                     'meta': None
-                    },
-                'errors': {
-                    'code': 200,
-                    'status': 'OK',
-                    'time': get_time,
-                    'detail': 'successfully'
                     }
-                }
-            response.upadate(data)
+            response["data"] = data
         else:
             errors = {
                 'errors': {
@@ -514,7 +520,7 @@ def authentication(request: api.ValidJSON) -> dict:
                     'detail': 'Unauthorized'
                     }
                 }
-            response.update(errors)
+            response["errors"] = errors
     else:
         errors = {
             'errors': {
@@ -524,9 +530,9 @@ def authentication(request: api.ValidJSON) -> dict:
                 'detail': 'User Not Found'
                 }
             }
-        response.update(errors)
+        response["errors"] = errors
 
-    return response.update(jsonapi)
+    return response
 
 
 def delete_user(request: api.ValidJSON) -> dict:
@@ -540,8 +546,15 @@ def delete_user(request: api.ValidJSON) -> dict:
         dict: [description]
     """
     get_time = time()
-    response = request.dict(include={'type'})
-    jsonapi = {
+    response = {
+        "type": request.type,
+        "data": None,
+        'errors': {
+            'code': 200,
+            'status': 'OK',
+            'time': get_time,
+            'detail': 'successfully'
+        },
         'jsonapi': {
             'version': config.API_VERSION
         },
@@ -554,22 +567,14 @@ def delete_user(request: api.ValidJSON) -> dict:
                                        password=request.data.user.password)
         if bool(dbquery.count()):
             data = {
-                'data': {
                     'user': {
                         'uuid': dbquery[0].uuid,
                         'login': dbquery[0].login
                         },
                     'meta': None
-                    },
-                'errors': {
-                    'code': 200,
-                    'status': 'OK',
-                    'time': get_time,
-                    'detail': 'successfully'
                     }
-                }
             dbquery[0].delete(dbquery[0].id)
-            response.update(data)
+            response["data"] = data
         else:
             errors = {
                 'errors': {
@@ -579,7 +584,7 @@ def delete_user(request: api.ValidJSON) -> dict:
                     'detail': 'User Not Found'
                     }
                 }
-            response.update(errors)
+            response["errors"] = errors
     else:
         errors = {
             'errors': {
@@ -589,9 +594,9 @@ def delete_user(request: api.ValidJSON) -> dict:
                 'detail': 'Unauthorized'
                 }
             }
-        response.update(errors)
+        response["errors"] = errors
 
-    return response.update(jsonapi)
+    return response
 
 
 def delete_message(request: api.ValidJSON) -> dict:
@@ -605,13 +610,20 @@ def delete_message(request: api.ValidJSON) -> dict:
         dict: [description]
     """
     get_time = time()
-    response = request.dict(include={type})
-    jsonapi = {
+    response = {
+        "type": request.type,
+        "data": None,
+        'errors': {
+            'code': 200,
+            'status': 'OK',
+            'time': get_time,
+            'detail': 'successfully'
+        },
         'jsonapi': {
             'version': config.API_VERSION
-            },
+        },
         'meta': None
-        }
+    }
     # TODO
     # check auth_id needs converting to single function
     check_user_in_db = models.User.selectBy(
@@ -621,35 +633,24 @@ def delete_message(request: api.ValidJSON) -> dict:
             models.User.q.messageID == request.data.message.id)
         if bool(dbquery.count()):
             dbquery[0].delete(dbquery[0].id)
-            errors = {
-                'errors': {
-                    'code': 200,
-                    'status': 'OK',
-                    'time': get_time,
-                    'detail': 'successfully'
-                }
-            }
         else:
             errors = {
-                'errors': {
-                    'code': 404,
-                    'status': 'Not Found',
-                    'time': get_time,
-                    'detail': 'Message Not Found'
-                }
+                'code': 404,
+                'status': 'Not Found',
+                'time': get_time,
+                'detail': 'Message Not Found'
             }
+            response["errors"] = errors
     else:
         errors = {
-            'errors': {
-                'code': 401,
-                'status': 'Unauthorized',
-                'time': get_time,
-                'detail': 'Unauthorized'
-                }
+            'code': 401,
+            'status': 'Unauthorized',
+            'time': get_time,
+            'detail': 'Unauthorized'
             }
+        response["errors"] = errors
 
-    response.update(errors)
-    return response.update(jsonapi)
+    return response
 
 
 def edited_message(request: api.ValidJSON) -> dict:
@@ -664,13 +665,20 @@ def edited_message(request: api.ValidJSON) -> dict:
         dict: [description]
     """
     get_time = time()
-    response = request.dict(include={type})
-    jsonapi = {
+    response = {
+        "type": request.type,
+        "data": None,
+        'errors': {
+            'code': 200,
+            'status': 'OK',
+            'time': get_time,
+            'detail': 'successfully'
+        },
         'jsonapi': {
             'version': config.API_VERSION
-            },
+        },
         'meta': None
-        }
+    }
     # TODO
     # check auth_id needs converting to single function
     check_user_in_db = models.User.selectBy(
@@ -686,35 +694,24 @@ def edited_message(request: api.ValidJSON) -> dict:
             dbquery[0].text = request.data.message.text
             dbquery[0].editedTime = get_time
             dbquery[0].editedStatus = True
-            errors = {
-                'errors': {
-                    'code': 200,
-                    'status': 'OK',
-                    'time': get_time,
-                    'detail': 'successfully'
-                    }
-                }
         else:
             errors = {
-                'errors': {
                     'code': 404,
                     'status': 'Not Found',
                     'time': get_time,
                     'detail': 'User Not Found'
-                    }
                 }
+            response["errors"] = errors
     else:
         errors = {
-            'errors': {
-                'code': 401,
-                'status': 'Unauthorized',
-                'time': get_time,
-                'detail': 'Unauthorized'
-                }
+            'code': 401,
+            'status': 'Unauthorized',
+            'time': get_time,
+            'detail': 'Unauthorized'
             }
+        response["errors"] = errors
 
-    response.update(errors)
-    return response.update(jsonapi)
+    return response
 
 
 def all_messages(request: api.ValidJSON) -> dict:
@@ -729,21 +726,26 @@ def all_messages(request: api.ValidJSON) -> dict:
         dict: [description]
     """
     get_time = time()
-    response = request.dict(include={type})
-    template = {
-        'data': None,
-        'errors': None,
+    response = {
+        "type": request.type,
+        "data": None,
+        'errors': {
+            'code': 200,
+            'status': 'OK',
+            'time': get_time,
+            'detail': 'successfully'
+        },
         'jsonapi': {
             'version': config.API_VERSION
-            },
+        },
         'meta': None
-        }
+    }
 
     if (errors :=
         check_uuid_and_auth_id(request.data.user.uuid,
                                request.data.user.auth_id))["code"] != 200:
-        template["errors"] = errors
-        return response.upadate(template)
+        response["errors"] = errors
+        return response
 
     dbquery = models.Message.select()
     if bool(dbquery.count()):
@@ -774,9 +776,8 @@ def all_messages(request: api.ValidJSON) -> dict:
             'meta': None
             }
 
-        template["data"] = data
-        template["errors"] = errors
-        return template
+        response["data"] = data
+        return response
 
 
 def ping_pong(request: api.ValidJSON) -> dict:
@@ -791,18 +792,18 @@ def ping_pong(request: api.ValidJSON) -> dict:
         dict: [description]
     """
     get_time = time()
-    response = request.dict(include={type})
-    data = {
-        'data': None,
+    response = {
+        "type": request.type,
+        "data": None,
         'errors': {
             'code': 200,
             'status': 'OK',
             'time': get_time,
             'detail': 'successfully'
-            },
+        },
         'jsonapi': {
             'version': config.API_VERSION
-            },
+        },
         'meta': None
-        }
-    return response.update(data)
+    }
+    return response
