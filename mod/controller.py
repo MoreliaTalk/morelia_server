@@ -5,6 +5,7 @@ from mod import models
 from mod import config
 from mod import api
 from mod import libhash
+from mod import func
 
 
 def user_info_for_server(uuid: int = None,
@@ -275,8 +276,73 @@ def get_update(request: api.ValidJSON) -> dict:
         validated by "pydantic".
 
     Returns:
-        dict: [description]
-    """
+        dict: [description]"""
+
+    get_time = time()
+    response = {
+        "type": request.type,
+        "data": None,
+        'errors': {
+            'code': 200,
+            'status': 'OK',
+            'time': get_time,
+            'detail': 'successfully'
+        },
+        'jsonapi': {
+            'version': config.API_VERSION
+        },
+        'meta': None
+    }
+
+    if (errors :=
+        check_uuid_and_auth_id(request.data.user.uuid,
+                               request.data.user.auth_id))["code"] != 200:
+        response["errors"] = errors
+        return response
+    dbquery = func.filter_dbquery_by_time_from_and_to(
+        models.Message.select(),
+        request.data.time,
+        get_time
+    )
+    if dbquery:
+        messages = []
+        for i in dbquery:
+            message = {
+                "flowID": i.flowID,
+                "userID": i.userID,
+                "text": i.text,
+                "time": i.time,
+                "filePicture": i.filePicture,
+                "fileVideo": i.fileVideo,
+                "fileAudio": i.fileAudio,
+                "fileDocument": i.fileDocument,
+                "emoji": i.emoji,
+                "editedTime": i.editedTime,
+                "editedStatus": i.editedStatus
+            }
+            messages.append(message)
+
+        data = {
+            'time': get_time,
+            'user': {
+                'uuid': request.data.user.uuid,
+                'auth_id': request.data.user.auth_id
+            },
+            'messages': messages,
+            'meta': None
+            }
+
+        response["data"] = data
+        return response
+    else:
+        errors_mes = {
+            'code': 404,
+            'status': 'Not Found',
+            'time': get_time,
+            'detail': 'Messages Not Found'
+            }
+        response["errors"] = errors_mes
+        return response
 
 
 def send_message(request: api.ValidJSON) -> dict:
@@ -777,6 +843,15 @@ def all_messages(request: api.ValidJSON) -> dict:
             }
 
         response["data"] = data
+        return response
+    else:
+        errors_mes = {
+            'code': 404,
+            'status': 'Not Found',
+            'time': get_time,
+            'detail': 'Messages Not Found'
+            }
+        response["errors"] = errors_mes
         return response
 
 
