@@ -5,7 +5,6 @@ from mod import models
 from mod import config
 from mod import api
 from mod import libhash
-from mod import func
 
 
 def user_info_for_server(uuid: int = None,
@@ -169,12 +168,12 @@ def serve_request(request_json) -> dict:
                 'status': 'Unsupported Media Type',
                 'code': 415,
                 'detail': 'JSON validation error'
-            },
+                },
             'jsonapi': {
                 'version': config.API_VERSION
-            },
+                },
             'meta': None
-        }
+            }
         return message
     if request.type == 'ping-pong':
         return ping_pong(request)
@@ -208,12 +207,12 @@ def serve_request(request_json) -> dict:
                 'status': 'Method Not Allowed',
                 'code': 405,
                 'detail': 'Method not supported by server'
-            },
+                },
             'jsonapi': {
                 'version': config.API_VERSION
-            },
+                },
             'meta': None
-        }
+            }
         return message
 
 
@@ -256,13 +255,21 @@ def register_user(request: api.ValidJSON) -> dict:
         return response
     else:
         errors = {
-                'code': 409,
-                'status': 'error',
-                'time': get_time,
-                'detail': 'User already exists'
+            'code': 409,
+            'status': 'error',
+            'time': get_time,
+            'detail': 'User already exists'
             }
         response['errors'] = errors
         return response
+
+
+def filter_dbquery_by_time_from_and_to(dbquery, ot, do):
+    response = []
+    for db_data in dbquery:
+        if db_data.time >= ot and db_data.time <= do:
+            response.append(db_data)
+    return response
 
 
 def get_update(request: api.ValidJSON) -> dict:
@@ -287,19 +294,20 @@ def get_update(request: api.ValidJSON) -> dict:
             'status': 'OK',
             'time': get_time,
             'detail': 'successfully'
-        },
+            },
         'jsonapi': {
             'version': config.API_VERSION
-        },
+            },
         'meta': None
-    }
+        }
 
     if (errors :=
         check_uuid_and_auth_id(request.data.user.uuid,
                                request.data.user.auth_id))["code"] != 200:
         response["errors"] = errors
         return response
-    dbquery = func.filter_dbquery_by_time_from_and_to(
+    # TODO нужно реализовать фильтрацию через SQLObject
+    dbquery = filter_dbquery_by_time_from_and_to(
         models.Message.select(),
         request.data.time,
         get_time
@@ -335,13 +343,13 @@ def get_update(request: api.ValidJSON) -> dict:
         response["data"] = data
         return response
     else:
-        errors_mes = {
+        errors = {
             'code': 404,
             'status': 'Not Found',
             'time': get_time,
             'detail': 'Messages Not Found'
             }
-        response["errors"] = errors_mes
+        response["errors"] = errors
         return response
 
 
@@ -410,18 +418,18 @@ def add_flow(request: api.ValidJSON) -> dict:
         'data': {
             'time': get_time,
             'meta': None
-        },
+            },
         'errors': {
             'code': 200,
             'status': 'OK',
             'time': get_time,
             'detail': 'successfully'
-        },
+            },
         'jsonapi': {
             'version': config.API_VERSION
-        },
+            },
         'meta': None
-    }
+        }
     return response
 
 
@@ -454,18 +462,18 @@ def all_flow(request: api.ValidJSON) -> dict:
             'time': get_time,
             'flows': flow_list,
             'meta': None
-        },
+            },
         'errors': {
             'code': 200,
             'status': 'OK',
             'time': get_time,
             'detail': 'successfully'
-        },
+            },
         'jsonapi': {
             'version': config.API_VERSION
-        },
+            },
         'meta': None
-    }
+        }
     return response
 
 
@@ -488,10 +496,10 @@ def user_info(request: api.ValidJSON) -> dict:
             'status': 'OK',
             'time': get_time,
             'detail': 'successfully'
-        },
+            },
         'jsonapi': {
             'version': config.API_VERSION
-        },
+            },
         'meta': None
     }
     dbquery = models.User.selectBy(uuid=request.data.user.uuid,
@@ -515,12 +523,10 @@ def user_info(request: api.ValidJSON) -> dict:
         response["data"] = data
     else:
         errors = {
-            'errors': {
-                'code': 401,
-                'status': 'Unauthorized',
-                'time': get_time,
-                'detail': 'Unauthorized'
-                }
+            'code': 401,
+            'status': 'Unauthorized',
+            'time': get_time,
+            'detail': 'Unauthorized'
             }
         response["errors"] = errors
     return response
@@ -548,12 +554,12 @@ def authentication(request: api.ValidJSON) -> dict:
             'status': 'OK',
             'time': get_time,
             'detail': 'successfully'
-        },
+            },
         'jsonapi': {
             'version': config.API_VERSION
-        },
+            },
         'meta': None
-    }
+        }
     dbquery = models.User.select(models.User.q.login ==
                                  request.data.user.login)
     if bool(dbquery.count()):
@@ -579,22 +585,18 @@ def authentication(request: api.ValidJSON) -> dict:
             response["data"] = data
         else:
             errors = {
-                'errors': {
-                    'code': 401,
-                    'status': 'Unauthorized',
-                    'time': get_time,
-                    'detail': 'Unauthorized'
-                    }
+                'code': 401,
+                'status': 'Unauthorized',
+                'time': get_time,
+                'detail': 'Unauthorized'
                 }
             response["errors"] = errors
     else:
         errors = {
-            'errors': {
-                'code': 404,
-                'status': 'Not Found',
-                'time': get_time,
-                'detail': 'User Not Found'
-                }
+            'code': 404,
+            'status': 'Not Found',
+            'time': get_time,
+            'detail': 'User Not Found'
             }
         response["errors"] = errors
 
@@ -620,12 +622,12 @@ def delete_user(request: api.ValidJSON) -> dict:
             'status': 'OK',
             'time': get_time,
             'detail': 'successfully'
-        },
+            },
         'jsonapi': {
             'version': config.API_VERSION
-        },
+            },
         'meta': None
-    }
+        }
     check_user_in_db = models.User.selectBy(
         uuid=request.data.user.uuid, auth_id=request.data.user.auth_id)
     if bool(check_user_in_db.count()):
@@ -633,32 +635,28 @@ def delete_user(request: api.ValidJSON) -> dict:
                                        password=request.data.user.password)
         if bool(dbquery.count()):
             data = {
-                    'user': {
-                        'uuid': dbquery[0].uuid,
-                        'login': dbquery[0].login
-                        },
-                    'meta': None
-                    }
+                'user': {
+                    'uuid': dbquery[0].uuid,
+                    'login': dbquery[0].login
+                    },
+                'meta': None
+                }
             dbquery[0].delete(dbquery[0].id)
             response["data"] = data
         else:
             errors = {
-                'errors': {
-                    'code': 404,
-                    'status': 'Not Found',
-                    'time': get_time,
-                    'detail': 'User Not Found'
-                    }
+                'code': 404,
+                'status': 'Not Found',
+                'time': get_time,
+                'detail': 'User Not Found'
                 }
             response["errors"] = errors
     else:
         errors = {
-            'errors': {
-                'code': 401,
-                'status': 'Unauthorized',
-                'time': get_time,
-                'detail': 'Unauthorized'
-                }
+            'code': 401,
+            'status': 'Unauthorized',
+            'time': get_time,
+            'detail': 'Unauthorized'
             }
         response["errors"] = errors
 
@@ -684,12 +682,12 @@ def delete_message(request: api.ValidJSON) -> dict:
             'status': 'OK',
             'time': get_time,
             'detail': 'successfully'
-        },
+            },
         'jsonapi': {
             'version': config.API_VERSION
-        },
+            },
         'meta': None
-    }
+        }
     # TODO
     # check auth_id needs converting to single function
     check_user_in_db = models.User.selectBy(
@@ -705,7 +703,7 @@ def delete_message(request: api.ValidJSON) -> dict:
                 'status': 'Not Found',
                 'time': get_time,
                 'detail': 'Message Not Found'
-            }
+                }
             response["errors"] = errors
     else:
         errors = {
@@ -739,12 +737,12 @@ def edited_message(request: api.ValidJSON) -> dict:
             'status': 'OK',
             'time': get_time,
             'detail': 'successfully'
-        },
+            },
         'jsonapi': {
             'version': config.API_VERSION
-        },
+            },
         'meta': None
-    }
+        }
     # TODO
     # check auth_id needs converting to single function
     check_user_in_db = models.User.selectBy(
@@ -762,10 +760,10 @@ def edited_message(request: api.ValidJSON) -> dict:
             dbquery[0].editedStatus = True
         else:
             errors = {
-                    'code': 404,
-                    'status': 'Not Found',
-                    'time': get_time,
-                    'detail': 'User Not Found'
+                'code': 404,
+                'status': 'Not Found',
+                'time': get_time,
+                'detail': 'User Not Found'
                 }
             response["errors"] = errors
     else:
@@ -800,12 +798,12 @@ def all_messages(request: api.ValidJSON) -> dict:
             'status': 'OK',
             'time': get_time,
             'detail': 'successfully'
-        },
+            },
         'jsonapi': {
             'version': config.API_VERSION
-        },
+            },
         'meta': None
-    }
+        }
 
     if (errors :=
         check_uuid_and_auth_id(request.data.user.uuid,
@@ -845,13 +843,13 @@ def all_messages(request: api.ValidJSON) -> dict:
         response["data"] = data
         return response
     else:
-        errors_mes = {
+        errors = {
             'code': 404,
             'status': 'Not Found',
             'time': get_time,
             'detail': 'Messages Not Found'
             }
-        response["errors"] = errors_mes
+        response["errors"] = errors
         return response
 
 
@@ -875,10 +873,10 @@ def ping_pong(request: api.ValidJSON) -> dict:
             'status': 'OK',
             'time': get_time,
             'detail': 'successfully'
-        },
+            },
         'jsonapi': {
             'version': config.API_VERSION
-        },
+            },
         'meta': None
-    }
+        }
     return response
