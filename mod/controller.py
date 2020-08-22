@@ -312,7 +312,8 @@ def get_update(request: api.ValidJSON) -> dict:
         response["errors"] = errors
         return response
 
-    if bool(models.Flow.select(models.Flow.q.flowId == request.data.flow.id).count()) is False:
+    dbquery_flow = models.Flow.select(models.Flow.q.flowId == request.data.flow.id)
+    if bool(dbquery_flow.count()) is False:
         errors = {
             'code': 404,
             'status': 'Not Found',
@@ -323,11 +324,11 @@ def get_update(request: api.ValidJSON) -> dict:
         return response
 
     # TODO нужно реализовать фильтрацию через SQLObject
-    dbquery = filter_dbquery_by_time_from_and_to(
-        models.Message.select(models.Message.q.flow == request.data.flow.id),
-        request.data.time,
-        get_time
-    )
+    dbquery = []
+    for db_data in models.Message.select(models.Message.q.flow == request.data.flow.id):
+        if db_data.time >= request.data.time and db_data.time <= get_time:
+            dbquery.append(db_data)
+
     if dbquery:
         messages = []
         for i in dbquery:
