@@ -288,7 +288,12 @@ def get_update(request: api.ValidJSON) -> dict:
     get_time = time()
     response = {
         "type": request.type,
-        "data": None,
+        "data": {
+            "time": get_time,
+            "flow": {
+                "id": request.data.flow.id
+            }
+        },
         'errors': {
             'code': 200,
             'status': 'OK',
@@ -306,9 +311,20 @@ def get_update(request: api.ValidJSON) -> dict:
                                request.data.user.auth_id))["code"] != 200:
         response["errors"] = errors
         return response
+
+    if bool(models.Flow.select(models.Flow.q.flowId == request.data.flow.id).count()) is False:
+        errors = {
+            'code': 404,
+            'status': 'Not Found',
+            'time': get_time,
+            'detail': 'Flow Not Found'
+            }
+        response["errors"] = errors
+        return response
+
     # TODO нужно реализовать фильтрацию через SQLObject
     dbquery = filter_dbquery_by_time_from_and_to(
-        models.Message.select(),
+        models.Message.select(models.Message.q.flow == request.data.flow.id),
         request.data.time,
         get_time
     )
