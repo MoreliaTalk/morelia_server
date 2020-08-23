@@ -4,7 +4,7 @@ from time import time
 from mod import models
 from mod import config
 from mod import api
-from mod import libhash
+from mod import lib
 
 
 def user_info_for_server(uuid: int = None,
@@ -175,45 +175,33 @@ def serve_request(request_json) -> dict:
             'meta': None
             }
         return message
-    if request.type == 'ping-pong':
-        return ping_pong(request)
-    elif request.type == 'register_user':
-        return register_user(request)
-    elif request.type == 'send_message':
-        return send_message(request)
-    elif request.type == 'all_flow':
-        return all_flow(request)
-    elif request.type == 'add_flow':
-        return add_flow(request)
-    elif request.type == 'all_messages':
-        return all_messages(request)
-    elif request.type == 'user_info':
-        return user_info(request)
-    elif request.type == 'auth':
-        return authentication(request)
-    elif request.type == 'delete_user':
-        return delete_user(request)
-    elif request.type == 'delete_message':
-        return delete_message(request)
-    elif request.type == 'edited_message':
-        return edited_message(request)
-    elif request.type == "get_update":
-        return get_update(request)
     else:
-        message = {
-            'type': request.type,
-            'errors': {
-                'time': get_time,
-                'status': 'Method Not Allowed',
-                'code': 405,
-                'detail': 'Method not supported by server'
-                },
-            'jsonapi': {
-                'version': config.API_VERSION
-                },
-            'meta': None
-            }
-        return message
+        if request.type == 'ping-pong':
+            return ping_pong(request)
+        elif request.type == 'register_user':
+            return register_user(request)
+        elif request.type == 'send_message':
+            return send_message(request)
+        elif request.type == 'all_flow':
+            return all_flow(request)
+        elif request.type == 'add_flow':
+            return add_flow(request)
+        elif request.type == 'all_messages':
+            return all_messages(request)
+        elif request.type == 'user_info':
+            return user_info(request)
+        elif request.type == 'auth':
+            return authentication(request)
+        elif request.type == 'delete_user':
+            return delete_user(request)
+        elif request.type == 'delete_message':
+            return delete_message(request)
+        elif request.type == 'edited_message':
+            return edited_message(request)
+        elif request.type == "get_update":
+            return get_update(request)
+        else:
+            errors(request)
 
 
 # Implementation of methods described in Morelia Protocol
@@ -584,11 +572,11 @@ def authentication(request: api.ValidJSON) -> dict:
     if bool(dbquery.count()):
         # Create an instance of the Hash class with
         # help of which we check the password and generating auth_id
-        generator = libhash.Hash(dbquery[0].password,
-                                 dbquery[0].salt,
-                                 request.data.user.password,
-                                 dbquery[0].key,
-                                 dbquery[0].uuid)
+        generator = lib.Hash(dbquery[0].password,
+                             dbquery[0].salt,
+                             request.data.user.password,
+                             dbquery[0].key,
+                             dbquery[0].uuid)
         if generator.check_password():
             # generate a session hash ('auth_id') and immediately
             # add it to user parameters in database
@@ -899,3 +887,25 @@ def ping_pong(request: api.ValidJSON) -> dict:
         'meta': None
         }
     return response
+
+
+def errors(request: api.ValidJSON) -> dict:
+    """[summary]
+
+    Args:
+        request (api.ValidJSON): client request - a set of data that was
+        validated by "pydantic".
+
+    Returns:
+        dict: [description]
+    """
+    template = {
+        'type': 'errors',
+        'data': None,
+        'errors': lib.error_catching(405),
+        'jsonapi': {
+            'version': config.API_VERSION
+        },
+        'meta': None
+    }
+    return template
