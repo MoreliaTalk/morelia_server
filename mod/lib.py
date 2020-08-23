@@ -249,9 +249,9 @@ def error_catching(code: Union[int, str],
                                   detail=add_info)
         result = attr.asdict(template)
         if code in (200, 201, 202):
-            logger.info(f"errors code: {code}, errors result: {result}")
-        else:
             logger.debug(f"errors code: {code}, errors result: {result}")
+        else:
+            logger.error(f"errors code: {code}, errors result: {result}")
     else:
         template = TemplateErrors(code=520,
                                   status='Unknown Error',

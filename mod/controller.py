@@ -890,7 +890,9 @@ def ping_pong(request: api.ValidJSON) -> dict:
 
 
 def errors(request: api.ValidJSON) -> dict:
-    """[summary]
+    """Function handles cases when a request to server is not recognized by it.
+    You get a standard answer type: error, which contains an object
+    with a description of the error.
 
     Args:
         request (api.ValidJSON): client request - a set of data that was
@@ -902,10 +904,15 @@ def errors(request: api.ValidJSON) -> dict:
     template = {
         'type': 'errors',
         'data': None,
-        'errors': lib.error_catching(405),
+        'errors': None,
         'jsonapi': {
             'version': config.API_VERSION
         },
         'meta': None
     }
+    if request.type is None:
+        template['errors'] = lib.error_catching(400)
+    else:
+        template['errors'] = lib.error_catching(405)
+
     return template
