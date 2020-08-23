@@ -312,7 +312,8 @@ def get_update(request: api.ValidJSON) -> dict:
         response["errors"] = errors
         return response
 
-    dbquery_flow = models.Flow.select(models.Flow.q.flowId == request.data.flow.id)
+    dbquery_flow = models.Flow.select(models.Flow.q.flowId ==
+                                      request.data.flow.id)
     if bool(dbquery_flow.count()) is False:
         errors = {
             'code': 404,
@@ -325,7 +326,8 @@ def get_update(request: api.ValidJSON) -> dict:
 
     # TODO нужно реализовать фильтрацию через SQLObject
     dbquery = []
-    for db_data in models.Message.select(models.Message.q.flow == request.data.flow.id):
+    for db_data in models.Message.select(models.Message.q.flow ==
+                                         request.data.flow.id):
         if db_data.time >= request.data.time and db_data.time <= get_time:
             dbquery.append(db_data)
 
