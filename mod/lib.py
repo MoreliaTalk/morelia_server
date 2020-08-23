@@ -147,88 +147,71 @@ def error_catching(code: Union[int, str],
 
     """
     dict_all_errors = {
-        '200': {
-            'code': 200,
+        200: {
             'status': 'OK',
             'detail': 'successfully'
             },
-        '201': {
-            'code': 201,
+        201: {
             'status': 'Created',
             'detail': 'Created'
             },
-        '202': {
-            'code': 202,
+        202: {
             'status': 'Accepted',
             'detail': 'Accepted'
             },
-        '400': {
-            'code': 400,
+        400: {
             'status': 'Bad Request',
             'detail': 'Bad Request'
             },
-        '401': {
-            'code': 401,
+        401: {
             'status': 'Unauthorized',
             'detail': 'Unauthorized'
             },
-        '403': {
-            'code': 403,
+        403: {
             'status': 'Forbidden',
             'detail': 'Forbidden'
             },
-        '404': {
-            'code': 404,
+        404: {
             'status': 'Not Found',
             'detail': 'Not Found'
             },
-        '405': {
-            'code': 405,
+        405: {
             'status': 'Method Not Allowed',
             'detail': 'Method Not Allowed'
             },
-        '408': {
-            'code': 408,
+        408: {
             'status': 'Request Timeout',
             'detail': 'Request Timeout'
             },
-        '415': {
-            'code': 415,
+        415: {
             'status': 'Unsupported Media Type',
             'detail': 'Unsupported Media Type'
             },
-        '417': {
-            'code': 417,
+        417: {
             'status': 'Expectation Failed',
             'detail': 'Expectation Failed'
             },
-        '426': {
-            'code': 426,
+        426: {
             'status': 'Upgrade Required',
             'detail': 'Upgrade Required'
             },
-        '429': {
-            'code': 429,
+        429: {
             'status': 'Too Many Requests',
             'detail': 'Too Many Requests'
             },
-        '499': {
-            'code': 499,
+        499: {
             'status': 'Client Closed Request',
             'detail': 'Client Closed Request'
             },
-        '500': {
-            'code': 500,
+        500: {
             'status': 'Internal Server Error',
             'detail': 'Internal Server Error'
             },
-        '503': {
-            'code': 503,
+        503: {
             'status': 'Service Unavailable',
             'detail': 'Service Unavailable'
             },
-        '526': {
-            'code': 526,
+        526: {
             'status': 'Invalid SSL Certificate',
             'detail': 'Invalid SSL Certificate'
             },
@@ -236,15 +219,11 @@ def error_catching(code: Union[int, str],
 
     get_time = int(time())
 
-    code_list = (200, 201, 202, 400, 401,
-                 403, 404, 405, 408, 415,
-                 417, 426, 429, 499, 500,
-                 503, 526)
-    if code in code_list:
+    if code in dict_all_errors:
         if add_info is None:
-            add_info = dict_all_errors[str(code)]['detail']
+            add_info = dict_all_errors[code]['detail']
         template = TemplateErrors(code=code,
-                                  status=dict_all_errors[str(code)]['status'],
+                                  status=dict_all_errors[code]['status'],
                                   time=get_time,
                                   detail=add_info)
         result = attr.asdict(template)
