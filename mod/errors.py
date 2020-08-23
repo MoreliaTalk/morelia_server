@@ -2,25 +2,48 @@ from time import time
 from typing import Optional
 from typing import Union
 
-# from loguru import logger
+from loguru import logger
 import attr
 
 
 @attr.s
 class TemplateErrors:
-    # хранение элементов словаря Errors в виде класса
-    # который даёт возможность управления и преобразования
-    # хранимых данных
-    get_time = int(time())
-    code: int = attr.ib(default=200)
-    status: str = attr.ib(default='Ok')
-    time: int = attr.ib(default=get_time)
-    detail: str = attr.ib(default='successfully')
+    """Template of class intended for storage of attributes 'Errors' object.
+    When creating an instance, any passed value to e'detail' attribute
+    is converted to the 'str' type.
+    """
+    code: int = attr.ib()
+    status: str = attr.ib()
+    time: int = attr.ib()
+    detail: str = attr.ib(converter=str)
 
 
-# Функция "перехватчик" ошибок в конструкции try...except.
 def error_catching(code: Union[int, str],
                    add_info: Optional[str] = None) -> dict:
+    """Function catches errors in the "try...except" content.
+    Result is 'dict' with information about the code, status,
+    time and detailed description of the error that has occurred.
+    For errors like Exception and other unrecognized errors,
+    code "520" and status "Unknown Error" are used.
+    Function also automatically logs the error.
+
+    Args:
+        code (Union[int, str]): Error code or type and exception description.
+        add_info (Optional[str], optional): Additional information to be added.
+                                            The 'Exception' field is not used
+                                            for exceptions. Defaults to None.
+
+    Returns:
+        dict: returns 'dict' according to the protocol,
+                like: {
+                    'code': 200,
+                    'status': 'Ok',
+                    'time': 123456545,
+                    'detail': 'successfully'
+                    }
+
+
+    """
     dict_all_errors = {
         '200': {
             'code': 200,
@@ -123,36 +146,16 @@ def error_catching(code: Union[int, str],
                                   time=get_time,
                                   detail=add_info)
         result = attr.asdict(template)
+        if code in (200, 201, 202):
+            logger.info(f"errors code: {code}, errors result: {result}")
+        else:
+            logger.debug(f"errors code: {code}, errors result: {result}")
     else:
-        if add_info is None:
-            exception = 'Exception'
-        template = TemplateErrors(code=666,
-                                  status=exception,
+        template = TemplateErrors(code=520,
+                                  status='Unknown Error',
                                   time=get_time,
                                   detail=code)
         result = attr.asdict(template)
+        logger.error(f"errors code: {code}, errors result: {result}")
 
-    # logger.debug(code, result)
     return result
-
-
-# Пример использования
-# функция проверки делимости 'b' на 2
-def func(a):
-    try:
-        b = int(a)
-        if (b / 2) == 1:
-            print('NOOO.....this is bad number!')
-            return error_catching(200)
-        elif (b / 2) >= 2:
-            print('Good number:', b)
-            return error_catching(404)
-    except Exception as error:
-        return error_catching(error)
-
-
-# запускаем
-while True:
-    a = input('Input number > 5: ')
-    result = func(a)
-    print('Result:', result)
