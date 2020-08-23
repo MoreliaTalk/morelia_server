@@ -901,7 +901,7 @@ def errors(request: api.ValidJSON) -> dict:
     Returns:
         dict: [description]
     """
-    template = {
+    response = {
         'type': 'errors',
         'data': None,
         'errors': None,
@@ -911,8 +911,8 @@ def errors(request: api.ValidJSON) -> dict:
         'meta': None
     }
     if request.type is None:
-        template['errors'] = lib.error_catching(400)
+        response['errors'] = lib.error_catching(400)
     else:
-        template['errors'] = lib.error_catching(405)
+        response['errors'] = lib.error_catching(405)
 
-    return template
+    return response
