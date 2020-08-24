@@ -1,6 +1,7 @@
 import unittest
 import sys
 import os
+from loguru import logger
 
 # Add path to directory with code being checked
 # to variable 'PATH' to import modules from directory
@@ -114,6 +115,10 @@ class TestErrorCatching(unittest.TestCase):
     and also checks if incorrect parameters are being processed.
 
     """
+
+    def setUp(self):
+        logger.remove()
+
     def test_error_catching_check_result_type(self):
         self.assertIsInstance(lib.error_catching('200'),
                               dict)
