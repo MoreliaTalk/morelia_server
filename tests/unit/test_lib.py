@@ -2,13 +2,22 @@ import unittest
 import sys
 import os
 
-
+# Add path to directory with code being checked
+# to variable 'PATH' to import modules from directory
+# above the directory with the tests.
 BASE_PATH = os.path.dirname(os.getcwd())
 sys.path.append(os.path.split(BASE_PATH)[0])
 from mod import lib
 
 
 class TestHash(unittest.TestCase):
+    """Modular tests for Hash class.
+    It checks if function is working with correct data and
+    also checks if there are any excitations when transmitting
+    incorrect parameters.
+
+    """
+    # Basic settings for each test
     def setUp(self):
         self.password = 'password'
         self.salt = 'salt'
@@ -19,6 +28,8 @@ class TestHash(unittest.TestCase):
                                 uuid=self.uuid)
         self.hash_password = self.libhash.password_hash()
 
+    # Cleaning of objects created in settings function
+    # is applied after each test.
     def tearDown(self):
         del self.libhash
         del self.hash_password
@@ -98,19 +109,24 @@ class TestHash(unittest.TestCase):
 
 
 class TestErrorCatching(unittest.TestCase):
-    def test_error_catching_type_dict(self):
+    """Modular tests for 'error_catching' function.
+    It checks if the function is working with correct data
+    and also checks if incorrect parameters are being processed.
+
+    """
+    def test_error_catching_check_result_type(self):
         self.assertIsInstance(lib.error_catching('200'),
                               dict)
 
-    def test_error_catching_start_range(self):
+    def test_error_catching_check_start_range(self):
         self.assertEqual(lib.error_catching(200)['code'],
                          200)
 
-    def test_error_catching_end_range(self):
+    def test_error_catching_check_end_range(self):
         self.assertEqual(lib.error_catching(526)['code'],
                          526)
 
-    def test_error_catching_detail_in_result(self):
+    def test_error_catching_check_add_info_in_result(self):
         self.assertEqual(lib.error_catching('200')['detail'],
                          '200')
 
