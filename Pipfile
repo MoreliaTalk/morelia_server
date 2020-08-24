@@ -17,6 +17,7 @@ sqlobject = "*"
 click = "*"
 pyyaml = "*"
 loguru = "*"
+attrs = "*"
 
 [requires]
 python_version = "3.8"

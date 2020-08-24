@@ -4,7 +4,7 @@ from time import time
 from mod import models
 from mod import config
 from mod import api
-from mod import libhash
+from mod import lib
 
 
 def user_info_for_server(uuid: int = None,
@@ -175,45 +175,33 @@ def serve_request(request_json) -> dict:
             'meta': None
             }
         return message
-    if request.type == 'ping-pong':
-        return ping_pong(request)
-    elif request.type == 'register_user':
-        return register_user(request)
-    elif request.type == 'send_message':
-        return send_message(request)
-    elif request.type == 'all_flow':
-        return all_flow(request)
-    elif request.type == 'add_flow':
-        return add_flow(request)
-    elif request.type == 'all_messages':
-        return all_messages(request)
-    elif request.type == 'user_info':
-        return user_info(request)
-    elif request.type == 'auth':
-        return authentication(request)
-    elif request.type == 'delete_user':
-        return delete_user(request)
-    elif request.type == 'delete_message':
-        return delete_message(request)
-    elif request.type == 'edited_message':
-        return edited_message(request)
-    elif request.type == "get_update":
-        return get_update(request)
     else:
-        message = {
-            'type': request.type,
-            'errors': {
-                'time': get_time,
-                'status': 'Method Not Allowed',
-                'code': 405,
-                'detail': 'Method not supported by server'
-                },
-            'jsonapi': {
-                'version': config.API_VERSION
-                },
-            'meta': None
-            }
-        return message
+        if request.type == 'ping-pong':
+            return ping_pong(request)
+        elif request.type == 'register_user':
+            return register_user(request)
+        elif request.type == 'send_message':
+            return send_message(request)
+        elif request.type == 'all_flow':
+            return all_flow(request)
+        elif request.type == 'add_flow':
+            return add_flow(request)
+        elif request.type == 'all_messages':
+            return all_messages(request)
+        elif request.type == 'user_info':
+            return user_info(request)
+        elif request.type == 'auth':
+            return authentication(request)
+        elif request.type == 'delete_user':
+            return delete_user(request)
+        elif request.type == 'delete_message':
+            return delete_message(request)
+        elif request.type == 'edited_message':
+            return edited_message(request)
+        elif request.type == "get_update":
+            return get_update(request)
+        else:
+            errors(request)
 
 
 # Implementation of methods described in Morelia Protocol
@@ -312,7 +300,8 @@ def get_update(request: api.ValidJSON) -> dict:
         response["errors"] = errors
         return response
 
-    dbquery_flow = models.Flow.select(models.Flow.q.flowId == request.data.flow.id)
+    dbquery_flow = models.Flow.select(models.Flow.q.flowId ==
+                                      request.data.flow.id)
     if bool(dbquery_flow.count()) is False:
         errors = {
             'code': 404,
@@ -325,7 +314,8 @@ def get_update(request: api.ValidJSON) -> dict:
 
     # TODO нужно реализовать фильтрацию через SQLObject
     dbquery = []
-    for db_data in models.Message.select(models.Message.q.flow == request.data.flow.id):
+    for db_data in models.Message.select(models.Message.q.flow ==
+                                         request.data.flow.id):
         if db_data.time >= request.data.time and db_data.time <= get_time:
             dbquery.append(db_data)
 
@@ -582,11 +572,11 @@ def authentication(request: api.ValidJSON) -> dict:
     if bool(dbquery.count()):
         # Create an instance of the Hash class with
         # help of which we check the password and generating auth_id
-        generator = libhash.Hash(dbquery[0].password,
-                                 dbquery[0].salt,
-                                 request.data.user.password,
-                                 dbquery[0].key,
-                                 dbquery[0].uuid)
+        generator = lib.Hash(dbquery[0].password,
+                             dbquery[0].salt,
+                             request.data.user.password,
+                             dbquery[0].key,
+                             dbquery[0].uuid)
         if generator.check_password():
             # generate a session hash ('auth_id') and immediately
             # add it to user parameters in database
@@ -896,4 +886,33 @@ def ping_pong(request: api.ValidJSON) -> dict:
             },
         'meta': None
         }
+    return response
+
+
+def errors(request: api.ValidJSON) -> dict:
+    """Function handles cases when a request to server is not recognized by it.
+    You get a standard answer type: error, which contains an object
+    with a description of the error.
+
+    Args:
+        request (api.ValidJSON): client request - a set of data that was
+        validated by "pydantic".
+
+    Returns:
+        dict: [description]
+    """
+    response = {
+        'type': 'errors',
+        'data': None,
+        'errors': None,
+        'jsonapi': {
+            'version': config.API_VERSION
+        },
+        'meta': None
+    }
+    if request.type is None:
+        response['errors'] = lib.error_catching(400)
+    else:
+        response['errors'] = lib.error_catching(405)
+
     return response
