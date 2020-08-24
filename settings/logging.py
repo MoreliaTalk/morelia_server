@@ -66,6 +66,8 @@ def add_logging(debug_status: int) -> None:
     logger.add('log/error.log',
                format=fmt,
                level="ERROR",
+               backtrace=True,
+               diagnose=True,
                enqueue=True,
                colorize=True,
                catch=True,
