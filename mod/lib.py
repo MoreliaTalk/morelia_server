@@ -1,4 +1,5 @@
 from time import time
+import sys
 from typing import Optional
 from typing import Union
 from hashlib import blake2b
@@ -95,10 +96,8 @@ class Hash:
             return None
         else:
             salt = self.salt.encode('utf-8')
-            # TODO
-            # Convert to bytes using the embedded 'to_bytes' function.
-            # In future we will have to decide on the conversion settings.
-            uuid = str(self.uuid).encode('utf-8')
+            uuid = self.uuid.to_bytes(self.uuid.bit_length(),
+                                      byteorder=sys.byteorder)
             result = blake2b(uuid,
                              digest_size=self.size_auth_id,
                              salt=salt)
