@@ -12,17 +12,23 @@ from mod import config
 
 
 class Hash:
-    """A class that generates password hashes, hashes for sessions,
+    """Сlass generates password hashes, hashes for sessions,
     checks passwords hashes.
 
     Args:
-        password (str, required): password
-        salt (str, required): Salt.
+        password (str, required): password.
+
+        salt (str, required): Salt. additional unique identifier
+             (there can be any line: mother's maiden name,
+             favorite writer, etc.).
+
         key (str, optional): Additional argument. Defaults to None.
             If the value of the 'key' parameter is 'None' then the function
             will set it to 'byte-like object' equal to an empty string.
-        hash_password (str, optional):
-        uuid (int, optional):
+
+        hash_password (str, optional): password hash (previously calculated).
+
+        uuid (int, optional): unique user identity.
 
     """
     def __init__(self, password: str,
@@ -30,15 +36,13 @@ class Hash:
                  hash_password: str = None,
                  key: str = None,
                  uuid: int = None):
-        self.password = password.encode('utf-8')
+        self.binary_password = password.encode('utf-8')
         self.hash_password = hash_password
         self.salt = salt
         self.key = key
         self.uuid = uuid
         self.size_password = config.PASSWORD_HASH_SIZE
         self.size_auth_id = config.AUTH_ID_HASH_SIZE
-        # TODO
-        # add iterations for generating hash-functions
 
     def __gen_salt(self, _salt: str) -> bytes:
         if _salt is None:
@@ -62,7 +66,7 @@ class Hash:
         """
         salt = self.__gen_salt(self.salt)
         key = self.__gen_key(self.key)
-        hash_password = blake2b(self.password,
+        hash_password = blake2b(self.binary_password,
                                 digest_size=self.size_password,
                                 key=key, salt=salt)
         return hash_password.hexdigest()
@@ -76,18 +80,11 @@ class Hash:
         if self.hash_password is None:
             return False
         else:
-            salt = self.__gen_salt(self.salt)
-            key = self.__gen_key(self.key)
-            password = self.password_hash().encode('utf-8')
-            result = blake2b(password,
-                             digest_size=self.size_password,
-                             key=key,
-                             salt=salt)
-            good_password = result.hexdigest()
+            verified_hash_password = self.password_hash()
             return compare_digest(self.hash_password,
-                                  good_password.encode('utf-8'))
+                                  verified_hash_password)
 
-    def auth_id(self) -> str:
+    def auth_id(self) -> Optional[str]:
         """The function generates an authenticator for the client session
         connection to the server.
 
