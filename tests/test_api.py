@@ -1,15 +1,15 @@
-import unittest
-import sys
 import os
-from pydantic import ValidationError
+import sys
+import unittest
+
 
 # Add path to directory with code being checked
 # to variable 'PATH' to import modules from directory
 # above the directory with the tests.
-FIXTURES_PATH = '\\'.join((os.getcwd(), 'tests\\fixtures'))
-TEST_FILE = '\\'.join((FIXTURES_PATH, 'api.json'))
-BASE_PATH = os.path.dirname(os.getcwd())
-sys.path.append(BASE_PATH)
+BASE_PATH = os.path.abspath(os.path.dirname(__file__))
+FIXTURES_PATH = os.path.join(BASE_PATH, 'fixtures')
+TEST_FILE = os.path.join(FIXTURES_PATH, 'api.json')
+sys.path.append(os.path.split(BASE_PATH)[0])
 from mod import api
 
 
