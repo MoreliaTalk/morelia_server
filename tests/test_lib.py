@@ -7,7 +7,7 @@ from loguru import logger
 # to variable 'PATH' to import modules from directory
 # above the directory with the tests.
 BASE_PATH = os.path.dirname(os.getcwd())
-sys.path.append(os.path.split(BASE_PATH)[0])
+sys.path.append(BASE_PATH)
 from mod import lib
 
 
