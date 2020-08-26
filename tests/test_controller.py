@@ -35,15 +35,14 @@ class TestServeRequest(unittest.TestCase):
                               dict)
 
     def testserve_request_validation_error_type(self):
-        self.assertIn('error', controller.serve_request(self.serve_request_dict)['type'])
+        self.assertIn('error',
+                      controller.serve_request(self.serve_request_dict)['type'])
 
     def tearDown(self):
         self.serve_request_dict = {}
         self.serve_request_json = {}
 
 
-# TODO Нуждается в доработке
-@unittest.skip("showing class skipping")
 class TestAllMessages(unittest.TestCase):
     def setUp(self):
         all_messages_dict = {
