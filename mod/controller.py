@@ -45,7 +45,7 @@ def user_info_for_server(uuid: int = None,
         return None
 
 
-def check_uuid_and_auth_id(uuid: int, auth_id: str) -> dict:
+def check_uuid_and_auth_id(uuid: int, auth_id: str) -> bool:
     """Function checks the correctness of uuid and auth_id
 
     Args:
@@ -53,34 +53,17 @@ def check_uuid_and_auth_id(uuid: int, auth_id: str) -> dict:
         auth_id (str, requires): Authentication ID
 
     Returns:
-        dict
+        bool
 
     """
-    get_time = time()
     dbquery = models.User.select(models.User.q.uuid == uuid)
-    if bool(dbquery.count()):
+    if dbquery.count():
         if auth_id == dbquery[0].authId:
-            errors = {
-                'code': 200,
-                'status': 'OK',
-                'time': get_time,
-                'detail': 'successfully'
-                }
+            return True
         else:
-            errors = {
-                'code': 401,
-                'status': 'Unauthorized',
-                'time': get_time,
-                'detail': 'Invalid auth_id'
-                }
+            return False
     else:
-        errors = {
-            'code': 401,
-            'status': 'Unauthorized',
-            'time': get_time,
-            'detail': 'Invalid uuid'
-            }
-    return errors
+        return False
 
 
 def save_userdata(username: str, password: str) -> None:
@@ -279,22 +262,16 @@ def get_update(request: api.ValidJSON) -> dict:
                 "id": request.data.flow.id
             }
         },
-        'errors': {
-            'code': 200,
-            'status': 'OK',
-            'time': get_time,
-            'detail': 'successfully'
-            },
+        'errors': None,
         'jsonapi': {
             'version': config.API_VERSION
             },
         'meta': None
         }
 
-    if (errors :=
-        check_uuid_and_auth_id(request.data.user.uuid,
-                               request.data.user.auth_id))["code"] != 200:
-        response["errors"] = errors
+    if check_uuid_and_auth_id(request.data.user.uuid,
+                              request.data.user.auth_id) is False:
+        response["errors"] = lib.error_catching(401)
         return response
 
     dbquery_flow = models.Flow.select(models.Flow.q.flowId ==
@@ -797,22 +774,16 @@ def all_messages(request: api.ValidJSON) -> dict:
     response = {
         "type": request.type,
         "data": None,
-        'errors': {
-            'code': 200,
-            'status': 'OK',
-            'time': get_time,
-            'detail': 'successfully'
-            },
+        'errors': None,
         'jsonapi': {
             'version': config.API_VERSION
             },
         'meta': None
         }
 
-    if (errors :=
-        check_uuid_and_auth_id(request.data.user.uuid,
-                               request.data.user.auth_id))["code"] != 200:
-        response["errors"] = errors
+    if check_uuid_and_auth_id(request.data.user.uuid,
+                              request.data.user.auth_id) is False:
+        response["errors"] = lib.error_catching(401)
         return response
 
     dbquery = models.Message.select()
