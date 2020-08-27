@@ -1,0 +1,60 @@
+{
+    "type": None,
+    "data": {
+      "time": 1594492370,
+      "flow": {
+        "id": 1254,
+        "time": 1594492370,
+        "type": "chat",
+        "title": "Name Chat",
+        "info": "Info about this chat"
+        },
+      "message": {
+        "id": 1,
+        "text": "some text...",
+        "from_user": {
+          "uuid": 1254,
+          "username": "Vasya"
+            },
+        "time": 1594492370,
+        "from_flow": {
+          "id": 123655455,
+          "type": "chat"
+          },
+        "file": {
+          "picture": "jkfikdkdsd",
+          "video": "sdfsdfsdf",
+          "audio": "fgfsdfsdfsdf",
+          "document": "fghsfghsfgh"
+          },
+        "emoji": "sfdfsdfsdf",
+        "edited_message": {
+          "time": 1594492370,
+          "status": true
+          },
+        "reply_to": None
+        },
+      "user": {
+        "uuid": 5855,
+        "login": "username1",
+        "password": "lksdjflksjfsd",
+        "username": "Vasya",
+        "is_bot": true,
+        "auth_id": "4646hjgjhg64",
+        "email": "querty@querty.com",
+        "avatar": "fffdddddd",
+        "bio": "My bio"
+        },
+      "meta": None
+      },
+    "errors": {
+      "code": 200,
+      "status": "OK",
+      "time": 1594492370,
+      "detail": "successfully"
+      },
+    "jsonapi": {
+      "version": None
+      },
+    "meta": None
+    }
