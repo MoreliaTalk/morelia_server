@@ -376,8 +376,7 @@ def add_flow(request: api.ValidJSON) -> dict:
                 timeCreated=get_time,
                 flowType=request.data.flow.type,
                 title=request.data.flow.title,
-                info=request.data.flow.info
-                )
+                info=request.data.flow.info)
     response = {
         'type': request.type,
         'data': {
@@ -456,44 +455,37 @@ def user_info(request: api.ValidJSON) -> dict:
     response = {
         "type": request.type,
         "data": None,
-        'errors': {
-            'code': 200,
-            'status': 'OK',
-            'time': get_time,
-            'detail': 'successfully'
-            },
+        'errors': None,
         'jsonapi': {
             'version': config.API_VERSION
             },
         'meta': None
-    }
+        }
+
+    if check_uuid_and_auth_id(uuid=request.data.user.uuid,
+                              auth_id=request.data.user.auth_id) is False:
+        response['errors'] = lib.error_catching(401)
+        return response
+
     dbquery = models.User.selectBy(uuid=request.data.user.uuid,
-                                   auth_id=request.data.user.auth_id)
-    if bool(dbquery.count()):
-        data = {
-                'time': get_time,
-                'user': {
-                    'uuid': dbquery[0].uuid,
-                    'login': dbquery[0].login,
-                    'password': dbquery[0].password,
-                    'username': dbquery[0].username,
-                    'is_bot': dbquery[0].isBot,
-                    'auth_id': dbquery[0].authId,
-                    'email': dbquery[0].email,
-                    'avatar': dbquery[0].avatar,
-                    'bio': dbquery[0].bio
-                    },
-                'meta': None
-            }
-        response["data"] = data
-    else:
-        errors = {
-            'code': 401,
-            'status': 'Unauthorized',
-            'time': get_time,
-            'detail': 'Unauthorized'
-            }
-        response["errors"] = errors
+                                   authId=request.data.user.auth_id)
+    data = {
+        'time': get_time,
+        'user': {
+            'uuid': dbquery[0].uuid,
+            'login': dbquery[0].login,
+            'password': dbquery[0].password,
+            'username': dbquery[0].username,
+            'is_bot': dbquery[0].isBot,
+            'auth_id': dbquery[0].authId,
+            'email': dbquery[0].email,
+            'avatar': dbquery[0].avatar,
+            'bio': dbquery[0].bio
+            },
+        'meta': None
+        }
+    response["data"] = data
+    response['errors'] = lib.error_catching(200)
     return response
 
 
