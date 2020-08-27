@@ -1,5 +1,6 @@
 import random
 from time import time
+from pydantic import ValidationError
 
 from mod import models
 from mod import config
@@ -157,24 +158,20 @@ def serve_request(request_json) -> dict:
         Response for sending to user  - successfully served
         (error response - if any kind of problems)
     """
-    get_time = time()
     try:
         request = api.ValidJSON.parse_raw(request_json)
-    except api.ValidationError:
-        message = {
-            'type': 'error',
-            'errors': {
-                'time': get_time,
-                'status': 'Unsupported Media Type',
-                'code': 415,
-                'detail': 'JSON validation error'
-                },
-            'jsonapi': {
-                'version': config.API_VERSION
-                },
-            'meta': None
-            }
-        return message
+    except ValidationError as error:
+        response = {
+            "type": "errors",
+            "data": None,
+            "errors": None,
+            "jsonapi": {
+                "version": config.API_VERSION
+            },
+            "meta": None
+        }
+        response['errors'] = lib.error_catching(error)
+        return response
     else:
         if request.type == 'ping-pong':
             return ping_pong(request)
@@ -201,7 +198,7 @@ def serve_request(request_json) -> dict:
         elif request.type == "get_update":
             return get_update(request)
         else:
-            errors(request)
+            return errors(request)
 
 
 # Implementation of methods described in Morelia Protocol
