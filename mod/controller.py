@@ -256,12 +256,7 @@ def get_update(request: api.ValidJSON) -> dict:
     get_time = time()
     response = {
         "type": request.type,
-        "data": {
-            "time": get_time,
-            "flow": {
-                "id": request.data.flow.id
-            }
-        },
+        "data": None,
         'errors': None,
         'jsonapi': {
             'version': config.API_VERSION
@@ -276,14 +271,8 @@ def get_update(request: api.ValidJSON) -> dict:
 
     dbquery_flow = models.Flow.select(models.Flow.q.flowId ==
                                       request.data.flow.id)
-    if bool(dbquery_flow.count()) is False:
-        errors = {
-            'code': 404,
-            'status': 'Not Found',
-            'time': get_time,
-            'detail': 'Flow Not Found'
-            }
-        response["errors"] = errors
+    if dbquery_flow.count() == 0:
+        response["errors"] = lib.error_catching(404)
         return response
 
     # TODO нужно реализовать фильтрацию через SQLObject
@@ -322,15 +311,10 @@ def get_update(request: api.ValidJSON) -> dict:
             }
 
         response["data"] = data
+        response['errors'] = lib.error_catching(200)
         return response
     else:
-        errors = {
-            'code': 404,
-            'status': 'Not Found',
-            'time': get_time,
-            'detail': 'Messages Not Found'
-            }
-        response["errors"] = errors
+        response["errors"] = lib.error_catching(404)
         return response
 
 
