@@ -6,7 +6,11 @@ import unittest
 
 import sqlobject as orm
 
-sys.path.append(os.path.dirname(os.getcwd()))
+BASE_PATH = os.path.abspath(os.path.dirname(__file__))
+FIXTURES_PATH = os.path.join(BASE_PATH, 'fixtures')
+VALID_JSON = os.path.join(FIXTURES_PATH, 'api.json')
+NOT_VALID_JSON = os.path.join(FIXTURES_PATH, 'not_valid_api.json')
+sys.path.append(os.path.split(BASE_PATH)[0])
 from mod import api
 from mod import config
 from mod import controller
@@ -245,37 +249,24 @@ ADD_FLOW = {}
 @unittest.skip
 class TestServeRequest(unittest.TestCase):
     def setUp(self):
-        self.serve_request_dict = {
-            'type': 'ping-pong',
-            'data': {
-                'user': {
-                    'uuid': 5345634567354,
-                    'auth_id': 'lkds89ds89fd98fd'
-                    },
-                'meta': None
-                },
-            'jsonapi': {
-                'version': '1.0'
-                },
-            'meta': None
-            }
-        self.serve_request_json = json.dumps(self.serve_request_dict)
-
-    def test_serve_request_type_dict(self):
-        self.assertIsInstance(controller.serve_request(self.serve_request_json),
-                              dict)
-
-    def testserve_request_validation_error(self):
-        self.assertIsInstance(controller.serve_request(self.serve_request_dict),
-                              dict)
-
-    def testserve_request_validation_error_type(self):
-        self.assertIn('error',
-                      controller.serve_request(self.serve_request_dict)['type'])
+        self.test = api.ValidJSON.parse_file(VALID_JSON)
 
     def tearDown(self):
-        self.serve_request_dict = {}
-        self.serve_request_json = {}
+        del self.test
+
+    def test_serve_request_type_dict(self):
+        self.assertIsInstance(controller.serve_request(self.test),
+                              dict)
+
+    def test_serve_request_validation_error(self):
+        self.test = api.ValidJSON.parse_file(NOT_VALID_JSON)
+        self.assertIsInstance(controller.serve_request(self.test),
+                              dict)
+
+    def test_serve_request_validation_error_check_code(self):
+        self.test = api.ValidJSON.parse_file(NOT_VALID_JSON)
+        result = controller.serve_request(self.test)
+        self.assertEqual(result['errors']['code'], 520)
 
 
 # TestSuite for testing protocol methods
@@ -302,6 +293,18 @@ class TestRegisterUser(unittest.TestCase):
         self.assertIsInstance(controller.register_user(self.valid),
                               dict)
 
+    def test_register_user_check_new_user(self):
+        result = controller.register_user(self.valid)
+        self.assertEqual(result['errors']['code'], 201)
+
+    def test_register_user_check_user_already_exists(self):
+        models.User(uuid=123456,
+                    password=REGISTER_USER['data']['user']['password'],
+                    login=REGISTER_USER['data']['user']['login'],
+                    username=REGISTER_USER['data']['user']['username'])
+        result = controller.register_user(self.valid)
+        self.assertEqual(result['errors']['code'], 409)
+
 
 class TestGetUpdate(unittest.TestCase):
     @classmethod
@@ -325,6 +328,14 @@ class TestGetUpdate(unittest.TestCase):
     def test_get_update_response_type(self):
         self.assertIsInstance(controller.register_user(self.valid),
                               dict)
+
+    def test_get_update_check_update(self):
+        result = controller.register_user(self.valid)
+        self.assertEqual(result['errors']['code'], 200)
+
+    def test_get_update_check_not_found(self):
+        result = controller.register_user(self.valid)
+        self.assertEqual(result['errors']['code'], 404)
 
 
 class TestSendMessage(unittest.TestCase):
