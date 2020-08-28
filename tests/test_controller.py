@@ -407,7 +407,7 @@ class TestGetUpdate(unittest.TestCase):
                        time=3,
                        user=new_user,
                        flow=new_flow)
-        #logger.remove()
+        logger.remove()
 
     def setUp(self):
         self.valid = api.ValidJSON.parse_obj(GET_UPDATE)
@@ -957,8 +957,8 @@ class TestApiControllers(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.dropTable(ifExists=True,
-            dropJoinTables=True,
-            cascade=True)
+                             dropJoinTables=True,
+                             cascade=True)
 
     def test_response_type_test(self):
         """[summary]
