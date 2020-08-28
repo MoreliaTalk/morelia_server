@@ -91,7 +91,7 @@ class Message(orm.SQLObject):
     fileDocument = orm.BLOBCol(default=None)
     emoji = orm.StringCol(default=None)
     editedTime = orm.IntCol(default=None)
-    editedStatus = orm.BoolCol(default=None)
+    editedStatus = orm.BoolCol(default=False)
     # replyTo = orm.StringCol(default=None)
     user = orm.ForeignKey('User')
     flow = orm.ForeignKey('Flow')
