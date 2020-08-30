@@ -6,6 +6,9 @@ from loguru import logger
 
 import sqlobject as orm
 
+# Add path to directory with code being checked
+# to variable 'PATH' to import modules from directory
+# above the directory with the tests.
 BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 FIXTURES_PATH = os.path.join(BASE_PATH, "fixtures")
 VALID_JSON = os.path.join(FIXTURES_PATH, "api.json")
