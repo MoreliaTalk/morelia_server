@@ -119,19 +119,19 @@ pipenv install --ignore-pipfile
 Перед запуском необходимо создать базу данных с пустыми таблицами, командой
 
 ```cmd
-python3 ./manage.py --table create
+python ./manage.py --table create
 ```
 
 Для запуска используйте команду
 
 ```cmd
-python3 ./app.py
+python ./app.py
 ```
 
 Для дополнительной информации о возможностях менеджера миграций
 
 ```cmd
-python3 ./manage.py --help
+python ./manage.py --help
 ```
 
 ## Создание пулл-реквеста для внесенния изменений в develop-ветку Morelia Server ##
