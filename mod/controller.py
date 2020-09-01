@@ -1,5 +1,6 @@
 import random
 from time import time
+from pydantic import ValidationError
 
 from mod import models
 from mod import config
@@ -18,7 +19,6 @@ def user_info_for_server(uuid: int = None,
 
     Returns:
         dict
-
     """
     if uuid:
         dbquery = models.User.select(models.User.q.uuid == uuid)
@@ -27,7 +27,7 @@ def user_info_for_server(uuid: int = None,
     else:
         return None
 
-    if bool(dbquery.count()):
+    if dbquery.count():
         data_user = {
                 'uuid': dbquery[0].uuid,
                 'login': dbquery[0].login,
@@ -44,42 +44,24 @@ def user_info_for_server(uuid: int = None,
         return None
 
 
-def check_uuid_and_auth_id(uuid: int, auth_id: str) -> dict:
+def check_uuid_and_auth_id(uuid: int, auth_id: str) -> bool:
     """Function checks the correctness of uuid and auth_id
 
     Args:
         uuid (int, requires): Unique User ID
-        auth_id (str, requires): Authentication ID
+        auth_id (str, requires): authentification ID
 
     Returns:
-        dict
-
+        bool
     """
-    get_time = time()
     dbquery = models.User.select(models.User.q.uuid == uuid)
-    if bool(dbquery.count()):
+    if dbquery.count():
         if auth_id == dbquery[0].authId:
-            errors = {
-                'code': 200,
-                'status': 'OK',
-                'time': get_time,
-                'detail': 'successfully'
-                }
+            return True
         else:
-            errors = {
-                'code': 401,
-                'status': 'Unauthorized',
-                'time': get_time,
-                'detail': 'Invalid auth_id'
-                }
+            return False
     else:
-        errors = {
-            'code': 401,
-            'status': 'Unauthorized',
-            'time': get_time,
-            'detail': 'Invalid uuid'
-            }
-    return errors
+        return False
 
 
 def save_userdata(username: str, password: str) -> None:
@@ -110,7 +92,8 @@ def save_message(message: dict) -> None:
     Returns:
         None
     """
-    user = models.User.select(models.User.q.username == message['username'])
+    user = models.User.select(models.User.q.username ==
+                              message['username'])
     models.Message(text=message['text'],
                    userID=user[0].uuid,
                    flowID=0,
@@ -137,7 +120,8 @@ def get_messages() -> list:
     dbquery = models.Message.select(models.Message.q.id > 0)
     messages = []
     for data in dbquery:
-        user = models.User.select(models.User.q.uuid == data.userID)
+        user = models.User.select(models.User.q.uuid ==
+                                  data.userID)
         messages.append({
             "mode": "message",
             "username": user[0].username,
@@ -157,24 +141,20 @@ def serve_request(request_json) -> dict:
         Response for sending to user  - successfully served
         (error response - if any kind of problems)
     """
-    get_time = time()
     try:
         request = api.ValidJSON.parse_raw(request_json)
-    except api.ValidationError:
-        message = {
-            'type': 'error',
-            'errors': {
-                'time': get_time,
-                'status': 'Unsupported Media Type',
-                'code': 415,
-                'detail': 'JSON validation error'
-                },
-            'jsonapi': {
-                'version': config.API_VERSION
-                },
-            'meta': None
-            }
-        return message
+    except ValidationError as error:
+        response = {
+            "type": "errors",
+            "data": None,
+            "errors": None,
+            "jsonapi": {
+                "version": config.API_VERSION
+            },
+            "meta": None
+        }
+        response['errors'] = lib.error_catching(error)
+        return response
     else:
         if request.type == 'ping-pong':
             return ping_pong(request)
@@ -191,7 +171,7 @@ def serve_request(request_json) -> dict:
         elif request.type == 'user_info':
             return user_info(request)
         elif request.type == 'auth':
-            return authentication(request)
+            return authentification(request)
         elif request.type == 'delete_user':
             return delete_user(request)
         elif request.type == 'delete_message':
@@ -201,7 +181,7 @@ def serve_request(request_json) -> dict:
         elif request.type == "get_update":
             return get_update(request)
         else:
-            errors(request)
+            return errors(request)
 
 
 # Implementation of methods described in Morelia Protocol
@@ -217,15 +197,10 @@ def register_user(request: api.ValidJSON) -> dict:
     Returns:
         dict: returns JSON reply to client
     """
-    get_time = time()
     response = {
         "type": request.type,
         'data': None,
-        'errors': {
-            'status': 'Created',
-            'code': 201,
-            'detail': 'Registered successfully'
-            },
+        'errors': None,
         'jsonapi': {
             'version': config.API_VERSION
             },
@@ -240,23 +215,11 @@ def register_user(request: api.ValidJSON) -> dict:
                     password=request.data.user.password,
                     login=request.data.user.login,
                     username=request.data.user.login)
-        return response
+        response['errors'] = lib.error_catching(201)
     else:
-        errors = {
-            'code': 409,
-            'status': 'error',
-            'time': get_time,
-            'detail': 'User already exists'
-            }
-        response['errors'] = errors
-        return response
+        # TODO поменять тип ошибки на 409
+        response['errors'] = lib.error_catching(400)
 
-
-def filter_dbquery_by_time_from_and_to(dbquery, ot, do):
-    response = []
-    for db_data in dbquery:
-        if db_data.time >= ot and db_data.time <= do:
-            response.append(db_data)
     return response
 
 
@@ -271,93 +234,77 @@ def get_update(request: api.ValidJSON) -> dict:
         validated by "pydantic".
 
     Returns:
-        dict: [description]"""
-
+        dict: [description]
+    """
     get_time = time()
     response = {
         "type": request.type,
-        "data": {
-            "time": get_time,
-            "flow": {
-                "id": request.data.flow.id
-            }
-        },
-        'errors': {
-            'code': 200,
-            'status': 'OK',
-            'time': get_time,
-            'detail': 'successfully'
-            },
+        "data": None,
+        'errors': None,
         'jsonapi': {
             'version': config.API_VERSION
             },
         'meta': None
         }
 
-    if (errors :=
-        check_uuid_and_auth_id(request.data.user.uuid,
-                               request.data.user.auth_id))["code"] != 200:
-        response["errors"] = errors
+    if check_uuid_and_auth_id(request.data.user.uuid,
+                              request.data.user.auth_id) is False:
+        response["errors"] = lib.error_catching(401)
         return response
 
     dbquery_flow = models.Flow.select(models.Flow.q.flowId ==
                                       request.data.flow.id)
-    if bool(dbquery_flow.count()) is False:
-        errors = {
-            'code': 404,
-            'status': 'Not Found',
-            'time': get_time,
-            'detail': 'Flow Not Found'
+    if dbquery_flow.count():
+        data = {
+            "time": get_time,
+            "flow": {
+                "id": dbquery_flow[0].flowId,
+                "time": dbquery_flow[0].timeCreated,
+                "type": dbquery_flow[0].flowType,
+                "title": dbquery_flow[0].title,
+                "info": dbquery_flow[0].info
+                }
             }
-        response["errors"] = errors
+        response['data'] = data
+    else:
+        response['errors'] = lib.error_catching(404, 'Flow Not Found')
         return response
 
-    # TODO нужно реализовать фильтрацию через SQLObject
-    dbquery = []
-    for db_data in models.Message.select(models.Message.q.flow ==
-                                         request.data.flow.id):
-        if db_data.time >= request.data.time and db_data.time <= get_time:
-            dbquery.append(db_data)
-
-    if dbquery:
-        messages = []
-        for i in dbquery:
+    # TODO нужно реализовать фильтрацию по времени через SQLObject
+    dbquery_message = models.Message.select(models.Message.q.flowID ==
+                                            request.data.flow.id)
+    if dbquery_message.count():
+        messages = {}
+        for i in dbquery_message:
             message = {
-                "flowID": i.flowID,
-                "userID": i.userID,
-                "text": i.text,
-                "time": i.time,
-                "filePicture": i.filePicture,
-                "fileVideo": i.fileVideo,
-                "fileAudio": i.fileAudio,
-                "fileDocument": i.fileDocument,
-                "emoji": i.emoji,
-                "editedTime": i.editedTime,
-                "editedStatus": i.editedStatus
-            }
-            messages.append(message)
-
+                i.id: {
+                    "flowID": i.flowID,
+                    "userID": i.userID,
+                    "text": i.text,
+                    "time": i.time,
+                    "filePicture": i.filePicture,
+                    "fileVideo": i.fileVideo,
+                    "fileAudio": i.fileAudio,
+                    "fileDocument": i.fileDocument,
+                    "emoji": i.emoji,
+                    "editedTime": i.editedTime,
+                    "editedStatus": i.editedStatus
+                    }
+                }
+            messages.update(message)
         data = {
-            'time': get_time,
             'user': {
                 'uuid': request.data.user.uuid,
                 'auth_id': request.data.user.auth_id
-            },
+                },
             'messages': messages,
             'meta': None
             }
-
-        response["data"] = data
-        return response
+        response.update(data)
+        response['errors'] = lib.error_catching(200)
     else:
-        errors = {
-            'code': 404,
-            'status': 'Not Found',
-            'time': get_time,
-            'detail': 'Messages Not Found'
-            }
-        response["errors"] = errors
-        return response
+        response["errors"] = lib.error_catching(404, "Message Not Found")
+    return response
 
 
 def send_message(request: api.ValidJSON) -> dict:
@@ -377,28 +324,27 @@ def send_message(request: api.ValidJSON) -> dict:
             'time': get_time,
             'meta': None
             },
-        'errors': {
-            'code': 200,
-            'status': 'OK',
-            'time': get_time,
-            'detail': 'successfully'
-            },
+        'errors': None,
         'jsonapi': {
             'version': config.API_VERSION
             },
         'meta': None
         }
-    dbquery = models.User.select(
-        models.User.q.username == request.data.user.login)
-    # TODO
-    # check existance of flow
-    # check if user is member of flow
-    # check can user send to channel
-    # check is user banned to write in group
+
+    if check_uuid_and_auth_id(request.data.user.uuid,
+                              request.data.user.auth_id) is False:
+        response['errors'] = lib.error_catching(401)
+        return response
+
+    check_user_in_db = models.User.select(models.User.q.uuid ==
+                                          request.data.user.uuid)
+    check_flow_in_db = models.Flow.select(models.Flow.q.id ==
+                                          request.data.flow.id)
     models.Message(text=request.data.message.text,
-                   userID=dbquery[0].uuid,
-                   flowID=request.data.message.from_flow.id,
-                   time=get_time)
+                   time=get_time,
+                   user=check_user_in_db,
+                   flow=check_flow_in_db)
+    response['errors'] = lib.error_catching(200)
     return response
 
 
@@ -413,30 +359,32 @@ def add_flow(request: api.ValidJSON) -> dict:
         dict: [description]
     """
     get_time = time()
-    flow_id = random.getrandbits(64)
-    models.Flow(flowId=flow_id,
-                timeCreated=get_time,
-                flowType=request.data.flow.type,
-                title=request.data.flow.title,
-                info=request.data.flow.info
-                )
     response = {
         'type': request.type,
-        'data': {
-            'time': get_time,
-            'meta': None
-            },
-        'errors': {
-            'code': 200,
-            'status': 'OK',
-            'time': get_time,
-            'detail': 'successfully'
-            },
+        'data': None,
+        'errors': None,
         'jsonapi': {
             'version': config.API_VERSION
             },
         'meta': None
         }
+
+    if check_uuid_and_auth_id(request.data.user.uuid,
+                              request.data.user.auth_id) is False:
+        response['errors'] = lib.error_catching(401)
+        return response
+
+    flow_id = random.getrandbits(64)
+    try:
+        models.Flow(flowId=flow_id,
+                    timeCreated=get_time,
+                    flowType=request.data.flow.type,
+                    title=request.data.flow.title,
+                    info=request.data.flow.info)
+    except Exception as error:
+        response['errors'] = lib.error_catching(error)
+    else:
+        response['errors'] = lib.error_catching(200)
     return response
 
 
@@ -452,35 +400,41 @@ def all_flow(request: api.ValidJSON) -> dict:
         dict: [description]
     """
     get_time = time()
-    flow_list = []
-    dbquery = models.Flow.select(models.Flow.q.id > 0)
-    for flow in dbquery:
-        data_flow = {
-           "flowId": flow.flowId,
-           "timeCreated": flow.timeCreated,
-           "flowType": flow.flowType,
-           "title": flow.title,
-           "info": flow.info
-        }
-        flow_list.append(data_flow)
     response = {
         'type': request.type,
-        'data': {
-            'time': get_time,
-            'flows': flow_list,
-            'meta': None
-            },
-        'errors': {
-            'code': 200,
-            'status': 'OK',
-            'time': get_time,
-            'detail': 'successfully'
-            },
+        'data': None,
+        'errors': None,
         'jsonapi': {
             'version': config.API_VERSION
             },
         'meta': None
         }
+
+    if check_uuid_and_auth_id(request.data.user.uuid,
+                              request.data.user.auth_id) is False:
+        response['errors'] = lib.error_catching(401)
+        return response
+
+    flows = {}
+    dbquery = models.Flow.select(models.Flow.q.id > 0)
+    for i in dbquery:
+        flow = {
+            i.id: {
+                "flowId": i.flowId,
+                "timeCreated": i.timeCreated,
+                "flowType": i.flowType,
+                "title": i.title,
+                "info": i.info
+                }
+            }
+        flows.update(flow)
+    data = {
+            'time': get_time,
+            'flow': flows,
+            'meta': None
+            }
+    response['data'] = data
+    response['errors'] = lib.error_catching(200)
     return response
 
 
@@ -498,51 +452,44 @@ def user_info(request: api.ValidJSON) -> dict:
     response = {
         "type": request.type,
         "data": None,
-        'errors': {
-            'code': 200,
-            'status': 'OK',
-            'time': get_time,
-            'detail': 'successfully'
-            },
+        'errors': None,
         'jsonapi': {
             'version': config.API_VERSION
             },
         'meta': None
-    }
+        }
+
+    if check_uuid_and_auth_id(request.data.user.uuid,
+                              request.data.user.auth_id) is False:
+        response['errors'] = lib.error_catching(401)
+        return response
+
     dbquery = models.User.selectBy(uuid=request.data.user.uuid,
-                                   auth_id=request.data.user.auth_id)
-    if bool(dbquery.count()):
-        data = {
-                'time': get_time,
-                'user': {
-                    'uuid': dbquery[0].uuid,
-                    'login': dbquery[0].login,
-                    'password': dbquery[0].password,
-                    'username': dbquery[0].username,
-                    'is_bot': dbquery[0].isBot,
-                    'auth_id': dbquery[0].authId,
-                    'email': dbquery[0].email,
-                    'avatar': dbquery[0].avatar,
-                    'bio': dbquery[0].bio
-                    },
-                'meta': None
-            }
-        response["data"] = data
-    else:
-        errors = {
-            'code': 401,
-            'status': 'Unauthorized',
-            'time': get_time,
-            'detail': 'Unauthorized'
-            }
-        response["errors"] = errors
+                                   authId=request.data.user.auth_id)
+    data = {
+        'time': get_time,
+        'user': {
+            'uuid': dbquery[0].uuid,
+            'login': dbquery[0].login,
+            'password': dbquery[0].password,
+            'username': dbquery[0].username,
+            'is_bot': dbquery[0].isBot,
+            'auth_id': dbquery[0].authId,
+            'email': dbquery[0].email,
+            'avatar': dbquery[0].avatar,
+            'bio': dbquery[0].bio
+            },
+        'meta': None
+        }
+    response["data"] = data
+    response['errors'] = lib.error_catching(200)
     return response
 
 
-def authentication(request: api.ValidJSON) -> dict:
-    """Performs authentication of registered client,
+def authentification(request: api.ValidJSON) -> dict:
+    """Performs authentification of registered client,
     with issuance of a unique hash number of connection session.
-    During authentication password transmitted by client
+    During authentification password transmitted by client
     and password contained in server database are verified.
 
     Args:
@@ -556,57 +503,33 @@ def authentication(request: api.ValidJSON) -> dict:
     response = {
         "type": request.type,
         "data": None,
-        'errors': {
-            'code': 200,
-            'status': 'OK',
-            'time': get_time,
-            'detail': 'successfully'
-            },
+        'errors': None,
         'jsonapi': {
             'version': config.API_VERSION
             },
         'meta': None
         }
-    dbquery = models.User.select(models.User.q.login ==
-                                 request.data.user.login)
-    if bool(dbquery.count()):
-        # Create an instance of the Hash class with
-        # help of which we check the password and generating auth_id
+    dbquery = models.User.selectBy(login=request.data.user.login,
+                                   password=request.data.user.password)
+    if dbquery.count():
+        # TODO После внесения изменений в протокол
+        # переделать алгоритм авторизации
         generator = lib.Hash(dbquery[0].password,
                              dbquery[0].salt,
-                             request.data.user.password,
-                             dbquery[0].key,
-                             dbquery[0].uuid)
-        if generator.check_password():
-            # generate a session hash ('auth_id') and immediately
-            # add it to user parameters in database
-            dbquery[0].authId = generator.auth_id()
-            data = {
-                    'time': get_time,
-                    'user': {
-                        'uuid': dbquery[0].uuid,
-                        'auth_id': dbquery[0].authId
-                        },
-                    'meta': None
-                    }
-            response["data"] = data
-        else:
-            errors = {
-                'code': 401,
-                'status': 'Unauthorized',
-                'time': get_time,
-                'detail': 'Unauthorized'
-                }
-            response["errors"] = errors
-    else:
-        errors = {
-            'code': 404,
-            'status': 'Not Found',
+                             uuid=dbquery[0].uuid)
+        dbquery[0].authId = generator.auth_id()
+        data = {
             'time': get_time,
-            'detail': 'User Not Found'
+            'user': {
+                'uuid': dbquery[0].uuid,
+                'auth_id': dbquery[0].authId
+                },
+            'meta': None
             }
-        response["errors"] = errors
-
+        response["data"] = data
+        response['errors'] = lib.error_catching(200)
+    else:
+        response["errors"] = lib.error_catching(404)
     return response
 
 
@@ -620,52 +543,36 @@ def delete_user(request: api.ValidJSON) -> dict:
     Returns:
         dict: [description]
     """
-    get_time = time()
     response = {
         "type": request.type,
         "data": None,
-        'errors': {
-            'code': 200,
-            'status': 'OK',
-            'time': get_time,
-            'detail': 'successfully'
-            },
+        'errors': None,
         'jsonapi': {
             'version': config.API_VERSION
             },
         'meta': None
         }
-    check_user_in_db = models.User.selectBy(
-        uuid=request.data.user.uuid, auth_id=request.data.user.auth_id)
-    if bool(check_user_in_db.count()):
-        dbquery = models.User.selectBy(login=request.data.user.login,
-                                       password=request.data.user.password)
-        if bool(dbquery.count()):
-            data = {
-                'user': {
-                    'uuid': dbquery[0].uuid,
-                    'login': dbquery[0].login
-                    },
-                'meta': None
-                }
-            dbquery[0].delete(dbquery[0].id)
-            response["data"] = data
-        else:
-            errors = {
-                'code': 404,
-                'status': 'Not Found',
-                'time': get_time,
-                'detail': 'User Not Found'
-                }
-            response["errors"] = errors
-    else:
-        errors = {
-            'code': 401,
-            'status': 'Unauthorized',
-            'time': get_time,
-            'detail': 'Unauthorized'
+
+    if check_uuid_and_auth_id(request.data.user.uuid,
+                              request.data.user.auth_id) is False:
+        response['errors'] = lib.error_catching(401)
+        return response
+
+    dbquery = models.User.selectBy(login=request.data.user.login,
+                                   password=request.data.user.password)
+    if dbquery.count():
+        data = {
+            'user': {
+                'uuid': dbquery[0].uuid,
+                'login': dbquery[0].login
+                },
+            'meta': None
             }
-        response["errors"] = errors
+        dbquery[0].delete(dbquery[0].id)
+        response["data"] = data
+        response['errors'] = lib.error_catching(200)
+    else:
+        response["errors"] = lib.error_catching(404)
 
     return response
 
@@ -680,46 +587,27 @@ def delete_message(request: api.ValidJSON) -> dict:
     Returns:
         dict: [description]
     """
-    get_time = time()
     response = {
         "type": request.type,
         "data": None,
-        'errors': {
-            'code': 200,
-            'status': 'OK',
-            'time': get_time,
-            'detail': 'successfully'
-            },
+        'errors': None,
         'jsonapi': {
             'version': config.API_VERSION
             },
         'meta': None
         }
-    # TODO
-    # check auth_id needs converting to single function
-    check_user_in_db = models.User.selectBy(
-        uuid=request.data.user.uuid, auth_id=request.data.user.auth_id)
-    if bool(check_user_in_db.count()):
-        dbquery = models.Message.select(
-            models.User.q.messageID == request.data.message.id)
-        if bool(dbquery.count()):
-            dbquery[0].delete(dbquery[0].id)
-        else:
-            errors = {
-                'code': 404,
-                'status': 'Not Found',
-                'time': get_time,
-                'detail': 'Message Not Found'
-                }
-            response["errors"] = errors
+    if check_uuid_and_auth_id(request.data.user.uuid,
+                              request.data.user.auth_id) is False:
+        response['errors'] = lib.error_catching(401)
+        return response
+
+    dbquery = models.Message.select(models.Message.q.id ==
+                                    request.data.message.id)
+    if dbquery.count():
+        dbquery[0].delete(dbquery[0].id)
+        response['errors'] = lib.error_catching(200)
     else:
-        errors = {
-            'code': 401,
-            'status': 'Unauthorized',
-            'time': get_time,
-            'detail': 'Unauthorized'
-            }
-        response["errors"] = errors
+        response["errors"] = lib.error_catching(404)
 
     return response
 
@@ -739,48 +627,31 @@ def edited_message(request: api.ValidJSON) -> dict:
     response = {
         "type": request.type,
         "data": None,
-        'errors': {
-            'code': 200,
-            'status': 'OK',
-            'time': get_time,
-            'detail': 'successfully'
-            },
+        'errors': None,
         'jsonapi': {
             'version': config.API_VERSION
             },
         'meta': None
         }
+
+    if check_uuid_and_auth_id(request.data.user.uuid,
+                              request.data.user.auth_id) is False:
+        response['errors'] = lib.error_catching(401)
+        return response
+
+    dbquery = models.Message.select(models.Message.q.id ==
+                                    request.data.message.id)
     # TODO
-    # check auth_id needs converting to single function
-    check_user_in_db = models.User.selectBy(
-        uuid=request.data.user.uuid, auth_id=request.data.user.auth_id)
-    if bool(check_user_in_db.count()):
-        dbquery = models.Message.select(
-            models.User.q.messageID == request.data.message.id)
-        # TODO
-        # added a comparison of time contained in query
-        # with time specified in Message database
-        if bool(dbquery.count()):
-            # changing in DB text, time and status
-            dbquery[0].text = request.data.message.text
-            dbquery[0].editedTime = get_time
-            dbquery[0].editedStatus = True
-        else:
-            errors = {
-                'code': 404,
-                'status': 'Not Found',
-                'time': get_time,
-                'detail': 'User Not Found'
-                }
-            response["errors"] = errors
+    # added a comparison of time contained in query
+    # with time specified in Message database
+    if dbquery.count():
+        # changing in DB text, time and status
+        dbquery[0].text = request.data.message.text
+        dbquery[0].editedTime = get_time
+        dbquery[0].editedStatus = True
+        response['errors'] = lib.error_catching(200)
     else:
-        errors = {
-            'code': 401,
-            'status': 'Unauthorized',
-            'time': get_time,
-            'detail': 'Unauthorized'
-            }
-        response["errors"] = errors
+        response["errors"] = lib.error_catching(404)
 
     return response
 
@@ -800,42 +671,38 @@ def all_messages(request: api.ValidJSON) -> dict:
     response = {
         "type": request.type,
         "data": None,
-        'errors': {
-            'code': 200,
-            'status': 'OK',
-            'time': get_time,
-            'detail': 'successfully'
-            },
+        'errors': None,
         'jsonapi': {
             'version': config.API_VERSION
             },
         'meta': None
         }
 
-    if (errors :=
-        check_uuid_and_auth_id(request.data.user.uuid,
-                               request.data.user.auth_id))["code"] != 200:
-        response["errors"] = errors
+    if check_uuid_and_auth_id(request.data.user.uuid,
+                              request.data.user.auth_id) is False:
+        response["errors"] = lib.error_catching(401)
         return response
 
-    dbquery = models.Message.select()
-    if bool(dbquery.count()):
-        messages = []
+    dbquery = models.Message.select(models.Message.q.id > 0)
+    if dbquery.count():
+        messages = {}
         for i in dbquery:
             message = {
-                "flowID": i.flowID,
-                "userID": i.userID,
-                "text": i.text,
-                "time": i.time,
-                "filePicture": i.filePicture,
-                "fileVideo": i.fileVideo,
-                "fileAudio": i.fileAudio,
-                "fileDocument": i.fileDocument,
-                "emoji": i.emoji,
-                "editedTime": i.editedTime,
-                "editedStatus": i.editedStatus
-            }
-            messages.append(message)
+                i.id: {
+                    "flowID": i.flowID,
+                    "userID": i.userID,
+                    "text": i.text,
+                    "time": i.time,
+                    "filePicture": i.filePicture,
+                    "fileVideo": i.fileVideo,
+                    "fileAudio": i.fileAudio,
+                    "fileDocument": i.fileDocument,
+                    "emoji": i.emoji,
+                    "editedTime": i.editedTime,
+                    "editedStatus": i.editedStatus
+                    }
+                }
+            messages.update(message)
 
         data = {
             'time': get_time,
@@ -843,21 +710,14 @@ def all_messages(request: api.ValidJSON) -> dict:
                 'uuid': request.data.user.uuid,
                 'auth_id': request.data.user.auth_id
             },
-            'messages': messages,
+            'message': messages,
             'meta': None
             }
-
         response["data"] = data
-        return response
+        response['errors'] = lib.error_catching(200)
     else:
-        errors = {
-            'code': 404,
-            'status': 'Not Found',
-            'time': get_time,
-            'detail': 'Messages Not Found'
-            }
-        response["errors"] = errors
-        return response
+        response["errors"] = lib.error_catching(404)
+    return response
 
 
 def ping_pong(request: api.ValidJSON) -> dict:
@@ -910,9 +770,5 @@ def errors(request: api.ValidJSON) -> dict:
         },
         'meta': None
     }
-    if request.type is None:
-        response['errors'] = lib.error_catching(400)
-    else:
-        response['errors'] = lib.error_catching(405)
-
+    response['errors'] = lib.error_catching(405)
     return response

@@ -30,7 +30,7 @@ class FromFlow(BaseModel):
 class Flow(BaseModel):
     class Config:
         title = 'List of chat rooms with their description and type'
-    id: int
+    id: Optional[int] = None
     time: Optional[int] = None
     type: Optional[str] = None
     title: Optional[str] = None

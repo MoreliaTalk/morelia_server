@@ -7,7 +7,17 @@ class User(orm.SQLObject):
     about the user and his settings.
 
     Args:
-        None
+        uuid (int, required):
+        login (str, required):
+        password (str, required):
+        username (str, optional):
+        isBot (bool, optional): default False
+        authId (str, optional):
+        email (str, optional):
+        avatar (str, optional):
+        bio (str, optional):
+        salt (str, optional):
+        key (str, optional):
 
     Returns:
         None
@@ -34,7 +44,11 @@ class Flow(orm.SQLObject):
     about threads and their types (chat, channel, group).
 
     Args:
-        None
+        flowId (int, required):
+        timeCreated (int, optional):
+        flowType (str, optional):
+        title (str, optional):
+        info (str, optional):
 
     Returns:
         None
@@ -53,7 +67,15 @@ class Message(orm.SQLObject):
     about user messages.
 
     Args:
-        None
+        text (str, optional):
+        time (int, optional):
+        filePicture (byte, optional):
+        fileVideo (byte, optional):
+        fileAudio (byte, optional):
+        fileDocument (byte, optional):
+        emoji (str, optional):
+        editedTime (int, optional):
+        editedStatus (bool, optional):
 
     Returns:
         None
@@ -69,7 +91,7 @@ class Message(orm.SQLObject):
     fileDocument = orm.BLOBCol(default=None)
     emoji = orm.StringCol(default=None)
     editedTime = orm.IntCol(default=None)
-    editedStatus = orm.BoolCol(default=None)
+    editedStatus = orm.BoolCol(default=False)
     # replyTo = orm.StringCol(default=None)
     user = orm.ForeignKey('User')
     flow = orm.ForeignKey('Flow')
@@ -80,7 +102,9 @@ class Errors(orm.SQLObject):
     all types of errors are pre-stored.
 
     Args:
-        None
+        status (str, optional):
+        code (int, optional):
+        detail (str, optional):
 
     Returns:
         None
