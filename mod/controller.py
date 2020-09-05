@@ -297,7 +297,7 @@ class ProtocolMethods:
                 'meta': None
                 }
         self.response.data = data
-        self.response.errors. = lib.error_catching(200)
+        self.response.errors = lib.error_catching(200)
 
     def user_info(self):
         """Provides information about all personal settings of user.
