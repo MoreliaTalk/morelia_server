@@ -6,7 +6,6 @@ from mod import models
 from mod import config
 from mod import api
 from mod import lib
-import attr
 
 
 def user_info_for_server(uuid: int = None,
@@ -65,9 +64,21 @@ def check_uuid_and_auth_id(uuid: int, auth_id: str) -> bool:
         return False
 
 
-@attr.s
-class ProtocolMetods(object):
-    serve_request = attr.ib()
+class ProtocolMethods:
+    def __init__(self, json_request):
+        self.response = api.ValidJSON()
+        self.response.data = api.Data()
+        self.response.data.message = api.Message()
+        self.response.data.message.file = api.File()
+        self.response.data.message.from_flow = api.FromFlow()
+        self.response.data.message.from_user = api.MessageFromUser()
+        self.response.data.message.edited = api.EditedMessage()
+        self.response.data.user = api.User()
+        self.response.errors = api.Errors()
+        self.response.jsonapi = api.Version()
+        self.response.jsonapi.version = config.API_VERSION
+        self.get_time = int(time())
+        self.json_request = json_request
 
     def serve_request(self) -> dict:
         """The function try serve user request and return result status.
@@ -79,24 +90,12 @@ class ProtocolMetods(object):
             Response for sending to user  - successfully served
             (error response - if any kind of problems)
         """
-        self.get_time = time()
-        self.response = {
-            "type": None,
-            "data": None,
-            "errors": None,
-            "jsonapi": {
-                "version": config.API_VERSION
-            },
-            "meta": None
-            }
-
         try:
-            self.request = api.ValidJSON.parse_raw(self.request_json)
+            self.request = api.ValidJSON.parse_raw(self.json_request)
         except ValidationError as error:
-            self.response['type'] = "errors"
-            self.response['errors'] = lib.error_catching(error)
+            self.response.type = "errors"
+            self.response.errors = lib.error_catching(error)
         else:
-            self.response['type'] = self.request.type
             if check_uuid_and_auth_id(self.request.data.user.uuid,
                                       self.request.data.user.auth_id):
                 if self.request.type == 'ping-pong':
@@ -126,9 +125,9 @@ class ProtocolMetods(object):
                 else:
                     self.errors()
             else:
-                self.response['errors'] = lib.error_catching(401)
+                self.response.errors = lib.error_catching(401)
 
-        return self.response
+        return self.response.toJSON()
 
     def register_user(self):
         """The function registers the user who is not in the database.
@@ -151,10 +150,10 @@ class ProtocolMetods(object):
                         password=self.request.data.user.password,
                         login=self.request.data.user.login,
                         username=self.request.data.user.login)
-            self.response['errors'] = lib.error_catching(201)
+            self.response.errors = lib.error_catching(201)
         else:
             # TODO поменять тип ошибки на 409
-            self.response['errors'] = lib.error_catching(400)
+            self.response.errors = lib.error_catching(400)
 
     def get_update(self):
         """The function displays messages of a specific flow,
@@ -169,7 +168,6 @@ class ProtocolMetods(object):
         Returns:
             dict: [description]
         """
-
         dbquery_flow = models.Flow.select(models.Flow.q.flowId ==
                                           self.request.data.flow.id)
         if dbquery_flow.count():
@@ -183,7 +181,7 @@ class ProtocolMetods(object):
                     "info": dbquery_flow[0].info
                     }
                 }
-            self.response['data'] = data
+            self.response.data = data
 
             dbquery_message = models.Message.select(
                 models.Message.q.flowID == self.request.data.flow.id)
@@ -245,7 +243,7 @@ class ProtocolMetods(object):
                        user=check_user_in_db,
                        flow=check_flow_in_db)
 
-        self.response['errors'] = lib.error_catching(200)
+        self.response.errors = lib.error_catching(200)
 
     def add_flow(self):
         """Function allows you to add a new flow to the database
@@ -265,9 +263,9 @@ class ProtocolMetods(object):
                         title=self.request.data.flow.title,
                         info=self.request.data.flow.info)
         except Exception as error:
-            self.response['errors'] = lib.error_catching(error)
+            self.response.errors = lib.error_catching(error)
         else:
-            self.response['errors'] = lib.error_catching(200)
+            self.response.errors = lib.error_catching(200)
 
     def all_flow(self):
         """Function allows to get a list of all flows and
@@ -298,8 +296,8 @@ class ProtocolMetods(object):
                 'flow': flows,
                 'meta': None
                 }
-        self.response['data'] = data
-        self.response['errors'] = lib.error_catching(200)
+        self.response.data = data
+        self.response.errors. = lib.error_catching(200)
 
     def user_info(self):
         """Provides information about all personal settings of user.
@@ -311,7 +309,6 @@ class ProtocolMetods(object):
         Returns:
             dict: [description]
         """
-
         dbquery = models.User.selectBy(uuid=self.request.data.user.uuid,
                                        authId=self.request.data.user.auth_id)
         data = {
@@ -329,8 +326,8 @@ class ProtocolMetods(object):
                 },
             'meta': None
             }
-        self.response["data"] = data
-        self.response['errors'] = lib.error_catching(200)
+        self.response.data = data
+        self.response.errors = lib.error_catching(200)
 
     def authentification(self):
         """Performs authentification of registered client,
@@ -363,10 +360,10 @@ class ProtocolMetods(object):
                     },
                 'meta': None
                 }
-            self.response["data"] = data
-            self.response['errors'] = lib.error_catching(200)
+            self.response.data = data
+            self.response.errors = lib.error_catching(200)
         else:
-            self.response["errors"] = lib.error_catching(404)
+            self.response.errors = lib.error_catching(404)
 
     def delete_user(self):
         """Function irretrievably deletes the user from the database.

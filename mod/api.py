@@ -1,3 +1,4 @@
+import json
 from typing import Any
 from typing import Optional
 
@@ -8,8 +9,8 @@ from pydantic import EmailStr
 class EditedMessage(BaseModel):
     class Config:
         title = 'Time of editing the message'
-    time: int
-    status: bool
+    time: Optional[int] = None
+    status: Optional[bool] = None
 
 
 class File(BaseModel):
@@ -24,7 +25,7 @@ class File(BaseModel):
 class FromFlow(BaseModel):
     class Config:
         title = 'Information from chat id'
-    id: int
+    id: Optional[int] = None
 
 
 class Flow(BaseModel):
@@ -40,14 +41,14 @@ class Flow(BaseModel):
 class MessageFromUser(BaseModel):
     class Config:
         title = 'Information about forwarded message user'
-    uuid: int
-    username: str
+    uuid: Optional[int] = None
+    username: Optional[str] = None
 
 
 class User(BaseModel):
     class Config:
         title = 'User information'
-    uuid: int = None
+    uuid: Optional[int] = None
     bio: Optional[str] = None
     avatar: Optional[bytes] = None
     password: Optional[str] = None
@@ -61,10 +62,10 @@ class User(BaseModel):
 class Message(BaseModel):
     class Config:
         title = 'Message options'
-    id: int
+    id: Optional[int] = None
     text: Optional[str] = None
     from_user: Optional[MessageFromUser] = None
-    time: int
+    time: Optional[int] = None
     from_flow: FromFlow = None
     file: Optional[File] = None
     emoji: Optional[bytes] = None
@@ -85,26 +86,32 @@ class Data(BaseModel):
 class Errors(BaseModel):
     class Config:
         title = 'Error information and statuses of request processing'
-    code: int
-    status: str
-    time: int
-    detail: str
+    code: Optional[int] = None
+    status: Optional[str] = None
+    time: Optional[int] = None
+    detail: Optional[str] = None
 
 
 class Version(BaseModel):
     class Config:
         title = 'Protocol version'
-    version: float
+    version: Optional[float] = None
 
 
 class ValidJSON(BaseModel):
     class Config:
         title = 'MoreliaTalk protocol v1.0'
-    type: str
+    type: Optional[str] = None
     data: Optional[Data] = None
     errors: Optional[Errors] = None
-    jsonapi: Version
+    jsonapi: Optional[Version] = None
     meta: Optional[Any] = None
+
+    def toJSON(self):
+        return json.dumps(self,
+                          sort_keys=False,
+                          indent=4,
+                          default=lambda o: o.__dict__)
 
 
 if __name__ == "__main__":
