@@ -1,6 +1,8 @@
 import json
 from typing import Any
 from typing import Optional
+from typing import Union
+from typing import List
 
 from pydantic import BaseModel
 from pydantic import EmailStr
@@ -8,14 +10,14 @@ from pydantic import EmailStr
 
 class EditedMessage(BaseModel):
     class Config:
-        title = 'Time of editing the message'
+        title = 'Status and time of editing message'
     time: Optional[int] = None
     status: Optional[bool] = None
 
 
 class File(BaseModel):
     class Config:
-        title = 'Files attached to the message'
+        title = 'Files attached to message'
     picture: Optional[bytes] = None
     video: Optional[bytes] = None
     audio: Optional[bytes] = None
@@ -24,13 +26,13 @@ class File(BaseModel):
 
 class FromFlow(BaseModel):
     class Config:
-        title = 'Information from chat id'
+        title = 'Id flow attached for message'
     id: Optional[int] = None
 
 
 class Flow(BaseModel):
     class Config:
-        title = 'List of chat rooms with their description and type'
+        title = 'Flow with description and type'
     id: Optional[int] = None
     time: Optional[int] = None
     type: Optional[str] = None
@@ -38,11 +40,16 @@ class Flow(BaseModel):
     info: Optional[str] = None
 
 
+class ListFlow(BaseModel):
+    class Config:
+        title = "List of flow"
+    __root__: List[Flow] = None
+
+
 class MessageFromUser(BaseModel):
     class Config:
-        title = 'Information about forwarded message user'
+        title = 'UUID user who write this message'
     uuid: Optional[int] = None
-    username: Optional[str] = None
 
 
 class User(BaseModel):
@@ -59,27 +66,38 @@ class User(BaseModel):
     username: Optional[str] = None
 
 
+class ListUser(BaseModel):
+    class Config:
+        title = "List of users"
+    __root__: List[User] = None
+
+
 class Message(BaseModel):
     class Config:
-        title = 'Message options'
+        title = 'Message information'
     id: Optional[int] = None
     text: Optional[str] = None
     from_user: Optional[MessageFromUser] = None
     time: Optional[int] = None
-    from_flow: FromFlow = None
+    from_flow: Optional[FromFlow] = None
     file: Optional[File] = None
     emoji: Optional[bytes] = None
     edited: Optional[EditedMessage] = None
-    reply_to: Optional[Any] = None
+
+
+class ListMessage(BaseModel):
+    class Config:
+        title = "List of messages"
+    __root__: List[Message] = None
 
 
 class Data(BaseModel):
     class Config:
         title = 'Main data-object'
     time: Optional[int] = None
-    flow: Optional[Flow] = None
-    message: Optional[Message] = None
-    user: Optional[User] = None
+    flow: Union[ListFlow, Flow] = None
+    message: Union[ListMessage, Message] = None
+    user: Union[ListUser, User] = None
     meta: Optional[Any] = None
 
 
@@ -95,7 +113,7 @@ class Errors(BaseModel):
 class Version(BaseModel):
     class Config:
         title = 'Protocol version'
-    version: Optional[float] = None
+    version: Optional[str] = None
 
 
 class ValidJSON(BaseModel):
@@ -107,10 +125,10 @@ class ValidJSON(BaseModel):
     jsonapi: Optional[Version] = None
     meta: Optional[Any] = None
 
-    def toJSON(self):
+    def toJSON(self, sort_keys=False, indent=4):
         return json.dumps(self,
-                          sort_keys=False,
-                          indent=4,
+                          sort_keys=sort_keys,
+                          indent=indent,
                           default=lambda o: o.__dict__)
 
 
