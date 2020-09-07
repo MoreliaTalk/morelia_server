@@ -7,14 +7,15 @@ from mod import config
 from mod import api
 from mod import lib
 
-
-
+from sqlobject import SQLObjectIntegrityError
+from sqlobject import SQLObjectNotFound
 
 
 class ProtocolMethods:
     def __init__(self, request):
         self.response = api.ValidJSON()
         self.response.data = api.Data()
+        self.response.data.flow = api.Flow()
         self.response.data.message = api.Message()
         self.response.data.message.file = api.File()
         self.response.data.message.from_flow = api.FromFlow()
@@ -66,43 +67,43 @@ class ProtocolMethods:
 
         return self.response.toJSON()
 
-	def __check_auth_token(self, uuid: int, auth_id: str) -> bool:
-    """Function checks uuid and auth_id of user
+    def __check_auth_token(self, uuid: int, auth_id: str) -> bool:
+        """Function checks uuid and auth_id of user
 
-    Args:
-        uuid (int, requires): Unique User ID
-        auth_id (str, requires): authentification ID
+        Args:
+            uuid (int, requires): Unique User ID
+            auth_id (str, requires): authentification ID
 
-    Returns:
-        bool
-    """
-    	try:
-    		dbquery = models.User.select(models.User.q.uuid == uuid).getOne()
-    	except SQLObjectIntegrityError, SQLObjectNotFound  as self.auth_error:
-    		# FIXME
-    		pass
-    	else:
-        	if auth_id == dbquery.authId:
-            	return True
-        	else:
-            	return False
+        Returns:
+            bool
+        """
+        try:
+            dbquery = models.User.select(models.User.q.uuid == uuid).getOne()
+        except SQLObjectIntegrityError, SQLObjectNotFound as self.auth_error:
+            # FIXME
+            pass
+        else:
+            if auth_id == dbquery.authId:
+                return True
+            else:
+                return False
 
     def __check_login(self, login: str) -> bool:
-    """Provides information about all personal settings of user
-    (in a server-friendly form)
+        """Provides information about all personal settings of user
+        (in a server-friendly form)
 
-    Args:
-        login (str, optional): user login
+        Args:
+            login (str, optional): user login
 
-    Returns:
-        Bool
-    """
-    	try:
-			dbquery = models.User.select(models.User.q.login == login)
-		except SQLObjectIntegrityError, SQLObjectNotFound as self.login_error:
-			return False
-    	else:
-        	return True
+        Returns:
+            Bool
+        """
+        try:
+            dbquery = models.User.select(models.User.q.login == login)
+        except SQLObjectIntegrityError, SQLObjectNotFound as self.login_error:
+            return False
+        else:
+            return True
 
     def _register_user(self):
         """The function registers the user who is not in the database.
@@ -121,8 +122,8 @@ class ProtocolMethods:
             # generate authID: store and return to user
             # generate salt, and create hash password
             password = lib.Hash(password=self.request.data.user.password,
-            					salt=self.request.data.user.salt,
-            					key=self.request.data.user.key)
+                                salt=self.request.data.user.salt,
+                                key=self.request.data.user.key)
 
             models.User(uuid=random.getrandbits(64),
                         password=self.request.data.user.password,
@@ -198,13 +199,13 @@ class ProtocolMethods:
                 self.response.errors = lib.error_catching(200)
 
             else:
-            	# FIXME
+                # FIXME
                 self.response.errors = lib.error_catching(404,
-                										  "Message Not Found")
+                                                          "Message Not Found")
         else:
-        	# FIXME
+            # FIXME
             self.response.errors = lib.error_catching(404,
-            										  'Flow Not Found')
+                                                      'Flow Not Found')
 
     def send_message(self):
         """The function saves user message in the database.
@@ -246,10 +247,10 @@ class ProtocolMethods:
                         title=self.request.data.flow.title,
                         info=self.request.data.flow.info)
         except Exception as error:
-        	# FIXME
+            # FIXME
             self.response.errors = lib.error_catching(error)
         else:
-        	# FIXME
+            # FIXME
             self.response.errors = lib.error_catching(200)
 
     def all_flow(self):
@@ -349,7 +350,7 @@ class ProtocolMethods:
             # FIXME
             self.response.errors = lib.error_catching(200)
         else:
-        	# FIXME
+            # FIXME
             self.response.errors = lib.error_catching(404)
 
     def delete_user(self):
@@ -399,7 +400,7 @@ class ProtocolMethods:
             # FIXME
             self.response.errors = lib.error_catching(200)
         else:
-        	# FIXME
+            # FIXME
             self.response.errors = lib.error_catching(404)
 
     def edited_message(self):
@@ -427,7 +428,7 @@ class ProtocolMethods:
             # FIXME
             self.response.errors = lib.error_catching(200)
         else:
-        	# FIXME
+            # FIXME
             self.response.errors = lib.error_catching(404)
 
     def all_messages(self):
@@ -475,7 +476,7 @@ class ProtocolMethods:
             # FIXME
             self.response.errors = lib.error_catching(200)
         else:
-        	# FIXME
+            # FIXME
             self.response.errors = lib.error_catching(404)
 
     def ping_pong(self):
