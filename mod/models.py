@@ -10,6 +10,7 @@ class User(orm.SQLObject):
         uuid (int, required):
         login (str, required):
         password (str, required):
+        hash_password (str, optional)
         username (str, optional):
         isBot (bool, optional): default False
         authId (str, optional):
@@ -27,6 +28,7 @@ class User(orm.SQLObject):
     uuid = orm.IntCol(alternateID=True, unique=True, notNone=True)
     login = orm.StringCol()
     password = orm.StringCol()
+    hashPassword = orm.StringCol(default=None)
     username = orm.StringCol(default=None)
     isBot = orm.BoolCol(default=False)
     authId = orm.StringCol(default=None)

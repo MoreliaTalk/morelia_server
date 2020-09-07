@@ -8,64 +8,11 @@ from mod import api
 from mod import lib
 
 
-def user_info_for_server(uuid: int = None,
-                         login: str = None) -> dict:
-    """Provides information about all personal settings of user
-    (in a server-friendly form)
 
-    Args:
-        uuid (int, optional): Unique User ID
-        login (str, optional): user login
-
-    Returns:
-        dict
-    """
-    if uuid:
-        dbquery = models.User.select(models.User.q.uuid == uuid)
-    elif login:
-        dbquery = models.User.select(models.User.q.login == login)
-    else:
-        return None
-
-    if dbquery.count():
-        data_user = {
-                'uuid': dbquery[0].uuid,
-                'login': dbquery[0].login,
-                'password': dbquery[0].password,
-                'username': dbquery[0].username,
-                'is_bot': dbquery[0].isBot,
-                'auth_id': dbquery[0].authId,
-                'email': dbquery[0].email,
-                'avatar': dbquery[0].avatar,
-                'bio': dbquery[0].bio
-            }
-        return data_user
-    else:
-        return None
-
-
-def check_uuid_and_auth_id(uuid: int, auth_id: str) -> bool:
-    """Function checks the correctness of uuid and auth_id
-
-    Args:
-        uuid (int, requires): Unique User ID
-        auth_id (str, requires): authentification ID
-
-    Returns:
-        bool
-    """
-    dbquery = models.User.select(models.User.q.uuid == uuid)
-    if dbquery.count():
-        if auth_id == dbquery[0].authId:
-            return True
-        else:
-            return False
-    else:
-        return False
 
 
 class ProtocolMethods:
-    def __init__(self, json_request):
+    def __init__(self, request):
         self.response = api.ValidJSON()
         self.response.data = api.Data()
         self.response.data.message = api.Message()
@@ -78,18 +25,8 @@ class ProtocolMethods:
         self.response.jsonapi = api.Version()
         self.response.jsonapi.version = config.API_VERSION
         self.get_time = int(time())
-        self.json_request = json_request
+        self.json_request = request
 
-    def serve_request(self) -> dict:
-        """The function try serve user request and return result status.
-
-        Args:
-            No args.
-
-        Returns:
-            Response for sending to user  - successfully served
-            (error response - if any kind of problems)
-        """
         try:
             self.request = api.ValidJSON.parse_raw(self.json_request)
         except ValidationError as error:
@@ -129,7 +66,45 @@ class ProtocolMethods:
 
         return self.response.toJSON()
 
-    def register_user(self):
+	def __check_auth_token(self, uuid: int, auth_id: str) -> bool:
+    """Function checks uuid and auth_id of user
+
+    Args:
+        uuid (int, requires): Unique User ID
+        auth_id (str, requires): authentification ID
+
+    Returns:
+        bool
+    """
+    	try:
+    		dbquery = models.User.select(models.User.q.uuid == uuid).getOne()
+    	except SQLObjectIntegrityError, SQLObjectNotFound  as self.auth_error:
+    		# FIXME
+    		pass
+    	else:
+        	if auth_id == dbquery.authId:
+            	return True
+        	else:
+            	return False
+
+    def __check_login(self, login: str) -> bool:
+    """Provides information about all personal settings of user
+    (in a server-friendly form)
+
+    Args:
+        login (str, optional): user login
+
+    Returns:
+        Bool
+    """
+    	try:
+			dbquery = models.User.select(models.User.q.login == login)
+		except SQLObjectIntegrityError, SQLObjectNotFound as self.login_error:
+			return False
+    	else:
+        	return True
+
+    def _register_user(self):
         """The function registers the user who is not in the database.
         Note: This version also authentificate user, that exist in database
         Future version will return error if login exist in database
@@ -141,19 +116,25 @@ class ProtocolMethods:
         Returns:
             dict: returns JSON reply to client
         """
-        if user_info_for_server(login=self.request.data.user.login) is None:
+        if __check_login(self.request.data.user.login) is False:
             # TODO
             # generate authID: store and return to user
             # generate salt, and create hash password
-            userID = random.getrandbits(64)
-            models.User(uuid=userID,
+            password = lib.Hash(password=self.request.data.user.password,
+            					salt=self.request.data.user.salt,
+            					key=self.request.data.user.key)
+
+            models.User(uuid=random.getrandbits(64),
                         password=self.request.data.user.password,
-                        login=self.request.data.user.login,
-                        username=self.request.data.user.login)
+                        hashPassword=password.password_hash(),
+                        salt=self.request.data.user.salt,
+                        key=self.request.data.user.key,
+                        login=self.request.data.user.login)
+            # FIXME
             self.response.errors = lib.error_catching(201)
         else:
-            # TODO поменять тип ошибки на 409
-            self.response.errors = lib.error_catching(400)
+            # FIXME
+            self.response.errors = lib.error_catching(409)
 
     def get_update(self):
         """The function displays messages of a specific flow,
@@ -172,7 +153,6 @@ class ProtocolMethods:
                                           self.request.data.flow.id)
         if dbquery_flow.count():
             data = {
-                "time": self.get_time,
                 "flow": {
                     "id": dbquery_flow[0].flowId,
                     "time": dbquery_flow[0].timeCreated,
@@ -213,15 +193,18 @@ class ProtocolMethods:
                     'messages': messages,
                     'meta': None
                     }
-                self.response["data"] = data
-                self.response['errors'] = lib.error_catching(200)
+                self.response.data = data
+                # FIXME
+                self.response.errors = lib.error_catching(200)
 
             else:
-                self.response["errors"] = lib.error_catching(404, "Message\
-                                                                Not Found")
+            	# FIXME
+                self.response.errors = lib.error_catching(404,
+                										  "Message Not Found")
         else:
-            self.response['errors'] = lib.error_catching(404, 'Flow\
-                                                            Not Found')
+        	# FIXME
+            self.response.errors = lib.error_catching(404,
+            										  'Flow Not Found')
 
     def send_message(self):
         """The function saves user message in the database.
@@ -242,7 +225,7 @@ class ProtocolMethods:
                        time=self.get_time,
                        user=check_user_in_db,
                        flow=check_flow_in_db)
-
+        # FIXME
         self.response.errors = lib.error_catching(200)
 
     def add_flow(self):
@@ -263,8 +246,10 @@ class ProtocolMethods:
                         title=self.request.data.flow.title,
                         info=self.request.data.flow.info)
         except Exception as error:
+        	# FIXME
             self.response.errors = lib.error_catching(error)
         else:
+        	# FIXME
             self.response.errors = lib.error_catching(200)
 
     def all_flow(self):
@@ -297,6 +282,7 @@ class ProtocolMethods:
                 'meta': None
                 }
         self.response.data = data
+        # FIXME
         self.response.errors = lib.error_catching(200)
 
     def user_info(self):
@@ -312,7 +298,6 @@ class ProtocolMethods:
         dbquery = models.User.selectBy(uuid=self.request.data.user.uuid,
                                        authId=self.request.data.user.auth_id)
         data = {
-            'time': self.get_time,
             'user': {
                 'uuid': dbquery[0].uuid,
                 'login': dbquery[0].login,
@@ -327,6 +312,7 @@ class ProtocolMethods:
             'meta': None
             }
         self.response.data = data
+        # FIXME
         self.response.errors = lib.error_catching(200)
 
     def authentification(self):
@@ -353,7 +339,6 @@ class ProtocolMethods:
                                  uuid=dbquery[0].uuid)
             dbquery[0].authId = generator.auth_id()
             data = {
-                'time': self.get_time,
                 'user': {
                     'uuid': dbquery[0].uuid,
                     'auth_id': dbquery[0].authId
@@ -361,8 +346,10 @@ class ProtocolMethods:
                 'meta': None
                 }
             self.response.data = data
+            # FIXME
             self.response.errors = lib.error_catching(200)
         else:
+        	# FIXME
             self.response.errors = lib.error_catching(404)
 
     def delete_user(self):
@@ -380,7 +367,6 @@ class ProtocolMethods:
                                     password=self.request.data.user.password)
         if dbquery.count():
             data = {
-                'time': self.get_time,
                 'user': {
                     'uuid': dbquery[0].uuid,
                     'login': dbquery[0].login
@@ -388,10 +374,12 @@ class ProtocolMethods:
                 'meta': None
                 }
             dbquery[0].delete(dbquery[0].id)
-            self.response["data"] = data
-            self.response['errors'] = lib.error_catching(200)
+            self.response.data = data
+            # FIXME
+            self.response.errors = lib.error_catching(200)
         else:
-            self.response["errors"] = lib.error_catching(404)
+
+            self.response.errors = lib.error_catching(404)
 
     def delete_message(self):
         """Function deletes the message from the database Message table by its ID.
@@ -408,9 +396,11 @@ class ProtocolMethods:
                                         self.request.data.message.id)
         if dbquery.count():
             dbquery[0].delete(dbquery[0].id)
-            self.response['errors'] = lib.error_catching(200)
+            # FIXME
+            self.response.errors = lib.error_catching(200)
         else:
-            self.response["errors"] = lib.error_catching(404)
+        	# FIXME
+            self.response.errors = lib.error_catching(404)
 
     def edited_message(self):
         """Function changes the text and time in the database Message table.
@@ -434,9 +424,11 @@ class ProtocolMethods:
             dbquery[0].text = self.request.data.message.text
             dbquery[0].editedTime = self.get_time
             dbquery[0].editedStatus = True
-            self.response['errors'] = lib.error_catching(200)
+            # FIXME
+            self.response.errors = lib.error_catching(200)
         else:
-            self.response["errors"] = lib.error_catching(404)
+        	# FIXME
+            self.response.errors = lib.error_catching(404)
 
     def all_messages(self):
         """Function displays all messages of a specific flow retrieves them
@@ -472,7 +464,6 @@ class ProtocolMethods:
                 messages.update(message)
 
             data = {
-                'time': self.get_time,
                 'user': {
                     'uuid': self.request.data.user.uuid,
                     'auth_id': self.request.data.user.auth_id
@@ -480,10 +471,12 @@ class ProtocolMethods:
                 'message': messages,
                 'meta': None
                 }
-            self.response["data"] = data
-            self.response['errors'] = lib.error_catching(200)
+            self.response.data = data
+            # FIXME
+            self.response.errors = lib.error_catching(200)
         else:
-            self.response["errors"] = lib.error_catching(404)
+        	# FIXME
+            self.response.errors = lib.error_catching(404)
 
     def ping_pong(self):
         """The function generates a response to a client's request
@@ -496,7 +489,8 @@ class ProtocolMethods:
         Returns:
             dict: [description]
         """
-        self.response['errors'] = lib.error_catching(200)
+        # FIXME
+        self.response.errors = lib.error_catching(200)
 
     def errors(self):
         """Function handles cases when a request to server is not recognized by it.
@@ -510,5 +504,6 @@ class ProtocolMethods:
         Returns:
             dict: [description]
         """
-        self.response["type"] = "errors"
-        self.response['errors'] = lib.error_catching(405)
+        self.response.type = "errors"
+        # FIXME
+        self.response.errors = lib.error_catching(405)

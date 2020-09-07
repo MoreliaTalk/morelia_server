@@ -179,6 +179,10 @@ def error_catching(code: Union[int, str],
             'status': 'Request Timeout',
             'detail': 'Request Timeout'
             },
+        409: {
+            'status': 'Conflict',
+            'detail': 'Such user (flow) is already on the server.'
+            },
         415: {
             'status': 'Unsupported Media Type',
             'detail': 'Unsupported Media Type'
