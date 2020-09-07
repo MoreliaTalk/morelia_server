@@ -34,8 +34,8 @@ class ProtocolMethods:
             self.response.type = "errors"
             self.response.errors = lib.error_catching(error)
         else:
-            if check_uuid_and_auth_id(self.request.data.user.uuid,
-                                      self.request.data.user.auth_id):
+            if self.check_uuid_and_auth_id(self.request.data.user.uuid,
+                                           self.request.data.user.auth_id):
                 if self.request.type == 'ping-pong':
                     self.ping_pong()
                 elif self.request.type == 'register_user':
@@ -79,7 +79,8 @@ class ProtocolMethods:
         """
         try:
             dbquery = models.User.select(models.User.q.uuid == uuid).getOne()
-        except SQLObjectIntegrityError, SQLObjectNotFound as self.auth_error:
+        except SQLObjectIntegrityError and SQLObjectNotFound:
+            self.auth_error = SQLObjectIntegrityError, SQLObjectNotFound
             # FIXME
             pass
         else:
@@ -99,8 +100,9 @@ class ProtocolMethods:
             Bool
         """
         try:
-            dbquery = models.User.select(models.User.q.login == login)
-        except SQLObjectIntegrityError, SQLObjectNotFound as self.login_error:
+            models.User.select(models.User.q.login == login)
+        except SQLObjectIntegrityError and SQLObjectNotFound:
+            self.login_error = SQLObjectIntegrityError, SQLObjectNotFound
             return False
         else:
             return True
@@ -117,7 +119,7 @@ class ProtocolMethods:
         Returns:
             dict: returns JSON reply to client
         """
-        if __check_login(self.request.data.user.login) is False:
+        if self.__check_login(self.request.data.user.login) is False:
             # TODO
             # generate authID: store and return to user
             # generate salt, and create hash password
@@ -137,7 +139,7 @@ class ProtocolMethods:
             # FIXME
             self.response.errors = lib.error_catching(409)
 
-    def get_update(self):
+    def _get_update(self):
         """The function displays messages of a specific flow,
         from the timestamp recorded in the request to the server timestamp,
         retrieves them from the database
@@ -207,7 +209,7 @@ class ProtocolMethods:
             self.response.errors = lib.error_catching(404,
                                                       'Flow Not Found')
 
-    def send_message(self):
+    def _send_message(self):
         """The function saves user message in the database.
 
         Args:
@@ -229,7 +231,7 @@ class ProtocolMethods:
         # FIXME
         self.response.errors = lib.error_catching(200)
 
-    def add_flow(self):
+    def _add_flow(self):
         """Function allows you to add a new flow to the database
 
         Args:
@@ -253,7 +255,7 @@ class ProtocolMethods:
             # FIXME
             self.response.errors = lib.error_catching(200)
 
-    def all_flow(self):
+    def _all_flow(self):
         """Function allows to get a list of all flows and
         information about them from the database
 
@@ -286,7 +288,7 @@ class ProtocolMethods:
         # FIXME
         self.response.errors = lib.error_catching(200)
 
-    def user_info(self):
+    def _user_info(self):
         """Provides information about all personal settings of user.
 
         Args:
@@ -316,7 +318,7 @@ class ProtocolMethods:
         # FIXME
         self.response.errors = lib.error_catching(200)
 
-    def authentification(self):
+    def _authentification(self):
         """Performs authentification of registered client,
         with issuance of a unique hash number of connection session.
         During authentification password transmitted by client
@@ -353,7 +355,7 @@ class ProtocolMethods:
             # FIXME
             self.response.errors = lib.error_catching(404)
 
-    def delete_user(self):
+    def _delete_user(self):
         """Function irretrievably deletes the user from the database.
 
         Args:
@@ -382,7 +384,7 @@ class ProtocolMethods:
 
             self.response.errors = lib.error_catching(404)
 
-    def delete_message(self):
+    def _delete_message(self):
         """Function deletes the message from the database Message table by its ID.
 
         Args:
@@ -403,7 +405,7 @@ class ProtocolMethods:
             # FIXME
             self.response.errors = lib.error_catching(404)
 
-    def edited_message(self):
+    def _edited_message(self):
         """Function changes the text and time in the database Message table.
         The value of the editedStatus column changes from None to True.
 
@@ -431,7 +433,7 @@ class ProtocolMethods:
             # FIXME
             self.response.errors = lib.error_catching(404)
 
-    def all_messages(self):
+    def _all_messages(self):
         """Function displays all messages of a specific flow retrieves them
         from the database and issues them as an array consisting of JSON
 
@@ -479,7 +481,7 @@ class ProtocolMethods:
             # FIXME
             self.response.errors = lib.error_catching(404)
 
-    def ping_pong(self):
+    def _ping_pong(self):
         """The function generates a response to a client's request
         for communication between the server and the client.
 
@@ -493,7 +495,7 @@ class ProtocolMethods:
         # FIXME
         self.response.errors = lib.error_catching(200)
 
-    def errors(self):
+    def _errors(self):
         """Function handles cases when a request to server is not recognized by it.
         You get a standard answer type: error, which contains an object
         with a description of the error.
