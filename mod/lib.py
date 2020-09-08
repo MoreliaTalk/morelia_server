@@ -1,5 +1,6 @@
 from time import time
 import sys
+import json
 from typing import Optional
 from typing import Union
 from hashlib import blake2b
@@ -7,9 +8,9 @@ from os import urandom
 from hmac import compare_digest
 
 from loguru import logger
-import attr
 
 from mod import config
+from mod import api
 
 
 class Hash:
@@ -104,20 +105,7 @@ class Hash:
             return result.hexdigest()
 
 
-@attr.s
-class TemplateErrors:
-    """Template of class intended for storage of attributes 'Errors' object.
-    When creating an instance, any passed value to e'detail' attribute
-    is converted to the 'str' type.
-    """
-    code: int = attr.ib()
-    status: str = attr.ib()
-    time: int = attr.ib()
-    detail: str = attr.ib(converter=str)
-
-
-def error_catching(code: Union[int, str],
-                   add_info: Optional[str] = None) -> dict:
+class ErrorsCatching(api.Errors):
     """Function catches errors in the "try...except" content.
     Result is 'dict' with information about the code, status,
     time and detailed description of the error that has occurred.
@@ -142,101 +130,112 @@ def error_catching(code: Union[int, str],
 
 
     """
-    dict_all_errors = {
-        200: {
-            'status': 'OK',
-            'detail': 'successfully'
-            },
-        201: {
-            'status': 'Created',
-            'detail': 'Created'
-            },
-        202: {
-            'status': 'Accepted',
-            'detail': 'Accepted'
-            },
-        400: {
-            'status': 'Bad Request',
-            'detail': 'Bad Request'
-            },
-        401: {
-            'status': 'Unauthorized',
-            'detail': 'Unauthorized'
-            },
-        403: {
-            'status': 'Forbidden',
-            'detail': 'Forbidden'
-            },
-        404: {
-            'status': 'Not Found',
-            'detail': 'Not Found'
-            },
-        405: {
-            'status': 'Method Not Allowed',
-            'detail': 'Method Not Allowed'
-            },
-        408: {
-            'status': 'Request Timeout',
-            'detail': 'Request Timeout'
-            },
-        409: {
-            'status': 'Conflict',
-            'detail': 'Such user (flow) is already on the server.'
-            },
-        415: {
-            'status': 'Unsupported Media Type',
-            'detail': 'Unsupported Media Type'
-            },
-        417: {
-            'status': 'Expectation Failed',
-            'detail': 'Expectation Failed'
-            },
-        426: {
-            'status': 'Upgrade Required',
-            'detail': 'Upgrade Required'
-            },
-        429: {
-            'status': 'Too Many Requests',
-            'detail': 'Too Many Requests'
-            },
-        499: {
-            'status': 'Client Closed Request',
-            'detail': 'Client Closed Request'
-            },
-        500: {
-            'status': 'Internal Server Error',
-            'detail': 'Internal Server Error'
-            },
-        503: {
-            'status': 'Service Unavailable',
-            'detail': 'Service Unavailable'
-            },
-        526: {
-            'status': 'Invalid SSL Certificate',
-            'detail': 'Invalid SSL Certificate'
-            },
-        }
-
-    get_time = int(time())
-
-    if code in dict_all_errors:
-        if add_info is None:
-            add_info = dict_all_errors[code]['detail']
-        template = TemplateErrors(code=code,
-                                  status=dict_all_errors[code]['status'],
-                                  time=get_time,
-                                  detail=add_info)
-        result = attr.asdict(template)
-        if code in (200, 201, 202):
-            logger.debug(f"errors code: {code}, errors result: {result}")
+    def __init__(self, code: Union[int, str],
+                 add_info: Optional[str] = None):
+        self.get_time = int(time())
+        self.dict_all_errors = {
+            200: {
+                'status': 'OK',
+                'detail': 'successfully'
+                },
+            201: {
+                'status': 'Created',
+                'detail': 'Created'
+                },
+            202: {
+                'status': 'Accepted',
+                'detail': 'Accepted'
+                },
+            400: {
+                'status': 'Bad Request',
+                'detail': 'Bad Request'
+                },
+            401: {
+                'status': 'Unauthorized',
+                'detail': 'Unauthorized'
+                },
+            403: {
+                'status': 'Forbidden',
+                'detail': 'Forbidden'
+                },
+            404: {
+                'status': 'Not Found',
+                'detail': 'Not Found'
+                },
+            405: {
+                'status': 'Method Not Allowed',
+                'detail': 'Method Not Allowed'
+                },
+            408: {
+                'status': 'Request Timeout',
+                'detail': 'Request Timeout'
+                },
+            409: {
+                'status': 'Conflict',
+                'detail': 'Such user (flow) is already on the server.'
+                },
+            415: {
+                'status': 'Unsupported Media Type',
+                'detail': 'Unsupported Media Type'
+                },
+            417: {
+                'status': 'Expectation Failed',
+                'detail': 'Expectation Failed'
+                },
+            426: {
+                'status': 'Upgrade Required',
+                'detail': 'Upgrade Required'
+                },
+            429: {
+                'status': 'Too Many Requests',
+                'detail': 'Too Many Requests'
+                },
+            499: {
+                'status': 'Client Closed Request',
+                'detail': 'Client Closed Request'
+                },
+            500: {
+                'status': 'Internal Server Error',
+                'detail': 'Internal Server Error'
+                },
+            503: {
+                'status': 'Service Unavailable',
+                'detail': 'Service Unavailable'
+                },
+            526: {
+                'status': 'Invalid SSL Certificate',
+                'detail': 'Invalid SSL Certificate'
+                },
+            }
+        self.code = code
+        self.add_info = add_info
+        self.template = api.Errors()
+        if self.code in self.dict_all_errors:
+            if self.add_info is None:
+                self.add_info = self.dict_all_errors[self.code]['detail']
+            self.template.code = self.code
+            self.template.status = self.dict_all_errors[self.code]['status']
+            self.template.time = self.get_time
+            self.template.detail = self.add_info
+            if self.code in (200, 201, 202):
+                logger.debug(f"errors code: {self.code}, \
+                               errors result: {self.template}")
+            else:
+                logger.error(f"errors code: {self.code}, \
+                              errors result: {result}")
         else:
-            logger.error(f"errors code: {code}, errors result: {result}")
-    else:
-        template = TemplateErrors(code=520,
-                                  status='Unknown Error',
-                                  time=get_time,
-                                  detail=code)
-        result = attr.asdict(template)
-        logger.error(f"errors code: {code}, errors result: {result}")
+            self.template.code = 520
+            self.template.status = 'Unknown Error'
+            self.template.time = self.get_time
+            self.template.detail = self.code
+            logger.error(f"errors code: {self.code}, \
+                          errors result: {self.template}")
 
-    return result
+    def to_json(self):
+        json.dumps(self.template, default=lambda o: o.__dict__)
+
+    def to_obj(self):
+        return self.template
+
+    def to_dict(self):
+        return self.template.__dict__
