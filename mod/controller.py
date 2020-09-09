@@ -15,7 +15,7 @@ class ProtocolMethods:
     def __init__(self, request):
         self.response = api.ValidJSON()
         self.response.data = api.Data()
-        self.response.data.flow = api.Flow()
+        self.response.data.flow: list = api.Flow()
         self.response.data.message = api.Message()
         self.response.data.message.file = api.File()
         self.response.data.message.from_flow = api.FromFlow()
@@ -26,48 +26,46 @@ class ProtocolMethods:
         self.response.jsonapi = api.Version()
         self.response.jsonapi.version = config.API_VERSION
         self.get_time = int(time())
-        self.json_request = request
-
+        self.request = request
         try:
-            self.request = api.ValidJSON.parse_raw(self.json_request)
+            self.request = api.ValidJSON.parse_raw(self.request)
         except ValidationError as error:
             self.response.type = "errors"
             self.response.errors = lib.error_catching(error)
         else:
-            if self.check_uuid_and_auth_id(self.request.data.user.uuid,
-                                           self.request.data.user.auth_id):
+            if __check_auth_token():
                 if self.request.type == 'ping-pong':
-                    self.ping_pong()
+                    self._ping_pong()
                 elif self.request.type == 'register_user':
-                    self.register_user()
+                    self._register_user()
                 elif self.request.type == 'send_message':
-                    self.send_message()
+                    self._send_message()
                 elif self.request.type == 'all_flow':
-                    self.all_flow()
+                    self._all_flow()
                 elif self.request.type == 'add_flow':
-                    self.add_flow()
+                    self._add_flow()
                 elif self.request.type == 'all_messages':
-                    self.all_messages()
+                    self._all_messages()
                 elif self.request.type == 'user_info':
-                    self.user_info()
+                    self._user_info()
                 elif self.request.type == 'auth':
-                    self.authentification()
+                    self._authentification()
                 elif self.request.type == 'delete_user':
-                    self.delete_user()
+                    self._delete_user()
                 elif self.request.type == 'delete_message':
-                    self.delete_message()
+                    self._delete_message()
                 elif self.request.type == 'edited_message':
-                    self.edited_message()
+                    self._edited_message()
                 elif self.request.type == "get_update":
-                    self.get_update()
+                    self._get_update()
                 else:
-                    self.errors()
+                    self._errors()
             else:
                 self.response.errors = lib.error_catching(401)
 
         return self.response.toJSON()
 
-    def __check_auth_token(self, uuid: int, auth_id: str) -> bool:
+    def __check_auth_token(self) -> bool:
         """Function checks uuid and auth_id of user
 
         Args:
@@ -78,10 +76,9 @@ class ProtocolMethods:
             bool
         """
         try:
-            dbquery = models.User.select(models.User.q.uuid == uuid).getOne()
-        except SQLObjectIntegrityError and SQLObjectNotFound:
-            self.auth_error = SQLObjectIntegrityError, SQLObjectNotFound
-            # FIXME
+            dbquery = models.User.select(models.User.q.uuid ==
+                                         self.request.data.user.uuid).getOne()
+        except SQLObjectIntegrityError, SQLObjectNotFound:
             pass
         else:
             if auth_id == dbquery.authId:
@@ -89,7 +86,7 @@ class ProtocolMethods:
             else:
                 return False
 
-    def __check_login(self, login: str) -> bool:
+    def __check_login(self) -> bool:
         """Provides information about all personal settings of user
         (in a server-friendly form)
 
@@ -100,9 +97,9 @@ class ProtocolMethods:
             Bool
         """
         try:
-            models.User.select(models.User.q.login == login)
-        except SQLObjectIntegrityError and SQLObjectNotFound:
-            self.login_error = SQLObjectIntegrityError, SQLObjectNotFound
+            dbquery = models.User.select(models.User.q.login ==
+                                         self.request.data.user.login)
+        except SQLObjectIntegrityError, SQLObjectNotFound:
             return False
         else:
             return True
@@ -119,17 +116,14 @@ class ProtocolMethods:
         Returns:
             dict: returns JSON reply to client
         """
-        if self.__check_login(self.request.data.user.login) is False:
-            # TODO
-            # generate authID: store and return to user
-            # generate salt, and create hash password
-            password = lib.Hash(password=self.request.data.user.password,
-                                salt=self.request.data.user.salt,
-                                key=self.request.data.user.key)
+        if __check_login() is False:
+            generated = lib.Hash(password=self.request.data.user.password,
+                                 salt=self.request.data.user.salt,
+                                 key=self.request.data.user.key)
 
             models.User(uuid=random.getrandbits(64),
                         password=self.request.data.user.password,
-                        hashPassword=password.password_hash(),
+                        hashPassword=generated.password_hash(),
                         salt=self.request.data.user.salt,
                         key=self.request.data.user.key,
                         login=self.request.data.user.login)
@@ -152,64 +146,56 @@ class ProtocolMethods:
         Returns:
             dict: [description]
         """
-        dbquery_flow = models.Flow.select(models.Flow.q.flowId ==
-                                          self.request.data.flow.id)
-        if dbquery_flow.count():
-            data = {
-                "flow": {
-                    "id": dbquery_flow[0].flowId,
-                    "time": dbquery_flow[0].timeCreated,
-                    "type": dbquery_flow[0].flowType,
-                    "title": dbquery_flow[0].title,
-                    "info": dbquery_flow[0].info
-                    }
-                }
-            self.response.data = data
-
-            dbquery_message = models.Message.select(
-                models.Message.q.flowID == self.request.data.flow.id)
-
-            if dbquery_message.count():
-                messages = {}
-                for i in dbquery_message:
-                    message = {
-                        i.id: {
-                            "flowID": i.flowID,
-                            "userID": i.userID,
-                            "text": i.text,
-                            "time": i.time,
-                            "filePicture": i.filePicture,
-                            "fileVideo": i.fileVideo,
-                            "fileAudio": i.fileAudio,
-                            "fileDocument": i.fileDocument,
-                            "emoji": i.emoji,
-                            "editedTime": i.editedTime,
-                            "editedStatus": i.editedStatus
+        for flow_id in self.request.data.flow:
+            try:
+                dbquery_flow = models.Flow.select(models.Flow.q.flowId ==
+                                                  flow_id).getOne()
+            except SQLObjectNotFound as flow_error:
+                self.response.errors = lib.ErrorsCatching(404,
+                                                          flow_error).to_obj()
+            else:
+                for flow in dbquery_flow:
+                    dict_flow = {
+                        "id": flow.flowId,
+                        "time": flow.timeCreated,
+                        "type": flow.flowType,
+                        "title": flow.title,
+                        "info": flow.info
+                        }
+                    self.response.data.flow.append(dict_flow)
+            try:
+                dbquery_message = models.Message.select(models.Message.q.flowID ==
+                                                        flow_id)
+            except SQLObjectNotFound as message_error:
+                self.response.errors = lib.ErrorsCatching(404,
+                                                          message_error).to_obj()
+            else:
+                for message in dbquery_message:
+                    dict_message = {
+                        "text": message.text,
+                        "time": message.time,
+                        "emoji": message.emoji,
+                        "file": {
+                            "picture": message.filePicture,
+                            "video": message.fileVideo,
+                            "audio": message.fileAudio,
+                            "document": message.fileDocument
+                            },
+                        "from_user": {
+                            "uuid": 123
+                            },
+                        "from_flow": {
+                            "id": message.FlowID
+                            },
+                        "edited_message": {
+                            "edited_time": message.editedTime,
+                            "edited_status": message.editedStatus
                             }
                         }
-                    messages.update(message)
-                data = {
-                    'user': {
-                        'uuid': self.request.data.user.uuid,
-                        'auth_id': self.request.data.user.auth_id
-                        },
-                    'messages': messages,
-                    'meta': None
-                    }
-                self.response.data = data
-                # FIXME
-                self.response.errors = lib.error_catching(200)
+                    self.response.data.message.append(dict_message)
+        self.response.errors = lib.ErrorsCatching(200).to_obj()
 
-            else:
-                # FIXME
-                self.response.errors = lib.error_catching(404,
-                                                          "Message Not Found")
-        else:
-            # FIXME
-            self.response.errors = lib.error_catching(404,
-                                                      'Flow Not Found')
-
-    def _send_message(self):
+    def send_message(self):
         """The function saves user message in the database.
 
         Args:
@@ -231,7 +217,7 @@ class ProtocolMethods:
         # FIXME
         self.response.errors = lib.error_catching(200)
 
-    def _add_flow(self):
+    def add_flow(self):
         """Function allows you to add a new flow to the database
 
         Args:
@@ -255,7 +241,7 @@ class ProtocolMethods:
             # FIXME
             self.response.errors = lib.error_catching(200)
 
-    def _all_flow(self):
+    def all_flow(self):
         """Function allows to get a list of all flows and
         information about them from the database
 
@@ -288,7 +274,7 @@ class ProtocolMethods:
         # FIXME
         self.response.errors = lib.error_catching(200)
 
-    def _user_info(self):
+    def user_info(self):
         """Provides information about all personal settings of user.
 
         Args:
@@ -318,7 +304,7 @@ class ProtocolMethods:
         # FIXME
         self.response.errors = lib.error_catching(200)
 
-    def _authentification(self):
+    def authentification(self):
         """Performs authentification of registered client,
         with issuance of a unique hash number of connection session.
         During authentification password transmitted by client
@@ -355,7 +341,7 @@ class ProtocolMethods:
             # FIXME
             self.response.errors = lib.error_catching(404)
 
-    def _delete_user(self):
+    def delete_user(self):
         """Function irretrievably deletes the user from the database.
 
         Args:
@@ -384,7 +370,7 @@ class ProtocolMethods:
 
             self.response.errors = lib.error_catching(404)
 
-    def _delete_message(self):
+    def delete_message(self):
         """Function deletes the message from the database Message table by its ID.
 
         Args:
@@ -405,7 +391,7 @@ class ProtocolMethods:
             # FIXME
             self.response.errors = lib.error_catching(404)
 
-    def _edited_message(self):
+    def edited_message(self):
         """Function changes the text and time in the database Message table.
         The value of the editedStatus column changes from None to True.
 
@@ -433,7 +419,7 @@ class ProtocolMethods:
             # FIXME
             self.response.errors = lib.error_catching(404)
 
-    def _all_messages(self):
+    def all_messages(self):
         """Function displays all messages of a specific flow retrieves them
         from the database and issues them as an array consisting of JSON
 
@@ -481,7 +467,7 @@ class ProtocolMethods:
             # FIXME
             self.response.errors = lib.error_catching(404)
 
-    def _ping_pong(self):
+    def ping_pong(self):
         """The function generates a response to a client's request
         for communication between the server and the client.
 
@@ -495,7 +481,7 @@ class ProtocolMethods:
         # FIXME
         self.response.errors = lib.error_catching(200)
 
-    def _errors(self):
+    def errors(self):
         """Function handles cases when a request to server is not recognized by it.
         You get a standard answer type: error, which contains an object
         with a description of the error.

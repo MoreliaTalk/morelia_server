@@ -32,18 +32,12 @@ class FromFlow(BaseModel):
 
 class Flow(BaseModel):
     class Config:
-        title = 'Flow with description and type'
+        title = 'List of flow with description and type'
     id: Optional[int] = None
     time: Optional[int] = None
     type: Optional[str] = None
     title: Optional[str] = None
     info: Optional[str] = None
-
-
-class ListFlow(BaseModel):
-    class Config:
-        title = "List of flow"
-    __root__: List[Flow] = None
 
 
 class MessageFromUser(BaseModel):
@@ -54,7 +48,7 @@ class MessageFromUser(BaseModel):
 
 class User(BaseModel):
     class Config:
-        title = 'User information'
+        title = 'List of user information'
     uuid: Optional[int] = None
     bio: Optional[str] = None
     avatar: Optional[bytes] = None
@@ -66,15 +60,9 @@ class User(BaseModel):
     username: Optional[str] = None
 
 
-class ListUser(BaseModel):
-    class Config:
-        title = "List of users"
-    __root__: List[User] = None
-
-
 class Message(BaseModel):
     class Config:
-        title = 'Message information'
+        title = 'List of message information'
     id: Optional[int] = None
     text: Optional[str] = None
     from_user: Optional[MessageFromUser] = None
@@ -85,19 +73,13 @@ class Message(BaseModel):
     edited: Optional[EditedMessage] = None
 
 
-class ListMessage(BaseModel):
-    class Config:
-        title = "List of messages"
-    __root__: List[Message] = None
-
-
 class Data(BaseModel):
     class Config:
         title = 'Main data-object'
     time: Optional[int] = None
-    flow: Union[ListFlow, Flow] = None
-    message: Union[ListMessage, Message] = None
-    user: Union[ListUser, User] = None
+    flow: Union[List[Flow], Flow] = None
+    message: Union[List[Message], Message] = None
+    user: Union[List[User], User] = None
     meta: Optional[Any] = None
 
 
