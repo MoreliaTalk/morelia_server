@@ -16,12 +16,12 @@ class ProtocolMethods:
         self.response = api.ValidJSON()
         self.response.data = api.Data()
         self.response.data.flow: list = api.Flow()
-        self.response.data.message = api.Message()
-        self.response.data.message.file = api.File()
-        self.response.data.message.from_flow = api.FromFlow()
-        self.response.data.message.from_user = api.MessageFromUser()
-        self.response.data.message.edited = api.EditedMessage()
-        self.response.data.user = api.User()
+        self.response.data.message: list = api.Message()
+        #self.response.data.message.file = api.File()
+        #self.response.data.message.from_flow = api.FromFlow()
+        #self.response.data.message.from_user = api.MessageFromUser()
+        #self.response.data.message.edited = api.EditedMessage()
+        self.response.data.user: list = api.User()
         self.response.errors = api.Errors()
         self.response.jsonapi = api.Version()
         self.response.jsonapi.version = config.API_VERSION
@@ -127,8 +127,7 @@ class ProtocolMethods:
                         salt=self.request.data.user.salt,
                         key=self.request.data.user.key,
                         login=self.request.data.user.login)
-            # FIXME
-            self.response.errors = lib.error_catching(201)
+            self.response.errors = lib.ErrorsCatching(201).to_obj()
         else:
             # FIXME
             self.response.errors = lib.error_catching(409)
@@ -152,7 +151,7 @@ class ProtocolMethods:
                                                   flow_id).getOne()
             except SQLObjectNotFound as flow_error:
                 self.response.errors = lib.ErrorsCatching(404,
-                                                          flow_error).to_obj()
+                                                          flow_error).to_dict()
             else:
                 for flow in dbquery_flow:
                     dict_flow = {
@@ -195,7 +194,7 @@ class ProtocolMethods:
                     self.response.data.message.append(dict_message)
         self.response.errors = lib.ErrorsCatching(200).to_obj()
 
-    def send_message(self):
+    def _send_message(self):
         """The function saves user message in the database.
 
         Args:
@@ -205,19 +204,26 @@ class ProtocolMethods:
         Returns:
             dict: returns JSON reply to client
         """
+        try:
+            dbquery_flow = models.Flow.select(models.Flow.q.id ==
+                                              self.request.data.flow.id).getOne()
+        except SQLObjectNotFound as flow_error:
+            self.response.errors = lib.ErrorsCatching(404, flow_error).to_dict()
+        else:
+            models.Message(text=self.request.data.message.text,
+                           time=self.get_time,
+                           filePicture=self.request.data.message.file.picture,
+                           fileVideo=self.request.data.message.file.video,
+                           fileAudio=self.request.data.message.file.audio,
+                           fileDocument=self.request.data.message.file.audio,
+                           emoji=self.request.data.message.emoji,
+                           editedTime=self.request.data.message.edited_message.time,
+                           editedStatus=self.request.data.message.edited_message.status,
+                           user=self.request.data.user.uuid,
+                           flow=self.request.data.flow.id)
+            self.response.errors = lib.ErrorsCatching(200).to_dict()
 
-        check_user_in_db = models.User.select(models.User.q.uuid ==
-                                              self.request.data.user.uuid)
-        check_flow_in_db = models.Flow.select(models.Flow.q.id ==
-                                              self.request.data.flow.id)
-        models.Message(text=self.request.data.message.text,
-                       time=self.get_time,
-                       user=check_user_in_db,
-                       flow=check_flow_in_db)
-        # FIXME
-        self.response.errors = lib.error_catching(200)
-
-    def add_flow(self):
+    def _add_flow(self):
         """Function allows you to add a new flow to the database
 
         Args:
@@ -234,12 +240,10 @@ class ProtocolMethods:
                         flowType=self.request.data.flow.type,
                         title=self.request.data.flow.title,
                         info=self.request.data.flow.info)
-        except Exception as error:
-            # FIXME
-            self.response.errors = lib.error_catching(error)
+        except SQLObjectIntegrityError as flow_error:
+            self.response.errors = lib.ErrorsCatching(404).to_dict()
         else:
-            # FIXME
-            self.response.errors = lib.error_catching(200)
+            self.response.errors = lib.ErrorsCatching(200).to_dict()
 
     def all_flow(self):
         """Function allows to get a list of all flows and
