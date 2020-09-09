@@ -105,7 +105,7 @@ class Hash:
             return result.hexdigest()
 
 
-class ErrorsCatching(api.Errors):
+class ErrorsCatching():
     """Function catches errors in the "try...except" content.
     Result is 'dict' with information about the code, status,
     time and detailed description of the error that has occurred.
@@ -132,7 +132,7 @@ class ErrorsCatching(api.Errors):
     """
     def __init__(self, code: Union[int, str],
                  add_info: Optional[str] = None):
-        self.get_time = int(time())
+        self.get_time = int(time.time())
         self.dict_all_errors = {
             200: {
                 'status': 'OK',
@@ -217,22 +217,15 @@ class ErrorsCatching(api.Errors):
             self.template.status = self.dict_all_errors[self.code]['status']
             self.template.time = self.get_time
             self.template.detail = self.add_info
-            if self.code in (200, 201, 202):
-                logger.debug(f"errors code: {self.code}, \
-                               errors result: {self.template}")
-            else:
-                logger.error(f"errors code: {self.code}, \
-                              errors result: {result}")
         else:
             self.template.code = 520
             self.template.status = 'Unknown Error'
             self.template.time = self.get_time
             self.template.detail = self.code
-            logger.error(f"errors code: {self.code}, \
-                          errors result: {self.template}")
 
     def to_json(self):
-        json.dumps(self.template, default=lambda o: o.__dict__)
+        return json.dumps(self.template, indent=4,
+                          default=lambda o: o.__dict__)
 
     def to_obj(self):
         return self.template
