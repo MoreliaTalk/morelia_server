@@ -33,36 +33,38 @@ class ProtocolMethods:
             self.response.type = "errors"
             self.response.errors = lib.error_catching(error)
         else:
-            if __check_auth_token():
-                if self.request.type == 'ping-pong':
-                    self._ping_pong()
-                elif self.request.type == 'register_user':
-                    self._register_user()
-                elif self.request.type == 'send_message':
-                    self._send_message()
-                elif self.request.type == 'all_flow':
-                    self._all_flow()
-                elif self.request.type == 'add_flow':
-                    self._add_flow()
-                elif self.request.type == 'all_messages':
-                    self._all_messages()
-                elif self.request.type == 'user_info':
-                    self._user_info()
-                elif self.request.type == 'auth':
-                    self._authentification()
-                elif self.request.type == 'delete_user':
-                    self._delete_user()
-                elif self.request.type == 'delete_message':
-                    self._delete_message()
-                elif self.request.type == 'edited_message':
-                    self._edited_message()
-                elif self.request.type == "get_update":
-                    self._get_update()
-                else:
-                    self._errors()
+            if self.request.type == 'register_user':
+                self._register_user()
+            elif self.request.type == 'auth':
+                self._authentification()
+            elif self.request.type == 'ping-pong':
+                self._ping_pong()
             else:
-                self.response.errors = lib.error_catching(401)
+                if self.__check_auth_token():
+                    if self.request.type == 'send_message':
+                        self._send_message()
+                    elif self.request.type == 'all_flow':
+                        self._all_flow()
+                    elif self.request.type == 'add_flow':
+                        self._add_flow()
+                    elif self.request.type == 'all_messages':
+                        self._all_messages()
+                    elif self.request.type == 'user_info':
+                        self._user_info()
+                    elif self.request.type == 'delete_user':
+                        self._delete_user()
+                    elif self.request.type == 'delete_message':
+                        self._delete_message()
+                    elif self.request.type == 'edited_message':
+                        self._edited_message()
+                    elif self.request.type == "get_update":
+                        self._get_update()
+                    else:
+                        self._errors()
+                else:
+                    self.response.errors = lib.ErrorsCatching(401)
 
+    def response_get(self):
         return self.response.toJSON()
 
     def __check_auth_token(self) -> bool:
@@ -78,10 +80,10 @@ class ProtocolMethods:
         try:
             dbquery = models.User.select(models.User.q.uuid ==
                                          self.request.data.user.uuid).getOne()
-        except SQLObjectIntegrityError, SQLObjectNotFound:
-            pass
+        except SQLObjectIntegrityError and SQLObjectNotFound:
+            return False
         else:
-            if auth_id == dbquery.authId:
+            if self.request.data.user.auth_id == dbquery.authId:
                 return True
             else:
                 return False
@@ -97,9 +99,9 @@ class ProtocolMethods:
             Bool
         """
         try:
-            dbquery = models.User.select(models.User.q.login ==
-                                         self.request.data.user.login)
-        except SQLObjectIntegrityError, SQLObjectNotFound:
+            models.User.select(models.User.q.login ==
+                               self.request.data.user.login).getOne()
+        except SQLObjectIntegrityError and SQLObjectNotFound:
             return False
         else:
             return True
@@ -116,21 +118,24 @@ class ProtocolMethods:
         Returns:
             dict: returns JSON reply to client
         """
-        if __check_login() is False:
+        salt = "Python is my life!"
+        key = "Morelia_Talk"
+        if self.__check_login() is False:
             generated = lib.Hash(password=self.request.data.user.password,
-                                 salt=self.request.data.user.salt,
-                                 key=self.request.data.user.key)
+                                 salt=salt,
+                                 key=key)
 
             models.User(uuid=random.getrandbits(64),
                         password=self.request.data.user.password,
                         hashPassword=generated.password_hash(),
-                        salt=self.request.data.user.salt,
-                        key=self.request.data.user.key,
+                        salt=salt,
+                        key=key,
                         login=self.request.data.user.login)
             self.response.errors = lib.ErrorsCatching(201).to_obj()
+            self.response.data.user.uuid = data
         else:
             # FIXME
-            self.response.errors = lib.error_catching(409)
+            self.response.errors = lib.ErrorsCatching(409)
 
     def _get_update(self):
         """The function displays messages of a specific flow,

@@ -132,7 +132,7 @@ class ErrorsCatching():
     """
     def __init__(self, code: Union[int, str],
                  add_info: Optional[str] = None):
-        self.get_time = int(time.time())
+        self.get_time = int(time())
         self.dict_all_errors = {
             200: {
                 'status': 'OK',
