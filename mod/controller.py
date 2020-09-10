@@ -27,38 +27,40 @@ class ProtocolMethods:
             self.request = api.ValidJSON.parse_raw(self.request)
         except ValidationError as error:
             self.response.type = "errors"
-            self.response.errors = lib.error_catching(error)
+            self.response.errors = lib.ErrorsCatching(error)
         else:
-            if __check_auth_token():
-                if self.request.type == 'ping-pong':
-                    self._ping_pong()
-                elif self.request.type == 'register_user':
-                    self._register_user()
-                elif self.request.type == 'send_message':
-                    self._send_message()
-                elif self.request.type == 'all_flow':
-                    self._all_flow()
-                elif self.request.type == 'add_flow':
-                    self._add_flow()
-                elif self.request.type == 'all_messages':
-                    self._all_messages()
-                elif self.request.type == 'user_info':
-                    self._user_info()
-                elif self.request.type == 'auth':
-                    self._authentification()
-                elif self.request.type == 'delete_user':
-                    self._delete_user()
-                elif self.request.type == 'delete_message':
-                    self._delete_message()
-                elif self.request.type == 'edited_message':
-                    self._edited_message()
-                elif self.request.type == "get_update":
-                    self._get_update()
-                else:
-                    self._errors()
+            if self.request.type == 'ping-pong':
+                self._ping_pong()
+            elif self.request.type == 'register_user':
+                self._register_user()
+            elif self.request.type == 'auth':
+                self._authentification()
             else:
-                self.response.errors = lib.ErrorsCatching(401).to_dict()
+                if self.__check_auth_token():
+                    if self.request.type == 'send_message':
+                        self._send_message()
+                    elif self.request.type == 'all_flow':
+                        self._all_flow()
+                    elif self.request.type == 'add_flow':
+                        self._add_flow()
+                    elif self.request.type == 'all_messages':
+                        self._all_messages()
+                    elif self.request.type == 'user_info':
+                        self._user_info()
+                    elif self.request.type == 'delete_user':
+                        self._delete_user()
+                    elif self.request.type == 'delete_message':
+                        self._delete_message()
+                    elif self.request.type == 'edited_message':
+                        self._edited_message()
+                    elif self.request.type == "get_update":
+                        self._get_update()
+                    else:
+                        self._errors()
+                else:
+                    self.response.errors = lib.ErrorsCatching(401).to_dict()
 
+    def get_response(self):
         return self.response.toJSON()
 
     def __check_auth_token(self) -> bool:
@@ -112,17 +114,19 @@ class ProtocolMethods:
         Returns:
             dict: returns JSON reply to client
         """
-        if __check_login():
+        salt = str(random.randint(1, 1000)) + "Змеи"
+        key = salt+salt*2+"MoreliTalk"
+        if self.__check_login() is False:
             self.response.errors = lib.ErrorsCatching(409).to_dict()
         else:
             generated = lib.Hash(password=self.request.data.user.password,
-                                 salt=self.request.data.user.salt,
-                                 key=self.request.data.user.key)
+                                 salt=salt,
+                                 key=key)
             models.User(uuid=random.getrandbits(64),
                         password=self.request.data.user.password,
                         hashPassword=generated.password_hash(),
-                        salt=self.request.data.user.salt,
-                        key=self.request.data.user.key,
+                        salt=salt,
+                        key=salt,
                         login=self.request.data.user.login)
             self.response.errors = lib.ErrorsCatching(201).to_obj()
 
@@ -157,11 +161,13 @@ class ProtocolMethods:
                         }
                     self.response.data.flow.append(dict_flow)
             try:
-                dbquery_message = models.Message.select(models.Message.q.flowID ==
-                                                        flow_id)
+                dbquery_message = models.Message.select(
+                                                    models.Message.q.flowID ==
+                                                    flow_id)
             except SQLObjectNotFound as message_error:
-                self.response.errors = lib.ErrorsCatching(404,
-                                                          message_error).to_obj()
+                self.response.errors = lib.ErrorsCatching(
+                                                        404,
+                                                        message_error).to_obj()
             else:
                 for message in dbquery_message:
                     dict_message = {
@@ -194,7 +200,8 @@ class ProtocolMethods:
             models.Flow.select(models.Flow.q.id ==
                                self.request.data.flow.id).getOne()
         except SQLObjectNotFound as flow_error:
-            self.response.errors = lib.ErrorsCatching(404, flow_error).to_dict()
+            self.response.errors = lib.ErrorsCatching(404,
+                                                      flow_error).to_dict()
         else:
             models.Message(text=self.request.data.message.text,
                            time=self.get_time,
@@ -204,7 +211,8 @@ class ProtocolMethods:
                            fileDocument=self.request.data.message.file_audio,
                            emoji=self.request.data.message.emoji,
                            editedTime=self.request.data.message.edited_time,
-                           editedStatus=self.request.data.message.edited_status,
+                           editedStatus=self.request.data.
+                           message.edited_status,
                            user=self.request.data.user.uuid,
                            flow=self.request.data.flow.id)
             self.response.errors = lib.ErrorsCatching(200).to_dict()
@@ -227,7 +235,8 @@ class ProtocolMethods:
                         title=self.request.data.flow.title,
                         info=self.request.data.flow.info)
         except SQLObjectIntegrityError as flow_error:
-            self.response.errors = lib.ErrorsCatching(520, flow_error).to_dict()
+            self.response.errors = lib.ErrorsCatching(520,
+                                                      flow_error).to_dict()
         else:
             self.response.errors = lib.ErrorsCatching(200).to_dict()
 
@@ -255,7 +264,7 @@ class ProtocolMethods:
                 "info": i.info
                 }
             self.response.data.flow.append(element_in_database)
-        self.response.errors = lib.error_catching(200)
+        self.response.errors = lib.ErrorsCatching(200)
 
     def _user_info(self):
         """Provides information about all personal settings of user.
@@ -285,9 +294,9 @@ class ProtocolMethods:
                 'bio': dbquery.bio
                 }
             self.response.data.user.append(user_info)
-            self.response.errors = lib.error_catching(200)
+            self.response.errors = lib.ErrorsCatching(200)
 
-    def authentification(self):
+    def _authentification(self):
         """Performs authentification of registered client,
         with issuance of a unique hash number of connection session.
         During authentification password transmitted by client
@@ -310,21 +319,13 @@ class ProtocolMethods:
                                  dbquery[0].salt,
                                  uuid=dbquery[0].uuid)
             dbquery[0].authId = generator.auth_id()
-            data = {
-                'user': {
-                    'uuid': dbquery[0].uuid,
-                    'auth_id': dbquery[0].authId
-                    },
-                'meta': None
-                }
-            self.response.data = data
-            # FIXME
-            self.response.errors = lib.error_catching(200)
+            self.response.data.user.uuid = dbquery[0].uuid
+            self.response.data.user.auth_id = dbquery[0].authId
+            self.response.errors = lib.ErrorsCatching(200)
         else:
-            # FIXME
-            self.response.errors = lib.error_catching(404)
+            self.response.errors = lib.ErrorsCatching(404)
 
-    def delete_user(self):
+    def _delete_user(self):
         """Function irretrievably deletes the user from the database.
 
         Args:
@@ -348,12 +349,12 @@ class ProtocolMethods:
             dbquery[0].delete(dbquery[0].id)
             self.response.data = data
             # FIXME
-            self.response.errors = lib.error_catching(200)
+            self.response.errors = lib.ErrorsCatching(200)
         else:
 
-            self.response.errors = lib.error_catching(404)
+            self.response.errors = lib.ErrorsCatching(404)
 
-    def delete_message(self):
+    def _delete_message(self):
         """Function deletes the message from the database Message table by its ID.
 
         Args:
@@ -369,12 +370,12 @@ class ProtocolMethods:
         if dbquery.count():
             dbquery[0].delete(dbquery[0].id)
             # FIXME
-            self.response.errors = lib.error_catching(200)
+            self.response.errors = lib.ErrorsCatching(200)
         else:
             # FIXME
-            self.response.errors = lib.error_catching(404)
+            self.response.errors = lib.ErrorsCatching(404)
 
-    def edited_message(self):
+    def _edited_message(self):
         """Function changes the text and time in the database Message table.
         The value of the editedStatus column changes from None to True.
 
@@ -396,13 +397,11 @@ class ProtocolMethods:
             dbquery[0].text = self.request.data.message.text
             dbquery[0].editedTime = self.get_time
             dbquery[0].editedStatus = True
-            # FIXME
-            self.response.errors = lib.error_catching(200)
+            self.response.errors = lib.ErrorsCatching(200)
         else:
-            # FIXME
-            self.response.errors = lib.error_catching(404)
+            self.response.errors = lib.ErrorsCatching(404)
 
-    def all_messages(self):
+    def _all_messages(self):
         """Function displays all messages of a specific flow retrieves them
         from the database and issues them as an array consisting of JSON
 
@@ -444,13 +443,11 @@ class ProtocolMethods:
                 'meta': None
                 }
             self.response.data = data
-            # FIXME
-            self.response.errors = lib.error_catching(200)
+            self.response.errors = lib.ErrorsCatching(200)
         else:
-            # FIXME
-            self.response.errors = lib.error_catching(404)
+            self.response.errors = lib.ErrorsCatching(404)
 
-    def ping_pong(self):
+    def _ping_pong(self):
         """The function generates a response to a client's request
         for communication between the server and the client.
 
@@ -462,9 +459,9 @@ class ProtocolMethods:
             dict: [description]
         """
         # FIXME
-        self.response.errors = lib.error_catching(200)
+        self.response.errors = lib.ErrorsCatching(200)
 
-    def errors(self):
+    def _errors(self):
         """Function handles cases when a request to server is not recognized by it.
         You get a standard answer type: error, which contains an object
         with a description of the error.
@@ -477,5 +474,4 @@ class ProtocolMethods:
             dict: [description]
         """
         self.response.type = "errors"
-        # FIXME
-        self.response.errors = lib.error_catching(405)
+        self.response.errors = lib.ErrorsCatching(405)
