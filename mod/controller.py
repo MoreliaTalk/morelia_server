@@ -17,10 +17,6 @@ class ProtocolMethods:
         self.response.data = api.Data()
         self.response.data.flow: list = api.Flow()
         self.response.data.message: list = api.Message()
-        #self.response.data.message.file = api.File()
-        #self.response.data.message.from_flow = api.FromFlow()
-        #self.response.data.message.from_user = api.MessageFromUser()
-        #self.response.data.message.edited = api.EditedMessage()
         self.response.data.user: list = api.User()
         self.response.errors = api.Errors()
         self.response.jsonapi = api.Version()
@@ -33,38 +29,36 @@ class ProtocolMethods:
             self.response.type = "errors"
             self.response.errors = lib.error_catching(error)
         else:
-            if self.request.type == 'register_user':
-                self._register_user()
-            elif self.request.type == 'auth':
-                self._authentification()
-            elif self.request.type == 'ping-pong':
-                self._ping_pong()
-            else:
-                if self.__check_auth_token():
-                    if self.request.type == 'send_message':
-                        self._send_message()
-                    elif self.request.type == 'all_flow':
-                        self._all_flow()
-                    elif self.request.type == 'add_flow':
-                        self._add_flow()
-                    elif self.request.type == 'all_messages':
-                        self._all_messages()
-                    elif self.request.type == 'user_info':
-                        self._user_info()
-                    elif self.request.type == 'delete_user':
-                        self._delete_user()
-                    elif self.request.type == 'delete_message':
-                        self._delete_message()
-                    elif self.request.type == 'edited_message':
-                        self._edited_message()
-                    elif self.request.type == "get_update":
-                        self._get_update()
-                    else:
-                        self._errors()
+            if __check_auth_token():
+                if self.request.type == 'ping-pong':
+                    self._ping_pong()
+                elif self.request.type == 'register_user':
+                    self._register_user()
+                elif self.request.type == 'send_message':
+                    self._send_message()
+                elif self.request.type == 'all_flow':
+                    self._all_flow()
+                elif self.request.type == 'add_flow':
+                    self._add_flow()
+                elif self.request.type == 'all_messages':
+                    self._all_messages()
+                elif self.request.type == 'user_info':
+                    self._user_info()
+                elif self.request.type == 'auth':
+                    self._authentification()
+                elif self.request.type == 'delete_user':
+                    self._delete_user()
+                elif self.request.type == 'delete_message':
+                    self._delete_message()
+                elif self.request.type == 'edited_message':
+                    self._edited_message()
+                elif self.request.type == "get_update":
+                    self._get_update()
                 else:
-                    self.response.errors = lib.ErrorsCatching(401)
+                    self._errors()
+            else:
+                self.response.errors = lib.ErrorsCatching(401).to_dict()
 
-    def response_get(self):
         return self.response.toJSON()
 
     def __check_auth_token(self) -> bool:
@@ -80,7 +74,7 @@ class ProtocolMethods:
         try:
             dbquery = models.User.select(models.User.q.uuid ==
                                          self.request.data.user.uuid).getOne()
-        except SQLObjectIntegrityError and SQLObjectNotFound:
+        except (SQLObjectIntegrityError, SQLObjectNotFound):
             return False
         else:
             if self.request.data.user.auth_id == dbquery.authId:
@@ -101,7 +95,7 @@ class ProtocolMethods:
         try:
             models.User.select(models.User.q.login ==
                                self.request.data.user.login).getOne()
-        except SQLObjectIntegrityError and SQLObjectNotFound:
+        except (SQLObjectIntegrityError, SQLObjectNotFound):
             return False
         else:
             return True
@@ -118,24 +112,19 @@ class ProtocolMethods:
         Returns:
             dict: returns JSON reply to client
         """
-        salt = "Python is my life!"
-        key = "Morelia_Talk"
-        if self.__check_login() is False:
+        if __check_login():
+            self.response.errors = lib.ErrorsCatching(409).to_dict()
+        else:
             generated = lib.Hash(password=self.request.data.user.password,
-                                 salt=salt,
-                                 key=key)
-
+                                 salt=self.request.data.user.salt,
+                                 key=self.request.data.user.key)
             models.User(uuid=random.getrandbits(64),
                         password=self.request.data.user.password,
                         hashPassword=generated.password_hash(),
-                        salt=salt,
-                        key=key,
+                        salt=self.request.data.user.salt,
+                        key=self.request.data.user.key,
                         login=self.request.data.user.login)
             self.response.errors = lib.ErrorsCatching(201).to_obj()
-            self.response.data.user.uuid = data
-        else:
-            # FIXME
-            self.response.errors = lib.ErrorsCatching(409)
 
     def _get_update(self):
         """The function displays messages of a specific flow,
@@ -179,22 +168,14 @@ class ProtocolMethods:
                         "text": message.text,
                         "time": message.time,
                         "emoji": message.emoji,
-                        "file": {
-                            "picture": message.filePicture,
-                            "video": message.fileVideo,
-                            "audio": message.fileAudio,
-                            "document": message.fileDocument
-                            },
-                        "from_user": {
-                            "uuid": 123
-                            },
-                        "from_flow": {
-                            "id": message.FlowID
-                            },
-                        "edited_message": {
-                            "edited_time": message.editedTime,
-                            "edited_status": message.editedStatus
-                            }
+                        "file_picture": message.filePicture,
+                        "file_video": message.fileVideo,
+                        "file_audio": message.fileAudio,
+                        "file_document": message.fileDocument,
+                        "from_user_uuid": 123,
+                        "from_flow_id": message.FlowID,
+                        "edited_time": message.editedTime,
+                        "edited_status": message.editedStatus
                         }
                     self.response.data.message.append(dict_message)
         self.response.errors = lib.ErrorsCatching(200).to_obj()
@@ -210,20 +191,20 @@ class ProtocolMethods:
             dict: returns JSON reply to client
         """
         try:
-            dbquery_flow = models.Flow.select(models.Flow.q.id ==
-                                              self.request.data.flow.id).getOne()
+            models.Flow.select(models.Flow.q.id ==
+                               self.request.data.flow.id).getOne()
         except SQLObjectNotFound as flow_error:
             self.response.errors = lib.ErrorsCatching(404, flow_error).to_dict()
         else:
             models.Message(text=self.request.data.message.text,
                            time=self.get_time,
-                           filePicture=self.request.data.message.file.picture,
-                           fileVideo=self.request.data.message.file.video,
-                           fileAudio=self.request.data.message.file.audio,
-                           fileDocument=self.request.data.message.file.audio,
+                           filePicture=self.request.data.message.file_picture,
+                           fileVideo=self.request.data.message.file_video,
+                           fileAudio=self.request.data.message.file_audio,
+                           fileDocument=self.request.data.message.file_audio,
                            emoji=self.request.data.message.emoji,
-                           editedTime=self.request.data.message.edited_message.time,
-                           editedStatus=self.request.data.message.edited_message.status,
+                           editedTime=self.request.data.message.edited_time,
+                           editedStatus=self.request.data.message.edited_status,
                            user=self.request.data.user.uuid,
                            flow=self.request.data.flow.id)
             self.response.errors = lib.ErrorsCatching(200).to_dict()
@@ -246,11 +227,11 @@ class ProtocolMethods:
                         title=self.request.data.flow.title,
                         info=self.request.data.flow.info)
         except SQLObjectIntegrityError as flow_error:
-            self.response.errors = lib.ErrorsCatching(404).to_dict()
+            self.response.errors = lib.ErrorsCatching(520, flow_error).to_dict()
         else:
             self.response.errors = lib.ErrorsCatching(200).to_dict()
 
-    def all_flow(self):
+    def _all_flow(self):
         """Function allows to get a list of all flows and
         information about them from the database
 
@@ -261,29 +242,22 @@ class ProtocolMethods:
         Returns:
             dict: [description]
         """
-        flows = {}
-        dbquery = models.Flow.select(models.Flow.q.id > 0)
+        try:
+            dbquery = models.Flow.select(models.Flow.q.id > 0)
+        except SQLObjectNotFound:
+            self.response.errors = lib.ErrorsCatching(404).to_dict()
         for i in dbquery:
-            flow = {
-                i.id: {
-                    "flowId": i.flowId,
-                    "timeCreated": i.timeCreated,
-                    "flowType": i.flowType,
-                    "title": i.title,
-                    "info": i.info
-                    }
+            element_in_database = {
+                "id": i.flowId,
+                "time": i.timeCreated,
+                "type": i.flowType,
+                "title": i.title,
+                "info": i.info
                 }
-            flows.update(flow)
-        data = {
-                'time': self.get_time,
-                'flow': flows,
-                'meta': None
-                }
-        self.response.data = data
-        # FIXME
+            self.response.data.flow.append(element_in_database)
         self.response.errors = lib.error_catching(200)
 
-    def user_info(self):
+    def _user_info(self):
         """Provides information about all personal settings of user.
 
         Args:
@@ -293,25 +267,25 @@ class ProtocolMethods:
         Returns:
             dict: [description]
         """
-        dbquery = models.User.selectBy(uuid=self.request.data.user.uuid,
-                                       authId=self.request.data.user.auth_id)
-        data = {
-            'user': {
-                'uuid': dbquery[0].uuid,
-                'login': dbquery[0].login,
-                'password': dbquery[0].password,
-                'username': dbquery[0].username,
-                'is_bot': dbquery[0].isBot,
-                'auth_id': dbquery[0].authId,
-                'email': dbquery[0].email,
-                'avatar': dbquery[0].avatar,
-                'bio': dbquery[0].bio
-                },
-            'meta': None
-            }
-        self.response.data = data
-        # FIXME
-        self.response.errors = lib.error_catching(200)
+        try:
+            dbquery = models.User.select(models.User.q.uuid ==
+                                         self.request.data.user.uuid).getOne()
+        except SQLObjectNotFound:
+            self.response.errors = lib.ErrorsCatching(404).to_dict()
+        else:
+            user_info = {
+                'uuid': dbquery.uuid,
+                'login': dbquery.login,
+                'password': dbquery.password,
+                'username': dbquery.username,
+                'is_bot': dbquery.isBot,
+                'auth_id': dbquery.authId,
+                'email': dbquery.email,
+                'avatar': dbquery.avatar,
+                'bio': dbquery.bio
+                }
+            self.response.data.user.append(user_info)
+            self.response.errors = lib.error_catching(200)
 
     def authentification(self):
         """Performs authentification of registered client,

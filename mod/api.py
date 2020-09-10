@@ -8,28 +8,6 @@ from pydantic import BaseModel
 from pydantic import EmailStr
 
 
-class EditedMessage(BaseModel):
-    class Config:
-        title = 'Status and time of editing message'
-    time: Optional[int] = None
-    status: Optional[bool] = None
-
-
-class File(BaseModel):
-    class Config:
-        title = 'Files attached to message'
-    picture: Optional[bytes] = None
-    video: Optional[bytes] = None
-    audio: Optional[bytes] = None
-    document: Optional[bytes] = None
-
-
-class FromFlow(BaseModel):
-    class Config:
-        title = 'Id flow attached for message'
-    id: Optional[int] = None
-
-
 class Flow(BaseModel):
     class Config:
         title = 'List of flow with description and type'
@@ -38,12 +16,6 @@ class Flow(BaseModel):
     type: Optional[str] = None
     title: Optional[str] = None
     info: Optional[str] = None
-
-
-class MessageFromUser(BaseModel):
-    class Config:
-        title = 'UUID user who write this message'
-    uuid: Optional[int] = None
 
 
 class User(BaseModel):
@@ -65,12 +37,16 @@ class Message(BaseModel):
         title = 'List of message information'
     id: Optional[int] = None
     text: Optional[str] = None
-    from_user: Optional[MessageFromUser] = None
+    from_user_uuid: Optional[int] = None
     time: Optional[int] = None
-    from_flow: Optional[FromFlow] = None
-    file: Optional[File] = None
+    from_flow_id: Optional[int] = None
+    file_picture: Optional[bytes] = None
+    file_video: Optional[bytes] = None
+    file_audio: Optional[bytes] = None
+    file_document: Optional[bytes] = None
     emoji: Optional[bytes] = None
-    edited: Optional[EditedMessage] = None
+    edited_time: Optional[int] = None
+    edited_status: Optional[bool] = None
 
 
 class Data(BaseModel):
