@@ -1,4 +1,3 @@
-import random
 from time import time
 from pydantic import ValidationError
 
@@ -9,6 +8,8 @@ from mod import lib
 
 from sqlobject import SQLObjectIntegrityError
 from sqlobject import SQLObjectNotFound
+
+import random
 
 
 class ProtocolMethods:
@@ -98,9 +99,9 @@ class ProtocolMethods:
             models.User.select(models.User.q.login ==
                                self.request.data.user.login).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound):
-            return False
-        else:
             return True
+        else:
+            return False
 
     def _register_user(self):
         """The function registers the user who is not in the database.
@@ -114,20 +115,20 @@ class ProtocolMethods:
         Returns:
             dict: returns JSON reply to client
         """
-        salt = str(random.randint(1, 1000)) + "Змеи"
-        key = salt+salt*2+"MoreliTalk"
         if self.__check_login() is False:
             self.response.errors = lib.ErrorsCatching(409).to_dict()
         else:
             generated = lib.Hash(password=self.request.data.user.password,
-                                 salt=salt,
-                                 key=key)
-            models.User(uuid=random.getrandbits(64),
-                        password=self.request.data.user.password,
+                                 uuid=(gen_uuid := random.getrandbits(64)))
+            models.User(uuid=gen_uuid,
                         hashPassword=generated.password_hash(),
-                        salt=salt,
-                        key=salt,
-                        login=self.request.data.user.login)
+                        login=self.request.data.user.login,
+                        key=generated.get_key(),
+                        salt=generated.get_salt(),
+                        authId=(gen_auth_id := generated.auth_id())
+                        )
+            self.response.data.user.uuid = gen_uuid
+            self.response.data.user.auth_id = gen_auth_id
             self.response.errors = lib.ErrorsCatching(201).to_obj()
 
     def _get_update(self):
@@ -309,21 +310,26 @@ class ProtocolMethods:
         Returns:
             dict: [description]
         """
-        dbquery = models.User.selectBy(
-                                    login=self.request.data.user.login,
-                                    password=self.request.data.user.password)
-        if dbquery.count():
-            # TODO После внесения изменений в протокол
-            # переделать алгоритм авторизации
-            generator = lib.Hash(dbquery[0].password,
-                                 dbquery[0].salt,
-                                 uuid=dbquery[0].uuid)
-            dbquery[0].authId = generator.auth_id()
-            self.response.data.user.uuid = dbquery[0].uuid
-            self.response.data.user.auth_id = dbquery[0].authId
-            self.response.errors = lib.ErrorsCatching(200)
-        else:
+        try:
+            dbquery = models.User.selectBy(
+                                            login=self.request.data.user.login
+                                            ).getOne()
+        except (SQLObjectIntegrityError, SQLObjectNotFound):
             self.response.errors = lib.ErrorsCatching(404)
+        else:
+            generator = lib.Hash(password=self.request.data.user.password,
+                                 uuid=dbquery.uuid,
+                                 salt=dbquery.salt,
+                                 key=dbquery.key
+                                 )
+
+            if generator.password_hash() == dbquery.hashPassword:
+                dbquery.authId = generator.auth_id()
+                self.response.data.user.uuid = dbquery.uuid
+                self.response.data.user.auth_id = dbquery.authId
+                self.response.errors = lib.ErrorsCatching(200)
+            else:
+                self.response.errors = lib.ErrorsCatching(401)
 
     def _delete_user(self):
         """Function irretrievably deletes the user from the database.

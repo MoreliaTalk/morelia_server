@@ -27,7 +27,6 @@ class User(orm.SQLObject):
     # which will return that object
     uuid = orm.IntCol(alternateID=True, unique=True, notNone=True)
     login = orm.StringCol()
-    password = orm.StringCol()
     hashPassword = orm.StringCol(default=None)
     username = orm.StringCol(default=None)
     isBot = orm.BoolCol(default=False)
@@ -35,8 +34,8 @@ class User(orm.SQLObject):
     email = orm.StringCol(default=None)
     avatar = orm.BLOBCol(default=None)
     bio = orm.StringCol(default=None)
-    salt = orm.StringCol(default=None)
-    key = orm.StringCol(default=None)
+    salt = orm.BLOBCol(default=None)
+    key = orm.BLOBCol(default=None)
     # Connection to the Message table
     message = orm.MultipleJoin('Message')
 
