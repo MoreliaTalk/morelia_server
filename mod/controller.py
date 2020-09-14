@@ -320,10 +320,11 @@ class ProtocolMethods:
             generator = lib.Hash(password=self.request.data.user.password,
                                  uuid=dbquery.uuid,
                                  salt=dbquery.salt,
-                                 key=dbquery.key
+                                 key=dbquery.key,
+                                 hash_password=dbquery.hashPassword
                                  )
 
-            if generator.password_hash() == dbquery.hashPassword:
+            if generator.check_password():
                 dbquery.authId = generator.auth_id()
                 self.response.data.user.uuid = dbquery.uuid
                 self.response.data.user.auth_id = dbquery.authId

@@ -6,6 +6,7 @@ from typing import Union
 from hashlib import blake2b
 from os import urandom
 
+from hmac import compare_digest
 from mod import config
 from mod import api
 
@@ -31,7 +32,9 @@ class Hash:
 
     """
     def __init__(self, password: str,
-                 uuid: int, salt: str = None, key: str = None
+                 uuid: int, salt: str = None,
+                 key: str = None,
+                 hash_password: str = None
                  ):
 
         if salt is None and key is None:
@@ -43,6 +46,7 @@ class Hash:
 
         self.binary_password = password.encode('utf-8')
         self.uuid = uuid
+        self.hash_password = hash_password
         self.size_password = config.PASSWORD_HASH_SIZE
         self.size_auth_id = config.AUTH_ID_HASH_SIZE
 
@@ -62,6 +66,18 @@ class Hash:
                                 digest_size=self.size_password,
                                 key=self.key, salt=self.salt)
         return hash_password.hexdigest()
+
+    def check_password(self) -> bool:
+        """The function checks the password hash and original password.
+        Returns:
+            bool: True or False
+        """
+        if self.hash_password is None:
+            return False
+        else:
+            verified_hash_password = self.password_hash()
+            return compare_digest(self.hash_password,
+                                  verified_hash_password)
 
     def auth_id(self) -> Optional[str]:
         """The function generates an authenticator for the client session
