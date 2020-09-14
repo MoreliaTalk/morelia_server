@@ -367,6 +367,40 @@ class TestRegisterUser(unittest.TestCase):
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 409)
 
+    def test_user_created_in_database(self):
+        dbquery = models.User.select(models.User.q.login ==
+                                     "other_login").getOne()
+        self.assertEqual(dbquery.login, "other_login")
+
+    def test_uuid_created_in_database(self):
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        dbquery = models.User.select(models.User.q.login ==
+                                     "other_login").getOne()
+        self.assertEqual(dbquery.uuid, result["data"]["user"][0]["uuid"])
+
+    def test_auth_id_created_in_database(self):
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        dbquery = models.User.select(models.User.q.login ==
+                                     "other_login").getOne()
+        self.assertEqual(dbquery.authId,
+                         result["data"]["user"][0]["auth_id"])
+
+    def test_salt(self):
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        dbquery = models.User.select(models.User.q.login ==
+                                     "other_login").getOne()
+        self.assertIsInstance(dbquery.salt, bytes)
+
+    def test_key(self):
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        dbquery = models.User.select(models.User.q.login ==
+                                     "other_login").getOne()
+        self.assertEqual(dbquery.key, bytes)
+
 
 class TestGetUpdate(unittest.TestCase):
     @classmethod
@@ -622,30 +656,30 @@ class TestUserInfo(unittest.TestCase):
 class TestAuthentification(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        logger.remove()
+
+    def setUp(self):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
         models.User(uuid=123456,
                     login="login",
                     password="password",
-                    salt="salt",
-                    key="key",
-                    authId="auth_id")
-        logger.remove()
-
-    def setUp(self):
+                    salt=b"salt",
+                    key=b"key")
         self.test = json.dumps(AUTH)
 
     def tearDown(self):
-        del self.test
-
-    @classmethod
-    def tearDownClass(cls):
         for item in classes:
             class_ = getattr(models, item)
             class_.dropTable(ifExists=True,
                              dropJoinTables=True,
                              cascade=True)
+        del self.test
+
+    @classmethod
+    def tearDownClass(cls):
+        pass
 
     def test_authentification(self):
         run_method = controller.ProtocolMethods(self.test)
@@ -653,12 +687,36 @@ class TestAuthentification(unittest.TestCase):
         self.assertEqual(result["errors"]["code"], 200)
 
     def test_blank_database(self):
-        dbquery = models.User.select(models.User.q.uuid ==
-                                     self.test.data.user[0].uuid)
+        dbquery = models.User.select(models.User.q.login ==
+                                     self.test.data.user[0].login)
         dbquery.delete(dbquery.id)
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 404)
+
+    def test_two_element_in_database(self):
+        models.User(uuid=654321,
+                    login="login",
+                    password="password",
+                    salt=b"salt",
+                    key=b"key")
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["errors"]["code"], 404)
+
+    def test_wrong_password(self):
+        self.test.data.user[0].password = "wrong_password"
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["errors"]["code"], 401)
+
+    def test_1_in_database(self):
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        dbquery = models.User.select(models.User.q.login ==
+                                     self.test.data.user[0].login).getOne()
+        self.assertEqual(dbquery.authId,
+                         result["data"]["user"][0]["auth_id"])
 
 
 class TestDeleteUser(unittest.TestCase):
