@@ -48,23 +48,15 @@ SEND_MESSAGE = {
     "type": "send_message",
     "data": {
         "flow": [{
-            "id": 123,
-            "time": 111,
-            "type": "chat"
+            "id": 123
             }],
         "message": [{
-            "id": 858585,
             "text": "Hello!",
-            "from_user_uuid": 123456,
-            "time": 1594492370,
-            "from_flow_id": 5656565656,
             "file_picture": "jkfikdkdsd",
             "file_video": "sdfsdfsdf",
             "file_audio": "fgfsdfsdfsdf",
             "file_document": "adgdfhfgth",
-            "emoji": "sfdfsdfsdf",
-            "edited_time": 1594492370,
-            "edited_status": True,
+            "emoji": "sfdfsdfsdf"
             }],
         "user": [{
             "uuid": 123456,
@@ -522,6 +514,21 @@ class TestSendMessage(unittest.TestCase):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 404)
+
+    def test_write_text_in_database(self):
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        dbquery = models.Message.select(models.Message.q.flowID ==
+                                        self.test.data.flow[0].id).getOne()
+        self.assertEqual(dbquery.text,
+                         self.test.data.message[0].text)
+
+    def test_write_time_in_database(self):
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        dbquery = models.Message.select(models.Message.q.flowID ==
+                                        self.test.data.flow[0].id).getOne()
+        self.assertIsInstance(dbquery.time, int)
 
 
 class TestAddFlow(unittest.TestCase):
