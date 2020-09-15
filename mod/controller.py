@@ -198,7 +198,7 @@ class ProtocolMethods:
             dict: returns JSON reply to client
         """
         try:
-            models.Flow.select(models.Flow.q.id ==
+            models.Flow.select(models.Flow.q.flowId ==
                                self.request.data.flow.id).getOne()
         except SQLObjectNotFound as flow_error:
             self.response.errors = lib.ErrorsCatching(404,

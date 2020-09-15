@@ -94,8 +94,8 @@ class Message(orm.SQLObject):
     editedTime = orm.IntCol(default=None)
     editedStatus = orm.BoolCol(default=False)
     # replyTo = orm.StringCol(default=None)
-    user = orm.ForeignKey('User')
-    flow = orm.ForeignKey('Flow')
+    user = orm.ForeignKey('User', refColumn="uuid")
+    flow = orm.ForeignKey('Flow', refColumn="flow_id")
 
 
 class Errors(orm.SQLObject):
