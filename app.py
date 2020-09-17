@@ -1,6 +1,4 @@
 # ************** Standart module *********************
-import json
-from time import time
 from datetime import datetime
 # ************** Standart module end *****************
 
@@ -12,20 +10,13 @@ from fastapi import Request
 from fastapi import WebSocket
 from starlette.templating import Jinja2Templates
 from starlette.websockets import WebSocketDisconnect
+import sqlobject as orm
 # ************** External module end *****************
 
 
 # ************** Morelia module **********************
 from mod import config
-
-# Comment on the line below to start working
-# with SQLite without SQLObject ORM
-# import database.main as db
-
-# Comment on the lines below to switch to
-# working with SQLite via SQLObject ORM
-from mod import controller as db
-import sqlobject as orm
+from mod import controller
 # ************** Morelia module end ********************
 
 
@@ -58,6 +49,7 @@ templates = Jinja2Templates(directory=config.TEMPLATE_FOLDER)
 clients = []
 
 
+# Static page
 # Server home page
 @app.get('/')
 def home_page(request: Request):
@@ -71,74 +63,30 @@ def status_page(request: Request):
         'Server time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'Server uptime': str(datetime.now()-server_started),
         'Users': len(clients),
-        'Messages': len(db.get_messages())
+        'Messages': len()
     }
     return templates.TemplateResponse('status.html',
                                       {'request': request,
                                        'stats': stats})
 
 
-# Send all message from DB
-async def get_all_messages(newclient) -> None:
-    for message in db.get_messages():
-        await newclient.send_json(message)
-
-
-# Sending a message to all clients
-async def send_message(message) -> None:
-    for client in clients:
-        await client.send_json(message)
-
-
-# TODO: надо релизовать регистрацию
-async def reg_user(data: dict) -> str:
-    password = data['password']
-    username = data['username']
-    if (dbpassword := db.get_userdata(username)):
-        if password == dbpassword:
-            return 'true'
-        else:
-            return 'false'
-    else:
-        db.save_userdata(username, password)
-        return 'newreg'
-
-
+# Websocket
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     clients.append(websocket)
-    client = websocket
-    await get_all_messages(websocket)
-    try:
-        while True:
+    logger.info("Clients information:" + websocket)
+    while True:
+        try:
             data = await websocket.receive_json()
-            if data.get("mode") == "message":
-                message = {
-                        "mode": "message",
-                        "username": data["username"],
-                        "text": data["text"],
-                        "timestamp": time()
-                        }
-                db.save_message(message)
-                logger.debug(f'{message}')
-                await send_message(message)
-            elif data.get("mode") == "reg":
-                message = {
-                        "mode": "reg",
-                        "status": await reg_user(data)
-                        }
-                await client.send_json(message)
-            else:
-                message = db.serve_request(json.dumps(data))
-                if message != {}:
-                    logger.debug(f'{message}')
-                    await send_message(message)
-
-    except WebSocketDisconnect as error:
-        logger.info('Disconnected ' + websocket.client.host)
-        clients.remove(websocket)
-        logger.info(error)
+            client = controller.ProtocolMethods(data)
+            await websocket.send_json(client.get_response())
+            await websocket.close(code=1000)
+            clients.remove(websocket)
+        except WebSocketDisconnect as error:
+            logger.info('Disconnected ' + websocket.client.host)
+            clients.remove(websocket)
+            logger.info(error)
 
 
 if __name__ == "__main__":
