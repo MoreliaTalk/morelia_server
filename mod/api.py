@@ -1,7 +1,7 @@
 import json
 from typing import Any
 from typing import Optional
-from typing import Union
+# from typing import Union
 from typing import List
 
 from pydantic import BaseModel
@@ -53,9 +53,9 @@ class Data(BaseModel):
     class Config:
         title = 'Main data-object'
     time: Optional[int] = None
-    flow: Union[List[Flow], Flow] = None
-    message: Union[List[Message], Message] = None
-    user: Union[List[User], User] = None
+    flow: Optional[List[Flow]] = None
+    message: Optional[List[Message]] = None
+    user: Optional[List[User]] = None
     meta: Optional[Any] = None
 
 
