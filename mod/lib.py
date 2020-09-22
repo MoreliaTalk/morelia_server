@@ -1,48 +1,48 @@
-from time import time
-import sys
 import json
+import sys
+from hashlib import blake2b
+from hmac import compare_digest
+from os import urandom
+from time import time
+from typing import Any
 from typing import Optional
 from typing import Union
-from hashlib import blake2b
-from os import urandom
 
-from hmac import compare_digest
-from mod import config
-from mod import api
+from mod import api, config
 
 
 class Hash:
     """Сlass generates password hashes, hashes for sessions,
-    checks passwords hashes.
+    authenticator ID's, checks passwords hashes.
 
     Args:
         password (str, required): password.
 
-        salt (str, required): Salt. additional unique identifier
+        uuid (int, required): unique user identity.
+
+        salt (Any, required): Salt. additional unique identifier
              (there can be any line: mother's maiden name,
              favorite writer, etc.).
 
-        key (str, optional): Additional argument. Defaults to None.
+        key (Any, optional): Additional argument. Defaults to None.
             If the value of the 'key' parameter is 'None' then the function
-            will set it to 'byte-like object' equal to an empty string.
+            will generated it.
 
         hash_password (str, optional): password hash (previously calculated).
 
-        uuid (int, optional): unique user identity.
-
     """
-    def __init__(self, password: str,
-                 uuid: int, salt: str = None,
-                 key: str = None,
-                 hash_password: str = None
-                 ):
+    def __init__(self, password: str, uuid: int, salt: Any = None,
+                 key: Any = None, hash_password: str = None):
 
-        if salt is None and key is None:
+        if salt is None:
             self.salt = urandom(16)
+        else:
+            self.salt = str(salt).encode('utf-8')
+
+        if key is None:
             self.key = urandom(20)
         else:
-            self.salt = salt
-            self.key = key
+            self.key = str(key).encode('utf-8')
 
         self.binary_password = password.encode('utf-8')
         self.uuid = uuid
@@ -50,10 +50,10 @@ class Hash:
         self.size_password = config.PASSWORD_HASH_SIZE
         self.size_auth_id = config.AUTH_ID_HASH_SIZE
 
-    def get_salt(self) -> str:
+    def get_salt(self) -> bytes:
         return self.salt
 
-    def get_key(self) -> str:
+    def get_key(self) -> bytes:
         return self.key
 
     def password_hash(self) -> str:
@@ -68,7 +68,8 @@ class Hash:
         return hash_password.hexdigest()
 
     def check_password(self) -> bool:
-        """The function checks the password hash and original password.
+        """Function checks the password hash and original password.
+
         Returns:
             bool: True or False
         """
@@ -79,8 +80,8 @@ class Hash:
             return compare_digest(self.hash_password,
                                   verified_hash_password)
 
-    def auth_id(self) -> Optional[str]:
-        """The function generates an authenticator for the client session
+    def auth_id(self) -> str:
+        """Function generates an authenticator ID's for the client session
         connection to the server.
 
         Returns:

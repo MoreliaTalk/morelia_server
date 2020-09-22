@@ -128,8 +128,7 @@ class ProtocolMethods:
                         login=self.request.data.user[0].login,
                         key=generated.get_key(),
                         salt=generated.get_salt(),
-                        authId=(gen_auth_id := generated.auth_id())
-                        )
+                        authId=(gen_auth_id := generated.auth_id()))
             self.response.data.user.append(api.User())
             self.response.data.user[0].uuid = gen_uuid
             self.response.data.user[0].auth_id = gen_auth_id
