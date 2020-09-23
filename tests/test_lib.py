@@ -100,26 +100,5 @@ class TestHash(unittest.TestCase):
                               str)
 
 
-class TestErrorCatching(unittest.TestCase):
-    def setUp(self):
-        logger.remove()
-
-    def test_check_error_code_200(self):
-        result = lib.error_catching(200)
-        self.assertEqual(result['code'], 200)
-
-    def test_check_error_code_526(self):
-        result = lib.error_catching(526)
-        self.assertEqual(result['code'], 526)
-
-    def test_check_add_info_in_result(self):
-        result = lib.error_catching('200')
-        self.assertEqual(result['detail'], '200')
-
-    def test_check_520_code_in_result(self):
-        result = lib.error_catching('200')
-        self.assertEqual(result['code'], 520)
-
-
 if __name__ == "__main__":
     unittest.main()

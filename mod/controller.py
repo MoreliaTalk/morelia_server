@@ -4,6 +4,8 @@ from mod import models
 from mod import config
 from mod import api
 from mod import lib
+from typing import Union
+from typing import Optional
 
 from sqlobject import SQLObjectIntegrityError
 from sqlobject import SQLObjectNotFound
@@ -22,24 +24,25 @@ class ProtocolMethods:
         self.response.jsonapi = api.Version()
         self.response.jsonapi.version = config.API_VERSION
         self.get_time = int(time())
-        self.request = request
+
         try:
-            self.request = api.ValidJSON.parse_raw(self.request)
+            self.request = api.ValidJSON.parse_raw(request)
         except ValidationError as error:
             self.response.type = "errors"
-            self.response.errors = lib.ErrorsCatching(error)
+            self.__catching_error(error)
         else:
             self.response.type = self.request.type
-            if self.request.type == 'ping-pong':  #
+            if self.request.type == 'ping-pong':
                 self._ping_pong()
-            elif self.request.type == 'register_user':  #
+            elif self.request.type == 'register_user':
                 self._register_user()
-            elif self.request.type == 'auth':  #
+            elif self.request.type == 'auth':
                 self._authentification()
             elif self.request.type == 'user_info':
                 self._user_info()
             else:
-                if self.__check_auth_token():
+                if self.__check_auth_token(self.request.data.user[0].uuid,
+                                           self.request.data.user[0].auth_id):
                     if self.request.type == 'send_message':
                         self._send_message()
                     elif self.request.type == 'all_flow':
@@ -59,12 +62,12 @@ class ProtocolMethods:
                     else:
                         self._errors()
                 else:
-                    self.response.errors = lib.ErrorsCatching(401).to_dict()
+                    self.__catching_error(401)
 
     def get_response(self):
         return self.response.toJSON()
 
-    def __check_auth_token(self) -> bool:
+    def __check_auth_token(self, uuid: str, auth_id: str) -> bool:
         """Function checks uuid and auth_id of user
 
         Args:
@@ -75,19 +78,18 @@ class ProtocolMethods:
             bool
         """
         try:
-            dbquery = models.User.select(
-                        models.User.q.uuid == self.request.data.user[0].uuid
-                                    ).getOne()
+            dbquery = models.User.select(models.User.q.uuid ==
+                                         uuid).getOne()
 
         except (SQLObjectIntegrityError, SQLObjectNotFound):
             return False
         else:
-            if self.request.data.user[0].auth_id == dbquery.authId:
+            if auth_id == dbquery.authId:
                 return True
             else:
                 return False
 
-    def __check_login(self) -> bool:
+    def __check_login(self, login: str) -> bool:
         """Provides information about all personal settings of user
         (in a server-friendly form)
 
@@ -99,11 +101,49 @@ class ProtocolMethods:
         """
         try:
             models.User.select(models.User.q.login ==
-                               self.request.data.user[0].login).getOne()
+                               login).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound):
-            return True
-        else:
             return False
+        else:
+            return True
+
+    def __catching_error(self, code: Union[int, str],
+                         add_info: Optional[str] = None) -> None:
+        """Function catches errors in the "try...except" content.
+        Result is 'dict' with information about the code, status,
+        time and detailed description of the error that has occurred.
+        For errors like Exception and other unrecognized errors,
+        code "520" and status "Unknown Error" are used.
+        Function also automatically logs the error.
+
+        Args:
+            code (Union[int, str]): Error code or type and exception
+            description.
+            add_info (Optional[str], optional): Additional information
+            to be added. The 'Exception' field is not used for exceptions.
+            Defaults to None.
+
+        Returns:
+            dict: returns 'dict' according to the protocol,
+                like: {
+                    'code': 200,
+                    'status': 'Ok',
+                    'time': 123456545,
+                    'detail': 'successfully'
+                    }
+    """
+        if code in config.DICT_ALL_ERRORS:
+            if add_info is None:
+                add_info = config.DICT_ALL_ERRORS[code]['detail']
+            self.response.errors.code = code
+            self.response.errors.status = config.DICT_ALL_ERRORS[code]['status']
+            self.response.errors.time = self.get_time
+            self.response.errors.detail = add_info
+        else:
+            self.response.errors.code = 520
+            self.response.errors.status = 'Unknown Error'
+            self.response.errors.time = self.get_time
+            self.response.errors.detail = code
 
     def _register_user(self):
         """The function registers the user who is not in the database.
@@ -117,8 +157,8 @@ class ProtocolMethods:
         Returns:
             dict: returns JSON reply to client
         """
-        if self.__check_login() is False:
-            self.response.errors = lib.ErrorsCatching(409).to_dict()
+        if self.__check_login(self.request.data.user[0].login) is False:
+            self.__catching_error(409)
         else:
             generated = lib.Hash(password=self.request.data.user[0].password,
                                  uuid=(gen_uuid := random.getrandbits(64)))
@@ -132,7 +172,7 @@ class ProtocolMethods:
             self.response.data.user.append(api.User())
             self.response.data.user[0].uuid = gen_uuid
             self.response.data.user[0].auth_id = gen_auth_id
-            self.response.errors = lib.ErrorsCatching(201).to_obj()
+            self.__catching_error(201)
 
     def _get_update(self):
         """The function displays messages of a specific flow,
@@ -151,12 +191,9 @@ class ProtocolMethods:
             try:
                 dbquery_message = models.Message.select(
                                 models.Message.q.flow == flowq.id and
-                                models.Message.q.time > self.request.data.time
-                                        )
+                                models.Message.q.time > self.request.data.time)
             except SQLObjectNotFound as message_error:
-                self.response.errors = lib.ErrorsCatching(
-                                                        404,
-                                                        message_error)
+                self.__catching_error(404, message_error)
             else:
                 for message in dbquery_message:
 
@@ -178,8 +215,7 @@ class ProtocolMethods:
             dbquery_flow = models.Flow.select(
                         models.Flow.q.timeCreated == self.request.data.time)
         except SQLObjectNotFound as flow_error:
-            self.response.errors = lib.ErrorsCatching(404,
-                                                      flow_error)
+            self.__catching_error(404, flow_error)
         else:
             for flow in dbquery_flow:
                 flow_el = api.Flow()
@@ -190,7 +226,7 @@ class ProtocolMethods:
                 flow_el.info = flow.info
 
                 self.response.data.flow.append(flow_el)
-        self.response.errors = lib.ErrorsCatching(200)
+        self.__catching_error(200)
 
     def _send_message(self):
         """The function saves user message in the database.
@@ -206,24 +242,21 @@ class ProtocolMethods:
             models.Flow.select(models.Flow.q.flowId ==
                                self.request.data.flow[0].id).getOne()
         except SQLObjectNotFound as flow_error:
-            self.response.errors = lib.ErrorsCatching(404,
-                                                      flow_error).to_dict()
+            self.__catching_error(404, flow_error)
         else:
-            models.Message(
-                        text=self.request.data.message[0].text,
-                        time=self.get_time,
-                        filePicture=self.request.data.message[0].file_picture,
-                        fileVideo=self.request.data.message[0].file_video,
-                        fileAudio=self.request.data.message[0].file_audio,
-                        fileDocument=self.request.data.message[0].file_audio,
-                        emoji=self.request.data.message[0].emoji,
-                        editedTime=self.request.data.message[0].edited_time,
-                        editedStatus=self.request.data.
-                        message[0].edited_status,
-                        user=self.request.data.user[0].uuid,
-                        flow=self.request.data.flow[0].id
-                        )
-            self.response.errors = lib.ErrorsCatching(200).to_dict()
+            models.Message(text=self.request.data.message[0].text,
+                           time=self.get_time,
+                           filePicture=self.request.data.message[0].file_picture,
+                           fileVideo=self.request.data.message[0].file_video,
+                           fileAudio=self.request.data.message[0].file_audio,
+                           fileDocument=self.request.data.message[0].file_audio,
+                           emoji=self.request.data.message[0].emoji,
+                           editedTime=self.request.data.message[0].edited_time,
+                           editedStatus=self.request.data.
+                           message[0].edited_status,
+                           user=self.request.data.user[0].uuid,
+                           flow=self.request.data.flow[0].id)
+            self.__catching_error(200)
 
     def _add_flow(self):
         """Function allows you to add a new flow to the database
@@ -243,10 +276,9 @@ class ProtocolMethods:
                         title=self.request.data.flow[0].title,
                         info=self.request.data.flow[0].info)
         except SQLObjectIntegrityError as flow_error:
-            self.response.errors = lib.ErrorsCatching(520,
-                                                      flow_error).to_dict()
+            self.__catching_error(520, flow_error)
         else:
-            self.response.errors = lib.ErrorsCatching(200).to_dict()
+            self.__catching_error(200)
 
     def _all_flow(self):
         """Function allows to get a list of all flows and
@@ -262,7 +294,7 @@ class ProtocolMethods:
         try:
             dbquery = models.Flow.select(models.Flow.q.id > 0)
         except SQLObjectNotFound:
-            self.response.errors = lib.ErrorsCatching(404).to_dict()
+            self.__catching_error(404)
         for i in dbquery:
             element = api.Flow()
             element.id = i.flowId
@@ -271,8 +303,7 @@ class ProtocolMethods:
             element.title = i.title
             element.info = i.info
             self.response.data.flow.append(element)
-
-        self.response.errors = lib.ErrorsCatching(200)
+        self.__catching_error(200)
 
     def _user_info(self):
         """Provides information about all personal settings of user.
@@ -285,11 +316,10 @@ class ProtocolMethods:
             dict: [description]
         """
         try:
-            dbquery = models.User.select(
-                models.User.q.uuid == self.request.data.user[0].uuid).getOne()
-
+            dbquery = models.User.select(models.User.q.uuid ==
+                                         self.request.data.user[0].uuid).getOne()
         except SQLObjectNotFound:
-            self.response.errors = lib.ErrorsCatching(404).to_dict()
+            self.__catching_error(404)
         else:
             user_info = api.User()
             user_info.uuid = dbquery.uuid
@@ -300,7 +330,7 @@ class ProtocolMethods:
             user_info.avatar = dbquery.avatar
             user_info.bio = dbquery.bio
             self.response.data.user.append(user_info)
-            self.response.errors = lib.ErrorsCatching(200)
+            self.__catching_error(200)
 
     def _authentification(self):
         """Performs authentification of registered client,
@@ -315,28 +345,25 @@ class ProtocolMethods:
         Returns:
             dict: [description]
         """
-        try:
-            dbquery = models.User.selectBy(
-                                        login=self.request.data.user[0].login
-                                            ).getOne()
-        except (SQLObjectIntegrityError, SQLObjectNotFound):
-            self.response.errors = lib.ErrorsCatching(404)
+        if self.__check_login(self.request.data.user[0].login) is False:
+            self.__catching_error(404)
         else:
+            dbquery = models.User.select(models.User.q.login ==
+                                         self.request.data.user[0].login).getOne()
             generator = lib.Hash(password=self.request.data.user[0].password,
                                  uuid=dbquery.uuid,
                                  salt=dbquery.salt,
                                  key=dbquery.key,
-                                 hash_password=dbquery.hashPassword
-                                 )
+                                 hash_password=dbquery.hashPassword)
 
             if generator.check_password():
                 dbquery.authId = generator.auth_id()
                 self.response.data.user.append(api.User())
                 self.response.data.user[0].uuid = dbquery.uuid
                 self.response.data.user[0].auth_id = dbquery.authId
-                self.response.errors = lib.ErrorsCatching(200)
+                self.__catching_error(200)
             else:
-                self.response.errors = lib.ErrorsCatching(401)
+                self.__catching_error(401)
 
     def _delete_user(self):
         """Function irretrievably deletes the user from the database.
@@ -349,14 +376,12 @@ class ProtocolMethods:
             dict: [description]
         """
         try:
-            dbquery = models.User.selectBy(
-                                    uuid=self.request.data.user[0].uuid
-                                          ).getOne()
-        except SQLObjectNotFound as er_not_found:
-            self.response.errors = lib.ErrorsCatching(404, er_not_found)
+            dbquery = models.User.selectBy(uuid=self.request.data.user[0].uuid).getOne()
+        except SQLObjectNotFound as user_not_found:
+            self.__catching_error(404, user_not_found)
         else:
             dbquery.delete(dbquery.id)
-            self.response.errors = lib.ErrorsCatching(200)
+            self.__catching_error(200)
 
     def _delete_message(self):
         """Function deletes the message from the database Message table by its ID.
@@ -369,15 +394,14 @@ class ProtocolMethods:
             dict: [description]
         """
         try:
-            dbquery = models.Message.select(
-                    models.Message.q.id == self.request.data.message[0].id
-                    ).getOne()
+            dbquery = models.Message.select(models.Message.q.id ==
+                                            self.request.data.message[0].id).getOne()
 
-        except SQLObjectNotFound as er_not_found:
-            self.response.errors = lib.ErrorsCatching(404, er_not_found)
+        except SQLObjectNotFound as message_not_found:
+            self.__catching_error(404, message_not_found)
         else:
             dbquery.delete(dbquery.id)
-            self.response.errors = lib.ErrorsCatching(200)
+            self.__catching_error(200)
 
     def _edited_message(self):
         """Function changes the text and time in the database Message table.
@@ -390,21 +414,17 @@ class ProtocolMethods:
         Returns:
             dict: [description]
         """
-        # TODO
-        # added a comparison of time contained in query
-        # with time specified in Message database
         try:
             dbquery = models.Message.select(models.Message.q.id ==
-                                            self.request.data.message[0].id
-                                            ).getOne()
-        except SQLObjectNotFound as er_not_found:
-            self.response.errors = lib.ErrorsCatching(404, er_not_found)
+                                            self.request.data.message[0].id).getOne()
+        except SQLObjectNotFound as message_not_found:
+            self.__catching_error(404, message_not_found)
         else:
             # changing in DB text, time and status
             dbquery.text = self.request.data.message[0].text
             dbquery.editedTime = self.get_time
             dbquery.editedStatus = True
-            self.response.errors = lib.ErrorsCatching(200)
+            self.__catching_error(200)
 
     def _all_messages(self):
         """Function displays all messages of a specific flow retrieves them
@@ -435,9 +455,9 @@ class ProtocolMethods:
                 message.edited_status = i.editedStatus
                 self.response.data.message.append(message)
 
-            self.response.errors = lib.ErrorsCatching(200)
+            self.__catching_error(200)
         else:
-            self.response.errors = lib.ErrorsCatching(404)
+            self.__catching_error(404)
 
     def _ping_pong(self):
         """The function generates a response to a client's request
@@ -450,7 +470,7 @@ class ProtocolMethods:
         Returns:
             dict: [description]
         """
-        self.response.errors = lib.ErrorsCatching(200)
+        self.__catching_error(200)
 
     def _errors(self):
         """Function handles cases when a request to server is not recognized by it.
@@ -464,5 +484,4 @@ class ProtocolMethods:
         Returns:
             dict: [description]
         """
-        self.response.type = "errors"
-        self.response.errors = lib.ErrorsCatching(405)
+        self.__catching_error(405)
