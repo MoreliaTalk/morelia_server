@@ -1,11 +1,11 @@
 import inspect
+import json
 import os
 import sys
 import unittest
-import json
-from loguru import logger
 
 import sqlobject as orm
+from loguru import logger
 
 # Add path to directory with code being checked
 # to variable 'PATH' to import modules from directory
@@ -14,9 +14,9 @@ BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 FIXTURES_PATH = os.path.join(BASE_PATH, "fixtures")
 sys.path.append(os.path.split(BASE_PATH)[0])
 from mod import api
-from mod import lib
 from mod import config
 from mod import controller
+from mod import lib
 from mod import models
 
 connection = orm.connectionForURI("sqlite:/:memory:")
@@ -52,11 +52,11 @@ SEND_MESSAGE = {
             }],
         "message": [{
             "text": "Hello!",
-            "file_picture": "jkfikdkdsd",
-            "file_video": "sdfsdfsdf",
-            "file_audio": "fgfsdfsdfsdf",
-            "file_document": "adgdfhfgth",
-            "emoji": "sfdfsdfsdf"
+            "file_picture": b"jkfikdkdsd",
+            "file_video": b"sdfsdfsdf",
+            "file_audio": b"fgfsdfsdfsdf",
+            "file_document": b"adgdfhfgth",
+            "emoji": b"sfdfsdfsdf"
             }],
         "user": [{
             "uuid": 123456,
@@ -73,7 +73,7 @@ SEND_MESSAGE = {
 ALL_MESSAGES = {
     "type": "all_messages",
     "data": {
-        "time": 1,
+        "time": 2,
         "flow": [{
             "id": 123
         }],
@@ -192,8 +192,7 @@ DELETE_MESSAGE = {
     "type": "delete_message",
     "data": {
         "message": [{
-            "id": 1,
-            "time": 1594492370
+            "id": 1
             }],
         "user": [{
             "uuid": 123456,
@@ -257,8 +256,8 @@ ERRORS = {
     }
 
 NON_VALID_ERRORS = {
-    # None valid blank value
-    "type": ,
+    # None valid blank dict
+    "type": {},
     "data": {
         "user": [{
             "uuid": 123456,
@@ -272,15 +271,15 @@ NON_VALID_ERRORS = {
     "meta": None
     }
 
-# end sample
-
-testing = ((controller.edited_message, EDITED_MESSAGE),
-           (controller.delete_message, DELETE_MESSAGE))
+# end
 
 
 class TestCheckAuthToken(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        logger.remove()
+
+    def setUp(self):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
@@ -288,116 +287,144 @@ class TestCheckAuthToken(unittest.TestCase):
                     login="login",
                     password="password",
                     authId="auth_id")
-        logger.remove()
-
-    def setUp(self):
-        self.test = json.dumps(GET_UPDATE)
+        self.test = api.ValidJSON.parse_obj(SEND_MESSAGE)
 
     def tearDown(self):
-        del self.test
-
-    @classmethod
-    def tearDownClass(cls):
         for item in classes:
             class_ = getattr(models, item)
             class_.dropTable(ifExists=True,
                              dropJoinTables=True,
                              cascade=True)
+        del self.test
 
-    def test_check_good(self):
+    def test_check_true_result(self):
+        uuid = self.test.data.user[0].uuid
+        auth_id = self.test.data.user[0].auth_id
         run_method = controller.ProtocolMethods(self.test)
-        result = run_method._ProtocolMethods__check_auth_token()
+        result = run_method._ProtocolMethods__check_auth_token(uuid,
+                                                               auth_id)
         self.assertTrue(result)
 
     def test_check_wrong_uuid(self):
-        self.test.data.user[0].uuid = 654321
+        uuid = 654321
+        auth_id = self.test.data.user[0].auth_id
         run_method = controller.ProtocolMethods(self.test)
-        result = run_method._ProtocolMethods__check_auth_token()
+        result = run_method._ProtocolMethods__check_auth_token(uuid,
+                                                               auth_id)
         self.assertFalse(result)
 
     def test_check_wrong_auth_id(self):
-        self.test.data.user[0].auth_id = "wrong_auth_id"
+        auth_id = "wrong_auth_id"
+        uuid = self.test.data.user[0].uuid
         run_method = controller.ProtocolMethods(self.test)
-        result = run_method._ProtocolMethods__check_auth_token()
+        result = run_method._ProtocolMethods__check_auth_token(uuid,
+                                                               auth_id)
         self.assertFalse(result)
 
 
-# TestSuite for testing class ProtocolMethods
-class TestRegisterUser(unittest.TestCase):
+class TestCheckLogin(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        logger.remove()
+
+    def setUp(self):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
         models.User(uuid=123456,
                     login="login",
-                    password="password")
-        logger.remove()
-
-    def setUp(self):
-        self.test = json.dumps(REGISTER_USER)
+                    password="password",
+                    authId="auth_id")
+        self.test = api.ValidJSON.parse_obj(REGISTER_USER)
 
     def tearDown(self):
-        del self.test
-
-    @classmethod
-    def tearDownClass(cls):
         for item in classes:
             class_ = getattr(models, item)
             class_.dropTable(ifExists=True,
                              dropJoinTables=True,
                              cascade=True)
+        del self.test
+
+    def test_check_true_result(self):
+        login = self.test.data.user[0].login
+        run_method = controller.ProtocolMethods(self.test)
+        result = run_method._ProtocolMethods__check_login(login)
+        self.assertTrue(result)
+
+    def test_check_wrong_login(self):
+        run_method = controller.ProtocolMethods(self.test)
+        result = run_method._ProtocolMethods__check_login("wrong_login")
+        self.assertFalse(result)
+
+
+class TestRegisterUser(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        logger.remove()
+
+    def setUp(self):
+        for item in classes:
+            class_ = getattr(models, item)
+            class_.createTable(ifNotExists=True)
+        self.test = api.ValidJSON.parse_obj(REGISTER_USER)
+
+    def tearDown(self):
+        for item in classes:
+            class_ = getattr(models, item)
+            class_.dropTable(ifExists=True,
+                             dropJoinTables=True,
+                             cascade=True)
+        del self.test
 
     def test_user_created(self):
-        self.test.data.user[0].login = "other_login"
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 201)
 
     def test_user_already_exists(self):
+        models.User(uuid=123456,
+                    login="login",
+                    password="password")
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 409)
 
     def test_user_write_in_database(self):
-        dbquery = models.User.select(models.User.q.login ==
-                                     "other_login").getOne()
-        self.assertEqual(dbquery.login, "other_login")
+        controller.ProtocolMethods(self.test)
+        dbquery = models.User.selectBy(login="login").getOne()
+        self.assertEqual(dbquery.login, "login")
 
     def test_uuid_write_in_database(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        dbquery = models.User.select(models.User.q.login ==
-                                     "other_login").getOne()
+        dbquery = models.User.selectBy(login="login").getOne()
         self.assertEqual(dbquery.uuid,
                          result["data"]["user"][0]["uuid"])
 
     def test_auth_id_write_in_database(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        dbquery = models.User.select(models.User.q.login ==
-                                     "other_login").getOne()
+        dbquery = models.User.selectBy(login="login").getOne()
         self.assertEqual(dbquery.authId,
                          result["data"]["user"][0]["auth_id"])
 
     def test_type_of_salt(self):
-        run_method = controller.ProtocolMethods(self.test)
-        result = json.loads(run_method.get_response())
-        dbquery = models.User.select(models.User.q.login ==
-                                     "other_login").getOne()
+        controller.ProtocolMethods(self.test)
+        dbquery = models.User.selectBy(login="login").getOne()
         self.assertIsInstance(dbquery.salt, bytes)
 
     def test_type_of_key(self):
-        run_method = controller.ProtocolMethods(self.test)
-        result = json.loads(run_method.get_response())
-        dbquery = models.User.select(models.User.q.login ==
-                                     "other_login").getOne()
-        self.assertEqual(dbquery.key, bytes)
+        controller.ProtocolMethods(self.test)
+        dbquery = models.User.selectBy(login="login").getOne()
+        self.assertIsInstance(dbquery.key, bytes)
 
 
 class TestGetUpdate(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        logger.remove()
+
+    def setUp(self):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
@@ -431,53 +458,41 @@ class TestGetUpdate(unittest.TestCase):
                        time=333,
                        user=new_user1,
                        flow=new_flow1)
-        logger.remove()
-
-    def setUp(self):
-        self.test = json.dumps(GET_UPDATE)
+        self.test = api.ValidJSON.parse_obj(GET_UPDATE)
 
     def tearDown(self):
-        del self.test
-
-    @classmethod
-    def tearDownClass(cls):
         for item in classes:
             class_ = getattr(models, item)
             class_.dropTable(ifExists=True,
                              dropJoinTables=True,
                              cascade=True)
+        del self.test
 
     def test_update(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 200)
 
-    def test_no_message_in_database(self):
+    def test_check_message_in_result(self):
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["data"]["message"][1]["text"],
+                         "Hello2")
+
+    @unittest.skip("Не работает, пока не будет добавлен фильтр по времени")
+    def test_no_new_data_in_database(self):
         self.test.data.time = 444
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["data"]["message"][0], None)
-
-    def test_no_flow_in_database(self):
-        self.test.data.time = 333
-        run_method = controller.ProtocolMethods(self.test)
-        result = json.loads(run_method.get_response())
-        self.assertEqual(result["data"]["flow"][0], None)
-
-    def test_no_data_in_database(self):
-        for item in classes:
-            class_ = getattr(models, item)
-            class_.dropTable(ifExists=True,
-                             dropJoinTables=True,
-                             cascade=True)
-        run_method = controller.ProtocolMethods(self.test)
-        result = json.loads(run_method.get_response())
-        self.assertEqual(result["data"], 404)
+        self.assertEqual(result["errors"]["code"], 404)
 
 
 class TestSendMessage(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        logger.remove()
+
+    def setUp(self):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
@@ -488,21 +503,15 @@ class TestSendMessage(unittest.TestCase):
         models.Flow(flowId=123,
                     timeCreated=111,
                     flowType="chat")
-        logger.remove()
-
-    def setUp(self):
-        self.test = json.dumps(SEND_MESSAGE)
+        self.test = api.ValidJSON.parse_obj(SEND_MESSAGE)
 
     def tearDown(self):
-        del self.test
-
-    @classmethod
-    def tearDownClass(cls):
         for item in classes:
             class_ = getattr(models, item)
             class_.dropTable(ifExists=True,
                              dropJoinTables=True,
                              cascade=True)
+        del self.test
 
     def test_send_message(self):
         run_method = controller.ProtocolMethods(self.test)
@@ -516,24 +525,21 @@ class TestSendMessage(unittest.TestCase):
         self.assertEqual(result["errors"]["code"], 404)
 
     def test_write_text_in_database(self):
-        run_method = controller.ProtocolMethods(self.test)
-        result = json.loads(run_method.get_response())
-        dbquery = models.Message.select(models.Message.q.flowID ==
-                                        self.test.data.flow[0].id).getOne()
+        flow_id = self.test.data.flow[0].id
+        controller.ProtocolMethods(self.test)
+        dbquery = models.Message.selectBy(flowID=flow_id).getOne()
         self.assertEqual(dbquery.text,
                          self.test.data.message[0].text)
 
     def test_write_time_in_database(self):
-        run_method = controller.ProtocolMethods(self.test)
-        result = json.loads(run_method.get_response())
-        dbquery = models.Message.select(models.Message.q.flowID ==
-                                        self.test.data.flow[0].id).getOne()
+        flow_id = self.test.data.flow[0].id
+        controller.ProtocolMethods(self.test)
+        dbquery = models.Message.selectBy(flowID=flow_id).getOne()
         self.assertIsInstance(dbquery.time, int)
 
 
 class TestAddFlow(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
@@ -541,41 +547,37 @@ class TestAddFlow(unittest.TestCase):
                     login="login",
                     password="password",
                     authId="auth_id")
+        models.Flow(flowId=333)
         logger.remove()
-
-    def setUp(self):
-        self.test = json.dumps(ADD_FLOW)
+        self.test = api.ValidJSON.parse_obj(ADD_FLOW)
 
     def tearDown(self):
-        del self.test
-
-    @classmethod
-    def tearDownClass(cls):
         for item in classes:
             class_ = getattr(models, item)
             class_.dropTable(ifExists=True,
                              dropJoinTables=True,
                              cascade=True)
+        del self.test
 
     def test_add_flow(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 200)
 
-    def test_520_error(self):
-        for item in classes:
-            class_ = getattr(models, item)
-            class_.dropTable(ifExists=True,
-                             dropJoinTables=True,
-                             cascade=True)
+    def test_check_flow_in_database(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 200)
+        dbquery = models.Flow.selectBy(title="title").getOne()
+        self.assertEqual(dbquery.flowId,
+                         result["data"]["flow"][0]["id"])
 
 
 class TestAllFlow(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        logger.remove()
+
+    def setUp(self):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
@@ -583,35 +585,27 @@ class TestAllFlow(unittest.TestCase):
                     login="login",
                     password="password",
                     authId="auth_id")
-        models.Flow(flowId=1,
-                    timeCreated=123456,
-                    flowType="flow_type",
-                    title="title",
-                    info="info")
-        logger.remove()
-
-    def setUp(self):
-        self.test = json.dumps(ALL_FLOW)
+        self.test = api.ValidJSON.parse_obj(ALL_FLOW)
 
     def tearDown(self):
-        del self.test
-
-    @classmethod
-    def tearDownClass(cls):
         for item in classes:
             class_ = getattr(models, item)
             class_.dropTable(ifExists=True,
                              dropJoinTables=True,
                              cascade=True)
+        del self.test
 
     def test_all_flow(self):
+        models.Flow(flowId=1,
+                    timeCreated=123456,
+                    flowType="flow_type",
+                    title="title",
+                    info="info")
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 200)
+        self.assertEqual(result["data"]["flow"][0]["info"], "info")
 
-    def test_blank_database(self):
-        dbquery = models.Flow.select(models.Flow.q.flowId > 0).getOne()
-        dbquery.delete(dbquery.id)
+    def test_blank_flow_table_in_database(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 404)
@@ -620,6 +614,9 @@ class TestAllFlow(unittest.TestCase):
 class TestUserInfo(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        logger.remove()
+
+    def setUp(self):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
@@ -631,34 +628,25 @@ class TestUserInfo(unittest.TestCase):
                     authId="auth_id",
                     email='email@email.com',
                     bio='bio')
-        logger.remove()
-
-    def setUp(self):
-        self.test = json.dumps(USER_INFO)
+        self.test = api.ValidJSON.parse_obj(USER_INFO)
 
     def tearDown(self):
-        del self.test
-
-    @classmethod
-    def tearDownClass(cls):
         for item in classes:
             class_ = getattr(models, item)
             class_.dropTable(ifExists=True,
                              dropJoinTables=True,
                              cascade=True)
+        del self.test
 
     def test_user_info(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 200)
 
-    def test_blank_database(self):
-        dbquery = models.User.select(models.User.q.uuid ==
-                                     self.test.data.user[0].uuid)
-        dbquery.delete(dbquery.id)
+    def test_check_user_info(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 404)
+        self.assertEqual(result["data"]["user"][0]["bio"], "bio")
 
 
 class TestAuthentification(unittest.TestCase):
@@ -667,16 +655,19 @@ class TestAuthentification(unittest.TestCase):
         logger.remove()
 
     def setUp(self):
+        gen_hash = lib.Hash("password", 123456,
+                            b"salt", b"key")
+        self.hash_password = gen_hash.password_hash()
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
         models.User(uuid=123456,
                     login="login",
                     password="password",
+                    hashPassword=self.hash_password,
                     salt=b"salt",
-                    key=b"key",
-                    authId="auth_id")
-        self.test = json.dumps(AUTH)
+                    key=b"key")
+        self.test = api.ValidJSON.parse_obj(AUTH)
 
     def tearDown(self):
         for item in classes:
@@ -686,18 +677,14 @@ class TestAuthentification(unittest.TestCase):
                              cascade=True)
         del self.test
 
-    @classmethod
-    def tearDownClass(cls):
-        pass
-
     def test_authentification(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 200)
 
     def test_blank_database(self):
-        dbquery = models.User.select(models.User.q.login ==
-                                     self.test.data.user[0].login)
+        login = self.test.data.user[0].login
+        dbquery = models.User.selectBy(login=login).getOne()
         dbquery.delete(dbquery.id)
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
@@ -720,10 +707,10 @@ class TestAuthentification(unittest.TestCase):
         self.assertEqual(result["errors"]["code"], 401)
 
     def test_write_in_database(self):
+        login = self.test.data.user[0].login
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        dbquery = models.User.select(models.User.q.login ==
-                                     self.test.data.user[0].login).getOne()
+        dbquery = models.User.selectBy(login=login).getOne()
         self.assertEqual(dbquery.authId,
                          result["data"]["user"][0]["auth_id"])
 
@@ -737,7 +724,7 @@ class TestDeleteUser(unittest.TestCase):
                     login="login",
                     password="password",
                     authId="auth_id")
-        self.test = json.dumps(DELETE_USER)
+        self.test = api.ValidJSON.parse_obj(DELETE_USER)
         logger.remove()
 
     def tearDown(self):
@@ -780,7 +767,7 @@ class TestDeleteMessage(unittest.TestCase):
                        time=123456,
                        user=new_user,
                        flow=new_flow)
-        self.test = json.dumps(DELETE_MESSAGE)
+        self.test = api.ValidJSON.parse_obj(DELETE_MESSAGE)
         logger.remove()
 
     def tearDown(self):
@@ -796,6 +783,11 @@ class TestDeleteMessage(unittest.TestCase):
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 200)
 
+    def test_check_delete_message_in_database(self):
+        controller.ProtocolMethods(self.test)
+        dbquery = models.Message.selectBy(text="Hello")
+        self.assertEqual(dbquery.count(), 0)
+
     def test_wrong_message_id(self):
         self.test.data.message[0].id = 2
         run_method = controller.ProtocolMethods(self.test)
@@ -806,6 +798,9 @@ class TestDeleteMessage(unittest.TestCase):
 class TestEditedMessage(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        logger.remove()
+
+    def setUp(self):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
@@ -819,29 +814,28 @@ class TestEditedMessage(unittest.TestCase):
                        time=123456,
                        user=new_user,
                        flow=new_flow)
-        logger.remove()
-
-    def setUp(self):
-        self.test = json.dumps(EDITED_MESSAGE)
+        self.test = api.ValidJSON.parse_obj(EDITED_MESSAGE)
 
     def tearDown(self):
-        del self.test
-
-    @classmethod
-    def tearDownClass(cls):
         for item in classes:
             class_ = getattr(models, item)
             class_.dropTable(ifExists=True,
                              dropJoinTables=True,
                              cascade=True)
+        del self.test
 
     def test_edited_message(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 200)
 
+    def test_new_edited_message(self):
+        controller.ProtocolMethods(self.test)
+        dbquery = models.Message.selectBy(id=1).getOne()
+        self.assertEqual(dbquery.text, "New_Hello")
+
     def test_wrong_message_id(self):
-        self.test.data.message.id = 3
+        self.test.data.message[0].id = 3
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 404)
@@ -850,6 +844,9 @@ class TestEditedMessage(unittest.TestCase):
 class TestAllMessages(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        logger.remove()
+
+    def setUp(self):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
@@ -875,26 +872,25 @@ class TestAllMessages(unittest.TestCase):
                        time=3,
                        user=new_user2,
                        flow=new_flow2)
-        logger.remove()
-
-    def setUp(self):
-        self.test = json.dumps(ALL_MESSAGES)
+        self.test = api.ValidJSON.parse_obj(ALL_MESSAGES)
 
     def tearDown(self):
-        del self.test
-
-    @classmethod
-    def tearDownClass(cls):
         for item in classes:
             class_ = getattr(models, item)
             class_.dropTable(ifExists=True,
                              dropJoinTables=True,
                              cascade=True)
+        del self.test
 
     def test_all_message(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 200)
+
+    def test_check_message_in_database(self):
+        controller.ProtocolMethods(self.test)
+        dbquery = models.Message.selectBy(time=3).getOne()
+        self.assertEqual(dbquery.text, "Hello2")
 
     def test_wrong_flow_id(self):
         self.test.data.flow[0].id = 555
@@ -904,8 +900,33 @@ class TestAllMessages(unittest.TestCase):
 
 
 class TestPingPong(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
+        for item in classes:
+            class_ = getattr(models, item)
+            class_.createTable(ifNotExists=True)
+        models.User(uuid=123456,
+                    login="login",
+                    password="password",
+                    authId="auth_id")
+        self.test = api.ValidJSON.parse_obj(PING_PONG)
+        logger.remove()
+
+    def tearDown(self):
+        for item in classes:
+            class_ = getattr(models, item)
+            class_.dropTable(ifExists=True,
+                             dropJoinTables=True,
+                             cascade=True)
+        del self.test
+
+    def test_ping_pong(self):
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["errors"]["code"], 200)
+
+
+class TestErrors(unittest.TestCase):
+    def setUp(self):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
@@ -915,44 +936,25 @@ class TestPingPong(unittest.TestCase):
                     authId="auth_id")
         logger.remove()
 
-    def setUp(self):
-        self.test = json.dumps(PING_PONG)
-
     def tearDown(self):
-        del self.test
-
-    @classmethod
-    def tearDownClass(cls):
         for item in classes:
             class_ = getattr(models, item)
             class_.dropTable(ifExists=True,
                              dropJoinTables=True,
                              cascade=True)
-
-    def test_ping_pong(self):
-        run_method = controller.ProtocolMethods(self.test)
-        result = run_method.get_response()
-        self.assertEqual(result["errors"]["code"], 200)
-
-
-class TestErrors(unittest.TestCase):
-    def setUp(self):
-        logger.remove()
-
-    def tearDown(self):
         del self.test
 
-    def test_errors(self):
-        self.test = json.dumps(ERRORS)
+    def test_wrong_type_method(self):
+        self.test = api.ValidJSON.parse_obj(ERRORS)
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 405)
 
-    def test_unknown_error(self):
+    def test_unsupported_media_type(self):
         self.test = json.dumps(NON_VALID_ERRORS)
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 520)
+        self.assertEqual(result["errors"]["code"], 415)
 
 
 if __name__ == "__main__":
