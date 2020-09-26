@@ -1,6 +1,7 @@
-import unittest
-import sys
 import os
+import sys
+import unittest
+
 from loguru import logger
 
 # Add path to directory with code being checked
