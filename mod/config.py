@@ -32,7 +32,7 @@ UVICORN_PORT = 8000
 
 TEMPLATE_FOLDER = 'templates'
 
-DICT_ALL_ERRORS = {
+DICT_ERRORS = {
             200: {
                 'status': 'OK',
                 'detail': 'successfully'
