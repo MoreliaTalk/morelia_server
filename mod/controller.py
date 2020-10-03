@@ -85,7 +85,7 @@ class ProtocolMethods:
             auth_id (str, requires): authentification ID
 
         Returns:
-            True if successfulor
+            True if successful
             False if unsuccessful
         """
         try:
