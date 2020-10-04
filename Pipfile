@@ -17,6 +17,7 @@ sqlobject = "*"
 click = "*"
 pyyaml = "*"
 loguru = "*"
+websockets = "*"
 
 [requires]
 python_version = "3.8"
