@@ -79,7 +79,7 @@ async def websocket_endpoint(websocket: WebSocket):
     clients.append(websocket)
     logger.info("".join(("Clients information: ",
                          "host: ", websocket.client.host,
-                         "port: ", websocket.client.host)))
+                         " port: ", websocket.client.port)))
     logger.debug(str(websocket.scope))
     while True:
         try:
@@ -88,9 +88,7 @@ async def websocket_endpoint(websocket: WebSocket):
             client = controller.ProtocolMethods(data)
             await websocket.send_json(client.get_response(), mode='binary')
         except WebSocketDisconnect as error:
-            logger.info("".join("Disconnected client: ",
-                                "host: ", websocket.client.host,
-                                "port: ", websocket.client.host))
+            logger.info("".join("Disconnected client: ", error)
             clients.remove(websocket)
             logger.info(error)
         else:
