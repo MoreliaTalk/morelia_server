@@ -77,21 +77,26 @@ def status_page(request: Request):
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     clients.append(websocket)
-    logger.info("Clients information:" + websocket)
+    # logger.info("Clients information:" + websocket)
     while True:
         try:
             data = await websocket.receive_json()
             client = controller.ProtocolMethods(data)
             await websocket.send_json(client.get_response())
-            await websocket.close(code=1000)
-            clients.remove(websocket)
         except WebSocketDisconnect as error:
-            logger.info('Disconnected ' + websocket.client.host)
+            # logger.info('Disconnected ' + websocket.client.host)
             clients.remove(websocket)
             logger.info(error)
+        else:
+            await websocket.close(code=1000)
+            clients.remove(websocket)
 
 
 if __name__ == "__main__":
     uvicorn.run(app, host=config.UVICORN_HOST,
                 port=config.UVICORN_PORT,
-                use_colors=False)
+                debug=True,
+                log_level="trace",
+                http="h11",
+                ws="websockets",
+                use_colors=True)
