@@ -4,7 +4,7 @@ from datetime import datetime
 
 
 # ************** External module *********************
-import uvicorn
+from uvicorn.config import logger as debug_level
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi import WebSocket
@@ -30,34 +30,35 @@ from settings.logging import add_logging
 # logging.disable()
 
 # ### loguru logger on
-add_logging(debug_status=uvicorn.config.logger.level)
+add_logging(debug_status=debug_level)
 # ************** Logging end **************************
 
+# Record server start time
+server_started = datetime.now()
 
 # Connect to database
 connection = orm.connectionForURI(config.LOCAL_SQLITE)
 orm.sqlhub.processConnection = connection
 
-server_started = datetime.now()
-
+# Server instance creation
 app = FastAPI()
 
+# Specifying where to load HTML page templates
 templates = Jinja2Templates(directory=config.TEMPLATE_FOLDER)
 
 
 # Save clients session
-# TODO: При отключении нужно реализовать их удаление подумать как их хранить
+# TODO: Нужно подумать как их компактно хранить
 clients = []
 
 
-# Static page
 # Server home page
 @app.get('/')
 def home_page(request: Request):
     return templates.TemplateResponse('index.html', {'request': request})
 
 
-# Page of server with statistics of it's work
+# Server page with working statistics
 @app.get('/status')
 def status_page(request: Request):
     dbquery = models.Message.select(models.Message.q.time >= 1)
@@ -72,7 +73,7 @@ def status_page(request: Request):
                                        'stats': stats})
 
 
-# Websocket
+# Chat websocket
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -102,10 +103,5 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host=config.UVICORN_HOST,
-                port=config.UVICORN_PORT,
-                debug=True,
-                log_level="trace",
-                http="h11",
-                ws="websockets",
-                use_colors=True)
+    print("to start the server, write the following command in the console:")
+    print("uvicorn server:app --host 0.0.0.0 --port 8000 --reload --use-colors --http h11 --ws websockets &")
