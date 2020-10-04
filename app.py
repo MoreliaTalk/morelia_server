@@ -90,7 +90,9 @@ async def websocket_endpoint(websocket: WebSocket):
         except WebSocketDisconnect as error:
             logger.info("".join(("Disconnection error: ", str(error))))
             clients.remove(websocket)
-            logger.info(error)
+        except RuntimeError as error:
+            logger.info("".join(("Runtime error: ", str(error))))
+            clients.remove(websocket)
         else:
             if websocket.client_state.value == 0:
                 await websocket.close(code=1000)
