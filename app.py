@@ -17,6 +17,7 @@ import sqlobject as orm
 # ************** Morelia module **********************
 from mod import config
 from mod import controller
+from mod import models
 # ************** Morelia module end ********************
 
 
@@ -59,12 +60,13 @@ def home_page(request: Request):
 # Page of server with statistics of it's work
 @app.get('/status')
 def status_page(request: Request):
+    dbquery = models.Message.select(models.Message.q.time >= 1)
     stats = {
         'Server time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'Server uptime': str(datetime.now()-server_started),
         'Users': len(clients),
-        'Messages': len()
-    }
+        'Messages': dbquery.count()
+        }
     return templates.TemplateResponse('status.html',
                                       {'request': request,
                                        'stats': stats})
