@@ -14,6 +14,7 @@ from mod import api
 
 
 class TestAPI(unittest.TestCase):
+    @classmethod
     def setUpClass(cls):
         logger.remove()
 
@@ -24,7 +25,7 @@ class TestAPI(unittest.TestCase):
         del self.valid
 
     def test_validation_json(self):
-        self.assertIsInstance(self.test.dict(), dict)
+        self.assertIsInstance(self.valid.dict(), dict)
 
 
 if __name__ == "__main__":
