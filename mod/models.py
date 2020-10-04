@@ -10,6 +10,7 @@ class User(orm.SQLObject):
         uuid (int, required):
         login (str, required):
         password (str, required):
+        hash_password (str, optional)
         username (str, optional):
         isBot (bool, optional): default False
         authId (str, optional):
@@ -27,14 +28,15 @@ class User(orm.SQLObject):
     uuid = orm.IntCol(alternateID=True, unique=True, notNone=True)
     login = orm.StringCol()
     password = orm.StringCol()
+    hashPassword = orm.StringCol(default=None)
     username = orm.StringCol(default=None)
     isBot = orm.BoolCol(default=False)
     authId = orm.StringCol(default=None)
     email = orm.StringCol(default=None)
     avatar = orm.BLOBCol(default=None)
     bio = orm.StringCol(default=None)
-    salt = orm.StringCol(default=None)
-    key = orm.StringCol(default=None)
+    salt = orm.BLOBCol(default=None)
+    key = orm.BLOBCol(default=None)
     # Connection to the Message table
     message = orm.MultipleJoin('Message')
 
@@ -81,20 +83,16 @@ class Message(orm.SQLObject):
         None
     """
     text = orm.StringCol(default=None)
-    # fromUser
-    # fromUserUsername
     time = orm.IntCol(default=None)
-    # fromFlow
     filePicture = orm.BLOBCol(default=None)
     fileVideo = orm.BLOBCol(default=None)
     fileAudio = orm.BLOBCol(default=None)
     fileDocument = orm.BLOBCol(default=None)
-    emoji = orm.StringCol(default=None)
+    emoji = orm.BLOBCol(default=None)
     editedTime = orm.IntCol(default=None)
     editedStatus = orm.BoolCol(default=False)
-    # replyTo = orm.StringCol(default=None)
-    user = orm.ForeignKey('User')
-    flow = orm.ForeignKey('Flow')
+    user = orm.ForeignKey('User', refColumn="uuid")
+    flow = orm.ForeignKey('Flow', refColumn="flowId")
 
 
 class Errors(orm.SQLObject):

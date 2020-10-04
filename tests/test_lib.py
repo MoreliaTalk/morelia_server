@@ -1,6 +1,7 @@
-import unittest
-import sys
 import os
+import sys
+import unittest
+
 from loguru import logger
 
 # Add path to directory with code being checked
@@ -12,6 +13,7 @@ from mod import lib
 
 
 class TestHash(unittest.TestCase):
+    @classmethod
     def setUpClass(cls):
         logger.remove()
 
@@ -20,25 +22,30 @@ class TestHash(unittest.TestCase):
         self.salt = 'salt'
         self.key = 'key',
         self.uuid = 1234
-        self.libhash = lib.Hash(self.password,
-                                self.salt,
-                                uuid=self.uuid)
-        self.hash_password = self.libhash.password_hash()
-        logger.remove()
+        self.generator = lib.Hash(self.password,
+                                  self.uuid,
+                                  self.salt,
+                                  self.key)
+        self.hash_password = self.generator.password_hash()
 
     def tearDown(self):
-        del self.libhash
+        del self.generator
         del self.hash_password
+        del self.password
+        del self.salt
+        del self.key
+        del self.uuid
 
-    def test_check_dict_in_result(self):
-        self.assertIsInstance(self.libhash.password_hash(),
+    def test_check_str_in_result(self):
+        self.assertIsInstance(self.generator.password_hash(),
                               str)
 
     def test_check_space_password(self):
         self.password = ' '
-        self.libhash = lib.Hash(self.password,
-                                self.salt)
-        self.assertIsInstance(self.libhash.password_hash(),
+        self.generator = lib.Hash(self.password,
+                                  self.uuid,
+                                  self.salt)
+        self.assertIsInstance(self.generator.password_hash(),
                               str)
 
     def test_check_256_symbols_password(self):
@@ -50,9 +57,10 @@ class TestHash(unittest.TestCase):
                          kgUU2x14tLMnswSs8YA9Tfk44tvHufL8 \
                          BQkUrrleeRLmRJgX9YguuLZecQYwkuJL \
                          VPXzeNZwrEAUqMda3w4Dn3oRT4Ihuhpo'
-        self.libhash = lib.Hash(self.password,
-                                self.salt)
-        self.assertIsInstance(self.libhash.password_hash(),
+        self.generator = lib.Hash(self.password,
+                                  self.uuid,
+                                  self.salt)
+        self.assertIsInstance(self.generator.password_hash(),
                               str)
 
     def test_check_wrong_password_type(self):
@@ -60,69 +68,37 @@ class TestHash(unittest.TestCase):
         self.assertRaises(AttributeError,
                           lib.Hash,
                           self.password,
+                          self.uuid,
                           self.salt)
-
-    def test_check_wrong_salt_type(self):
-        self.salt = 123456789
-        libhash = lib.Hash(self.password,
-                           self.salt)
-        self.assertRaises(AttributeError,
-                          libhash.password_hash)
 
     def test_wrong_hash_password_type(self):
         self.hash_password = 123456789
-        libhash = lib.Hash(self.password,
-                           self.salt,
-                           hash_password=self.hash_password)
+        generator = lib.Hash(self.password,
+                             self.uuid,
+                             self.salt,
+                             hash_password=self.hash_password)
         self.assertRaises(TypeError,
-                          libhash.check_password)
-
-    def test_check_key_type(self):
-        self.key = 123456789
-        libhash = lib.Hash(self.password,
-                           self.salt,
-                           key=self.key)
-        self.assertRaises(AttributeError,
-                          libhash.password_hash)
+                          generator.check_password)
 
     def test_check_wrong_uuid_type(self):
         self.uuid = '123123'
-        libhash = lib.Hash(self.password,
-                           self.salt,
-                           uuid=self.uuid)
+        generator = lib.Hash(self.password,
+                             self.uuid,
+                             self.salt)
         self.assertRaises(AttributeError,
-                          libhash.auth_id)
+                          generator.auth_id)
 
     def test_check_password(self):
-        self.libhash = lib.Hash(self.password,
-                                self.salt,
-                                self.hash_password)
-        self.assertTrue(self.libhash.check_password())
+        self.new_generator = lib.Hash(self.password,
+                                      self.uuid,
+                                      self.salt,
+                                      self.key,
+                                      hash_password=self.hash_password)
+        self.assertTrue(self.new_generator.check_password())
 
-    def test_check_auth_id_(self):
-        self.assertIsInstance(self.libhash.auth_id(),
+    def test_check_auth_id(self):
+        self.assertIsInstance(self.generator.auth_id(),
                               str)
-
-
-class TestErrorCatching(unittest.TestCase):
-    def setUp(self):
-        logger.remove()
-
-    def test_check_error_code_200(self):
-        result = lib.error_catching(200)
-        self.assertEqual(result['code'], 200)
-
-    def test_check_error_code_526(self):
-        result = lib.error_catching(526)
-        self.assertEqual(result['code'], 526)
-
-    def test_check_add_info_in_result(self):
-        result = lib.error_catching('200')
-        self.assertEqual(result['detail'], '200')
-
-    def test_check_520_code_in_result(self):
-        result = lib.error_catching('200')
-        self.assertEqual(result['code'], 520)
 
 
 if __name__ == "__main__":
