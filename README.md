@@ -48,6 +48,8 @@
   * test_controller.py - тесты для проверки класса который отвечает за обработкуметодов протокола
   * test_lib.py - тесты хэш-функции
 
+* debug_server.py - обёртка для server.py для дебага через утилиту `pdb`
+
 ## Установка ##
 
 Установить [Python](https://www.python.org/downloads/) версии 3.8.
@@ -231,6 +233,20 @@ uvicorn server:app --log-level debug
 
 ```cmd
 python -v ./tests/test_*.py
+```
+
+## Запуск дебаггера ##
+
+Для запуска дебаггера в полевых условиях, через консоль
+
+```cmd
+python -m pdb ./debug_server.py
+```
+
+Для получения справки в дебаг-режиме
+
+```cmd
+(pdb) help
 ```
 
 ## Контакты ##
