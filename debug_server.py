@@ -9,6 +9,6 @@ if __name__ == "__main__":
                 port=8000,
                 http="h11",
                 ws="websocket",
-                log_config="trace",
+                log_level="trace",
                 use_colors=True,
                 debug=True)
