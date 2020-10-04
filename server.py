@@ -4,7 +4,6 @@ from datetime import datetime
 
 
 # ************** External module *********************
-from uvicorn.config import logger as debug_level
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi import WebSocket
@@ -30,7 +29,7 @@ from settings.logging import add_logging
 # logging.disable()
 
 # ### loguru logger on
-add_logging(debug_status=debug_level)
+add_logging(debug_status=config.DEBUG_LEVEL)
 # ************** Logging end **************************
 
 # Record server start time
