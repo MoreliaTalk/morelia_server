@@ -88,7 +88,7 @@ async def websocket_endpoint(websocket: WebSocket):
             client = controller.ProtocolMethods(data)
             await websocket.send_json(client.get_response(), mode='binary')
         except WebSocketDisconnect as error:
-            logger.info("".join("Disconnected client: ", error)
+            logger.info("".join("Disconnected client: ", error))
             clients.remove(websocket)
             logger.info(error)
         else:
