@@ -10,5 +10,5 @@ if __name__ == "__main__":
                 http="h11",
                 ws="websockets",
                 log_level="trace",
-                use_colors=True,
+                use_colors=False,
                 debug=True)
