@@ -27,15 +27,21 @@ def main(table):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        print(f"Table is createt at: {time.process_time() - start_time} sec.")
-        return
+        return print(f"Table is createt at: {time.process_time() - start_time} sec.")
+    if table == "superuser":
+        models.User(uuid=123456,
+                    login="login",
+                    password="password",
+                    username="superuser",
+                    salt=b"salt",
+                    key=b"key")
+        return print("Create user")
     elif table == "delete":
         start_time = time.process_time()
         for item in classes:
             class_ = getattr(models, item)
             class_.dropTable(ifExists=True, dropJoinTables=True, cascade=True)
-        print(f"Table is deleted at: {time.process_time() - start_time} sec.")
-        return
+        return print(f"Table is deleted at: {time.process_time() - start_time} sec.")
     else:
         return print("ERROR. Function \'--table\' did not work")
 
