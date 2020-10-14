@@ -34,8 +34,8 @@ def main(table):
                     password="password",
                     hash_password="8b915f2f0b0d0ccf27854dd708524d0b5a91bdcd3775c6d3335f63d015a43ce1",
                     username="superuser",
-                    salt="salt",
-                    key="key")
+                    salt=b"salt",
+                    key=b"key")
         return print("Create user")
     elif table == "delete":
         start_time = time.process_time()
