@@ -7,12 +7,14 @@ verify_ssl = true
 flake8 = "*"
 
 [packages]
-uvicorn = "*"
-fastapi = "*"
-jinja2 = "*"
-aiofiles = "*"
-email-validator = "*"
-pyjwt = "*"
+uvicorn = "==0.12.1"
+fastapi = "==0.61.1"
+jinja2 = "==2.11.2"
+aiofiles = "==0.5.0"
+email-validator = "==1.1.1"
+sqlobject = "==3.8.1"
+loguru = "==0.5.3"
+websockets = "==8.1"
 
 [requires]
 python_version = "3.8"
