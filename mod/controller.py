@@ -35,7 +35,7 @@ class ProtocolMethods:
             self.request = api.ValidJSON.parse_obj(request)
         except ValidationError as error:
             self.response.type = "errors"
-            self.__catching_error(415, error)
+            self.__catching_error(415, str(error))
         else:
             self.response.type = self.request.type
             if self.request.type == 'register_user':
@@ -239,7 +239,7 @@ class ProtocolMethods:
         try:
             models.Flow.selectBy(flowId=self.request.data.flow[0].id).getOne()
         except SQLObjectNotFound as flow_error:
-            self.__catching_error(404, flow_error)
+            self.__catching_error(404, str(flow_error))
         else:
             models.Message(text=self.request.data.message[0].text,
                            time=self.get_time,
@@ -269,7 +269,7 @@ class ProtocolMethods:
                         title=self.request.data.flow[0].title,
                         info=self.request.data.flow[0].info)
         except SQLObjectIntegrityError as flow_error:
-            self.__catching_error(520, flow_error)
+            self.__catching_error(520, str(flow_error))
         else:
             flow = api.Flow()
             flow.id = flow_id
@@ -306,7 +306,7 @@ class ProtocolMethods:
         try:
             dbquery = models.User.selectBy(uuid=self.request.data.user[0].uuid).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound) as user_info_error:
-            self.__catching_error(404, user_info_error)
+            self.__catching_error(404, str(user_info_error))
         else:
             user = api.User()
             user.uuid = dbquery.uuid
@@ -353,7 +353,7 @@ class ProtocolMethods:
             dbquery = models.User.selectBy(login=self.request.data.user[0].login,
                                            password=self.request.data.user[0].password).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound) as not_found:
-            self.__catching_error(404, not_found)
+            self.__catching_error(404, str(not_found))
         else:
             dbquery.delete(dbquery.id)
             self.__catching_error(200)
@@ -365,7 +365,7 @@ class ProtocolMethods:
         try:
             dbquery = models.Message.selectBy(id=self.request.data.message[0].id).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound) as not_found:
-            self.__catching_error(404, not_found)
+            self.__catching_error(404, str(not_found))
         else:
             dbquery.delete(dbquery.id)
             self.__catching_error(200)
@@ -378,7 +378,7 @@ class ProtocolMethods:
         try:
             dbquery = models.Message.selectBy(id=self.request.data.message[0].id).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound) as not_found:
-            self.__catching_error(404, not_found)
+            self.__catching_error(404, str(not_found))
         else:
             # changing in DB text, time and status
             dbquery.text = self.request.data.message[0].text
