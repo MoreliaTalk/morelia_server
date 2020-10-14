@@ -3,7 +3,7 @@ from hashlib import blake2b
 from hmac import compare_digest
 from os import urandom
 
-import config
+from mod import config
 
 
 class Hash:
