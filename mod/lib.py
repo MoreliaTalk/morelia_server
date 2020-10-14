@@ -4,7 +4,7 @@ from hmac import compare_digest
 from os import urandom
 from typing import Any
 
-from mod import config
+import config
 
 
 class Hash:
@@ -46,11 +46,11 @@ class Hash:
         self.size_password = config.PASSWORD_HASH_SIZE
         self.size_auth_id = config.AUTH_ID_HASH_SIZE
 
-    def get_salt(self) -> bytes:
-        return self.salt
+    def get_salt(self) -> str:
+        return self.salt.decode("utf-8")
 
-    def get_key(self) -> bytes:
-        return self.key
+    def get_key(self) -> str:
+        return self.key.decode("utf-8")
 
     def password_hash(self) -> str:
         """Function generates a password hash.
