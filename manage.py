@@ -32,7 +32,7 @@ def main(table):
         models.User(uuid=123456,
                     login="login",
                     password="password",
-                    hash_password="8b915f2f0b0d0ccf27854dd708524d0b5a91bdcd3775c6d3335f63d015a43ce1",
+                    hashPassword="8b915f2f0b0d0ccf27854dd708524d0b5a91bdcd3775c6d3335f63d015a43ce1",
                     username="superuser",
                     salt=b"salt",
                     key=b"key")
