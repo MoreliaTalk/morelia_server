@@ -18,8 +18,13 @@ def add_logging(debug_status: int) -> None:
     The information is also duplicated in the console
 
     Args:
-        TODO: добавить описание типов дебаг статусов
         debug_status (str, requires): ?
+
+        50 = CRITICAL -> Уровень CRITICAL
+        40 = ERROR -> Уровень ERROR
+        30 = WARNING -> Урвоень WARNING
+        20 = INFO -> Урвоень INFO
+        10 = DEBUG -> Уровень DEBUG
 
     Returns:
         None
