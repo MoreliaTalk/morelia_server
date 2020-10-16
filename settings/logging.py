@@ -20,11 +20,11 @@ def add_logging(debug_status: int) -> None:
     Args:
         debug_status (str, requires): ?
 
-        50 = CRITICAL
-        40 = ERROR
-        30 = WARNING
-        20 = INFO
-        10 = DEBUG
+        50 - CRITICAL
+        40 - ERROR
+        30 - WARNING
+        20 - INFO
+        10 - DEBUG
 
     Returns:
         None
