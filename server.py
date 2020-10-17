@@ -37,7 +37,7 @@ add_logging(debug_status=config.DEBUG_LEVEL)
 server_started = datetime.now()
 
 # Connect to database
-connection = orm.connectionForURI(config.LOCAL_SQLITE)
+connection = orm.connectionForURI(config.LOCAL_POSTGRESQL)
 orm.sqlhub.processConnection = connection
 
 # Server instance creation
