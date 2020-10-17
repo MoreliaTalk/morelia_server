@@ -1,5 +1,6 @@
 # ************** Standart module *********************
 from datetime import datetime
+from json import JSONDecodeError
 # ************** Standart module end *****************
 
 
@@ -91,8 +92,8 @@ async def websocket_endpoint(websocket: WebSocket):
             logger.info("".join(("Disconnection error: ", str(error))))
             clients.remove(websocket)
             break
-        except RuntimeError as error:
-            logger.info("".join(("Runtime error: ", str(error))))
+        except (RuntimeError, JSONDecodeError) as error:
+            logger.info("".join(("Runtime or Decode error: ", str(error))))
             clients.remove(websocket)
             break
         else:
