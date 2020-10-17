@@ -9,7 +9,7 @@ from loguru import logger
 # above the directory with the tests.
 BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.split(BASE_PATH)[0])
-from mod import lib
+from mod import lib  # noqa
 
 
 class TestHash(unittest.TestCase):
@@ -49,7 +49,7 @@ class TestHash(unittest.TestCase):
                               str)
 
     def test_check_256_symbols_password(self):
-        self.password = '8b915f2f0b0d0ccf27854dd708524d0b \
+        self.password = '8b915f2f0b0d0ccf27854dd708524d0b\
                          5a91bdcd3775c6d3335f63d015a43ce1'
         self.generator = lib.Hash(self.password,
                                   self.uuid,
