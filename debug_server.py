@@ -1,6 +1,6 @@
 import uvicorn
 
-import server
+import server  # noqa
 
 
 if __name__ == "__main__":

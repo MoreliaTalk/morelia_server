@@ -2,7 +2,38 @@ import sqlobject as orm
 
 
 # Create table in database using ORM SQLobject
-class User(orm.SQLObject):
+class Message(orm.SQLObject):
+    """The class generates a Message table containing information
+    about user messages.
+
+    Args:
+        text (str, optional):
+        time (int, optional):
+        filePicture (byte, optional):
+        fileVideo (byte, optional):
+        fileAudio (byte, optional):
+        fileDocument (byte, optional):
+        emoji (str, optional):
+        editedTime (int, optional):
+        editedStatus (bool, optional):
+
+    Returns:
+        None
+    """
+    text = orm.StringCol(default=None)
+    time = orm.IntCol(default=None)
+    filePicture = orm.BLOBCol(default=None)
+    fileVideo = orm.BLOBCol(default=None)
+    fileAudio = orm.BLOBCol(default=None)
+    fileDocument = orm.BLOBCol(default=None)
+    emoji = orm.BLOBCol(default=None)
+    editedTime = orm.IntCol(default=None)
+    editedStatus = orm.BoolCol(default=False)
+    userConfig = orm.RelatedJoin('UserConfig')
+    flow = orm.RelatedJoin('Flow')
+
+
+class UserConfig(orm.SQLObject):
     """The class generates a table containing data
     about the user and his settings.
 
@@ -38,7 +69,7 @@ class User(orm.SQLObject):
     salt = orm.BLOBCol(default=None)
     key = orm.BLOBCol(default=None)
     # Connection to the Message table
-    message = orm.MultipleJoin('Message')
+    message = orm.RelatedJoin('Message')
 
 
 class Flow(orm.SQLObject):
@@ -61,38 +92,7 @@ class Flow(orm.SQLObject):
     title = orm.StringCol(default=None)
     info = orm.StringCol(default=None)
     # Connection to the Message table
-    message = orm.MultipleJoin('Message')
-
-
-class Message(orm.SQLObject):
-    """The class generates a Message table containing information
-    about user messages.
-
-    Args:
-        text (str, optional):
-        time (int, optional):
-        filePicture (byte, optional):
-        fileVideo (byte, optional):
-        fileAudio (byte, optional):
-        fileDocument (byte, optional):
-        emoji (str, optional):
-        editedTime (int, optional):
-        editedStatus (bool, optional):
-
-    Returns:
-        None
-    """
-    text = orm.StringCol(default=None)
-    time = orm.IntCol(default=None)
-    filePicture = orm.BLOBCol(default=None)
-    fileVideo = orm.BLOBCol(default=None)
-    fileAudio = orm.BLOBCol(default=None)
-    fileDocument = orm.BLOBCol(default=None)
-    emoji = orm.BLOBCol(default=None)
-    editedTime = orm.IntCol(default=None)
-    editedStatus = orm.BoolCol(default=False)
-    user = orm.ForeignKey('User', refColumn="uuid")
-    flow = orm.ForeignKey('Flow', refColumn="flowId")
+    message = orm.RelatedJoin('Message')
 
 
 class Errors(orm.SQLObject):

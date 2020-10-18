@@ -1,7 +1,6 @@
 import json
 from typing import Any
 from typing import Optional
-# from typing import Union
 from typing import List
 
 from pydantic import BaseModel

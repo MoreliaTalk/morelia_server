@@ -89,7 +89,7 @@ class ProtocolMethods:
             False if unsuccessful
         """
         try:
-            dbquery = models.User.selectBy(uuid=uuid).getOne()
+            dbquery = models.UserConfig.selectBy(uuid=uuid).getOne()
         except (dberrors.OperationalError,
                 SQLObjectIntegrityError, SQLObjectNotFound):
             return False
@@ -111,7 +111,7 @@ class ProtocolMethods:
             False if no such user exists
         """
         try:
-            models.User.selectBy(login=login).getOne()
+            models.UserConfig.selectBy(login=login).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound):
             return False
         else:
@@ -169,13 +169,13 @@ class ProtocolMethods:
         else:
             generated = lib.Hash(password=self.request.data.user[0].password,
                                  uuid=gen_uuid)
-            models.User(uuid=gen_uuid,
-                        password=self.request.data.user[0].password,
-                        hashPassword=generated.password_hash(),
-                        login=self.request.data.user[0].login,
-                        key=generated.get_key(),
-                        salt=generated.get_salt(),
-                        authId=(gen_auth_id := generated.auth_id()))
+            models.UserConfig(uuid=gen_uuid,
+                              password=self.request.data.user[0].password,
+                              hashPassword=generated.password_hash(),
+                              login=self.request.data.user[0].login,
+                              key=generated.get_key(),
+                              salt=generated.get_salt(),
+                              authId=(gen_auth_id := generated.auth_id()))
             user = api.User()
             user.uuid = gen_uuid
             user.auth_id = gen_auth_id
@@ -191,7 +191,7 @@ class ProtocolMethods:
         """
         # TODO внеести измнения в протокол, добавить фильтр
         # по дате создания пользователя
-        dbquery_user = models.User.selectBy()
+        dbquery_user = models.UserConfig.selectBy()
         dbquery_flow = models.Flow.select(models.Flow.q.timeCreated >=
                                           self.request.data.time)
         dbquery_message = models.Message.select(models.Message.q.time >=
@@ -251,7 +251,7 @@ class ProtocolMethods:
                            editedTime=self.request.data.message[0].edited_time,
                            editedStatus=self.request.data.
                            message[0].edited_status,
-                           user=self.request.data.user[0].uuid,
+                           userConfig=self.request.data.user[0].uuid,
                            flow=self.request.data.flow[0].id)
             self.__catching_error(200)
 
@@ -304,7 +304,7 @@ class ProtocolMethods:
 
         """
         try:
-            dbquery = models.User.selectBy(uuid=self.request.data.user[0].uuid).getOne()
+            dbquery = models.UserConfig.selectBy(uuid=self.request.data.user[0].uuid).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound) as user_info_error:
             self.__catching_error(404, str(user_info_error))
         else:
@@ -329,7 +329,7 @@ class ProtocolMethods:
         if self.__check_login(self.request.data.user[0].login) is False:
             self.__catching_error(404)
         else:
-            dbquery = models.User.selectBy(login=self.request.data.user[0].login).getOne()
+            dbquery = models.UserConfig.selectBy(login=self.request.data.user[0].login).getOne()
             generator = lib.Hash(password=self.request.data.user[0].password,
                                  uuid=dbquery.uuid,
                                  salt=dbquery.salt,
@@ -350,8 +350,8 @@ class ProtocolMethods:
 
         """
         try:
-            dbquery = models.User.selectBy(login=self.request.data.user[0].login,
-                                           password=self.request.data.user[0].password).getOne()
+            dbquery = models.UserConfig.selectBy(login=self.request.data.user[0].login,
+                                                 password=self.request.data.user[0].password).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound) as not_found:
             self.__catching_error(404, str(not_found))
         else:

@@ -13,10 +13,10 @@ from loguru import logger
 BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 FIXTURES_PATH = os.path.join(BASE_PATH, "fixtures")
 sys.path.append(os.path.split(BASE_PATH)[0])
-from mod import api
-from mod import controller
-from mod import lib
-from mod import models
+from mod import api  # noqa
+from mod import controller  # noqa
+from mod import lib  # noqa
+from mod import models  # noqa
 
 connection = orm.connectionForURI("sqlite:/:memory:")
 orm.sqlhub.processConnection = connection
@@ -282,10 +282,10 @@ class TestCheckAuthToken(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        models.User(uuid=123456,
-                    login="login",
-                    password="password",
-                    authId="auth_id")
+        models.UserConfig(uuid=123456,
+                          login="login",
+                          password="password",
+                          authId="auth_id")
         self.test = api.ValidJSON.parse_obj(SEND_MESSAGE)
 
     def tearDown(self):
@@ -330,10 +330,10 @@ class TestCheckLogin(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        models.User(uuid=123456,
-                    login="login",
-                    password="password",
-                    authId="auth_id")
+        models.UserConfig(uuid=123456,
+                          login="login",
+                          password="password",
+                          authId="auth_id")
         self.test = api.ValidJSON.parse_obj(REGISTER_USER)
 
     def tearDown(self):
@@ -381,40 +381,40 @@ class TestRegisterUser(unittest.TestCase):
         self.assertEqual(result["errors"]["code"], 201)
 
     def test_user_already_exists(self):
-        models.User(uuid=123456,
-                    login="login",
-                    password="password")
+        models.UserConfig(uuid=123456,
+                          login="login",
+                          password="password")
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 409)
 
     def test_user_write_in_database(self):
         controller.ProtocolMethods(self.test)
-        dbquery = models.User.selectBy(login="login").getOne()
+        dbquery = models.UserConfig.selectBy(login="login").getOne()
         self.assertEqual(dbquery.login, "login")
 
     def test_uuid_write_in_database(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        dbquery = models.User.selectBy(login="login").getOne()
+        dbquery = models.UserConfig.selectBy(login="login").getOne()
         self.assertEqual(dbquery.uuid,
                          result["data"]["user"][0]["uuid"])
 
     def test_auth_id_write_in_database(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        dbquery = models.User.selectBy(login="login").getOne()
+        dbquery = models.UserConfig.selectBy(login="login").getOne()
         self.assertEqual(dbquery.authId,
                          result["data"]["user"][0]["auth_id"])
 
     def test_type_of_salt(self):
         controller.ProtocolMethods(self.test)
-        dbquery = models.User.selectBy(login="login").getOne()
+        dbquery = models.UserConfig.selectBy(login="login").getOne()
         self.assertIsInstance(dbquery.salt, bytes)
 
     def test_type_of_key(self):
         controller.ProtocolMethods(self.test)
-        dbquery = models.User.selectBy(login="login").getOne()
+        dbquery = models.UserConfig.selectBy(login="login").getOne()
         self.assertIsInstance(dbquery.key, bytes)
 
 
@@ -427,14 +427,14 @@ class TestGetUpdate(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        new_user1 = models.User(uuid=123456,
-                                login="login",
-                                password="password",
-                                authId="auth_id")
-        new_user2 = models.User(uuid=987654,
-                                login="login2",
-                                password="password2",
-                                authId="auth_id2")
+        new_user1 = models.UserConfig(uuid=123456,
+                                      login="login",
+                                      password="password",
+                                      authId="auth_id")
+        new_user2 = models.UserConfig(uuid=987654,
+                                      login="login2",
+                                      password="password2",
+                                      authId="auth_id2")
         new_flow1 = models.Flow(flowId=1,
                                 timeCreated=111,
                                 flowType='chat',
@@ -447,15 +447,15 @@ class TestGetUpdate(unittest.TestCase):
                                 info='info2')
         models.Message(text="Hello1",
                        time=111,
-                       user=new_user1,
+                       userConfig=new_user1,
                        flow=new_flow1)
         models.Message(text="Hello2",
                        time=222,
-                       user=new_user2,
+                       userConfig=new_user2,
                        flow=new_flow2)
         models.Message(text="Hello3",
                        time=333,
-                       user=new_user1,
+                       userConfig=new_user1,
                        flow=new_flow1)
         self.test = api.ValidJSON.parse_obj(GET_UPDATE)
 
@@ -495,10 +495,10 @@ class TestSendMessage(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        models.User(uuid=123456,
-                    login="login",
-                    password="password",
-                    authId="auth_id")
+        models.UserConfig(uuid=123456,
+                          login="login",
+                          password="password",
+                          authId="auth_id")
         models.Flow(flowId=123,
                     timeCreated=111,
                     flowType="chat")
@@ -542,10 +542,10 @@ class TestAddFlow(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        models.User(uuid=123456,
-                    login="login",
-                    password="password",
-                    authId="auth_id")
+        models.UserConfig(uuid=123456,
+                          login="login",
+                          password="password",
+                          authId="auth_id")
         models.Flow(flowId=333)
         logger.remove()
         self.test = api.ValidJSON.parse_obj(ADD_FLOW)
@@ -580,10 +580,10 @@ class TestAllFlow(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        models.User(uuid=123456,
-                    login="login",
-                    password="password",
-                    authId="auth_id")
+        models.UserConfig(uuid=123456,
+                          login="login",
+                          password="password",
+                          authId="auth_id")
         self.test = api.ValidJSON.parse_obj(ALL_FLOW)
 
     def tearDown(self):
@@ -619,14 +619,14 @@ class TestUserInfo(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        models.User(uuid=123456,
-                    login="login",
-                    password="password",
-                    username="username",
-                    isBot=False,
-                    authId="auth_id",
-                    email='email@email.com',
-                    bio='bio')
+        models.UserConfig(uuid=123456,
+                          login="login",
+                          password="password",
+                          username="username",
+                          isBot=False,
+                          authId="auth_id",
+                          email='email@email.com',
+                          bio='bio')
         self.test = api.ValidJSON.parse_obj(USER_INFO)
 
     def tearDown(self):
@@ -660,12 +660,12 @@ class TestAuthentification(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        models.User(uuid=123456,
-                    login="login",
-                    password="password",
-                    hashPassword=self.hash_password,
-                    salt=b"salt",
-                    key=b"key")
+        models.UserConfig(uuid=123456,
+                          login="login",
+                          password="password",
+                          hashPassword=self.hash_password,
+                          salt=b"salt",
+                          key=b"key")
         self.test = api.ValidJSON.parse_obj(AUTH)
 
     def tearDown(self):
@@ -683,18 +683,18 @@ class TestAuthentification(unittest.TestCase):
 
     def test_blank_database(self):
         login = self.test.data.user[0].login
-        dbquery = models.User.selectBy(login=login).getOne()
+        dbquery = models.UserConfig.selectBy(login=login).getOne()
         dbquery.delete(dbquery.id)
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 404)
 
     def test_two_element_in_database(self):
-        models.User(uuid=654321,
-                    login="login",
-                    password="password",
-                    salt=b"salt",
-                    key=b"key")
+        models.UserConfig(uuid=654321,
+                          login="login",
+                          password="password",
+                          salt=b"salt",
+                          key=b"key")
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 404)
@@ -709,7 +709,7 @@ class TestAuthentification(unittest.TestCase):
         login = self.test.data.user[0].login
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        dbquery = models.User.selectBy(login=login).getOne()
+        dbquery = models.UserConfig.selectBy(login=login).getOne()
         self.assertEqual(dbquery.authId,
                          result["data"]["user"][0]["auth_id"])
 
@@ -719,10 +719,10 @@ class TestDeleteUser(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        models.User(uuid=123456,
-                    login="login",
-                    password="password",
-                    authId="auth_id")
+        models.UserConfig(uuid=123456,
+                          login="login",
+                          password="password",
+                          authId="auth_id")
         self.test = api.ValidJSON.parse_obj(DELETE_USER)
         logger.remove()
 
@@ -757,14 +757,14 @@ class TestDeleteMessage(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        new_user = models.User(uuid=123456,
-                               login="login",
-                               password="password",
-                               authId="auth_id")
+        new_user = models.UserConfig(uuid=123456,
+                                     login="login",
+                                     password="password",
+                                     authId="auth_id")
         new_flow = models.Flow(flowId=123)
         models.Message(text="Hello",
                        time=123456,
-                       user=new_user,
+                       userConfig=new_user,
                        flow=new_flow)
         self.test = api.ValidJSON.parse_obj(DELETE_MESSAGE)
         logger.remove()
@@ -803,15 +803,15 @@ class TestEditedMessage(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        new_user = models.User(uuid=123456,
-                               login="login",
-                               password="password",
-                               authId="auth_id")
+        new_user = models.UserConfig(uuid=123456,
+                                     login="login",
+                                     password="password",
+                                     authId="auth_id")
         new_flow = models.Flow(flowId=123)
         models.Message(id=1,
                        text="Hello",
                        time=123456,
-                       user=new_user,
+                       userConfig=new_user,
                        flow=new_flow)
         self.test = api.ValidJSON.parse_obj(EDITED_MESSAGE)
 
@@ -849,27 +849,27 @@ class TestAllMessages(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        new_user = models.User(uuid=123456,
-                               login="login",
-                               password="password",
-                               authId="auth_id")
-        new_user2 = models.User(uuid=654321,
-                                login="login2",
-                                password="password2",
-                                authId="auth_id2")
+        new_user = models.UserConfig(uuid=123456,
+                                     login="login",
+                                     password="password",
+                                     authId="auth_id")
+        new_user2 = models.UserConfig(uuid=654321,
+                                      login="login2",
+                                      password="password2",
+                                      authId="auth_id2")
         new_flow = models.Flow(flowId=123)
         new_flow2 = models.Flow(flowId=321)
         models.Message(text="Hello",
                        time=1,
-                       user=new_user,
+                       userConfig=new_user,
                        flow=new_flow)
         models.Message(text="Privet",
                        time=2,
-                       user=new_user,
+                       userConfig=new_user,
                        flow=new_flow)
         models.Message(text="Hello2",
                        time=3,
-                       user=new_user2,
+                       userConfig=new_user2,
                        flow=new_flow2)
         self.test = api.ValidJSON.parse_obj(ALL_MESSAGES)
 
@@ -903,10 +903,10 @@ class TestPingPong(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        models.User(uuid=123456,
-                    login="login",
-                    password="password",
-                    authId="auth_id")
+        models.UserConfig(uuid=123456,
+                          login="login",
+                          password="password",
+                          authId="auth_id")
         self.test = api.ValidJSON.parse_obj(PING_PONG)
         logger.remove()
 
@@ -929,10 +929,10 @@ class TestErrors(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        models.User(uuid=123456,
-                    login="login",
-                    password="password",
-                    authId="auth_id")
+        models.UserConfig(uuid=123456,
+                          login="login",
+                          password="password",
+                          authId="auth_id")
         logger.remove()
 
     def tearDown(self):
