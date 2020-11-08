@@ -173,6 +173,8 @@ class ProtocolMethods:
                               password=self.request.data.user[0].password,
                               hashPassword=generated.password_hash(),
                               login=self.request.data.user[0].login,
+                              username=self.request.data.user[0].username,
+                              email=self.request.data.user[0].email,
                               key=generated.get_key(),
                               salt=generated.get_salt(),
                               authId=(gen_auth_id := generated.auth_id()))
