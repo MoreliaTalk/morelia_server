@@ -264,9 +264,9 @@ class ProtocolMethods:
         # FIXME после замены flowId на UUID из питоньего модуля
         random.seed(urandom(64))
         flow_id = random.randrange(1, 999999)
-        if self.request.data.flow[0].type not in ["group", "channel"]:
+        if self.request.data.flow[0].type not in ["chat", "group", "channel"]:
             self.__catching_error(400, "Wrong flow type")
-        elif self.request.data.flow[0].type == 'chat' and self.request.data.user[1].uuid is None:
+        elif self.request.data.flow[0].type == 'chat' and len(self.request.data.user) < 2:
             self.__catching_error(400, "Two users UUID must be specified for chat")
         else:
             try:
