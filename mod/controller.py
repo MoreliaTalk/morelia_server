@@ -265,7 +265,7 @@ class ProtocolMethods:
         random.seed(urandom(64))
         flow_id = random.randrange(1, 999999)
         if self.request.data.flow[0].type not in ["group", "channel"]:
-            self.__catching_error(400, "".join("Wrong flow type: ", self.request.data.flow[0].type))
+            self.__catching_error(400, "Wrong flow type")
         elif self.request.data.flow[0].type == 'chat' and self.request.data.user[1].uuid is None:
             self.__catching_error(400, "Two users UUID must be specified for chat")
         else:
