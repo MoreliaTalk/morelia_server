@@ -559,6 +559,7 @@ class TestAddFlow(unittest.TestCase):
         del self.test
 
     def test_add_flow_group(self):
+        self.test.data.flow[0].type = "group"
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 200)
@@ -573,19 +574,20 @@ class TestAddFlow(unittest.TestCase):
         self.test.data.flow[0].type = "unknown"
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 400)
+        self.assertEqual(result["errors"]["detail"], "Wrong flow type")
 
     def test_add_flow_chat_single_user(self):
         self.test.data.flow[0].type = "chat"
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 400)
+        self.assertEqual(result["errors"]["detail"], "Two users UUID must be specified for chat")
 
     def test_add_flow_chat_double_user(self):
         self.test.data.flow[0].type = "chat"
-        self.test.data.user.append(api.User())
-        self.test.data.user[1].uuid = 1234567
-        run_method = controller.ProtocolMethods(self.test)
+        extended_test_data = self.test
+        extended_test_data.data.user.append(api.User())
+        extended_test_data.data.user[1].uuid = 1234567
+        run_method = controller.ProtocolMethods(extended_test_data)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 200)
 
