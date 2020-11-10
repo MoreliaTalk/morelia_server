@@ -592,6 +592,7 @@ class TestAddFlow(unittest.TestCase):
         self.assertEqual(result["errors"]["code"], 200)
 
     def test_check_flow_in_database(self):
+        self.test.data.flow[0].type = "group"
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         dbquery = models.Flow.selectBy(title="title").getOne()
