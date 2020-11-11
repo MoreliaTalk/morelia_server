@@ -173,6 +173,8 @@ class ProtocolMethods:
                               password=self.request.data.user[0].password,
                               hashPassword=generated.password_hash(),
                               login=self.request.data.user[0].login,
+                              username=self.request.data.user[0].username,
+                              email=self.request.data.user[0].email,
                               key=generated.get_key(),
                               salt=generated.get_salt(),
                               authId=(gen_auth_id := generated.auth_id()))
@@ -262,23 +264,28 @@ class ProtocolMethods:
         # FIXME после замены flowId на UUID из питоньего модуля
         random.seed(urandom(64))
         flow_id = random.randrange(1, 999999)
-        try:
-            models.Flow(flowId=flow_id,
-                        timeCreated=self.get_time,
-                        flowType=self.request.data.flow[0].type,
-                        title=self.request.data.flow[0].title,
-                        info=self.request.data.flow[0].info)
-        except SQLObjectIntegrityError as flow_error:
-            self.__catching_error(520, str(flow_error))
+        if self.request.data.flow[0].type not in ["chat", "group", "channel"]:
+            self.__catching_error(400, "Wrong flow type")
+        elif self.request.data.flow[0].type == 'chat' and len(self.request.data.user) < 2:
+            self.__catching_error(400, "Two users UUID must be specified for chat")
         else:
-            flow = api.Flow()
-            flow.id = flow_id
-            flow.time = self.get_time
-            flow.type = self.request.data.flow[0].type
-            flow.title = self.request.data.flow[0].title
-            flow.info = self.request.data.flow[0].info
-            self.response.data.flow.append(flow)
-            self.__catching_error(200)
+            try:
+                models.Flow(flowId=flow_id,
+                            timeCreated=self.get_time,
+                            flowType=self.request.data.flow[0].type,
+                            title=self.request.data.flow[0].title,
+                            info=self.request.data.flow[0].info)
+            except SQLObjectIntegrityError as flow_error:
+                self.__catching_error(520, str(flow_error))
+            else:
+                flow = api.Flow()
+                flow.id = flow_id
+                flow.time = self.get_time
+                flow.type = self.request.data.flow[0].type
+                flow.title = self.request.data.flow[0].title
+                flow.info = self.request.data.flow[0].info
+                self.response.data.flow.append(flow)
+                self.__catching_error(200)
 
     def _all_flow(self):
         """Function allows to get a list of all flows and

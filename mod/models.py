@@ -29,8 +29,8 @@ class Message(orm.SQLObject):
     emoji = orm.BLOBCol(default=None)
     editedTime = orm.IntCol(default=None)
     editedStatus = orm.BoolCol(default=False)
-    userConfig = orm.RelatedJoin('UserConfig')
-    flow = orm.RelatedJoin('Flow')
+    userConfig = orm.ForeignKey('UserConfig', refColumn="uuid")
+    flow = orm.ForeignKey('Flow', refColumn="flowId")
 
 
 class UserConfig(orm.SQLObject):
@@ -69,7 +69,7 @@ class UserConfig(orm.SQLObject):
     salt = orm.BLOBCol(default=None)
     key = orm.BLOBCol(default=None)
     # Connection to the Message table
-    message = orm.RelatedJoin('Message')
+    message = orm.MultipleJoin('Message')
 
 
 class Flow(orm.SQLObject):
@@ -92,7 +92,7 @@ class Flow(orm.SQLObject):
     title = orm.StringCol(default=None)
     info = orm.StringCol(default=None)
     # Connection to the Message table
-    message = orm.RelatedJoin('Message')
+    message = orm.MultipleJoin('Message')
 
 
 class Errors(orm.SQLObject):
