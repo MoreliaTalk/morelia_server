@@ -31,6 +31,7 @@ class ProtocolMethods:
         self.response.jsonapi.version = config.API_VERSION
         self.get_time = int(time())
 
+        print(request)
         try:
             self.request = api.ValidJSON.parse_obj(request)
         except ValidationError as error:
