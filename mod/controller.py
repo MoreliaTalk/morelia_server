@@ -31,12 +31,11 @@ class ProtocolMethods:
         self.response.jsonapi.version = config.API_VERSION
         self.get_time = int(time())
 
-        print(request)
         try:
             self.request = api.ValidJSON.parse_obj(request)
         except ValidationError as error:
             self.response.type = "errors"
-            self.__catching_error(415, str(error))
+            self.__catching_error(415, error)
         else:
             self.response.type = self.request.type
             if self.request.type == 'register_user':
@@ -90,7 +89,7 @@ class ProtocolMethods:
             False if unsuccessful
         """
         try:
-            dbquery = models.UserConfig.selectBy(uuid=uuid).getOne()
+            dbquery = models.User.selectBy(uuid=uuid).getOne()
         except (dberrors.OperationalError,
                 SQLObjectIntegrityError, SQLObjectNotFound):
             return False
@@ -112,7 +111,7 @@ class ProtocolMethods:
             False if no such user exists
         """
         try:
-            models.UserConfig.selectBy(login=login).getOne()
+            models.User.selectBy(login=login).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound):
             return False
         else:
@@ -170,13 +169,13 @@ class ProtocolMethods:
         else:
             generated = lib.Hash(password=self.request.data.user[0].password,
                                  uuid=gen_uuid)
-            models.UserConfig(uuid=gen_uuid,
-                              password=self.request.data.user[0].password,
-                              hashPassword=generated.password_hash(),
-                              login=self.request.data.user[0].login,
-                              key=generated.get_key(),
-                              salt=generated.get_salt(),
-                              authId=(gen_auth_id := generated.auth_id()))
+            models.User(uuid=gen_uuid,
+                        password=self.request.data.user[0].password,
+                        hashPassword=generated.password_hash(),
+                        login=self.request.data.user[0].login,
+                        key=generated.get_key(),
+                        salt=generated.get_salt(),
+                        authId=(gen_auth_id := generated.auth_id()))
             user = api.User()
             user.uuid = gen_uuid
             user.auth_id = gen_auth_id
@@ -192,7 +191,7 @@ class ProtocolMethods:
         """
         # TODO внеести измнения в протокол, добавить фильтр
         # по дате создания пользователя
-        dbquery_user = models.UserConfig.selectBy()
+        dbquery_user = models.User.selectBy()
         dbquery_flow = models.Flow.select(models.Flow.q.timeCreated >=
                                           self.request.data.time)
         dbquery_message = models.Message.select(models.Message.q.time >=
@@ -240,7 +239,7 @@ class ProtocolMethods:
         try:
             models.Flow.selectBy(flowId=self.request.data.flow[0].id).getOne()
         except SQLObjectNotFound as flow_error:
-            self.__catching_error(404, str(flow_error))
+            self.__catching_error(404, flow_error)
         else:
             models.Message(text=self.request.data.message[0].text,
                            time=self.get_time,
@@ -252,7 +251,7 @@ class ProtocolMethods:
                            editedTime=self.request.data.message[0].edited_time,
                            editedStatus=self.request.data.
                            message[0].edited_status,
-                           userConfig=self.request.data.user[0].uuid,
+                           user=self.request.data.user[0].uuid,
                            flow=self.request.data.flow[0].id)
             self.__catching_error(200)
 
@@ -270,7 +269,7 @@ class ProtocolMethods:
                         title=self.request.data.flow[0].title,
                         info=self.request.data.flow[0].info)
         except SQLObjectIntegrityError as flow_error:
-            self.__catching_error(520, str(flow_error))
+            self.__catching_error(520, flow_error)
         else:
             flow = api.Flow()
             flow.id = flow_id
@@ -305,9 +304,9 @@ class ProtocolMethods:
 
         """
         try:
-            dbquery = models.UserConfig.selectBy(uuid=self.request.data.user[0].uuid).getOne()
+            dbquery = models.User.selectBy(uuid=self.request.data.user[0].uuid).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound) as user_info_error:
-            self.__catching_error(404, str(user_info_error))
+            self.__catching_error(404, user_info_error)
         else:
             user = api.User()
             user.uuid = dbquery.uuid
@@ -330,7 +329,7 @@ class ProtocolMethods:
         if self.__check_login(self.request.data.user[0].login) is False:
             self.__catching_error(404)
         else:
-            dbquery = models.UserConfig.selectBy(login=self.request.data.user[0].login).getOne()
+            dbquery = models.User.selectBy(login=self.request.data.user[0].login).getOne()
             generator = lib.Hash(password=self.request.data.user[0].password,
                                  uuid=dbquery.uuid,
                                  salt=dbquery.salt,
@@ -351,10 +350,10 @@ class ProtocolMethods:
 
         """
         try:
-            dbquery = models.UserConfig.selectBy(login=self.request.data.user[0].login,
-                                                 password=self.request.data.user[0].password).getOne()
+            dbquery = models.User.selectBy(login=self.request.data.user[0].login,
+                                           password=self.request.data.user[0].password).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound) as not_found:
-            self.__catching_error(404, str(not_found))
+            self.__catching_error(404, not_found)
         else:
             dbquery.delete(dbquery.id)
             self.__catching_error(200)
@@ -366,7 +365,7 @@ class ProtocolMethods:
         try:
             dbquery = models.Message.selectBy(id=self.request.data.message[0].id).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound) as not_found:
-            self.__catching_error(404, str(not_found))
+            self.__catching_error(404, not_found)
         else:
             dbquery.delete(dbquery.id)
             self.__catching_error(200)
@@ -379,7 +378,7 @@ class ProtocolMethods:
         try:
             dbquery = models.Message.selectBy(id=self.request.data.message[0].id).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound) as not_found:
-            self.__catching_error(404, str(not_found))
+            self.__catching_error(404, not_found)
         else:
             # changing in DB text, time and status
             dbquery.text = self.request.data.message[0].text

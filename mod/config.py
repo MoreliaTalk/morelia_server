@@ -5,7 +5,7 @@ import os
 LOCAL_SQLITE = ''.join(['sqlite:', os.path.abspath('db_sqlite.db')])
 
 # Local PostgreSQL
-LOCAL_POSTGRESQL = 'postgres://postgres:123456@127.0.0.1/morelia_server_db?debug=True'
+LOCAL_POSTGRESQL = 'postgres://testdb:123456@127.0.0.1/test_morelia_server'
 
 # Online PostgreSQL
 ONLINE_POSTGRESQL = os.getenv('DATABASE_URL')
