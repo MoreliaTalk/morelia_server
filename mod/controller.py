@@ -404,8 +404,9 @@ class ProtocolMethods:
         if dbquery.count():
             for element in dbquery:
                 message = api.Message()
+                message.id = element.id
                 message.from_flow_id = element.flowID
-                message.from_user_uuid = element.userID
+                message.from_user_uuid = element.userConfigID
                 message.text = element.text
                 message.time = element.time
                 message.file_picture = element.filePicture

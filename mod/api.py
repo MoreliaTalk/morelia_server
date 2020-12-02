@@ -1,6 +1,7 @@
 import json
 from typing import Any
 from typing import Optional
+# from typing import Union
 from typing import List
 
 from pydantic import BaseModel
@@ -82,9 +83,10 @@ class ValidJSON(BaseModel):
     jsonapi: Optional[Version] = None
     meta: Optional[Any] = None
 
-    def toJSON(self):
+    def toJSON(self, sort_keys=False, indent=4):
         return json.dumps(self,
-                          ensure_ascii=False,
+                          sort_keys=sort_keys,
+                          indent=indent,
                           default=lambda o: o.__dict__)
 
 
