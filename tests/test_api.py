@@ -10,6 +10,7 @@ BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 FIXTURES_PATH = os.path.join(BASE_PATH, 'fixtures')
 VALID_JSON = os.path.join(FIXTURES_PATH, 'api.json')
 sys.path.append(os.path.split(BASE_PATH)[0])
+
 from mod import api  # noqa
 
 

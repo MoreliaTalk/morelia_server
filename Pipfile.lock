@@ -31,6 +31,14 @@
             ],
             "version": "==7.1.2"
         },
+        "colorama": {
+            "hashes": [
+                "sha256:7d73d2a99753107a36ac6b455ee49046802e59d9d076ef8e47b61499fa29afff",
+                "sha256:e96da0d330793e2cb9485e9ddfd918d456036c7149416295932478192f4436a1"
+            ],
+            "markers": "sys_platform == 'win32'",
+            "version": "==0.4.3"
+        },
         "dnspython": {
             "hashes": [
                 "sha256:95d12f6ef0317118d2a1a6fc49aac65ffec7eb8087474158f42f26a639135216",
@@ -83,6 +91,14 @@
             ],
             "index": "pypi",
             "version": "==2.11.3"
+        },
+        "loguru": {
+            "hashes": [
+                "sha256:b28e72ac7a98be3d28ad28570299a393dfcd32e5e3f6a353dec94675767b6319",
+                "sha256:f8087ac396b5ee5f67c963b495d615ebbceac2796379599820e324419d53667c"
+            ],
+            "index": "pypi",
+            "version": "==0.5.3"
         },
         "loguru": {
             "hashes": [
@@ -198,7 +214,7 @@
             "index": "pypi",
             "version": "==3.8.1"
         },
-        "starlette": {
+        "six": {
             "hashes": [
                 "sha256:bd2ffe5e37fb75d014728511f8e68ebf2c80b0fa3d04ca1479f4dc752ae31ac9",
                 "sha256:ebe8ee08d9be96a3c9f31b2cb2a24dbdf845247b745664bd8a3f9bd0c977fdbc"
@@ -248,6 +264,14 @@
             ],
             "index": "pypi",
             "version": "==8.1"
+        },
+        "win32-setctime": {
+            "hashes": [
+                "sha256:02b4c5959ca0b195f45c98115826c6e8a630b7cf648e724feaab1a5aa6250640",
+                "sha256:47aa7c43548c1fc0a4f026d1944b748b37036df116c7c4cf908e82638d854313"
+            ],
+            "markers": "sys_platform == 'win32'",
+            "version": "==1.0.2"
         }
     },
     "develop": {
