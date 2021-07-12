@@ -207,7 +207,7 @@ class ProtocolMethods:
                 message.file_video = element.fileVideo
                 message.file_audio = element.fileAudio
                 message.file_document = element.fileDocument
-                message.from_user_uuid = element.userID
+                message.from_user_uuid = element.userConfigID
                 message.from_flow_id = element.flowID
                 message.edited_status = element.editedStatus
                 self.response.data.message.append(message)
@@ -411,7 +411,7 @@ class ProtocolMethods:
             for element in dbquery:
                 message = api.Message()
                 message.from_flow_id = element.flowID
-                message.from_user_uuid = element.userID
+                message.from_user_uuid = element.userConfigID
                 message.text = element.text
                 message.time = element.time
                 message.file_picture = element.filePicture
