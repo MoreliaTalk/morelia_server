@@ -9,7 +9,7 @@ from loguru import logger
 # above the directory with the tests.
 BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.split(BASE_PATH)[0])
-from mod import lib
+from mod import lib  # noqa
 
 
 class TestHash(unittest.TestCase):
@@ -19,9 +19,9 @@ class TestHash(unittest.TestCase):
 
     def setUp(self):
         self.password = 'password'
-        self.salt = 'salt'
-        self.key = 'key',
-        self.uuid = 1234
+        self.salt = b'salt'
+        self.key = b'key'
+        self.uuid = 123456
         self.generator = lib.Hash(self.password,
                                   self.uuid,
                                   self.salt,
@@ -49,14 +49,8 @@ class TestHash(unittest.TestCase):
                               str)
 
     def test_check_256_symbols_password(self):
-        self.password = 'HezyfR4BdO2CcGNsaaDsIYHVYFIJn9Fp \
-                         ICpqnFoXBYXn71wnItwTT2lAzgI44ur7 \
-                         sviD8RckgfSTfdI1pFjLDxiO0EuG8Twn \
-                         B7ZS3svE4RKn2xDkB3eOQ611UxT6oLXx \
-                         rtIcVa7VeMTZEVj7tT8miOLAmzg5pKYo \
-                         kgUU2x14tLMnswSs8YA9Tfk44tvHufL8 \
-                         BQkUrrleeRLmRJgX9YguuLZecQYwkuJL \
-                         VPXzeNZwrEAUqMda3w4Dn3oRT4Ihuhpo'
+        self.password = '8b915f2f0b0d0ccf27854dd708524d0b\
+                         5a91bdcd3775c6d3335f63d015a43ce1'
         self.generator = lib.Hash(self.password,
                                   self.uuid,
                                   self.salt)

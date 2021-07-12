@@ -9,7 +9,7 @@ from mod import config
 from mod import models
 
 # Connect to database
-connection = orm.connectionForURI(config.LOCAL_SQLITE)
+connection = orm.connectionForURI(config.LOCAL_POSTGRESQL)
 orm.sqlhub.processConnection = connection
 
 # looking for all Classes listed in the models.py file.
@@ -27,11 +27,14 @@ def main(table):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        return print(f"Table is createt at: {time.process_time() - start_time} sec.")
+        return print(f"Table is createt at: \
+                     {time.process_time() - start_time} sec.")
     if table == "superuser":
         models.User(uuid=123456,
                     login="login",
                     password="password",
+                    hashPassword="8b915f2f0b0d0ccf27854dd708524d0b\
+                                  5a91bdcd3775c6d3335f63d015a43ce1",
                     username="superuser",
                     salt=b"salt",
                     key=b"key")
@@ -41,7 +44,8 @@ def main(table):
         for item in classes:
             class_ = getattr(models, item)
             class_.dropTable(ifExists=True, dropJoinTables=True, cascade=True)
-        return print(f"Table is deleted at: {time.process_time() - start_time} sec.")
+        return print(f"Table is deleted at: \
+                     {time.process_time() - start_time} sec.")
     else:
         return print("ERROR. Function \'--table\' did not work")
 

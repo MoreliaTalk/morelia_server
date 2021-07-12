@@ -2,7 +2,6 @@ import sys
 from hashlib import blake2b
 from hmac import compare_digest
 from os import urandom
-from typing import Any
 
 from mod import config
 
@@ -27,18 +26,18 @@ class Hash:
         hash_password (str, optional): password hash (previously calculated).
 
     """
-    def __init__(self, password: str, uuid: int, salt: Any = None,
-                 key: Any = None, hash_password: str = None):
+    def __init__(self, password: str, uuid: int, salt: bytes = None,
+                 key: bytes = None, hash_password: str = None):
 
         if salt is None:
             self.salt = urandom(16)
         else:
-            self.salt = str(salt).encode('utf-8')
+            self.salt = salt
 
         if key is None:
             self.key = urandom(20)
         else:
-            self.key = str(key).encode('utf-8')
+            self.key = key
 
         self.binary_password = password.encode('utf-8')
         self.uuid = uuid

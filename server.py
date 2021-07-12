@@ -1,5 +1,6 @@
 # ************** Standart module *********************
 from datetime import datetime
+from json import JSONDecodeError
 # ************** Standart module end *****************
 
 
@@ -36,7 +37,7 @@ add_logging(debug_status=config.DEBUG_LEVEL)
 server_started = datetime.now()
 
 # Connect to database
-connection = orm.connectionForURI(config.LOCAL_SQLITE)
+connection = orm.connectionForURI(config.LOCAL_POSTGRESQL)
 orm.sqlhub.processConnection = connection
 
 # Server instance creation
@@ -86,13 +87,13 @@ async def websocket_endpoint(websocket: WebSocket):
             data = await websocket.receive_json()
             logger.debug(str(data))
             client = controller.ProtocolMethods(data)
-            await websocket.send_json(client.get_response(), mode='binary')
+            await websocket.send_bytes(client.get_response())
         except WebSocketDisconnect as error:
             logger.info("".join(("Disconnection error: ", str(error))))
             clients.remove(websocket)
             break
-        except RuntimeError as error:
-            logger.info("".join(("Runtime error: ", str(error))))
+        except (RuntimeError, JSONDecodeError) as error:
+            logger.info("".join(("Runtime or Decode error: ", str(error))))
             clients.remove(websocket)
             break
         else:

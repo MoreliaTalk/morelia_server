@@ -25,7 +25,7 @@ def add_logging(debug_status: int) -> None:
         30 - WARNING
         20 - INFO
         10 - DEBUG
-
+        
     Returns:
         None
     """
