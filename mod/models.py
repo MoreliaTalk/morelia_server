@@ -1,9 +1,8 @@
 import sqlobject as orm
 
 
-# Create table in database using ORM SQLobject
 class Message(orm.SQLObject):
-    """The class generates a Message table containing information
+    """Generates a Message table containing information
     about user messages.
 
     Args:
@@ -34,8 +33,8 @@ class Message(orm.SQLObject):
 
 
 class UserConfig(orm.SQLObject):
-    """The class generates a table containing data
-    about the user and his settings.
+    """Generates a table containing data
+    about user and his settings.
 
     Args:
         uuid (int, required):
@@ -73,7 +72,7 @@ class UserConfig(orm.SQLObject):
 
 
 class Flow(orm.SQLObject):
-    """The class generates a Flow table containing information
+    """Generates a Flow table containing information
     about threads and their types (chat, channel, group).
 
     Args:
@@ -95,8 +94,9 @@ class Flow(orm.SQLObject):
     message = orm.MultipleJoin('Message')
 
 
+# FIXME В последствии удалить
 class Errors(orm.SQLObject):
-    """The class generates an Errors table in which
+    """Generates an Errors table in which
     all types of errors are pre-stored.
 
     Args:
@@ -107,7 +107,6 @@ class Errors(orm.SQLObject):
     Returns:
         None
     """
-    # status and code is standart HTTP status code
     status = orm.StringCol(default=None)
     code = orm.IntCol(default=None)
     detail = orm.StringCol(default=None)

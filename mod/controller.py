@@ -16,8 +16,8 @@ from mod import models
 
 
 class ProtocolMethods:
-    """The class is responsible for processing requests and forming answers
-    according to "Udav" protocol. Protocol version and it's actual description:
+    """Processing requests and forming answers according to "Udav" protocol.
+    Protocol version and it's actual description:
     https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md
     """
     def __init__(self, request):
@@ -71,14 +71,14 @@ class ProtocolMethods:
                     self.__catching_error(401)
 
     def get_response(self):
-        """Function generates a JSON-object containing result
+        """Generates a JSON-object containing result
         of an instance of ProtocolMethod class.
 
         """
         return self.response.toJSON()
 
     def __check_auth_token(self, uuid: str, auth_id: str) -> bool:
-        """Function checks uuid and auth_id of user
+        """Checks uuid and auth_id of user
 
         Args:
             uuid (int, requires): Unique User ID
@@ -100,8 +100,7 @@ class ProtocolMethods:
                 return False
 
     def __check_login(self, login: str) -> bool:
-        """Provides information about all personal settings of user
-        (in a server-friendly form)
+        """Checks database for a user with the same login
 
         Args:
             login (str, optional): user login
@@ -119,22 +118,22 @@ class ProtocolMethods:
 
     def __catching_error(self, code: Union[int, str],
                          add_info: Optional[str] = None) -> None:
-        """Function catches errors in the "try...except" content.
-        Result is 'dict' with information about the code, status,
-        time and detailed description of the error that has occurred.
+        """Сatches errors in "try...except" content.
+        Result is 'dict' with information about code, status,
+        time and detailed description of error that has occurred.
         For errors like Exception and other unrecognized errors,
         code "520" and status "Unknown Error" are used.
-        Function also automatically logs the error.
+        FIXME Добавить автоматическую запись информации в лог.
 
         Args:
             code (Union[int, str]): Error code or type and exception
             description.
             add_info (Optional[str], optional): Additional information
-            to be added. The 'Exception' field is not used for exceptions.
+            to be added. 'Exception' field is not used for exceptions.
             Defaults to None.
 
         Returns:
-            dict: returns 'dict' according to the protocol,
+            dict: returns 'dict' according to  protocol,
                 like: {
                     'code': 200,
                     'status': 'Ok',
@@ -156,9 +155,10 @@ class ProtocolMethods:
             self.response.errors.detail = code
 
     def _register_user(self):
-        """The function registers the user who is not in the database.
+        """Registers user who is not in the database.
         Note: This version also authentificate user, that exist in database
-        Future version will return error if login exist in database
+        FIXME должна возвращать ошибку если пользователь с таким логином
+        уже есть в БД
 
         """
         # FIXME после замены uuid на UUID из питоньего модуля
@@ -169,6 +169,7 @@ class ProtocolMethods:
         else:
             generated = lib.Hash(password=self.request.data.user[0].password,
                                  uuid=gen_uuid)
+            gen_auth_id = generated.auth_id()
             models.UserConfig(uuid=gen_uuid,
                               password=self.request.data.user[0].password,
                               hashPassword=generated.password_hash(),
@@ -177,7 +178,7 @@ class ProtocolMethods:
                               email=self.request.data.user[0].email,
                               key=generated.get_key(),
                               salt=generated.get_salt(),
-                              authId=(gen_auth_id := generated.auth_id()))
+                              authId=gen_auth_id)
             user = api.User()
             user.uuid = gen_uuid
             user.auth_id = gen_auth_id
@@ -185,12 +186,10 @@ class ProtocolMethods:
             self.__catching_error(201)
 
     def _get_update(self):
-        """The function displays messages of a specific flow,
-        from the timestamp recorded in the request to the server timestamp,
-        retrieves them from the database
-        and issues them as an array consisting of JSON
+        """Provides updates of flows, messages and users in them from time "time"
 
         """
+        # select all fields of the user table
         # TODO внеести измнения в протокол, добавить фильтр
         # по дате создания пользователя
         dbquery_user = models.UserConfig.selectBy()
@@ -235,7 +234,7 @@ class ProtocolMethods:
         self.__catching_error(200)
 
     def _send_message(self):
-        """The function saves user message in the database.
+        """Saves user message in database.
 
         """
         try:
@@ -258,16 +257,18 @@ class ProtocolMethods:
             self.__catching_error(200)
 
     def _add_flow(self):
-        """Function allows you to add a new flow to the database
+        """Allows add a new flow to database
 
         """
         # FIXME после замены flowId на UUID из питоньего модуля
         random.seed(urandom(64))
         flow_id = random.randrange(1, 999999)
         if self.request.data.flow[0].type not in ["chat", "group", "channel"]:
-            self.__catching_error(400, "Wrong flow type")
+            error = "Wrong flow type"
+            self.__catching_error(400, error)
         elif self.request.data.flow[0].type == 'chat' and len(self.request.data.user) < 2:
-            self.__catching_error(400, "Two users UUID must be specified for chat")
+            error = "Two users UUID must be specified for chat"
+            self.__catching_error(400, error)
         else:
             try:
                 models.Flow(flowId=flow_id,
@@ -288,8 +289,8 @@ class ProtocolMethods:
                 self.__catching_error(200)
 
     def _all_flow(self):
-        """Function allows to get a list of all flows and
-        information about them from the database
+        """Allows to get a list of all flows and information about them
+        from database
 
         """
         dbquery = models.Flow.select(models.Flow.q.flowId >= 1)
@@ -337,6 +338,10 @@ class ProtocolMethods:
             self.__catching_error(404)
         else:
             dbquery = models.UserConfig.selectBy(login=self.request.data.user[0].login).getOne()
+            # to check password, we use same module as for its
+            # hash generation. Specify password entered by user
+            # and hash of old password as parameters.
+            # After that, hashes are compared using "check_password" method.
             generator = lib.Hash(password=self.request.data.user[0].password,
                                  uuid=dbquery.uuid,
                                  salt=dbquery.salt,
@@ -353,7 +358,7 @@ class ProtocolMethods:
                 self.__catching_error(401)
 
     def _delete_user(self):
-        """Function irretrievably deletes the user from the database.
+        """Function irretrievably deletes the user from database.
 
         """
         try:
@@ -366,7 +371,8 @@ class ProtocolMethods:
             self.__catching_error(200)
 
     def _delete_message(self):
-        """Function deletes the message from the database Message table by its ID.
+        """Function deletes the message from database Message
+        table by its ID.
 
         """
         try:
@@ -378,8 +384,8 @@ class ProtocolMethods:
             self.__catching_error(200)
 
     def _edited_message(self):
-        """Function changes the text and time in the database Message table.
-        The value of the editedStatus column changes from None to True.
+        """Changes text and time in database Message table.
+        Value of editedStatus column changes from None to True.
 
         """
         try:
@@ -394,8 +400,8 @@ class ProtocolMethods:
             self.__catching_error(200)
 
     def _all_messages(self):
-        """Function displays all messages of a specific flow retrieves them
-        from the database and issues them as an array consisting of JSON
+        """Displays all messages of a specific flow retrieves them
+        from database and issues them as an array consisting of JSON
 
         """
         dbquery = models.Message.select(
@@ -421,16 +427,16 @@ class ProtocolMethods:
             self.__catching_error(404)
 
     def _ping_pong(self):
-        """The function generates a response to a client's request
-        for communication between the server and the client.
+        """Generates a response to a client's request
+        for communication between server and client.
 
         """
         self.__catching_error(200)
 
     def _errors(self):
-        """Function handles cases when a request to server is not recognized by it.
-        You get a standard answer type: error, which contains an object
-        with a description of the error.
+        """Handles cases when a request to server is not recognized by it.
+        Get a standard answer type: error, which contains an object
+        with a description of error.
 
         """
         self.__catching_error(405)

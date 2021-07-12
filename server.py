@@ -33,7 +33,7 @@ from settings.logging import add_logging
 add_logging(debug_status=config.DEBUG_LEVEL)
 # ************** Logging end **************************
 
-# Record server start time
+# Record server start time (UTC)
 server_started = datetime.now()
 
 # Connect to database
@@ -76,6 +76,7 @@ def status_page(request: Request):
 # Chat websocket
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    # Waiting for the client to connect via websockets
     await websocket.accept()
     clients.append(websocket)
     logger.info("".join(("Clients information: ",
@@ -84,10 +85,17 @@ async def websocket_endpoint(websocket: WebSocket):
     logger.debug(str(websocket.scope))
     while True:
         try:
+            # Receive a request from the client as a JSON object
             data = await websocket.receive_json()
             logger.debug(str(data))
+            # create a "client" object and pass the request body to
+            # it as a parameter. The "get_response" method generates
+            # a response in JSON-object format.
             client = controller.ProtocolMethods(data)
             await websocket.send_bytes(client.get_response())
+        # After disconnecting the client (by the decision of the client,
+        # the error) must interrupt the cycle otherwise the next clients
+        # will not be able to connect.
         except WebSocketDisconnect as error:
             logger.info("".join(("Disconnection error: ", str(error))))
             clients.remove(websocket)
@@ -98,10 +106,12 @@ async def websocket_endpoint(websocket: WebSocket):
             break
         else:
             if websocket.client_state.value == 0:
+                # "code=1000" - normal session termination
                 await websocket.close(code=1000)
                 clients.remove(websocket)
 
 
 if __name__ == "__main__":
     print("to start the server, write the following command in the console:")
-    print("uvicorn server:app --host 0.0.0.0 --port 8000 --reload --use-colors --http h11 --ws websockets &")
+    print("uvicorn server:app --host 0.0.0.0 --port 8000 --reload --use-colors \
+          --http h11 --ws websockets &")

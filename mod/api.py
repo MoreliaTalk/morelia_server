@@ -81,6 +81,7 @@ class ValidJSON(BaseModel):
     errors: Optional[Errors] = None
     jsonapi: Optional[Version] = None
     meta: Optional[Any] = None
+
     def toJSON(self):
         return json.dumps(self,
                           ensure_ascii=False,

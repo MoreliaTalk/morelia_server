@@ -7,7 +7,7 @@ from mod import config
 
 
 class Hash:
-    """Сlass generates password hashes, hashes for sessions,
+    """Generates password hashes, hashes for sessions,
     authenticator ID's, checks passwords hashes.
 
     Args:
@@ -20,7 +20,7 @@ class Hash:
              favorite writer, etc.).
 
         key (Any, optional): Additional argument. Defaults to None.
-            If the value of the 'key' parameter is 'None' then the function
+            If value of 'key' parameter is 'None' then function
             will generated it.
 
         hash_password (str, optional): password hash (previously calculated).
@@ -52,7 +52,7 @@ class Hash:
         return self.key
 
     def password_hash(self) -> str:
-        """Function generates a password hash.
+        """Generates a password hash.
 
         Returns:
             str: Returns hash password.
@@ -63,7 +63,7 @@ class Hash:
         return hash_password.hexdigest()
 
     def check_password(self) -> bool:
-        """Function checks the password hash and original password.
+        """Checks password hash and original password.
 
         Returns:
             bool: True or False
@@ -76,8 +76,8 @@ class Hash:
                                   verified_hash_password)
 
     def auth_id(self) -> str:
-        """Function generates an authenticator ID's for the client session
-        connection to the server.
+        """Generates an authenticator ID's for client session
+        connection to server.
 
         Returns:
             str: Returns auth_id

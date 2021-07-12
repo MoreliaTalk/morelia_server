@@ -571,16 +571,18 @@ class TestAddFlow(unittest.TestCase):
         self.assertEqual(result["errors"]["code"], 200)
 
     def test_add_flow_bad_type(self):
+        error = "Wrong flow type"
         self.test.data.flow[0].type = "unknown"
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["detail"], "Wrong flow type")
+        self.assertEqual(result["errors"]["detail"], error)
 
     def test_add_flow_chat_single_user(self):
+        error = "Two users UUID must be specified for chat"
         self.test.data.flow[0].type = "chat"
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["detail"], "Two users UUID must be specified for chat")
+        self.assertEqual(result["errors"]["detail"], error)
 
     def test_add_flow_chat_double_user(self):
         self.test.data.flow[0].type = "chat"

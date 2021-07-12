@@ -3,7 +3,7 @@ import sys
 
 
 def add_logging(debug_status: int) -> None:
-    """Function enables logging depending on the start parameter uvicorn
+    """Enables logging depending on start parameter uvicorn
 
     Instead of print we use:                       #
                logger.debug('debug message')       #
@@ -25,7 +25,7 @@ def add_logging(debug_status: int) -> None:
         30 - WARNING
         20 - INFO
         10 - DEBUG
-        
+
     Returns:
         None
     """

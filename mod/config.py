@@ -27,9 +27,11 @@ AUTH_ID_HASH_SIZE = 16
 DEBUG_LEVEL = 10
 
 # Settings Jinja2
-
 TEMPLATE_FOLDER = 'templates'
 
+# Status and error description settings, where
+# "status" - corresponds to the same status for HTTP error codes
+# "detail" - description of the error, understandable for humans
 DICT_ERRORS = {
             200: {
                 'status': 'OK',

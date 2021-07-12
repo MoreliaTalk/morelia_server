@@ -12,7 +12,7 @@ from mod import models
 connection = orm.connectionForURI(config.LOCAL_POSTGRESQL)
 orm.sqlhub.processConnection = connection
 
-# looking for all Classes listed in the models.py file.
+# looking for all Classes listed in models.py
 classes = [cls_name for cls_name, cls_obj
            in inspect.getmembers(sys.modules['mod.models'])
            if inspect.isclass(cls_obj)]
@@ -20,11 +20,13 @@ classes = [cls_name for cls_name, cls_obj
 
 @click.command()
 @click.option('--table', default='create', help='Create or delete all table \
-    whit all data. The operation, by default, creates all tables')
+    whit all data. Оperation, by default, creates all tables')
 def main(table):
     if table == "create":
         start_time = time.process_time()
         for item in classes:
+            # Create tables in database for each class
+            # that is located in models module
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
         return print(f"Table is createt at: \
