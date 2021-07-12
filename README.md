@@ -6,7 +6,7 @@
 
 [master](https://github.com/MoreliaTalk/morelia_server/tree/master) - Основная и стабильная ветка.
 
-[master-develop](https://github.com/MoreliaTalk/morelia_server/tree/develop) - Ветка для добавления нового функционала.
+[develop](https://github.com/MoreliaTalk/morelia_server/tree/develop) - Ветка для добавления нового функционала.
 
 ## В разработке применяется ##
 
