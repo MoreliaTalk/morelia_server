@@ -263,11 +263,11 @@ class ProtocolMethods:
         from database and issues them as an array consisting of JSON
 
         """
-        dbquery = models.Message.select(
-            AND(models.Message.q.flowID == self.request.data.flow[0].id,
-                models.Message.q.time >= self.request.data.time))
-        if dbquery.count():
-            for element in dbquery:
+        flow = api.Flow()
+        flow.id = self.request.data.flow[0].id
+
+        def get_messages(db, end):
+            for element in db[:end]:
                 message = api.Message()
                 message.from_flow_id = element.flowID
                 message.from_user_uuid = element.userConfigID
@@ -281,9 +281,25 @@ class ProtocolMethods:
                 message.edited_time = element.editedTime
                 message.edited_status = element.editedStatus
                 self.response.data.message.append(message)
-            self.__catching_error(200)
-        else:
-            self.__catching_error(404)
+
+        try:
+            dbquery = models.Message.select(
+                AND(models.Message.q.flowID == self.request.data.flow[0].id,
+                    models.Message.q.time >= self.request.data.time))
+            MESSAGE_COUNT = dbquery.count()
+            if MESSAGE_COUNT <= config.LIMIT_MESSAGE:
+                self.response.data.flow.append(flow)
+                get_messages(dbquery, config.LIMIT_MESSAGE - 1)
+                self.__catching_error(200)
+            elif MESSAGE_COUNT > config.LIMIT_MESSAGE:
+                flow.message_end = MESSAGE_COUNT + 1
+                self.response.data.flow.append(flow)
+                get_messages(dbquery, config.LIMIT_MESSAGE)
+                self.__catching_error(206)
+            else:
+                self.__catching_error(404)
+        except SQLObjectIntegrityError as flow_error:
+            self.__catching_error(520, str(flow_error))
 
     def _add_flow(self):
         """Allows add a new flow to database
