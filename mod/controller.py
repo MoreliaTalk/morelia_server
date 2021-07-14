@@ -200,15 +200,17 @@ class ProtocolMethods:
         if dbquery_message.count():
             for element in dbquery_message:
                 message = api.Message()
+                message.id = element.id
                 message.text = element.text
+                message.from_user_uuid = element.userConfigID
                 message.time = element.time
-                message.emoji = element.emoji
+                message.from_flow_id = element.flowID
                 message.file_picture = element.filePicture
                 message.file_video = element.fileVideo
                 message.file_audio = element.fileAudio
                 message.file_document = element.fileDocument
-                message.from_user_uuid = element.userConfigID
-                message.from_flow_id = element.flowID
+                message.emoji = element.emoji
+                message.edited_time = element.editedTime
                 message.edited_status = element.editedStatus
                 self.response.data.message.append(message)
         elif dbquery_flow.count():
@@ -255,6 +257,33 @@ class ProtocolMethods:
                            userConfig=self.request.data.user[0].uuid,
                            flow=self.request.data.flow[0].id)
             self.__catching_error(200)
+
+    def _all_messages(self):
+        """Displays all messages of a specific flow retrieves them
+        from database and issues them as an array consisting of JSON
+
+        """
+        dbquery = models.Message.select(
+            AND(models.Message.q.flowID == self.request.data.flow[0].id,
+                models.Message.q.time >= self.request.data.time))
+        if dbquery.count():
+            for element in dbquery:
+                message = api.Message()
+                message.from_flow_id = element.flowID
+                message.from_user_uuid = element.userConfigID
+                message.text = element.text
+                message.time = element.time
+                message.file_picture = element.filePicture
+                message.file_video = element.fileVideo
+                message.file_audio = element.fileAudio
+                message.file_document = element.fileDocument
+                message.emoji = element.emoji
+                message.edited_time = element.editedTime
+                message.edited_status = element.editedStatus
+                self.response.data.message.append(message)
+            self.__catching_error(200)
+        else:
+            self.__catching_error(404)
 
     def _add_flow(self):
         """Allows add a new flow to database
@@ -398,33 +427,6 @@ class ProtocolMethods:
             dbquery.editedTime = self.get_time
             dbquery.editedStatus = True
             self.__catching_error(200)
-
-    def _all_messages(self):
-        """Displays all messages of a specific flow retrieves them
-        from database and issues them as an array consisting of JSON
-
-        """
-        dbquery = models.Message.select(
-            AND(models.Message.q.flowID == self.request.data.flow[0].id,
-                models.Message.q.time >= self.request.data.time))
-        if dbquery.count():
-            for element in dbquery:
-                message = api.Message()
-                message.from_flow_id = element.flowID
-                message.from_user_uuid = element.userConfigID
-                message.text = element.text
-                message.time = element.time
-                message.file_picture = element.filePicture
-                message.file_video = element.fileVideo
-                message.file_audio = element.fileAudio
-                message.file_document = element.fileDocument
-                message.emoji = element.emoji
-                message.edited_time = element.editedTime
-                message.edited_status = element.editedStatus
-                self.response.data.message.append(message)
-            self.__catching_error(200)
-        else:
-            self.__catching_error(404)
 
     def _ping_pong(self):
         """Generates a response to a client's request
