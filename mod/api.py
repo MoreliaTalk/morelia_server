@@ -15,6 +15,8 @@ class Flow(BaseModel):
     type: Optional[str] = None
     title: Optional[str] = None
     info: Optional[str] = None
+    message_start: Optional[int] = None
+    message_end: Optional[int] = None
 
 
 class User(BaseModel):
