@@ -29,6 +29,10 @@ DEBUG_LEVEL = 10
 # Settings Jinja2
 TEMPLATE_FOLDER = 'templates'
 
+# Setting up number of messages that server gives out on
+# "get_all_message" client request
+LIMIT_MESSAGE = 100
+
 # Status and error description settings, where
 # "status" - corresponds to the same status for HTTP error codes
 # "detail" - description of the error, understandable for humans
@@ -101,6 +105,10 @@ DICT_ERRORS = {
                 'status': 'Service Unavailable',
                 'detail': 'Service Unavailable'
                 },
+            520: {
+                'status': 'Unknown Error',
+                'detail': 'Unknown Error'
+            },
             526: {
                 'status': 'Invalid SSL Certificate',
                 'detail': 'Invalid SSL Certificate'
