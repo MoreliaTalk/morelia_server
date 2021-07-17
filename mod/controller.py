@@ -429,13 +429,24 @@ class ProtocolMethods:
         """Function irretrievably deletes the user from database.
 
         """
+        login = self.request.data.user[0].login
+        password = self.request.data.user[0].password
         try:
-            dbquery = models.UserConfig.selectBy(login=self.request.data.user[0].login,
-                                                 password=self.request.data.user[0].password).getOne()
+            dbquery = models.UserConfig.selectBy(login=login,
+                                                 password=password).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound) as not_found:
             self.__catching_error(404, str(not_found))
         else:
-            dbquery.delete(dbquery.id)
+            dbquery.login = "User deleted"
+            dbquery.password = str(urandom(64))
+            dbquery.hashPassword = str(urandom(64))
+            dbquery.username = "User deleted"
+            dbquery.authId = str(urandom(64))
+            dbquery.email = ""
+            dbquery.avatar = b""
+            dbquery.bio = "deleted"
+            dbquery.salt = b"deleted"
+            dbquery.key = b"deleted"
             self.__catching_error(200)
 
     def _delete_message(self):
