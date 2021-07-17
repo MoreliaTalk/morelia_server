@@ -327,7 +327,7 @@ class ProtocolMethods:
         if self.request.data.flow[0].type not in ["chat", "group", "channel"]:
             error = "Wrong flow type"
             self.__catching_error(400, error)
-        elif self.request.data.flow[0].type == 'chat' and len(self.request.data.user) < 2:
+        elif self.request.data.flow[0].type == 'chat' and len(self.request.data.user) != 2:
             error = "Two users UUID must be specified for chat"
             self.__catching_error(400, error)
         else:
