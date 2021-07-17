@@ -401,10 +401,11 @@ class ProtocolMethods:
         and password contained in server database are verified.
 
         """
-        if self.__check_login(self.request.data.user[0].login) is False:
+        login = self.request.data.user[0].login
+        if self.__check_login(login) is False:
             self.__catching_error(404)
         else:
-            dbquery = models.UserConfig.selectBy(login=self.request.data.user[0].login).getOne()
+            dbquery = models.UserConfig.selectBy(login=login).getOne()
             # to check password, we use same module as for its
             # hash generation. Specify password entered by user
             # and hash of old password as parameters.
