@@ -131,6 +131,18 @@ USER_INFO = {
         "user": [{
             "uuid": 123456,
             "auth_id": "auth_id"
+            },
+            {
+            "uuid": 123457
+            },
+            {
+            "uuid": 123458
+            },
+            {
+            "uuid": 123459
+            },
+            {
+            "uuid": 123460
             }],
         "meta": None
         },
@@ -649,14 +661,15 @@ class TestUserInfo(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        models.UserConfig(uuid=123456,
-                          login="login",
-                          password="password",
-                          username="username",
-                          isBot=False,
-                          authId="auth_id",
-                          email='email@email.com',
-                          bio='bio')
+        for item in range(5):
+            models.UserConfig(uuid=123456 + item,
+                              login="login",
+                              password="password",
+                              username="username",
+                              isBot=False,
+                              authId="auth_id",
+                              email='email@email.com',
+                              bio='bio')
         self.test = api.ValidJSON.parse_obj(USER_INFO)
 
     def tearDown(self):
@@ -676,6 +689,13 @@ class TestUserInfo(unittest.TestCase):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["data"]["user"][0]["bio"], "bio")
+
+    def test_check_many_user_info(self):
+        users = [{'uuid': 123456 + item} for item in range(120)]
+        self.test.data.user.extend(users)
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["errors"]["code"], 403)
 
 
 class TestAuthentification(unittest.TestCase):
