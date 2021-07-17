@@ -313,7 +313,7 @@ class ProtocolMethods:
                                  self.request.data.flow[0].message_start)
                     self.__catching_error(206)
                 else:
-                    self.__catching_error(403, add_info="Requested more messages"
+                    self.__catching_error(403, "Requested more messages"
                                           f" than server limit. {message_volume} >"
                                           f" {config.LIMIT_MESSAGE}")
 
@@ -372,21 +372,27 @@ class ProtocolMethods:
         """Provides information about all personal settings of user.
 
         """
-        try:
-            dbquery = models.UserConfig.selectBy(uuid=self.request.data.user[0].uuid).getOne()
-        except (SQLObjectIntegrityError, SQLObjectNotFound) as user_info_error:
-            self.__catching_error(404, str(user_info_error))
-        else:
-            user = api.User()
-            user.uuid = dbquery.uuid
-            user.login = dbquery.login
-            user.username = dbquery.username
-            user.is_bot = dbquery.isBot
-            user.email = dbquery.email
-            user.avatar = dbquery.avatar
-            user.bio = dbquery.bio
-            self.response.data.user.append(user)
+        users_volume = len(self.request.data.user)
+        if users_volume <= config.LIMIT_USERS:
+            for element in self.request.data.user:
+                try:
+                    dbquery = models.UserConfig.selectBy(uuid=element.uuid).getOne()
+                except SQLObjectIntegrityError as user_info_error:
+                    self.__catching_error(520, str(user_info_error))
+                else:
+                    user = api.User()
+                    user.uuid = dbquery.uuid
+                    user.login = dbquery.login
+                    user.username = dbquery.username
+                    user.is_bot = dbquery.isBot
+                    user.email = dbquery.email
+                    user.avatar = dbquery.avatar
+                    user.bio = dbquery.bio
+                    self.response.data.user.append(user)
             self.__catching_error(200)
+        else:
+            self.__catching_error(403, f"Requested more {config.LIMIT_USERS}"
+                                  " users than server limit")
 
     def _authentification(self):
         """Performs authentification of registered client,
