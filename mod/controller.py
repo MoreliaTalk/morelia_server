@@ -265,9 +265,16 @@ class ProtocolMethods:
         """
         flow = api.Flow()
         flow.id = self.request.data.flow[0].id
+        message_start = self.request.data.flow[0].message_start
+        message_end = self.request.data.flow[0].message_end
+        if message_start is None:
+            message_start = 0
+        if message_end is None:
+            message_end = 0
+        message_volume = message_end - message_start
 
-        def get_messages(db, end):
-            for element in db[:end]:
+        def get_messages(db, end: int, start: int = 0) -> None:
+            for element in db[start:end]:
                 message = api.Message()
                 message.from_flow_id = element.flowID
                 message.from_user_uuid = element.userConfigID
@@ -284,22 +291,31 @@ class ProtocolMethods:
 
         try:
             dbquery = models.Message.select(
-                AND(models.Message.q.flowID == self.request.data.flow[0].id,
+                AND(models.Message.q.flow == self.request.data.flow[0].id,
                     models.Message.q.time >= self.request.data.time))
-            MESSAGE_COUNT = dbquery.count()
-            if MESSAGE_COUNT <= config.LIMIT_MESSAGE:
-                self.response.data.flow.append(flow)
-                get_messages(dbquery, config.LIMIT_MESSAGE - 1)
-                self.__catching_error(200)
-            elif MESSAGE_COUNT > config.LIMIT_MESSAGE:
-                flow.message_end = MESSAGE_COUNT + 1
-                self.response.data.flow.append(flow)
-                get_messages(dbquery, config.LIMIT_MESSAGE)
-                self.__catching_error(206)
-            else:
-                self.__catching_error(404)
+            MESSAGE_COUNT: int = dbquery.count()
+            dbquery[0]
         except SQLObjectIntegrityError as flow_error:
             self.__catching_error(520, str(flow_error))
+        except IndexError as flow_error:
+            self.__catching_error(404, str(flow_error))
+        else:
+            if MESSAGE_COUNT <= config.LIMIT_MESSAGE:
+                self.response.data.flow.append(flow)
+                get_messages(dbquery, config.LIMIT_MESSAGE)
+                self.__catching_error(200)
+            elif MESSAGE_COUNT > config.LIMIT_MESSAGE:
+                flow.message_end = MESSAGE_COUNT
+                self.response.data.flow.append(flow)
+                if message_volume <= config.LIMIT_MESSAGE:
+                    get_messages(dbquery,
+                                 self.request.data.flow[0].message_end,
+                                 self.request.data.flow[0].message_start)
+                    self.__catching_error(206)
+                else:
+                    self.__catching_error(403, add_info="Requested more messages"
+                                          f" than server limit. {message_volume} >"
+                                          f" {config.LIMIT_MESSAGE}")
 
     def _add_flow(self):
         """Allows add a new flow to database
