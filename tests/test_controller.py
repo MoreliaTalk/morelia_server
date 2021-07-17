@@ -18,6 +18,7 @@ from mod import api  # noqa
 from mod import controller  # noqa
 from mod import lib  # noqa
 from mod import models  # noqa
+from mod import config  # noqa
 
 connection = orm.connectionForURI("sqlite:/:memory:")
 orm.sqlhub.processConnection = connection
@@ -76,7 +77,7 @@ ALL_MESSAGES = {
         "time": 2,
         "flow": [{
             "id": 123
-        }],
+            }],
         "user": [{
             "uuid": 123456,
             "auth_id": "auth_id"
@@ -888,15 +889,17 @@ class TestAllMessages(unittest.TestCase):
                                       authId="auth_id2")
         new_flow = models.Flow(flowId=123)
         new_flow2 = models.Flow(flowId=321)
-        models.Message(text="Hello",
-                       time=1,
-                       userConfig=new_user,
-                       flow=new_flow)
+        for item in range(config.LIMIT_MESSAGE+10):
+            models.Message(text=f"Hello{item}",
+                           time=1+item,
+                           userConfig=new_user,
+                           flow=new_flow)
+        for item in range(config.LIMIT_MESSAGE):
+            models.Message(text=f"Kak Dela{item}",
+                           time=1+item,
+                           userConfig=new_user,
+                           flow=new_flow2)
         models.Message(text="Privet",
-                       time=2,
-                       userConfig=new_user,
-                       flow=new_flow)
-        models.Message(text="Hello2",
                        time=3,
                        userConfig=new_user2,
                        flow=new_flow2)
@@ -910,15 +913,34 @@ class TestAllMessages(unittest.TestCase):
                              cascade=True)
         del self.test
 
-    def test_all_message(self):
+    def test_all_message_more_limit(self):
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["errors"]["code"], 206)
+
+    def test_all_message_less_limit(self):
+        self.test.data.flow[0].id = 321
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 200)
 
+    def test_message_end_in_response(self):
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["data"]["flow"][0]["message_end"], 109)
+
     def test_check_message_in_database(self):
         controller.ProtocolMethods(self.test)
-        dbquery = models.Message.selectBy(time=3).getOne()
+        dbquery = models.Message.selectBy(time=3,
+                                          userConfig=123456,
+                                          flow=123).getOne()
         self.assertEqual(dbquery.text, "Hello2")
+
+    def test_wrong_message_volume(self):
+        self.test.data.flow[0].message_end = 256
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["errors"]["code"], 403)
 
     def test_wrong_flow_id(self):
         self.test.data.flow[0].id = 555
