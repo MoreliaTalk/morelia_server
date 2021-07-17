@@ -454,12 +454,22 @@ class ProtocolMethods:
         table by its ID.
 
         """
+        flow = self.request.data.flow[0].id
+        id = self.request.data.message[0].id
         try:
-            dbquery = models.Message.selectBy(id=self.request.data.message[0].id).getOne()
+            dbquery = models.Message.selectBy(id=id,
+                                              flow=flow).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound) as not_found:
             self.__catching_error(404, str(not_found))
         else:
-            dbquery.delete(dbquery.id)
+            dbquery.text = "Message deleted"
+            dbquery.filePicture = b''
+            dbquery.fileVideo = b''
+            dbquery.fileAudio = b''
+            dbquery.fileDocument = b''
+            dbquery.emoji = b''
+            dbquery.editedTime = self.get_time
+            dbquery.editedStatus = True
             self.__catching_error(200)
 
     def _edited_message(self):
