@@ -33,6 +33,10 @@ TEMPLATE_FOLDER: str = 'templates'
 # "get_all_message" client request
 LIMIT_MESSAGE: int = 100
 
+# Setting up number of users that server gives out on
+# "get_user_info" client request
+LIMIT_USERS: int = 100
+
 # Status and error description settings, where
 # "status" - corresponds to the same status for HTTP error codes
 # "detail" - description of the error, understandable for humans
