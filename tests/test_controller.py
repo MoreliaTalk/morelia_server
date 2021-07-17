@@ -204,6 +204,9 @@ DELETE_USER = {
 DELETE_MESSAGE = {
     "type": "delete_message",
     "data": {
+        "flow": [{
+            "id": 123
+            }],
         "message": [{
             "id": 1
             }],
@@ -836,6 +839,11 @@ class TestDeleteMessage(unittest.TestCase):
         controller.ProtocolMethods(self.test)
         dbquery = models.Message.selectBy(text="Hello")
         self.assertEqual(dbquery.count(), 0)
+
+    def test_check_deleted_message_in_database(self):
+        controller.ProtocolMethods(self.test)
+        dbquery = models.Message.selectBy(text="Message deleted")
+        self.assertEqual(dbquery.count(), 1)
 
     def test_wrong_message_id(self):
         self.test.data.message[0].id = 2
