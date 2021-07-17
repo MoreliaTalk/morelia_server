@@ -2,41 +2,41 @@ import os
 
 # Configuring database access
 # SQLite3
-LOCAL_SQLITE = ''.join(['sqlite:', os.path.abspath('db_sqlite.db')])
+LOCAL_SQLITE: str = ''.join(['sqlite:', os.path.abspath('db_sqlite.db')])
 
 # Local PostgreSQL
-LOCAL_POSTGRESQL = 'postgres://postgres:123456@127.0.0.1/morelia_server_db?debug=True'
+LOCAL_POSTGRESQL: str = 'postgres://postgres:123456@127.0.0.1/morelia_server_db?debug=True'
 
 # Online PostgreSQL
-ONLINE_POSTGRESQL = os.getenv('DATABASE_URL')
+ONLINE_POSTGRESQL: str = os.getenv('DATABASE_URL')
 
 # Version of Morelia Protocol
-API_VERSION = '1.0'
+API_VERSION: str = '1.0'
 
 # LibHash config #
 # TODO
 # add constat for configurating iteration cycle
 
 # size of output hash digest in bytes
-PASSWORD_HASH_SIZE = 32
+PASSWORD_HASH_SIZE: int = 32
 
 # size of output auth_id digest in bytes
-AUTH_ID_HASH_SIZE = 16
+AUTH_ID_HASH_SIZE: int = 16
 
 # Settings loguru
-DEBUG_LEVEL = 10
+DEBUG_LEVEL: int = 10
 
 # Settings Jinja2
-TEMPLATE_FOLDER = 'templates'
+TEMPLATE_FOLDER: str = 'templates'
 
 # Setting up number of messages that server gives out on
 # "get_all_message" client request
-LIMIT_MESSAGE = 100
+LIMIT_MESSAGE: int = 100
 
 # Status and error description settings, where
 # "status" - corresponds to the same status for HTTP error codes
 # "detail" - description of the error, understandable for humans
-DICT_ERRORS = {
+DICT_ERRORS: dict = {
             200: {
                 'status': 'OK',
                 'detail': 'successfully'
@@ -48,6 +48,10 @@ DICT_ERRORS = {
             202: {
                 'status': 'Accepted',
                 'detail': 'Accepted'
+                },
+            206: {
+                'status': "Partial Content",
+                'detail': "Partial Content"
                 },
             400: {
                 'status': 'Bad Request',
