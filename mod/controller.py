@@ -239,25 +239,32 @@ class ProtocolMethods:
         """Saves user message in database.
 
         """
-        flow = self.request.data.flow[0].id
+        flow_id = self.request.data.flow[0].id
+        text = self.request.data.message[0].text
+        picture = self.request.data.message[0].file_picture
+        video = self.request.data.message[0].file_video
+        audio = self.request.data.message[0].file_audio
+        document = self.request.data.message[0].file_document
+        emoji = self.request.data.message[0].emoji
+        user_uuid = self.request.data.user[0].uuid
         try:
-            models.Flow.selectBy(flowId=flow).getOne()
+            models.Flow.selectBy(flowId=flow_id).getOne()
         except SQLObjectNotFound as flow_error:
             self.__catching_error(404, str(flow_error))
         else:
-            dbquery = models.Message(text=self.request.data.message[0].text,
+            dbquery = models.Message(text=text,
                                      time=self.get_time,
-                                     filePicture=self.request.data.message[0].file_picture,
-                                     fileVideo=self.request.data.message[0].file_video,
-                                     fileAudio=self.request.data.message[0].file_audio,
-                                     fileDocument=self.request.data.message[0].file_audio,
-                                     emoji=self.request.data.message[0].emoji,
+                                     filePicture=picture,
+                                     fileVideo=video,
+                                     fileAudio=audio,
+                                     fileDocument=document,
+                                     emoji=emoji,
                                      editedTime=None,
                                      editedStatus=False,
-                                     userConfig=self.request.data.user[0].uuid,
-                                     flow=self.request.data.flow[0].id)
+                                     userConfig=user_uuid,
+                                     flow=flow_id)
             message = api.Message()
-            message.from_flow_id = flow
+            message.from_flow_id = flow_id
             message.from_user_uuid = dbquery.userConfig.uuid
             message.id = dbquery.id
             self.response.data.message.append(message)
@@ -329,10 +336,11 @@ class ProtocolMethods:
         # FIXME после замены flowId на UUID из питоньего модуля
         random.seed(urandom(64))
         flow_id = random.randrange(1, 999999)
-        if self.request.data.flow[0].type not in ["chat", "group", "channel"]:
+        flow_type = self.request.data.flow[0].type
+        if flow_type not in ["chat", "group", "channel"]:
             error = "Wrong flow type"
             self.__catching_error(400, error)
-        elif self.request.data.flow[0].type == 'chat' and len(self.request.data.user) != 2:
+        elif flow_type == 'chat' and len(self.request.data.user) != 2:
             error = "Two users UUID must be specified for chat"
             self.__catching_error(400, error)
         else:
