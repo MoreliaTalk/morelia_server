@@ -1,7 +1,7 @@
 import random
 from os import urandom
 from time import time
-from typing import Optional, Union
+from typing import Union
 
 from pydantic import ValidationError
 from sqlobject import AND
@@ -77,7 +77,7 @@ class ProtocolMethods:
         """
         return self.response.toJSON()
 
-    def __check_auth_token(self, uuid: str, auth_id: str) -> bool:
+    def __check_auth_token(self, uuid: Union[str, int], auth_id: str) -> bool:
         """Checks uuid and auth_id of user
 
         Args:
@@ -117,7 +117,7 @@ class ProtocolMethods:
             return True
 
     def __catching_error(self, code: Union[int, str],
-                         add_info: Optional[str] = None) -> None:
+                         add_info: Union[Exception, str] = None) -> None:
         """Сatches errors in "try...except" content.
         Result is 'dict' with information about code, status,
         time and detailed description of error that has occurred.
