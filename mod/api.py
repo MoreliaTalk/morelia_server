@@ -10,7 +10,7 @@ from pydantic import EmailStr
 class Flow(BaseModel):
     class Config:
         title = 'List of flow with description and type'
-    id: Optional[int] = None
+    id: Optional[str] = None
     time: Optional[int] = None
     type: Optional[str] = None
     title: Optional[str] = None

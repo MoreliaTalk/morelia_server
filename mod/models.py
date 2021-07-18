@@ -55,7 +55,7 @@ class UserConfig(orm.SQLObject):
     """
     # added alternateID for added class method @byUUID
     # which will return that object
-    uuid = orm.IntCol(alternateID=True, unique=True, notNone=True)
+    uuid = orm.IntCol(notNone=True)
     login = orm.StringCol()
     password = orm.StringCol()
     hashPassword = orm.StringCol(default=None)
@@ -85,7 +85,7 @@ class Flow(orm.SQLObject):
     Returns:
         None
     """
-    flowId = orm.IntCol(alternateID=True, unique=True, notNone=True)
+    flowId = orm.StringCol(notNone=True)
     timeCreated = orm.IntCol(default=None)
     flowType = orm.StringCol(default=None)
     title = orm.StringCol(default=None)
