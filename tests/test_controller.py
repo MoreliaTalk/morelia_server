@@ -61,7 +61,7 @@ SEND_MESSAGE = {
             }],
         "user": [{
             "uuid": 123456,
-            "auth_id": "auth_id",
+            "auth_id": "auth_id"
             }],
         "meta": None
         },
@@ -533,6 +533,11 @@ class TestSendMessage(unittest.TestCase):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 200)
+
+    def test_check_id_in_response(self):
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["data"]["message"][0]["id"], 1)
 
     def test_wrong_flow(self):
         self.test.data.flow[0].id = 666
