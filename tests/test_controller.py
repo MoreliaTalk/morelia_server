@@ -272,8 +272,6 @@ ERRORS = {
     }
 
 NON_VALID_ERRORS = {
-    # None valid blank dict
-    "type": {},
     "data": {
         "user": [{
             "uuid": 123456,
