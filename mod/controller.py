@@ -258,7 +258,7 @@ class ProtocolMethods:
                                      flow=self.request.data.flow[0].id)
             message = api.Message()
             message.from_flow_id = flow
-            message.from_user_uuid = dbquery.userConfig
+            message.from_user_uuid = dbquery.userConfig.uuid
             message.id = dbquery.id
             self.response.data.message.append(message)
             self.__catching_error(200)
