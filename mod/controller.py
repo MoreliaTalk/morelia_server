@@ -239,23 +239,28 @@ class ProtocolMethods:
         """Saves user message in database.
 
         """
+        flow = self.request.data.flow[0].id
         try:
-            models.Flow.selectBy(flowId=self.request.data.flow[0].id).getOne()
+            models.Flow.selectBy(flowId=flow).getOne()
         except SQLObjectNotFound as flow_error:
             self.__catching_error(404, str(flow_error))
         else:
-            models.Message(text=self.request.data.message[0].text,
-                           time=self.get_time,
-                           filePicture=self.request.data.message[0].file_picture,
-                           fileVideo=self.request.data.message[0].file_video,
-                           fileAudio=self.request.data.message[0].file_audio,
-                           fileDocument=self.request.data.message[0].file_audio,
-                           emoji=self.request.data.message[0].emoji,
-                           editedTime=self.request.data.message[0].edited_time,
-                           editedStatus=self.request.data.
-                           message[0].edited_status,
-                           userConfig=self.request.data.user[0].uuid,
-                           flow=self.request.data.flow[0].id)
+            dbquery = models.Message(text=self.request.data.message[0].text,
+                                     time=self.get_time,
+                                     filePicture=self.request.data.message[0].file_picture,
+                                     fileVideo=self.request.data.message[0].file_video,
+                                     fileAudio=self.request.data.message[0].file_audio,
+                                     fileDocument=self.request.data.message[0].file_audio,
+                                     emoji=self.request.data.message[0].emoji,
+                                     editedTime=None,
+                                     editedStatus=False,
+                                     userConfig=self.request.data.user[0].uuid,
+                                     flow=self.request.data.flow[0].id)
+            message = api.Message()
+            message.from_flow_id = flow
+            message.from_user_uuid = dbquery.userConfig
+            message.id = dbquery.id
+            self.response.data.message.append(message)
             self.__catching_error(200)
 
     def _all_messages(self):
@@ -477,8 +482,9 @@ class ProtocolMethods:
         Value of editedStatus column changes from None to True.
 
         """
+        id = self.request.data.message[0].id
         try:
-            dbquery = models.Message.selectBy(id=self.request.data.message[0].id).getOne()
+            dbquery = models.Message.selectBy(id=id).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound) as not_found:
             self.__catching_error(404, str(not_found))
         else:
