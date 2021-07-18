@@ -1,7 +1,6 @@
-import random
-from os import urandom
 from time import time
 from typing import Union
+from uuid import uuid4
 
 from pydantic import ValidationError
 from sqlobject import AND
@@ -161,21 +160,23 @@ class ProtocolMethods:
         уже есть в БД
 
         """
-        # FIXME после замены uuid на UUID из питоньего модуля
-        random.seed(urandom(64))
-        gen_uuid = random.randrange(10000, 999999999999)
-        if self.__check_login(self.request.data.user[0].login):
+        gen_uuid = uuid4().int
+        password = self.request.data.user[0].password
+        login = self.request.data.user[0].login
+        username = self.request.data.user[0].username
+        email = self.request.data.user[0].email
+        if self.__check_login(login):
             self.__catching_error(409)
         else:
-            generated = lib.Hash(password=self.request.data.user[0].password,
+            generated = lib.Hash(password=password,
                                  uuid=gen_uuid)
             gen_auth_id = generated.auth_id()
             models.UserConfig(uuid=gen_uuid,
-                              password=self.request.data.user[0].password,
+                              password=password,
                               hashPassword=generated.password_hash(),
-                              login=self.request.data.user[0].login,
-                              username=self.request.data.user[0].username,
-                              email=self.request.data.user[0].email,
+                              login=login,
+                              username=username,
+                              email=email,
                               key=generated.get_key(),
                               salt=generated.get_salt(),
                               authId=gen_auth_id)
@@ -333,9 +334,7 @@ class ProtocolMethods:
         """Allows add a new flow to database
 
         """
-        # FIXME после замены flowId на UUID из питоньего модуля
-        random.seed(urandom(64))
-        flow_id = random.randrange(1, 999999)
+        flow_id = str(uuid4().hex)
         flow_type = self.request.data.flow[0].type
         if flow_type not in ["chat", "group", "channel"]:
             error = "Wrong flow type"
@@ -345,16 +344,16 @@ class ProtocolMethods:
             self.__catching_error(400, error)
         else:
             try:
-                models.Flow(flowId=flow_id,
-                            timeCreated=self.get_time,
-                            flowType=self.request.data.flow[0].type,
-                            title=self.request.data.flow[0].title,
-                            info=self.request.data.flow[0].info)
+                dbquery = models.Flow(flowId=flow_id,
+                                      timeCreated=self.get_time,
+                                      flowType=flow_type,
+                                      title=self.request.data.flow[0].title,
+                                      info=self.request.data.flow[0].info)
             except SQLObjectIntegrityError as flow_error:
                 self.__catching_error(520, str(flow_error))
             else:
                 flow = api.Flow()
-                flow.id = flow_id
+                flow.id = dbquery.flowId
                 flow.time = self.get_time
                 flow.type = self.request.data.flow[0].type
                 flow.title = self.request.data.flow[0].title
@@ -442,6 +441,7 @@ class ProtocolMethods:
         """Function irretrievably deletes the user from database.
 
         """
+        gen_uuid = uuid4().bytes
         login = self.request.data.user[0].login
         password = self.request.data.user[0].password
         try:
@@ -451,10 +451,10 @@ class ProtocolMethods:
             self.__catching_error(404, str(not_found))
         else:
             dbquery.login = "User deleted"
-            dbquery.password = str(urandom(64))
-            dbquery.hashPassword = str(urandom(64))
+            dbquery.password = str(gen_uuid)
+            dbquery.hashPassword = str(gen_uuid)
             dbquery.username = "User deleted"
-            dbquery.authId = str(urandom(64))
+            dbquery.authId = str(gen_uuid)
             dbquery.email = ""
             dbquery.avatar = b""
             dbquery.bio = "deleted"
