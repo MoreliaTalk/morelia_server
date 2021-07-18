@@ -285,6 +285,10 @@ NON_VALID_ERRORS = {
     "meta": None
     }
 
+ERRORS_ONLY_TYPE = {
+    "type": "send_message"
+    }
+
 # end
 
 
@@ -1025,7 +1029,7 @@ class TestErrors(unittest.TestCase):
                              cascade=True)
         del self.test
 
-    def test_wrong_type_method(self):
+    def test_wrong_type(self):
         self.test = api.ValidJSON.parse_obj(ERRORS)
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
@@ -1037,6 +1041,11 @@ class TestErrors(unittest.TestCase):
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 415)
 
+    def test_only_type_in_request(self):
+        self.test = json.dumps(ERRORS_ONLY_TYPE)
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["errors"]["code"], 415)
 
 if __name__ == "__main__":
     unittest.main()
