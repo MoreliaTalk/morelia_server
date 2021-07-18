@@ -1,16 +1,16 @@
 # Morelia Server - мессенджер (сервер) для Morelia Network #
 
-![]() *тут скриншот*
+Language [EN](https://github.com/MoreliaTalk/morelia_server/blob/master/README_ENG.md), [RU](https://github.com/MoreliaTalk/morelia_server/blob/master/README.md)
 
 ## В репозитории 2 бранча ##
 
-[master](https://github.com/MoreliaTalk/morelia_server/tree/master) - Основная и стабильная ветка.
+[master](https://github.com/MoreliaTalk/morelia_server/tree/master) - стабильная ветка.
 
-[develop](https://github.com/MoreliaTalk/morelia_server/tree/develop) - Ветка для добавления нового функционала.
+[develop](https://github.com/MoreliaTalk/morelia_server/tree/develop) - ветка для добавления нового функционала.
 
 ## В разработке применяется ##
 
-* [Python 3.8](https://www.python.org/) - язык программирования
+* [Python 3.9](https://www.python.org/) - язык программирования
 
 * [FastAPI](https://fastapi.tiangolo.com) - основной фреймворк
 
@@ -18,12 +18,14 @@
 
 * [Pydantic](https://pydantic-docs.helpmanual.io) - валидация данных
 
-* [Starlette](https://www.starlette.io) - лёгковесный ASGI фреймворк/тулкит.
+* [Starlette](https://www.starlette.io) - лёгковесный ASGI фреймворк/тулкит
+
+* [websockets](https://pypi.org/project/websockets/) - реализация протокола Websockets в Python (RFC 6455 & 7692)
 
 ## Описание репозитория ##
 
 * /mod
-  * api.py - модуль отвечает за описание АПИ, а так же валидацию данных.
+  * api.py - модуль отвечает за описание API, а так же валидацию данных.
   * config.py - модуль отвечает за хранение настроек (констант).
   * controller.py - модуль отвечает за реализацию методов описанных в [Morelia Protocol](https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md)
   * lib.py - модуль отвечает за хэширования пароля, сравнения пароля с его хэш-суммой, создание хэша для auth_id.
@@ -39,7 +41,7 @@
 
 * server.py - основной код сервера
 
-* manage.py - менеджер миграции для БД
+* manage.py - менеджер миграции для БД (создание и удаление таблиц базы данных)
 
 * /tests
   * fixtures/
@@ -52,7 +54,7 @@
 
 ## Установка ##
 
-Установить [Python](https://www.python.org/downloads/) версии 3.8.
+Установить [Python](https://www.python.org/downloads/) версии 3.9.
 
 Загрузить и установить последнюю версию [git](https://git-scm.com/downloads).
 
@@ -181,7 +183,6 @@ uvicorn server:app --host 0.0.0.0 --port 8000 --reload --use-colors --http h11 -
 
 `--timeout-keep-alive <int>` - Close Keep-Alive connections if no new data is received within this timeout. Default: 5.
 
-
 ## Создание пулл-реквеста для внесенния изменений в develop-ветку Morelia Server ##
 
 Получение последних изменнений из develop-ветки Morelia Server
@@ -196,7 +197,7 @@ git pull upstream develop
 git push
 ```
 
-Для создания пулл-реквеста, необходимо перейти на [GitHub](https://www.github.com), выбрать свой форк и в правом меню нажать на `New pull request`, после чего выбрать бранч из которого будет производится перенос изменений в develop-ветку Morelia Qt и нажать `Create pull request`.
+Для создания пулл-реквеста, необходимо перейти на [GitHub](https://www.github.com), выбрать свой форк и в правом меню нажать на `New pull request`, после чего выбрать бранч из которого будет производится перенос изменений в develop-ветку Morelia Server и нажать `Create pull request`.
 
 ## Требования к стилю кода ##
 
