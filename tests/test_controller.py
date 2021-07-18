@@ -3,6 +3,7 @@ import json
 import os
 import sys
 import unittest
+from uuid import uuid4
 
 import sqlobject as orm
 from loguru import logger
@@ -49,7 +50,7 @@ SEND_MESSAGE = {
     "type": "send_message",
     "data": {
         "flow": [{
-            "id": 123
+            "id": '07d949'
             }],
         "message": [{
             "text": "Hello!",
@@ -76,7 +77,7 @@ ALL_MESSAGES = {
     "data": {
         "time": 2,
         "flow": [{
-            "id": 123
+            "id": '07d949'
             }],
         "user": [{
             "uuid": 123456,
@@ -205,7 +206,7 @@ DELETE_MESSAGE = {
     "type": "delete_message",
     "data": {
         "flow": [{
-            "id": 123
+            "id": '07d949'
             }],
         "message": [{
             "id": 1
@@ -454,12 +455,12 @@ class TestGetUpdate(unittest.TestCase):
                                       login="login2",
                                       password="password2",
                                       authId="auth_id2")
-        new_flow1 = models.Flow(flowId=1,
+        new_flow1 = models.Flow(flowId='07d949',
                                 timeCreated=111,
                                 flowType='chat',
                                 title='title2',
                                 info='info2')
-        new_flow2 = models.Flow(flowId=2,
+        new_flow2 = models.Flow(flowId='07d950',
                                 timeCreated=222,
                                 flowType='chat',
                                 title='title2',
@@ -518,7 +519,7 @@ class TestSendMessage(unittest.TestCase):
                           login="login",
                           password="password",
                           authId="auth_id")
-        models.Flow(flowId=123,
+        models.Flow(flowId='07d949',
                     timeCreated=111,
                     flowType="chat")
         self.test = api.ValidJSON.parse_obj(SEND_MESSAGE)
@@ -542,7 +543,7 @@ class TestSendMessage(unittest.TestCase):
         self.assertEqual(result["data"]["message"][0]["id"], 1)
 
     def test_wrong_flow(self):
-        self.test.data.flow[0].id = 666
+        self.test.data.flow[0].id = '666666'
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 404)
@@ -570,7 +571,7 @@ class TestAddFlow(unittest.TestCase):
                           login="login",
                           password="password",
                           authId="auth_id")
-        models.Flow(flowId=333)
+        models.Flow(flowId='07d949')
         logger.remove()
         self.test = api.ValidJSON.parse_obj(ADD_FLOW)
 
@@ -647,7 +648,7 @@ class TestAllFlow(unittest.TestCase):
         del self.test
 
     def test_all_flow(self):
-        models.Flow(flowId=1,
+        models.Flow(flowId='07d949',
                     timeCreated=123456,
                     flowType="flow_type",
                     title="title",
@@ -821,7 +822,7 @@ class TestDeleteMessage(unittest.TestCase):
                                      login="login",
                                      password="password",
                                      authId="auth_id")
-        new_flow = models.Flow(flowId=123)
+        new_flow = models.Flow(flowId='07d949')
         models.Message(text="Hello",
                        time=123456,
                        userConfig=new_user,
@@ -872,7 +873,7 @@ class TestEditedMessage(unittest.TestCase):
                                      login="login",
                                      password="password",
                                      authId="auth_id")
-        new_flow = models.Flow(flowId=123)
+        new_flow = models.Flow(flowId='07d949')
         models.Message(id=1,
                        text="Hello",
                        time=123456,
@@ -922,8 +923,8 @@ class TestAllMessages(unittest.TestCase):
                                       login="login2",
                                       password="password2",
                                       authId="auth_id2")
-        new_flow = models.Flow(flowId=123)
-        new_flow2 = models.Flow(flowId=321)
+        new_flow = models.Flow(flowId='07d949')
+        new_flow2 = models.Flow(flowId='07d950')
         for item in range(config.LIMIT_MESSAGE+10):
             models.Message(text=f"Hello{item}",
                            time=1+item,
@@ -954,7 +955,7 @@ class TestAllMessages(unittest.TestCase):
         self.assertEqual(result["errors"]["code"], 206)
 
     def test_all_message_less_limit(self):
-        self.test.data.flow[0].id = 321
+        self.test.data.flow[0].id = '07d950'
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 200)
@@ -968,7 +969,7 @@ class TestAllMessages(unittest.TestCase):
         controller.ProtocolMethods(self.test)
         dbquery = models.Message.selectBy(time=3,
                                           userConfig=123456,
-                                          flow=123).getOne()
+                                          flow='07d949').getOne()
         self.assertEqual(dbquery.text, "Hello2")
 
     def test_wrong_message_volume(self):
@@ -978,7 +979,7 @@ class TestAllMessages(unittest.TestCase):
         self.assertEqual(result["errors"]["code"], 403)
 
     def test_wrong_flow_id(self):
-        self.test.data.flow[0].id = 555
+        self.test.data.flow[0].id = '666666'
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 404)
@@ -1046,6 +1047,7 @@ class TestErrors(unittest.TestCase):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 415)
+
 
 if __name__ == "__main__":
     unittest.main()
