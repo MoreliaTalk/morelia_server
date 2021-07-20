@@ -366,7 +366,7 @@ class ProtocolMethods:
         from database
 
         """
-        dbquery = models.Flow.select(models.Flow.q.flowId >= 1)
+        dbquery = models.Flow.selectBy()
         if dbquery.count():
             for element in dbquery:
                 flow = api.Flow()
