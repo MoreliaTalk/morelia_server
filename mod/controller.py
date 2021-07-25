@@ -76,7 +76,8 @@ class ProtocolMethods:
         """
         return self.response.toJSON()
 
-    def __check_auth_token(self, uuid: Union[str, int], auth_id: str) -> bool:
+    def __check_auth_token(self, uuid: Union[str, int],
+                           auth_id: str) -> bool:
         """Checks uuid and auth_id of user
 
         Args:
@@ -87,6 +88,8 @@ class ProtocolMethods:
             True if successful
             False if unsuccessful
         """
+        if isinstance(uuid, int):
+            uuid = str(uuid)
         try:
             dbquery = models.UserConfig.selectBy(uuid=uuid).getOne()
         except (dberrors.OperationalError,
@@ -156,11 +159,9 @@ class ProtocolMethods:
     def _register_user(self):
         """Registers user who is not in the database.
         Note: This version also authentificate user, that exist in database
-        FIXME должна возвращать ошибку если пользователь с таким логином
-        уже есть в БД
 
         """
-        gen_uuid = uuid4().int
+        uuid = str(uuid4().int)
         password = self.request.data.user[0].password
         login = self.request.data.user[0].login
         username = self.request.data.user[0].username
@@ -169,9 +170,9 @@ class ProtocolMethods:
             self.__catching_error(409)
         else:
             generated = lib.Hash(password=password,
-                                 uuid=gen_uuid)
-            gen_auth_id = generated.auth_id()
-            models.UserConfig(uuid=gen_uuid,
+                                 uuid=uuid)
+            auth_id = generated.auth_id()
+            models.UserConfig(uuid=uuid,
                               password=password,
                               hashPassword=generated.password_hash(),
                               login=login,
@@ -179,10 +180,10 @@ class ProtocolMethods:
                               email=email,
                               key=generated.get_key(),
                               salt=generated.get_salt(),
-                              authId=gen_auth_id)
+                              authId=auth_id)
             user = api.User()
-            user.uuid = gen_uuid
-            user.auth_id = gen_auth_id
+            user.uuid = uuid
+            user.auth_id = auth_id
             self.response.data.user.append(user)
             self.__catching_error(201)
 
@@ -201,11 +202,11 @@ class ProtocolMethods:
         if dbquery_message.count():
             for element in dbquery_message:
                 message = api.Message()
-                message.id = element.id
+                message.uuid = element.uuid
                 message.text = element.text
-                message.from_user_uuid = element.userConfigID
+                message.from_user = element.userConfig.uuid
                 message.time = element.time
-                message.from_flow_id = element.flowID
+                message.from_flow = element.flow.uuid
                 message.file_picture = element.filePicture
                 message.file_video = element.fileVideo
                 message.file_audio = element.fileAudio
@@ -217,11 +218,13 @@ class ProtocolMethods:
         elif dbquery_flow.count():
             for element in dbquery_flow:
                 flow = api.Flow()
-                flow.id = element.flowId
+                flow.uuid = element.uuid
                 flow.time = element.timeCreated
                 flow.type = element.flowType
                 flow.title = element.title
                 flow.info = element.info
+                flow.owner = element.owner
+                flow.users = [item.uuid for item in element[0].users]
                 self.response.data.flow.append(flow)
         elif dbquery_user.count():
             for element in dbquery_user:
@@ -240,7 +243,8 @@ class ProtocolMethods:
         """Saves user message in database.
 
         """
-        flow_id = self.request.data.flow[0].id
+        message_uuid = str(uuid4().int)
+        flow_uuid = self.request.data.flow[0].uuid
         text = self.request.data.message[0].text
         picture = self.request.data.message[0].file_picture
         video = self.request.data.message[0].file_video
@@ -249,25 +253,26 @@ class ProtocolMethods:
         emoji = self.request.data.message[0].emoji
         user_uuid = self.request.data.user[0].uuid
         try:
-            models.Flow.selectBy(flowId=flow_id).getOne()
+            models.Flow.selectBy(uuid=flow_uuid).getOne()
         except SQLObjectNotFound as flow_error:
             self.__catching_error(404, str(flow_error))
         else:
-            dbquery = models.Message(text=text,
-                                     time=self.get_time,
-                                     filePicture=picture,
-                                     fileVideo=video,
-                                     fileAudio=audio,
-                                     fileDocument=document,
-                                     emoji=emoji,
-                                     editedTime=None,
-                                     editedStatus=False,
-                                     userConfig=user_uuid,
-                                     flow=flow_id)
+            models.Message(uuid=message_uuid,
+                           text=text,
+                           time=self.get_time,
+                           filePicture=picture,
+                           fileVideo=video,
+                           fileAudio=audio,
+                           fileDocument=document,
+                           emoji=emoji,
+                           editedTime=None,
+                           editedStatus=False,
+                           user=user_uuid,
+                           flow=flow_uuid)
             message = api.Message()
-            message.from_flow_id = flow_id
-            message.from_user_uuid = dbquery.userConfig.uuid
-            message.id = dbquery.id
+            message.from_flow = flow_uuid
+            message.from_user = user_uuid
+            message.uuid = message_uuid
             self.response.data.message.append(message)
             self.__catching_error(200)
 
@@ -277,7 +282,7 @@ class ProtocolMethods:
 
         """
         flow = api.Flow()
-        flow.id = self.request.data.flow[0].id
+        flow.uuid = self.request.data.flow[0].uuid
         message_start = self.request.data.flow[0].message_start
         message_end = self.request.data.flow[0].message_end
         if message_start is None:
@@ -289,8 +294,8 @@ class ProtocolMethods:
         def get_messages(db, end: int, start: int = 0) -> None:
             for element in db[start:end]:
                 message = api.Message()
-                message.from_flow_id = element.flowID
-                message.from_user_uuid = element.userConfigID
+                message.from_flow = element.flow.uuid
+                message.from_user = element.userConfig.uuid
                 message.text = element.text
                 message.time = element.time
                 message.file_picture = element.filePicture
@@ -304,7 +309,7 @@ class ProtocolMethods:
 
         try:
             dbquery = models.Message.select(
-                AND(models.Message.q.flow == self.request.data.flow[0].id,
+                AND(models.Message.q.flow == flow.uuid,
                     models.Message.q.time >= self.request.data.time))
             MESSAGE_COUNT: int = dbquery.count()
             dbquery[0]
@@ -327,37 +332,45 @@ class ProtocolMethods:
                     self.__catching_error(206)
                 else:
                     self.__catching_error(403, "Requested more messages"
-                                          f" than server limit. {message_volume} >"
-                                          f" {config.LIMIT_MESSAGE}")
+                                          f" than server limit"
+                                          f" (<{config.LIMIT_MESSAGE})")
 
     def _add_flow(self):
         """Allows add a new flow to database
 
         """
-        flow_id = str(uuid4().hex)
+        flow_uuid = str(uuid4().hex)
+        owner = self.request.data.flow[0].owner
+        users = self.request.data.flow[0].users
         flow_type = self.request.data.flow[0].type
         if flow_type not in ["chat", "group", "channel"]:
             error = "Wrong flow type"
             self.__catching_error(400, error)
-        elif flow_type == 'chat' and len(self.request.data.user) != 2:
+        elif flow_type == 'chat' and len(users) != 2:
             error = "Two users UUID must be specified for chat"
             self.__catching_error(400, error)
         else:
             try:
-                dbquery = models.Flow(flowId=flow_id,
+                dbquery = models.Flow(uuid=flow_uuid,
                                       timeCreated=self.get_time,
                                       flowType=flow_type,
                                       title=self.request.data.flow[0].title,
-                                      info=self.request.data.flow[0].info)
+                                      info=self.request.data.flow[0].info,
+                                      owner=owner)
+                for user_uuid in users:
+                    user = models.UserConfig.selectBy(uuid=user_uuid)
+                    dbquery.addUserConfig(user)
             except SQLObjectIntegrityError as flow_error:
                 self.__catching_error(520, str(flow_error))
             else:
                 flow = api.Flow()
-                flow.id = dbquery.flowId
+                flow.uuid = flow_uuid
                 flow.time = self.get_time
                 flow.type = self.request.data.flow[0].type
                 flow.title = self.request.data.flow[0].title
                 flow.info = self.request.data.flow[0].info
+                flow.owner = owner
+                flow.users = users
                 self.response.data.flow.append(flow)
                 self.__catching_error(200)
 
@@ -370,11 +383,13 @@ class ProtocolMethods:
         if dbquery.count():
             for element in dbquery:
                 flow = api.Flow()
-                flow.id = element.flowId
+                flow.uuid = element.uuid
                 flow.time = element.timeCreated
                 flow.type = element.flowType
                 flow.title = element.title
                 flow.info = element.info
+                flow.owned = element.owned
+                flow.users = [item.uuid for item in element.users]
                 self.response.data.flow.append(flow)
             self.__catching_error(200)
         else:
@@ -386,7 +401,7 @@ class ProtocolMethods:
         """
         users_volume = len(self.request.data.user)
         if users_volume <= config.LIMIT_USERS:
-            for element in self.request.data.user:
+            for element in self.request.data.user[1:]:
                 try:
                     dbquery = models.UserConfig.selectBy(uuid=element.uuid).getOne()
                 except SQLObjectIntegrityError as user_info_error:
@@ -397,7 +412,6 @@ class ProtocolMethods:
                     user.login = dbquery.login
                     user.username = dbquery.username
                     user.is_bot = dbquery.isBot
-                    user.email = dbquery.email
                     user.avatar = dbquery.avatar
                     user.bio = dbquery.bio
                     self.response.data.user.append(user)
@@ -414,6 +428,7 @@ class ProtocolMethods:
 
         """
         login = self.request.data.user[0].login
+        password = self.request.data.user[0].password
         if self.__check_login(login) is False:
             self.__catching_error(404)
         else:
@@ -422,7 +437,7 @@ class ProtocolMethods:
             # hash generation. Specify password entered by user
             # and hash of old password as parameters.
             # After that, hashes are compared using "check_password" method.
-            generator = lib.Hash(password=self.request.data.user[0].password,
+            generator = lib.Hash(password=password,
                                  uuid=dbquery.uuid,
                                  salt=dbquery.salt,
                                  key=dbquery.key,
@@ -441,7 +456,7 @@ class ProtocolMethods:
         """Function irretrievably deletes the user from database.
 
         """
-        gen_uuid = uuid4().bytes
+        uuid = str(uuid4().int)
         login = self.request.data.user[0].login
         password = self.request.data.user[0].password
         try:
@@ -451,10 +466,10 @@ class ProtocolMethods:
             self.__catching_error(404, str(not_found))
         else:
             dbquery.login = "User deleted"
-            dbquery.password = str(gen_uuid)
-            dbquery.hashPassword = str(gen_uuid)
+            dbquery.password = uuid
+            dbquery.hashPassword = uuid
             dbquery.username = "User deleted"
-            dbquery.authId = str(gen_uuid)
+            dbquery.authId = uuid
             dbquery.email = ""
             dbquery.avatar = b""
             dbquery.bio = "deleted"
@@ -467,11 +482,11 @@ class ProtocolMethods:
         table by its ID.
 
         """
-        flow = self.request.data.flow[0].id
-        id = self.request.data.message[0].id
+        flow_uuid = self.request.data.flow[0].uuid
+        message_uuid = self.request.data.message[0].uuid
         try:
-            dbquery = models.Message.selectBy(id=id,
-                                              flow=flow).getOne()
+            dbquery = models.Message.selectBy(uuid=message_uuid,
+                                              flow=flow_uuid).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound) as not_found:
             self.__catching_error(404, str(not_found))
         else:
@@ -490,9 +505,9 @@ class ProtocolMethods:
         Value of editedStatus column changes from None to True.
 
         """
-        id = self.request.data.message[0].id
+        uuid = self.request.data.message[0].uuid
         try:
-            dbquery = models.Message.selectBy(id=id).getOne()
+            dbquery = models.Message.selectBy(uuid=uuid).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound) as not_found:
             self.__catching_error(404, str(not_found))
         else:

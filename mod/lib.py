@@ -2,6 +2,7 @@ import sys
 from hashlib import blake2b
 from hmac import compare_digest
 from os import urandom
+from typing import Union
 
 from mod import config
 
@@ -13,7 +14,8 @@ class Hash:
     Args:
         password (str, required): password.
 
-        uuid (int, required): unique user identity.
+        uuid (int or str, [str convert to int], required): unique user
+              identity.
 
         salt (Any, required): Salt. additional unique identifier
              (there can be any line: mother's maiden name,
@@ -26,8 +28,9 @@ class Hash:
         hash_password (str, optional): password hash (previously calculated).
 
     """
-    def __init__(self, password: str, uuid: int, salt: bytes = None,
-                 key: bytes = None, hash_password: str = None):
+    def __init__(self, password: str, uuid: Union[int, str],
+                 salt: bytes = None, key: bytes = None,
+                 hash_password: str = None):
 
         if salt is None:
             self.salt = urandom(16)
@@ -39,8 +42,12 @@ class Hash:
         else:
             self.key = key
 
+        if isinstance(uuid, str):
+            self.uuid = int(uuid)
+        else:
+            self.uuid = uuid
+
         self.binary_password = password.encode('utf-8')
-        self.uuid = uuid
         self.hash_password = hash_password
         self.size_password = config.PASSWORD_HASH_SIZE
         self.size_auth_id = config.AUTH_ID_HASH_SIZE

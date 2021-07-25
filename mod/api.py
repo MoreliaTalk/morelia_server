@@ -2,6 +2,7 @@ import json
 from typing import Any
 from typing import Optional
 from typing import List
+from typing import Dict
 
 from pydantic import BaseModel
 from pydantic import EmailStr
@@ -10,11 +11,13 @@ from pydantic import EmailStr
 class Flow(BaseModel):
     class Config:
         title = 'List of flow with description and type'
-    id: Optional[str] = None
+    uuid: Optional[str] = None
     time: Optional[int] = None
     type: Optional[str] = None
     title: Optional[str] = None
     info: Optional[str] = None
+    owner: Optional[str] = None
+    users: Optional[Dict[str]] = None
     message_start: Optional[int] = None
     message_end: Optional[int] = None
 
@@ -22,7 +25,7 @@ class Flow(BaseModel):
 class User(BaseModel):
     class Config:
         title = 'List of user information'
-    uuid: Optional[int] = None
+    uuid: Optional[str] = None
     bio: Optional[str] = None
     avatar: Optional[bytes] = None
     password: Optional[str] = None
@@ -36,11 +39,11 @@ class User(BaseModel):
 class Message(BaseModel):
     class Config:
         title = 'List of message information'
-    id: Optional[int] = None
+    uuid: Optional[str] = None
     text: Optional[str] = None
-    from_user_uuid: Optional[int] = None
+    from_user: Optional[str] = None
     time: Optional[int] = None
-    from_flow_id: Optional[int] = None
+    from_flow: Optional[str] = None
     file_picture: Optional[bytes] = None
     file_video: Optional[bytes] = None
     file_audio: Optional[bytes] = None
