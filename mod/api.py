@@ -2,7 +2,6 @@ import json
 from typing import Any
 from typing import Optional
 from typing import List
-from typing import Dict
 
 from pydantic import BaseModel
 from pydantic import EmailStr
@@ -17,7 +16,7 @@ class Flow(BaseModel):
     title: Optional[str] = None
     info: Optional[str] = None
     owner: Optional[str] = None
-    users: Optional[Dict[str]] = None
+    users: Optional[List] = None
     message_start: Optional[int] = None
     message_end: Optional[int] = None
 
