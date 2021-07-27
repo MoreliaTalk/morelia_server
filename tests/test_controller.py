@@ -35,7 +35,7 @@ GET_UPDATE = {
     "data": {
         "time": 111,
         "user": [{
-            "uuid": 123456,
+            "uuid": "123456",
             "auth_id": "auth_id"
             }],
         "meta": None
@@ -50,7 +50,7 @@ SEND_MESSAGE = {
     "type": "send_message",
     "data": {
         "flow": [{
-            "id": '07d949'
+            "uuid": "07d949"
             }],
         "message": [{
             "text": "Hello!",
@@ -61,7 +61,7 @@ SEND_MESSAGE = {
             "emoji": b"sfdfsdfsdf"
             }],
         "user": [{
-            "uuid": 123456,
+            "uuid": "123456",
             "auth_id": "auth_id"
             }],
         "meta": None
@@ -77,10 +77,10 @@ ALL_MESSAGES = {
     "data": {
         "time": 2,
         "flow": [{
-            "id": '07d949'
+            "uuid": "07d949"
             }],
         "user": [{
-            "uuid": 123456,
+            "uuid": "123456",
             "auth_id": "auth_id"
             }],
         "meta": None
@@ -97,10 +97,12 @@ ADD_FLOW = {
         "flow": [{
             "type": "group",
             "title": "title",
-            "info": "info"
+            "info": "info",
+            "owner": "123456",
+            "users": ["123456"]
             }],
         "user": [{
-            "uuid": 123456,
+            "uuid": "123456",
             "auth_id": "auth_id",
             }],
         "meta": None
@@ -115,7 +117,7 @@ ALL_FLOW = {
     "type": "all_flow",
     "data": {
         "user": [{
-            "uuid": 123456,
+            "uuid": "123456",
             "auth_id": "auth_id"
             }],
         "meta": None
@@ -130,20 +132,20 @@ USER_INFO = {
     "type": "user_info",
     "data": {
         "user": [{
-            "uuid": 123456,
+            "uuid": "123456",
             "auth_id": "auth_id"
             },
             {
-            "uuid": 123457
+            "uuid": "123457"
             },
             {
-            "uuid": 123458
+            "uuid": "123458"
             },
             {
-            "uuid": 123459
+            "uuid": "123459"
             },
             {
-            "uuid": 123460
+            "uuid": "123460"
             }],
         "meta": None
         },
@@ -189,7 +191,7 @@ DELETE_USER = {
     "type": "delete_user",
     "data": {
         "user": [{
-            "uuid": 123456,
+            "uuid": "123456",
             "password": "password",
             "login": "login",
             "auth_id": "auth_id"
@@ -206,13 +208,13 @@ DELETE_MESSAGE = {
     "type": "delete_message",
     "data": {
         "flow": [{
-            "id": '07d949'
+            "uuid": "07d949"
             }],
         "message": [{
-            "id": 1
+            "uuid": "1122"
             }],
         "user": [{
-            "uuid": 123456,
+            "uuid": "123456",
             "auth_id": "auth_id"
             }],
         "meta": None
@@ -227,11 +229,11 @@ EDITED_MESSAGE = {
     "type": "edited_message",
     "data": {
         "message": [{
-            "id": 1,
+            "uuid": "1",
             "text": "New_Hello"
             }],
         "user": [{
-            "uuid": 123456,
+            "uuid": "123456",
             "auth_id": "auth_id"
             }],
         "meta": None
@@ -246,7 +248,7 @@ PING_PONG = {
     "type": "ping-pong",
     "data": {
         "user": [{
-            "uuid": 123456,
+            "uuid": "123456",
             "auth_id": "auth_id"
             }],
         "meta": None
@@ -261,7 +263,7 @@ ERRORS = {
     "type": "wrong type",
     "data": {
         "user": [{
-            "uuid": 123456,
+            "uuid": "123456",
             "auth_id": "auth_id"
             }],
         "meta": None
@@ -275,7 +277,7 @@ ERRORS = {
 NON_VALID_ERRORS = {
     "data": {
         "user": [{
-            "uuid": 123456,
+            "uuid": "123456",
             "auth_id": "auth_id"
             }],
         "meta": None
@@ -302,7 +304,7 @@ class TestCheckAuthToken(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        models.UserConfig(uuid=123456,
+        models.UserConfig(uuid="123456",
                           login="login",
                           password="password",
                           authId="auth_id")
@@ -350,7 +352,7 @@ class TestCheckLogin(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        models.UserConfig(uuid=123456,
+        models.UserConfig(uuid="123456",
                           login="login",
                           password="password",
                           authId="auth_id")
@@ -401,7 +403,7 @@ class TestRegisterUser(unittest.TestCase):
         self.assertEqual(result["errors"]["code"], 201)
 
     def test_user_already_exists(self):
-        models.UserConfig(uuid=123456,
+        models.UserConfig(uuid="123456",
                           login="login",
                           password="password")
         run_method = controller.ProtocolMethods(self.test)
@@ -447,36 +449,60 @@ class TestGetUpdate(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        new_user1 = models.UserConfig(uuid=123456,
+        new_user1 = models.UserConfig(uuid="123456",
                                       login="login",
                                       password="password",
                                       authId="auth_id")
-        new_user2 = models.UserConfig(uuid=987654,
+        new_user2 = models.UserConfig(uuid="987654",
                                       login="login2",
                                       password="password2",
                                       authId="auth_id2")
-        new_flow1 = models.Flow(flowId='07d949',
+        new_user3 = models.UserConfig(uuid="666555",
+                                      login="login3",
+                                      password="password3",
+                                      authId="auth_id3")
+        new_flow1 = models.Flow(uuid="07d949",
                                 timeCreated=111,
-                                flowType='chat',
-                                title='title2',
-                                info='info2')
-        new_flow2 = models.Flow(flowId='07d950',
+                                flowType="chat",
+                                title="title1",
+                                info="info1",
+                                owner="123456")
+        new_flow2 = models.Flow(uuid="07d950",
                                 timeCreated=222,
-                                flowType='chat',
-                                title='title2',
-                                info='info2')
-        models.Message(text="Hello1",
+                                flowType="group",
+                                title="title2",
+                                info="info2",
+                                owner="987654")
+        new_flow1.addUserConfig(new_user1)
+        new_flow1.addUserConfig(new_user2)
+        new_flow2.addUserConfig(new_user2)
+        new_flow2.addUserConfig(new_user1)
+        new_flow2.addUserConfig(new_user3)
+        models.Message(uuid="111",
+                       text="Hello1",
                        time=111,
-                       userConfig=new_user1,
+                       user=new_user1,
                        flow=new_flow1)
-        models.Message(text="Hello2",
+        models.Message(uuid="112",
+                       text="Hello2",
                        time=222,
-                       userConfig=new_user2,
-                       flow=new_flow2)
-        models.Message(text="Hello3",
-                       time=333,
-                       userConfig=new_user1,
+                       user=new_user2,
                        flow=new_flow1)
+        models.Message(uuid="113",
+                       text="Heeeello1",
+                       time=111,
+                       user=new_user1,
+                       flow=new_flow2)
+        models.Message(uuid="114",
+                       text="Heeeello2",
+                       time=222,
+                       user=new_user2,
+                       flow=new_flow2)
+        models.Message(uuid="115",
+                       text="Heeeello3",
+                       time=333,
+                       user=new_user3,
+                       flow=new_flow2)
         self.test = api.ValidJSON.parse_obj(GET_UPDATE)
 
     def tearDown(self):
@@ -495,8 +521,20 @@ class TestGetUpdate(unittest.TestCase):
     def test_check_message_in_result(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["data"]["message"][1]["text"],
-                         "Hello2")
+        self.assertEqual(result["data"]["message"][1]["uuid"],
+                         "112")
+
+    def test_check_flow_in_result(self):
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["data"]["flow"][0]["owner"],
+                         "123456")
+
+    def test_check_user_in_result(self):
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["data"]["user"][2]["uuid"],
+                         "666555")
 
     @unittest.skip("Не работает, пока не будет добавлен фильтр по времени")
     def test_no_new_data_in_database(self):
@@ -515,13 +553,15 @@ class TestSendMessage(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        models.UserConfig(uuid=123456,
-                          login="login",
-                          password="password",
-                          authId="auth_id")
-        models.Flow(flowId='07d949',
-                    timeCreated=111,
-                    flowType="chat")
+        new_user = models.UserConfig(uuid="123456",
+                                     login="login",
+                                     password="password",
+                                     authId="auth_id")
+        new_flow = models.Flow(uuid="07d949",
+                               timeCreated=111,
+                               flowType="group",
+                               owner="123456")
+        new_flow.addUserConfig(new_user)
         self.test = api.ValidJSON.parse_obj(SEND_MESSAGE)
 
     def tearDown(self):
@@ -540,26 +580,114 @@ class TestSendMessage(unittest.TestCase):
     def test_check_id_in_response(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["data"]["message"][0]["id"], 1)
+        dbquery = models.Message.selectBy().getOne()
+        self.assertEqual(result["data"]["message"][0]["uuid"],
+                         dbquery.uuid)
 
     def test_wrong_flow(self):
-        self.test.data.flow[0].id = '666666'
+        self.test.data.flow[0].uuid = "666666"
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 404)
 
     def test_write_text_in_database(self):
-        flow_id = self.test.data.flow[0].id
         controller.ProtocolMethods(self.test)
-        dbquery = models.Message.selectBy(flowID=flow_id).getOne()
+        dbquery = models.Message.selectBy().getOne()
         self.assertEqual(dbquery.text,
                          self.test.data.message[0].text)
 
     def test_write_time_in_database(self):
-        flow_id = self.test.data.flow[0].id
         controller.ProtocolMethods(self.test)
-        dbquery = models.Message.selectBy(flowID=flow_id).getOne()
+        dbquery = models.Message.selectBy().getOne()
         self.assertIsInstance(dbquery.time, int)
+
+
+class TestAllMessages(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        logger.remove()
+
+    def setUp(self):
+        for item in classes:
+            class_ = getattr(models, item)
+            class_.createTable(ifNotExists=True)
+        new_user = models.UserConfig(uuid="123456",
+                                     login="login",
+                                     password="password",
+                                     authId="auth_id")
+        new_user2 = models.UserConfig(uuid="654321",
+                                      login="login2",
+                                      password="password2",
+                                      authId="auth_id2")
+        new_flow = models.Flow(uuid="07d949",
+                               flowType="chat",
+                               owner="123456")
+        new_flow2 = models.Flow(uuid="07d950",
+                                flowType="chat",
+                                owner="654321")
+        new_flow.addUserConfig(new_user)
+        new_flow.addUserConfig(new_user2)
+        new_flow2.addUserConfig(new_user)
+        new_flow2.addUserConfig(new_user2)
+        for item in range(config.LIMIT_MESSAGE+10):
+            models.Message(uuid=str(uuid4().int),
+                           text=f"Hello{item}",
+                           time=item,
+                           user=new_user,
+                           flow=new_flow)
+        for item in range(config.LIMIT_MESSAGE-10):
+            models.Message(uuid=str(uuid4().int),
+                           text=f"Kak Dela{item}",
+                           time=item,
+                           user=new_user2,
+                           flow=new_flow2)
+        models.Message(uuid=str(uuid4().int),
+                       text="Privet",
+                       time=666,
+                       user=new_user2,
+                       flow=new_flow2)
+        self.test = api.ValidJSON.parse_obj(ALL_MESSAGES)
+
+    def tearDown(self):
+        for item in classes:
+            class_ = getattr(models, item)
+            class_.dropTable(ifExists=True,
+                             dropJoinTables=True,
+                             cascade=True)
+        del self.test
+
+    def test_all_message_more_limit(self):
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["errors"]["code"], 206)
+
+    def test_all_message_less_limit(self):
+        self.test.data.flow[0].uuid = "07d950"
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["errors"]["code"], 200)
+
+    def test_message_end_in_response(self):
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["data"]["flow"][0]["message_end"], 108)
+
+    def test_check_message_in_database(self):
+        controller.ProtocolMethods(self.test)
+        dbquery = models.Message.selectBy(time=666).getOne()
+        self.assertEqual(dbquery.text, "Privet")
+
+    def test_wrong_message_volume(self):
+        self.test.data.flow[0].message_end = 256
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["errors"]["code"], 403)
+
+    def test_wrong_flow_id(self):
+        self.test.data.flow[0].uuid = "666666"
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["errors"]["code"], 404)
 
 
 class TestAddFlow(unittest.TestCase):
@@ -567,11 +695,11 @@ class TestAddFlow(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        models.UserConfig(uuid=123456,
+        models.UserConfig(uuid="123456",
                           login="login",
                           password="password",
                           authId="auth_id")
-        models.Flow(flowId='07d949')
+        models.Flow(uuid="07d949")
         logger.remove()
         self.test = api.ValidJSON.parse_obj(ADD_FLOW)
 
@@ -608,20 +736,19 @@ class TestAddFlow(unittest.TestCase):
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["detail"], error)
 
-    def test_add_flow_chat_double_user(self):
+    def test_add_flow_chat_more_users(self):
         self.test.data.flow[0].type = "chat"
-        self.test.data.user.append(api.User())
-        self.test.data.user[1].uuid = 1234567
+        self.test.data.flow[0].users.extend(["666555", "888999"])
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 200)
+        self.assertEqual(result["errors"]["code"], 400)
 
     def test_check_flow_in_database(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         dbquery = models.Flow.selectBy(title="title").getOne()
-        self.assertEqual(dbquery.flowId,
-                         result["data"]["flow"][0]["id"])
+        self.assertEqual(dbquery.uuid,
+                         result["data"]["flow"][0]["uuid"])
 
 
 class TestAllFlow(unittest.TestCase):
@@ -633,7 +760,7 @@ class TestAllFlow(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        models.UserConfig(uuid=123456,
+        models.UserConfig(uuid="123456",
                           login="login",
                           password="password",
                           authId="auth_id")
@@ -648,11 +775,12 @@ class TestAllFlow(unittest.TestCase):
         del self.test
 
     def test_all_flow(self):
-        models.Flow(flowId='07d949',
+        models.Flow(uuid="07d949",
                     timeCreated=123456,
-                    flowType="flow_type",
+                    flowType="group",
                     title="title",
-                    info="info")
+                    info="info",
+                    owner="123456")
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["data"]["flow"][0]["info"], "info")
@@ -673,14 +801,15 @@ class TestUserInfo(unittest.TestCase):
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
         for item in range(5):
-            models.UserConfig(uuid=123456 + item,
+            uuid = str(123456 + item)
+            models.UserConfig(uuid=uuid,
                               login="login",
                               password="password",
                               username="username",
                               isBot=False,
                               authId="auth_id",
-                              email='email@email.com',
-                              bio='bio')
+                              email="email@email.com",
+                              bio="bio")
         self.test = api.ValidJSON.parse_obj(USER_INFO)
 
     def tearDown(self):
@@ -702,7 +831,7 @@ class TestUserInfo(unittest.TestCase):
         self.assertEqual(result["data"]["user"][0]["bio"], "bio")
 
     def test_check_many_user_info(self):
-        users = [{'uuid': 123456 + item} for item in range(120)]
+        users = [{'uuid': str(123456 + item)} for item in range(120)]
         self.test.data.user.extend(users)
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
@@ -721,7 +850,7 @@ class TestAuthentification(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        models.UserConfig(uuid=123456,
+        models.UserConfig(uuid="123456",
                           login="login",
                           password="password",
                           hashPassword=self.hash_password,
@@ -751,7 +880,7 @@ class TestAuthentification(unittest.TestCase):
         self.assertEqual(result["errors"]["code"], 404)
 
     def test_two_element_in_database(self):
-        models.UserConfig(uuid=654321,
+        models.UserConfig(uuid="654321",
                           login="login",
                           password="password",
                           salt=b"salt",
@@ -780,7 +909,7 @@ class TestDeleteUser(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        models.UserConfig(uuid=123456,
+        models.UserConfig(uuid="123456",
                           login="login",
                           password="password",
                           authId="auth_id")
@@ -818,14 +947,20 @@ class TestDeleteMessage(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        new_user = models.UserConfig(uuid=123456,
+        new_user = models.UserConfig(uuid="123456",
                                      login="login",
                                      password="password",
                                      authId="auth_id")
-        new_flow = models.Flow(flowId='07d949')
-        models.Message(text="Hello",
+        new_flow = models.Flow(uuid="07d949",
+                               timeCreated=111,
+                               flowType="group",
+                               title="group",
+                               owner="123456")
+        new_flow.addUserConfig(new_user)
+        models.Message(uuid="1122",
+                       text="Hello",
                        time=123456,
-                       userConfig=new_user,
+                       user=new_user,
                        flow=new_flow)
         self.test = api.ValidJSON.parse_obj(DELETE_MESSAGE)
         logger.remove()
@@ -854,7 +989,7 @@ class TestDeleteMessage(unittest.TestCase):
         self.assertEqual(dbquery.count(), 1)
 
     def test_wrong_message_id(self):
-        self.test.data.message[0].id = 2
+        self.test.data.message[0].uuid = "2"
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 404)
@@ -869,15 +1004,20 @@ class TestEditedMessage(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        new_user = models.UserConfig(uuid=123456,
+        new_user = models.UserConfig(uuid="123456",
                                      login="login",
                                      password="password",
                                      authId="auth_id")
-        new_flow = models.Flow(flowId='07d949')
-        models.Message(id=1,
+        new_flow = models.Flow(uuid="07d949",
+                               timeCreated=112,
+                               flowType="group",
+                               title="group",
+                               owner="123456")
+        new_flow.addUserConfig(new_user)
+        models.Message(uuid="1",
                        text="Hello",
                        time=123456,
-                       userConfig=new_user,
+                       user=new_user,
                        flow=new_flow)
         self.test = api.ValidJSON.parse_obj(EDITED_MESSAGE)
 
@@ -900,86 +1040,7 @@ class TestEditedMessage(unittest.TestCase):
         self.assertEqual(dbquery.text, "New_Hello")
 
     def test_wrong_message_id(self):
-        self.test.data.message[0].id = 3
-        run_method = controller.ProtocolMethods(self.test)
-        result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 404)
-
-
-class TestAllMessages(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        logger.remove()
-
-    def setUp(self):
-        for item in classes:
-            class_ = getattr(models, item)
-            class_.createTable(ifNotExists=True)
-        new_user = models.UserConfig(uuid=123456,
-                                     login="login",
-                                     password="password",
-                                     authId="auth_id")
-        new_user2 = models.UserConfig(uuid=654321,
-                                      login="login2",
-                                      password="password2",
-                                      authId="auth_id2")
-        new_flow = models.Flow(flowId='07d949')
-        new_flow2 = models.Flow(flowId='07d950')
-        for item in range(config.LIMIT_MESSAGE+10):
-            models.Message(text=f"Hello{item}",
-                           time=1+item,
-                           userConfig=new_user,
-                           flow=new_flow)
-        for item in range(config.LIMIT_MESSAGE):
-            models.Message(text=f"Kak Dela{item}",
-                           time=1+item,
-                           userConfig=new_user,
-                           flow=new_flow2)
-        models.Message(text="Privet",
-                       time=3,
-                       userConfig=new_user2,
-                       flow=new_flow2)
-        self.test = api.ValidJSON.parse_obj(ALL_MESSAGES)
-
-    def tearDown(self):
-        for item in classes:
-            class_ = getattr(models, item)
-            class_.dropTable(ifExists=True,
-                             dropJoinTables=True,
-                             cascade=True)
-        del self.test
-
-    def test_all_message_more_limit(self):
-        run_method = controller.ProtocolMethods(self.test)
-        result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 206)
-
-    def test_all_message_less_limit(self):
-        self.test.data.flow[0].id = '07d950'
-        run_method = controller.ProtocolMethods(self.test)
-        result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 200)
-
-    def test_message_end_in_response(self):
-        run_method = controller.ProtocolMethods(self.test)
-        result = json.loads(run_method.get_response())
-        self.assertEqual(result["data"]["flow"][0]["message_end"], 109)
-
-    def test_check_message_in_database(self):
-        controller.ProtocolMethods(self.test)
-        dbquery = models.Message.selectBy(time=3,
-                                          userConfig=123456,
-                                          flow='07d949').getOne()
-        self.assertEqual(dbquery.text, "Hello2")
-
-    def test_wrong_message_volume(self):
-        self.test.data.flow[0].message_end = 256
-        run_method = controller.ProtocolMethods(self.test)
-        result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 403)
-
-    def test_wrong_flow_id(self):
-        self.test.data.flow[0].id = '666666'
+        self.test.data.message[0].uuid = "3"
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 404)
@@ -990,7 +1051,7 @@ class TestPingPong(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        models.UserConfig(uuid=123456,
+        models.UserConfig(uuid="123456",
                           login="login",
                           password="password",
                           authId="auth_id")
@@ -1016,7 +1077,7 @@ class TestErrors(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        models.UserConfig(uuid=123456,
+        models.UserConfig(uuid="123456",
                           login="login",
                           password="password",
                           authId="auth_id")

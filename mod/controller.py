@@ -204,7 +204,7 @@ class ProtocolMethods:
                 message = api.Message()
                 message.uuid = element.uuid
                 message.text = element.text
-                message.from_user = element.userConfig.uuid
+                message.from_user = element.user.uuid
                 message.time = element.time
                 message.from_flow = element.flow.uuid
                 message.file_picture = element.filePicture
@@ -215,7 +215,10 @@ class ProtocolMethods:
                 message.edited_time = element.editedTime
                 message.edited_status = element.editedStatus
                 self.response.data.message.append(message)
-        elif dbquery_flow.count():
+        else:
+            self.response.data.message
+
+        if dbquery_flow.count():
             for element in dbquery_flow:
                 flow = api.Flow()
                 flow.uuid = element.uuid
@@ -224,9 +227,12 @@ class ProtocolMethods:
                 flow.title = element.title
                 flow.info = element.info
                 flow.owner = element.owner
-                flow.users = [item.uuid for item in element[0].users]
+                flow.users = [item.uuid for item in element.users]
                 self.response.data.flow.append(flow)
-        elif dbquery_user.count():
+        else:
+            self.response.data.flow
+
+        if dbquery_user.count():
             for element in dbquery_user:
                 user = api.User()
                 user.uuid = element.uuid
@@ -236,7 +242,7 @@ class ProtocolMethods:
                 user.bio = element.bio
                 self.response.data.user.append(user)
         else:
-            self.__catching_error(404)
+            self.response.data.user
         self.__catching_error(200)
 
     def _send_message(self):
@@ -253,7 +259,8 @@ class ProtocolMethods:
         emoji = self.request.data.message[0].emoji
         user_uuid = self.request.data.user[0].uuid
         try:
-            models.Flow.selectBy(uuid=flow_uuid).getOne()
+            flow = models.Flow.selectBy(uuid=flow_uuid).getOne()
+            user = models.UserConfig.selectBy(uuid=user_uuid).getOne()
         except SQLObjectNotFound as flow_error:
             self.__catching_error(404, str(flow_error))
         else:
@@ -267,8 +274,8 @@ class ProtocolMethods:
                            emoji=emoji,
                            editedTime=None,
                            editedStatus=False,
-                           user=user_uuid,
-                           flow=flow_uuid)
+                           user=user,
+                           flow=flow)
             message = api.Message()
             message.from_flow = flow_uuid
             message.from_user = user_uuid
@@ -282,7 +289,7 @@ class ProtocolMethods:
 
         """
         flow = api.Flow()
-        flow.uuid = self.request.data.flow[0].uuid
+        flow_uuid = self.request.data.flow[0].uuid
         message_start = self.request.data.flow[0].message_start
         message_end = self.request.data.flow[0].message_end
         if message_start is None:
@@ -295,7 +302,7 @@ class ProtocolMethods:
             for element in db[start:end]:
                 message = api.Message()
                 message.from_flow = element.flow.uuid
-                message.from_user = element.userConfig.uuid
+                message.from_user = element.user.uuid
                 message.text = element.text
                 message.time = element.time
                 message.file_picture = element.filePicture
@@ -308,14 +315,15 @@ class ProtocolMethods:
                 self.response.data.message.append(message)
 
         try:
+            flow_dbquery = models.Flow.selectBy(uuid=flow_uuid).getOne()
             dbquery = models.Message.select(
-                AND(models.Message.q.flow == flow.uuid,
+                AND(models.Message.q.flow == flow_dbquery,
                     models.Message.q.time >= self.request.data.time))
             MESSAGE_COUNT: int = dbquery.count()
             dbquery[0]
         except SQLObjectIntegrityError as flow_error:
             self.__catching_error(520, str(flow_error))
-        except IndexError as flow_error:
+        except (IndexError, SQLObjectNotFound) as flow_error:
             self.__catching_error(404, str(flow_error))
         else:
             if MESSAGE_COUNT <= config.LIMIT_MESSAGE:
@@ -358,7 +366,7 @@ class ProtocolMethods:
                                       info=self.request.data.flow[0].info,
                                       owner=owner)
                 for user_uuid in users:
-                    user = models.UserConfig.selectBy(uuid=user_uuid)
+                    user = models.UserConfig.selectBy(uuid=user_uuid).getOne()
                     dbquery.addUserConfig(user)
             except SQLObjectIntegrityError as flow_error:
                 self.__catching_error(520, str(flow_error))
@@ -388,7 +396,7 @@ class ProtocolMethods:
                 flow.type = element.flowType
                 flow.title = element.title
                 flow.info = element.info
-                flow.owned = element.owned
+                flow.owner = element.owner
                 flow.users = [item.uuid for item in element.users]
                 self.response.data.flow.append(flow)
             self.__catching_error(200)
@@ -482,11 +490,9 @@ class ProtocolMethods:
         table by its ID.
 
         """
-        flow_uuid = self.request.data.flow[0].uuid
-        message_uuid = self.request.data.message[0].uuid
+        uuid = self.request.data.message[0].uuid
         try:
-            dbquery = models.Message.selectBy(uuid=message_uuid,
-                                              flow=flow_uuid).getOne()
+            dbquery = models.Message.selectBy(uuid=uuid).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound) as not_found:
             self.__catching_error(404, str(not_found))
         else:
