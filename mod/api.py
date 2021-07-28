@@ -39,6 +39,7 @@ class Message(BaseModel):
     class Config:
         title = 'List of message information'
     uuid: Optional[str] = None
+    client_id: Optional[int] = None
     text: Optional[str] = None
     from_user: Optional[str] = None
     time: Optional[int] = None
