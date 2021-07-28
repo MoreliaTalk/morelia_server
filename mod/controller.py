@@ -277,6 +277,7 @@ class ProtocolMethods:
                            user=user,
                            flow=flow)
             message = api.Message()
+            message.client_id = self.request.data.message[0].client_id
             message.from_flow = flow_uuid
             message.from_user = user_uuid
             message.uuid = message_uuid
