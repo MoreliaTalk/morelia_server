@@ -54,6 +54,7 @@ SEND_MESSAGE = {
             }],
         "message": [{
             "text": "Hello!",
+            "client_id": 123,
             "file_picture": b"jkfikdkdsd",
             "file_video": b"sdfsdfsdf",
             "file_audio": b"fgfsdfsdfsdf",
@@ -583,6 +584,12 @@ class TestSendMessage(unittest.TestCase):
         dbquery = models.Message.selectBy().getOne()
         self.assertEqual(result["data"]["message"][0]["uuid"],
                          dbquery.uuid)
+
+    def test_check_client_id_in_response(self):
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["data"]["message"][0]["client_id"],
+                         123)
 
     def test_wrong_flow(self):
         self.test.data.flow[0].uuid = "666666"
