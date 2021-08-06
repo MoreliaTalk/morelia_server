@@ -1,7 +1,6 @@
 import os
 import sys
 import unittest
-from uuid import uuid4
 
 from loguru import logger
 
