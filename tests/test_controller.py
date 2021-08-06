@@ -3,6 +3,7 @@ import json
 import os
 import sys
 import unittest
+import configparser
 from uuid import uuid4
 
 import sqlobject as orm
@@ -19,7 +20,12 @@ from mod import api  # noqa
 from mod import controller  # noqa
 from mod import lib  # noqa
 from mod import models  # noqa
-from mod import config  # noqa
+
+# ************** Read "config.ini" ********************
+config = configparser.ConfigParser()
+config.read('config.ini')
+limit = config['SERVER_LIMIT']
+# ************** END **********************************
 
 connection = orm.connectionForURI("sqlite:/:memory:")
 orm.sqlhub.processConnection = connection
@@ -636,13 +642,13 @@ class TestAllMessages(unittest.TestCase):
         new_flow.addUserConfig(new_user2)
         new_flow2.addUserConfig(new_user)
         new_flow2.addUserConfig(new_user2)
-        for item in range(config.LIMIT_MESSAGE+10):
+        for item in range(limit.getint("messages") + 10):
             models.Message(uuid=str(uuid4().int),
                            text=f"Hello{item}",
                            time=item,
                            user=new_user,
                            flow=new_flow)
-        for item in range(config.LIMIT_MESSAGE-10):
+        for item in range(limit.getint("messages") - 10):
             models.Message(uuid=str(uuid4().int),
                            text=f"Kak Dela{item}",
                            time=item,

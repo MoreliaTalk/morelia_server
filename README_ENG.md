@@ -1,6 +1,6 @@
 # Morelia Server - messenger server for Morelia Network #
 
-Language [EN](https://github.com/MoreliaTalk/morelia_server/blob/master/README_ENG.md), [RU](https://github.com/MoreliaTalk/morelia_server/blob/master/README.md)
+Language [EN](./README_ENG.md), [RU](./README.md)
 
 ## There are two brunches in repository ##
 
@@ -26,31 +26,30 @@ Language [EN](https://github.com/MoreliaTalk/morelia_server/blob/master/README_E
 
 * /mod
   * api.py - module is responsible for description of API, as well as validation of data.
-  * config.py - module is responsible for storing settings (constants).
-  * controller.py - module is responsible for implementing methods described in [Morelia Protocol](https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md)
+  * error.py - module is responsible for storing error codes.
+  * controller.py - module is responsible for implementing methods described in [Morelia Protocol](https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md).
   * lib.py - module is responsible for hashing password, comparing password with its hash sum, and creating a hash for auth_id.
   * models.py - module is responsible for describing database tables to work through ORM.
+  * logging.py - logging configuration module.
 
-* /templates - templates for displaying server statistics in browser
-  * base.html - base template with basic elements of menu, it is implemented in every working template
-  * index.html - working homepage template
-  * status.thml - working page template with status of server
+* /templates - templates for displaying server statistics in browser.
+  * base.html - base template with basic elements of menu, it is implemented in every working template.
+  * index.html - working homepage template.
+  * status.thml - working page template with status of server.
 
-* /settings
-  * logging.py - logging settings
+* server.py - basic server code.
 
-* server.py - basic server code
-
-* manage.py - migration manager for database (creating and deleting database tables)
+* manage.py - migration manager for database (creating and deleting database tables).
 
 * /tests
   * fixtures/
-    * api.json - json-file with pre-prepared data, to conduct tests
-  * test_api.py - validation tests
-  * test_controller.py - tests to check class that is responsible for processing protocol methods
-  * test_lib.py - hash function tests
+    * api.json - json-file with pre-prepared data, to conduct tests.
+  * test_api.py - validation tests.
+  * test_controller.py - tests to check class that is responsible for processing protocol methods.
+  * test_lib.py - hash function tests.
 
-* debug_server.py - A wrapper for server.py to debug through a utility `pdb`
+* debug_server.py - A wrapper for server.py to debug through a utility `pdb`.
+* example_config.ini - file containing server settings, just rename it to `config.ini` before starting server.
 
 ## Installing ##
 

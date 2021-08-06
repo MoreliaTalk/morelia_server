@@ -3,8 +3,13 @@ from hashlib import blake2b
 from hmac import compare_digest
 from os import urandom
 from typing import Union
+import configparser
 
-from mod import config
+# ************** Read "config.ini" ********************
+config = configparser.ConfigParser()
+config.read('config.ini')
+hash_size = config['HASH_SIZE']
+# ************** END **********************************
 
 
 class Hash:
@@ -49,8 +54,8 @@ class Hash:
 
         self.binary_password = password.encode('utf-8')
         self.hash_password = hash_password
-        self.size_password = config.PASSWORD_HASH_SIZE
-        self.size_auth_id = config.AUTH_ID_HASH_SIZE
+        self.size_password = hash_size.getint('password')
+        self.size_auth_id = hash_size.getint('auth_id')
 
     def get_salt(self) -> bytes:
         return self.salt

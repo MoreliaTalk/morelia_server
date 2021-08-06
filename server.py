@@ -1,6 +1,7 @@
 # ************** Standart module *********************
 from datetime import datetime
 from json import JSONDecodeError
+import configparser
 # ************** Standart module end *****************
 
 
@@ -15,7 +16,6 @@ import sqlobject as orm
 
 
 # ************** Morelia module **********************
-from mod import config
 from mod import controller
 from mod import models
 # ************** Morelia module end ********************
@@ -24,27 +24,34 @@ from mod import models
 # ************** Logging beginning *********************
 from loguru import logger
 from settings.logging import add_logging
-
 # ### unicorn logger off
 # import logging
 # logging.disable()
-
-# ### loguru logger on
-add_logging(debug_status=config.DEBUG_LEVEL)
 # ************** Logging end **************************
+
+# ************** Read "config.ini" ********************
+config = configparser.ConfigParser()
+config.read('config.ini')
+logging = config['LOGGING']
+database = config["DATABASE"]
+directory = config["TEMPLATES"]
+# ************** END **********************************
+
+# loguru logger on
+add_logging(logging.getint("level"))
 
 # Record server start time (UTC)
 server_started = datetime.now()
 
 # Connect to database
-connection = orm.connectionForURI(config.LOCAL_POSTGRESQL)
+connection = orm.connectionForURI(database.get("uri"))
 orm.sqlhub.processConnection = connection
 
 # Server instance creation
 app = FastAPI()
 
 # Specifying where to load HTML page templates
-templates = Jinja2Templates(directory=config.TEMPLATE_FOLDER)
+templates = Jinja2Templates(directory.get("folder"))
 
 
 # Save clients session

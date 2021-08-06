@@ -1,13 +1,21 @@
 import sys
-import time
+from time import time, process_time
 import inspect
 from uuid import uuid4
+import configparser
 
 import sqlobject as orm
 import click
 
-from mod import config
 from mod import models
+
+# ************** Read "config.ini" ********************
+config = configparser.ConfigParser()
+config.read('config.ini')
+logging = config['LOGGING']
+database = config["DATABASE"]
+superuser = config["SUPERUSER"]
+# ************** END **********************************
 
 
 @click.command()
@@ -18,11 +26,11 @@ from mod import models
               'by default, creates all tables')
 @click.option('--table',
               type=click.Choice(["superuser", "flow"]),
-              help='Creating records in the database.'
+              help='Creating records in the database. '
               'You can create a superuser or flow type "group".')
 def main(db, table):
     # Connect to database
-    connection = orm.connectionForURI(config.LOCAL_SQLITE)
+    connection = orm.connectionForURI(database.get("uri"))
     orm.sqlhub.processConnection = connection
 
     # looking for all Classes listed in models.py
@@ -31,25 +39,27 @@ def main(db, table):
                if inspect.isclass(cls_obj)]
 
     if db == "create":
-        start_time = time.process_time()
+        start_time = process_time()
         for item in classes:
             # Create tables in database for each class
             # that is located in models module
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
         click.echo(f'Table is createt at: '
-                   f'{time.process_time() - start_time} sec.')
+                   f'{process_time() - start_time} sec.')
     elif db == "delete":
-        start_time = time.process_time()
+        start_time = process_time()
         for item in classes:
             class_ = getattr(models, item)
             class_.dropTable(ifExists=True, dropJoinTables=True, cascade=True)
         click.echo(f'Table is deleted at: '
-                   f'{time.process_time() - start_time} sec.')
-    elif table == "superuser":
-        hash_password = "8b915f2f0b0d0ccf27854dd708524d0b5a91bdcd3775c6d3335f63d015a43ce1"
+                   f'{process_time() - start_time} sec.')
+
+    user_uuid = str(123456789)
+    hash_password = superuser.get('hash_password')
+    if table == "superuser":
         try:
-            models.UserConfig(uuid=str(123456789),
+            models.UserConfig(uuid=user_uuid,
                               login="login",
                               password="password",
                               hashPassword=hash_password,
@@ -60,16 +70,8 @@ def main(db, table):
         except orm.dberrors.OperationalError as error:
             click.echo(f'Failed to create a user. Error text: {error}')
     elif table == "flow":
-        user_uuid = str(123456789)
-        hash_password = "8b915f2f0b0d0ccf27854dd708524d0b5a91bdcd3775c6d3335f63d015a43ce1"
         try:
-            new_user = models.UserConfig(uuid=user_uuid,
-                                         login="login",
-                                         password="password",
-                                         hashPassword=hash_password,
-                                         username="superuser",
-                                         salt=b"salt",
-                                         key=b"key")
+            new_user = models.UserConfig.selectBy(uuid=user_uuid).getOne()
             new_flow = models.Flow(uuid=str(uuid4().hex),
                                    timeCreated=int(time()),
                                    flowType="group",
@@ -80,8 +82,6 @@ def main(db, table):
             click.echo("Flow created")
         except orm.dberrors.OperationalError as error:
             click.echo(f'Failed to create a flow. Error text: {error}')
-    else:
-        click.echo("ERRROOOOR")
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 from time import time
 from typing import Union
 from uuid import uuid4
+import configparser
 
 from pydantic import ValidationError
 from sqlobject import AND
@@ -9,9 +10,15 @@ from sqlobject import SQLObjectNotFound
 from sqlobject import dberrors
 
 from mod import api
-from mod import config
+from mod import error
 from mod import lib
 from mod import models
+
+# ************** Read "config.ini" ********************
+config = configparser.ConfigParser()
+config.read('config.ini')
+limit = config['SERVER_LIMIT']
+# ************** END **********************************
 
 
 class ProtocolMethods:
@@ -27,7 +34,7 @@ class ProtocolMethods:
         self.response.data.user = list()
         self.response.errors = api.Errors()
         self.response.jsonapi = api.Version()
-        self.response.jsonapi.version = config.API_VERSION
+        self.response.jsonapi.version = api.VERSION
         self.get_time = int(time())
 
         try:
@@ -143,11 +150,11 @@ class ProtocolMethods:
                     'detail': 'successfully'
                     }
         """
-        if code in config.DICT_ERRORS:
+        if code in error.DICT:
             if add_info is None:
-                add_info = config.DICT_ERRORS[code]['detail']
+                add_info = error.DICT[code]['detail']
             self.response.errors.code = code
-            self.response.errors.status = config.DICT_ERRORS[code]['status']
+            self.response.errors.status = error.DICT[code]['status']
             self.response.errors.time = self.get_time
             self.response.errors.detail = add_info
         else:
@@ -327,14 +334,14 @@ class ProtocolMethods:
         except (IndexError, SQLObjectNotFound) as flow_error:
             self.__catching_error(404, str(flow_error))
         else:
-            if MESSAGE_COUNT <= config.LIMIT_MESSAGE:
+            if MESSAGE_COUNT <= limit.getint("messages"):
                 self.response.data.flow.append(flow)
-                get_messages(dbquery, config.LIMIT_MESSAGE)
+                get_messages(dbquery, limit.getint("messages"))
                 self.__catching_error(200)
-            elif MESSAGE_COUNT > config.LIMIT_MESSAGE:
+            elif MESSAGE_COUNT > limit.getint("messages"):
                 flow.message_end = MESSAGE_COUNT
                 self.response.data.flow.append(flow)
-                if message_volume <= config.LIMIT_MESSAGE:
+                if message_volume <= limit.getint("messages"):
                     get_messages(dbquery,
                                  self.request.data.flow[0].message_end,
                                  self.request.data.flow[0].message_start)
@@ -342,7 +349,7 @@ class ProtocolMethods:
                 else:
                     self.__catching_error(403, "Requested more messages"
                                           f" than server limit"
-                                          f" (<{config.LIMIT_MESSAGE})")
+                                          f" (<{limit.getint('messages')})")
 
     def _add_flow(self):
         """Allows add a new flow to database
@@ -409,7 +416,7 @@ class ProtocolMethods:
 
         """
         users_volume = len(self.request.data.user)
-        if users_volume <= config.LIMIT_USERS:
+        if users_volume <= limit.getint("users"):
             for element in self.request.data.user[1:]:
                 try:
                     dbquery = models.UserConfig.selectBy(uuid=element.uuid).getOne()
@@ -426,7 +433,7 @@ class ProtocolMethods:
                     self.response.data.user.append(user)
             self.__catching_error(200)
         else:
-            self.__catching_error(403, f"Requested more {config.LIMIT_USERS}"
+            self.__catching_error(403, f"Requested more {limit.get('users')}"
                                   " users than server limit")
 
     def _authentification(self):

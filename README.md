@@ -1,6 +1,6 @@
 # Morelia Server - мессенджер (сервер) для Morelia Network #
 
-Language [EN](https://github.com/MoreliaTalk/morelia_server/blob/master/README_ENG.md), [RU](https://github.com/MoreliaTalk/morelia_server/blob/master/README.md)
+Language [EN](./README_ENG.md), [RU](./README.md)
 
 ## В репозитории 2 бранча ##
 
@@ -26,18 +26,16 @@ Language [EN](https://github.com/MoreliaTalk/morelia_server/blob/master/README_E
 
 * /mod
   * api.py - модуль отвечает за описание API, а так же валидацию данных.
-  * config.py - модуль отвечает за хранение настроек (констант).
-  * controller.py - модуль отвечает за реализацию методов описанных в [Morelia Protocol](https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md)
+  * error.py - модуль отвечает за хранение кодов ошибок.
+  * controller.py - модуль отвечает за реализацию методов описанных в [Morelia Protocol](https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md).
   * lib.py - модуль отвечает за хэширования пароля, сравнения пароля с его хэш-суммой, создание хэша для auth_id.
   * models.py - модуль отвечает за описание таблиц БД для работы через ОРМ.
+  * logging.py - модуль настройки логирования.
 
-* /templates - шаблоны для вывода статистики сервера в браузере
-  * base.html - базовый шаблон с основными элементами меню, он имплементируется в каждый рабочий шаблон
-  * index.html - рабочий шаблон главной страницы
-  * status.thml - рабочий шаблон страницы со статусом работы сервера
-
-* /settings
-  * logging.py - настройки логирования
+* /templates - шаблоны для вывода статистики сервера в браузере.
+  * base.html - базовый шаблон с основными элементами меню, он имплементируется в каждый рабочий шаблон.
+  * index.html - рабочий шаблон главной страницы.
+  * status.thml - рабочий шаблон страницы со статусом работы сервера.
 
 * server.py - основной код сервера
 
@@ -45,12 +43,13 @@ Language [EN](https://github.com/MoreliaTalk/morelia_server/blob/master/README_E
 
 * /tests
   * fixtures/
-    * api.json - json-файл с заранее подготовленными данными, для провдедения тестов
-  * test_api.py - тесты для проверки валидации
-  * test_controller.py - тесты для проверки класса который отвечает за обработкуметодов протокола
-  * test_lib.py - тесты хэш-функции
+    * api.json - json-файл с заранее подготовленными данными, для провдедения тестов.
+  * test_api.py - тесты для проверки валидации.
+  * test_controller.py - тесты для проверки класса который отвечает за обработкуметодов протокола.
+  * test_lib.py - тесты хэш-функции.
 
-* debug_server.py - обёртка для server.py для дебага через утилиту `pdb`
+* debug_server.py - обёртка для server.py для дебага через утилиту `pdb`.
+* example_config.ini - файла содержащий настройки сервера, перед запуском сервера просто переименуйте в `config.ini`.
 
 ## Установка ##
 
