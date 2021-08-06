@@ -6,6 +6,9 @@ from typing import List
 from pydantic import BaseModel
 from pydantic import EmailStr
 
+# Version of MoreliaTalk Protocol
+VERSION: str = '1.0'
+
 
 class Flow(BaseModel):
     class Config:
