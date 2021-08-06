@@ -23,7 +23,7 @@ from mod import models
 
 # ************** Logging beginning *********************
 from loguru import logger
-from settings.logging import add_logging
+from mod.logging import add_logging
 # ### unicorn logger off
 # import logging
 # logging.disable()
