@@ -104,7 +104,7 @@ async def websocket_endpoint(websocket: WebSocket):
         # the error) must interrupt the cycle otherwise the next clients
         # will not be able to connect.
         except WebSocketDisconnect as error:
-            logger.info("".join(("Disconnection error: ", str(error))))
+            logger.info("".join(("Disconnection status: ", str(error))))
             clients.remove(websocket)
             break
         except (RuntimeError, JSONDecodeError) as error:

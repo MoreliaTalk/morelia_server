@@ -19,6 +19,7 @@ sqlobject = "==3.9.1"
 loguru = "==0.5.3"
 websockets = "==9.1"
 pydantic = "==1.8.2"
+websocket-client = "*"
 
 [requires]
 python_version = "3.9"

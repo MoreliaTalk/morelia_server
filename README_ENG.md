@@ -31,25 +31,21 @@ Language [EN](./README_ENG.md), [RU](./README.md)
   * lib.py - module is responsible for hashing password, comparing password with its hash sum, and creating a hash for auth_id.
   * models.py - module is responsible for describing database tables to work through ORM.
   * logging.py - logging configuration module.
-
 * /templates - templates for displaying server statistics in browser.
   * base.html - base template with basic elements of menu, it is implemented in every working template.
   * index.html - working homepage template.
   * status.thml - working page template with status of server.
-
 * server.py - basic server code.
-
 * manage.py - migration manager for database (creating and deleting database tables).
-
 * /tests
   * fixtures/
     * api.json - json-file with pre-prepared data, to conduct tests.
   * test_api.py - validation tests.
   * test_controller.py - tests to check class that is responsible for processing protocol methods.
   * test_lib.py - hash function tests.
-
 * debug_server.py - A wrapper for server.py to debug through a utility `pdb`.
-* example_config.ini - file containing server settings, just rename it to `config.ini` before starting server.
+* example_config.ini - file containing the example server settings, just rename it to `config.ini` before starting the server.
+* client.py - mini client to check the server operation.
 
 ## Installing ##
 
@@ -120,27 +116,43 @@ Install all required libraries from Pipfile
 pipenv install --ignore-pipfile
 ```
 
-## Running server ##
+## Before starting the server - using the configuration manager ##
 
-Before launching it is necessary to create a database with empty tables, with command
+Before you start the server you need to make some settings (create a database, tables and add the first user - administrator)
+
+Create a database with empty tables:
 
 ```cmd
-python ./manage.py --table create
+python ./manage.py --db create
 ```
 
-Additionally, you can add first user to table
+If you want to delete all tables in the created database (WARNING only tables are deleted, the database is not deleted):
+
+```cmd
+python ./manage.py --db delete
+```
+
+Add the administrator in the created database:
 
 ```cmd
 python ./manage.py --table superuser
 ```
 
-For more information about Migration Manager features
+Additionally, you can create a `flow` with the group type:
+
+```cmd
+python ./manage.py --table flow
+```
+
+Information about all the features of the configuration manager:
 
 ```cmd
 python ./manage.py --help
 ```
 
-To start server, use command
+## Server startup ##
+
+To start server, use command:
 
 ```cmd
 uvicorn server:app --host 0.0.0.0 --port 8000 --reload --use-colors --http h11 --ws websockets
@@ -181,6 +193,16 @@ Additional parameters that can be sent to server:
 `--ssl-ciphers <str>` - Ciphers to use (see stdlib ssl module's)
 
 `--timeout-keep-alive <int>` - Close Keep-Alive connections if no new data is received within this timeout. Default: 5.
+
+## Checking server availability with the built-in client ##
+
+To test the server, run the mini client `client.py` in the console:
+
+```cmd
+pipenv run python -i ./client.py
+```
+
+After launching, the client will send an authorization message to the server, the server's response will be displayed in the console, and then the `python` will switch to the interactive line mode, so that it is possible to perform additional checks.
 
 ## Creating a pool-request to make changes to development branch Morelia Server ##
 
