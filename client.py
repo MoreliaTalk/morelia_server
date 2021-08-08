@@ -15,8 +15,8 @@ from mod.logging import add_logging
 # ************** Logging end *************************
 
 
-# loguru logger on
-add_logging(10)
+# logger on INFO
+add_logging(20)
 
 # URL and Port
 URI = 'ws://localhost:8000/ws'
@@ -111,25 +111,25 @@ def send_message(message: Union[dict, str] = AUTH, uri: str = URI) -> bytes:
     """
     ws = websocket.WebSocket()
     try:
-        logger.info("Setting up connection")
         ws.connect(uri)
+        logger.success("Setting up connection")
     except Exception as error:
         logger.exception(str(error))
-        logger.info("Problems in connection to server")
+        logger.error("Problems in connection to server")
     else:
         logger.info(f"Connection status: {ws.getstatus()}")
         ws.send(json.dumps(message))
         logger.info("Message send")
         result = ws.recv()
-        logger.debug("Server response received")
-        ws.close()
-        logger.info("Session with server ended successfully")
+        logger.info("Server response received")
+        ws.close(status=1000)
+        logger.success("Session with server ended successfully")
     finally:
-        ws.close()
+        ws.close(status=1002)
     return result
 
 
 if __name__ == "__main__":
     result = send_message()
-    logger.info(f"Server response: {json.loads(result)}")
+    logger.debug(f"Server response: {json.loads(result)}")
     logger.info("END")

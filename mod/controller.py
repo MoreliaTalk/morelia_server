@@ -8,6 +8,7 @@ from sqlobject import AND
 from sqlobject import SQLObjectIntegrityError
 from sqlobject import SQLObjectNotFound
 from sqlobject import dberrors
+from loguru import logger
 
 from mod import api
 from mod import error
@@ -39,9 +40,11 @@ class ProtocolMethods:
 
         try:
             self.request = api.ValidJSON.parse_obj(request)
-        except ValidationError as error:
+            logger.success("Validation was successful")
+        except ValidationError as ERROR:
             self.response.type = "errors"
-            self.__catching_error(415, str(error))
+            self.__catching_error(415, str(ERROR))
+            logger.debug(f"Validation failed: {ERROR}")
         else:
             self.response.type = self.request.type
             if self.request.type == 'register_user':
@@ -99,13 +102,17 @@ class ProtocolMethods:
             uuid = str(uuid)
         try:
             dbquery = models.UserConfig.selectBy(uuid=uuid).getOne()
+            logger.success("User was found in the database")
         except (dberrors.OperationalError,
                 SQLObjectIntegrityError, SQLObjectNotFound):
+            logger.debug("User wasn't found in the database")
             return False
         else:
             if auth_id == dbquery.authId:
+                logger.success("Authentication token has been verified")
                 return True
             else:
+                logger.debug("Authentication token failed")
                 return False
 
     def __check_login(self, login: str) -> bool:
@@ -121,8 +128,10 @@ class ProtocolMethods:
         try:
             models.UserConfig.selectBy(login=login).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound):
+            logger.debug("There is no user in the database")
             return False
         else:
+            logger.success("User was found in the database")
             return True
 
     def __catching_error(self, code: Union[int, str],
@@ -132,7 +141,6 @@ class ProtocolMethods:
         time and detailed description of error that has occurred.
         For errors like Exception and other unrecognized errors,
         code "520" and status "Unknown Error" are used.
-        FIXME Добавить автоматическую запись информации в лог.
 
         Args:
             code (Union[int, str]): Error code or type and exception
@@ -153,6 +161,8 @@ class ProtocolMethods:
         if code in error.DICT:
             if add_info is None:
                 add_info = error.DICT[code]['detail']
+            else:
+                logger.exception(str(add_info))
             self.response.errors.code = code
             self.response.errors.status = error.DICT[code]['status']
             self.response.errors.time = self.get_time
@@ -162,6 +172,7 @@ class ProtocolMethods:
             self.response.errors.status = 'Unknown Error'
             self.response.errors.time = self.get_time
             self.response.errors.detail = code
+        logger.debug(f"Status code({code}): {error.DICT[code]['status']}")
 
     def _register_user(self):
         """Registers user who is not in the database.
@@ -192,6 +203,7 @@ class ProtocolMethods:
             user.uuid = uuid
             user.auth_id = auth_id
             self.response.data.user.append(user)
+            logger.success("User is registred")
             self.__catching_error(201)
 
     def _get_update(self):
@@ -250,6 +262,7 @@ class ProtocolMethods:
                 self.response.data.user.append(user)
         else:
             self.response.data.user
+        logger.success("\'_get_update\' executed successfully")
         self.__catching_error(200)
 
     def _send_message(self):
@@ -268,8 +281,8 @@ class ProtocolMethods:
         try:
             flow = models.Flow.selectBy(uuid=flow_uuid).getOne()
             user = models.UserConfig.selectBy(uuid=user_uuid).getOne()
-        except SQLObjectNotFound as flow_error:
-            self.__catching_error(404, str(flow_error))
+        except SQLObjectNotFound as ERROR:
+            self.__catching_error(404, str(ERROR))
         else:
             models.Message(uuid=message_uuid,
                            text=text,
@@ -289,6 +302,7 @@ class ProtocolMethods:
             message.from_user = user_uuid
             message.uuid = message_uuid
             self.response.data.message.append(message)
+            logger.success("\'_send_message\' executed successfully")
             self.__catching_error(200)
 
     def _all_messages(self):
@@ -337,6 +351,7 @@ class ProtocolMethods:
             if MESSAGE_COUNT <= limit.getint("messages"):
                 self.response.data.flow.append(flow)
                 get_messages(dbquery, limit.getint("messages"))
+                logger.success("\'_all_messages\' executed successfully")
                 self.__catching_error(200)
             elif MESSAGE_COUNT > limit.getint("messages"):
                 flow.message_end = MESSAGE_COUNT
@@ -345,6 +360,7 @@ class ProtocolMethods:
                     get_messages(dbquery,
                                  self.request.data.flow[0].message_end,
                                  self.request.data.flow[0].message_start)
+                    logger.success("\'_all_messages\' executed successfully")
                     self.__catching_error(206)
                 else:
                     self.__catching_error(403, "Requested more messages"
@@ -360,11 +376,9 @@ class ProtocolMethods:
         users = self.request.data.flow[0].users
         flow_type = self.request.data.flow[0].type
         if flow_type not in ["chat", "group", "channel"]:
-            error = "Wrong flow type"
-            self.__catching_error(400, error)
+            self.__catching_error(400, "Wrong flow type")
         elif flow_type == 'chat' and len(users) != 2:
-            error = "Two users UUID must be specified for chat"
-            self.__catching_error(400, error)
+            self.__catching_error(400, "Must be two users only")
         else:
             try:
                 dbquery = models.Flow(uuid=flow_uuid,
@@ -388,6 +402,7 @@ class ProtocolMethods:
                 flow.owner = owner
                 flow.users = users
                 self.response.data.flow.append(flow)
+                logger.success("\'_add_flow\' executed successfully")
                 self.__catching_error(200)
 
     def _all_flow(self):
@@ -407,6 +422,7 @@ class ProtocolMethods:
                 flow.owner = element.owner
                 flow.users = [item.uuid for item in element.users]
                 self.response.data.flow.append(flow)
+            logger.success("\'_all_flow\' executed successfully")
             self.__catching_error(200)
         else:
             self.__catching_error(404)
@@ -431,6 +447,7 @@ class ProtocolMethods:
                     user.avatar = dbquery.avatar
                     user.bio = dbquery.bio
                     self.response.data.user.append(user)
+            logger.success("\'_user_info\' executed successfully")
             self.__catching_error(200)
         else:
             self.__catching_error(403, f"Requested more {limit.get('users')}"
@@ -464,6 +481,7 @@ class ProtocolMethods:
                 user.uuid = dbquery.uuid
                 user.auth_id = dbquery.authId
                 self.response.data.user.append(user)
+                logger.success("\'_authentification\' executed successfully")
                 self.__catching_error(200)
             else:
                 self.__catching_error(401)
@@ -491,6 +509,7 @@ class ProtocolMethods:
             dbquery.bio = "deleted"
             dbquery.salt = b"deleted"
             dbquery.key = b"deleted"
+            logger.success("\'_delete_user\' executed successfully")
             self.__catching_error(200)
 
     def _delete_message(self):
@@ -512,6 +531,7 @@ class ProtocolMethods:
             dbquery.emoji = b''
             dbquery.editedTime = self.get_time
             dbquery.editedStatus = True
+            logger.success("\'_delete_message\' executed successfully")
             self.__catching_error(200)
 
     def _edited_message(self):
@@ -529,6 +549,7 @@ class ProtocolMethods:
             dbquery.text = self.request.data.message[0].text
             dbquery.editedTime = self.get_time
             dbquery.editedStatus = True
+            logger.success("\'_edited_message\' executed successfully")
             self.__catching_error(200)
 
     def _ping_pong(self):
@@ -536,6 +557,7 @@ class ProtocolMethods:
         for communication between server and client.
 
         """
+        logger.success("\'_ping_pong\' executed successfully")
         self.__catching_error(200)
 
     def _errors(self):
@@ -544,4 +566,5 @@ class ProtocolMethods:
         with a description of error.
 
         """
+        logger.success("\'_errors\' executed successfully")
         self.__catching_error(405)
