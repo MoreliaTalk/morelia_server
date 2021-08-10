@@ -49,7 +49,7 @@ Language [EN](./README_ENG.md), [RU](./README.md)
 
 ## Installing ##
 
-Install [Python](https://www.python.org/downloads/) version 3.9.
+Install [Python](https://www.python.org/downloads/) version 3.8 or higher.
 
 Download and install latest version [git](https://git-scm.com/downloads).
 
@@ -96,7 +96,7 @@ If using `GitHub`, select `Clone repository...` from `File` menu and follow inst
 
 ## Configuring the Pipenv Virtual Environment ##
 
-To work with project it is necessary to install the libraries that it uses, so called `workspace`, for this use utility [Pipenv](https://github.com/pypa/pipenv)
+To work with the project it is necessary to install the libraries that it uses and configure the so-called `virtual environment` or `virtualenv`, for this purpose the utility [Pipenv](https://github.com/pypa/pipenv)
 
 If pipenv is not installed, run
 
@@ -116,38 +116,38 @@ Install all required libraries from Pipfile
 pipenv install --ignore-pipfile
 ```
 
-## Before starting the server - using the configuration manager ##
+## Before starting the server - use the configuration manager ##
 
 Before you start the server you need to make some settings (create a database, tables and add the first user - administrator)
 
 Create a database with empty tables:
 
 ```cmd
-python ./manage.py --db create
+pipenv run python ./manage.py --db create
 ```
 
 If you want to delete all tables in the created database (WARNING only tables are deleted, the database is not deleted):
 
 ```cmd
-python ./manage.py --db delete
+pipenv run python ./manage.py --db delete
 ```
 
 Add the administrator in the created database:
 
 ```cmd
-python ./manage.py --table superuser
+pipenv run python ./manage.py --table superuser
 ```
 
 Additionally, you can create a `flow` with the group type:
 
 ```cmd
-python ./manage.py --table flow
+pipenv run python ./manage.py --table flow
 ```
 
 Information about all the features of the configuration manager:
 
 ```cmd
-python ./manage.py --help
+pipenv run python ./manage.py --help
 ```
 
 ## Server startup ##
@@ -194,6 +194,14 @@ Additional parameters that can be sent to server:
 
 `--timeout-keep-alive <int>` - Close Keep-Alive connections if no new data is received within this timeout. Default: 5.
 
+## Running the server in DEBUG mode ##
+
+To easily start the server in debug mode, all you need to do is run `debug_server.py`:
+
+```cmd
+pipenv run python ./debug_server.py
+```
+
 ## Checking server availability with the built-in client ##
 
 To test the server, run the mini client `client.py` in the console:
@@ -202,7 +210,15 @@ To test the server, run the mini client `client.py` in the console:
 pipenv run python -i ./client.py
 ```
 
-After launching, the client will send an authorization message to the server, the server's response will be displayed in the console, and then the `python` will switch to the interactive line mode, so that it is possible to perform additional checks.
+After launching, the client will send an authorization message (AUTH) to the server, the server's response will be displayed in the console, after which `python` will go into interactive line mode `>>>`, so that it is possible to perform additional checks.
+
+In the interactive console, there will be one function available to send `end_message` which takes two arguments `message` message and `uri` server address. In the argument `message` you need to pass an object with type "dict" or "str", you can use ready-made examples of queries: AUTH, GET_UPDATE, ADD_FLOW, ALL_FLOW. In the argument you must pass an object with type "str", you can use ready examples of server address: LOCALHOST.
+
+```py
+>>> send_message(GET_UPDATE, LOCALHOST)
+```
+
+If no arguments are passed to the function, the default is to send an AUTH message to LOCALHOST.
 
 ## Creating a pool-request to make changes to development branch Morelia Server ##
 
@@ -238,13 +254,8 @@ INFO       | logger.info()
 SUCCESS    | logger.success()
 WARNING    | logger.warning()
 ERROR      | logger.error()
+           | logger.exception()
 CRITICAL   | logger.critical()
-```
-
-To enable **DEBUG** mode, start server with parameter:
-
-```cmd
-uvicorn server:app --log-level debug
 ```
 
 ## Writing and running tests ##
@@ -254,7 +265,7 @@ Built-in Unittest module is used to write tests.
 To run tests, run (replace asterisk with test name)
 
 ```cmd
-python -v ./tests/test_*.py
+pipenv run python -v ./tests/test_*.py
 ```
 
 ## Running the debugger ##
