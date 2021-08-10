@@ -23,7 +23,7 @@ limit = config['SERVER_LIMIT']
 
 
 class ProtocolMethods:
-    """Processing requests and forming answers according to "Udav" protocol.
+    """Processing requests and forming answers according to "MTP" protocol.
     Protocol version and it's actual description:
     https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md
     """
