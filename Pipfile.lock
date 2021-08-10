@@ -88,7 +88,7 @@
             "markers": "python_version >= '3.6'",
             "version": "==0.12.0"
         },
-        "idna": {
+        "jinja2": {
             "hashes": [
                 "sha256:14475042e284991034cb48e06f6851428fb14c4dc953acd9be9a5e95c7b6dd7a",
                 "sha256:467fbad99067910785144ce333826c71fb0e63a425657295239737f7ecd125f3"
@@ -96,21 +96,13 @@
             "markers": "python_version >= '3.5'",
             "version": "==3.2"
         },
-        "jinja2": {
+        "loguru": {
             "hashes": [
                 "sha256:1f06f2da51e7b56b8f238affdd6b4e2c61e39598a378cc49345bc1bd42a978a4",
                 "sha256:703f484b47a6af502e743c9122595cc812b0271f661722403114f71a79d0f5a4"
             ],
             "index": "pypi",
             "version": "==3.0.1"
-        },
-        "loguru": {
-            "hashes": [
-                "sha256:b28e72ac7a98be3d28ad28570299a393dfcd32e5e3f6a353dec94675767b6319",
-                "sha256:f8087ac396b5ee5f67c963b495d615ebbceac2796379599820e324419d53667c"
-            ],
-            "index": "pypi",
-            "version": "==0.5.3"
         },
         "markupsafe": {
             "hashes": [
