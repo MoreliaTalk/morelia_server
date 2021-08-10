@@ -19,7 +19,7 @@ from mod.logging import add_logging
 add_logging(20)
 
 # URL and Port
-URI = 'ws://localhost:8000/ws'
+LOCALHOST = 'ws://localhost:8000/ws'
 
 # Registration infirmation from superuser
 user_login = 'login'
@@ -98,7 +98,7 @@ ALL_FLOW = {
 
 
 # Chat websocket
-def send_message(message: Union[dict, str] = AUTH, uri: str = URI) -> bytes:
+def send_message(message: Union[dict, str] = AUTH, uri: str = LOCALHOST) -> bytes:
     result = b'None'
     """Sending a message via websockets, with a response
 
