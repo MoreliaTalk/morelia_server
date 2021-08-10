@@ -35,14 +35,25 @@ classes = [cls_name for cls_name, cls_obj
            if inspect.isclass(cls_obj)]
 
 
-# JSON-object for test
+# **************** Examples of requests ********************
+#
+#
+# variables for repeating fields in queries:
+user_uuid = "123456"
+user_auth_id = "auth_id"
+user_password = "password"
+user_login = "login"
+flow_uuid = "07d949"
+#
+#
+# requests
 GET_UPDATE = {
     "type": "get_update",
     "data": {
         "time": 111,
         "user": [{
-            "uuid": "123456",
-            "auth_id": "auth_id"
+            "uuid": user_uuid,
+            "auth_id": user_auth_id
             }],
         "meta": None
         },
@@ -56,7 +67,7 @@ SEND_MESSAGE = {
     "type": "send_message",
     "data": {
         "flow": [{
-            "uuid": "07d949"
+            "uuid": flow_uuid
             }],
         "message": [{
             "text": "Hello!",
@@ -68,8 +79,8 @@ SEND_MESSAGE = {
             "emoji": b"sfdfsdfsdf"
             }],
         "user": [{
-            "uuid": "123456",
-            "auth_id": "auth_id"
+            "uuid": user_uuid,
+            "auth_id": user_auth_id
             }],
         "meta": None
         },
@@ -84,11 +95,11 @@ ALL_MESSAGES = {
     "data": {
         "time": 2,
         "flow": [{
-            "uuid": "07d949"
+            "uuid": flow_uuid
             }],
         "user": [{
-            "uuid": "123456",
-            "auth_id": "auth_id"
+            "uuid": user_uuid,
+            "auth_id": user_auth_id
             }],
         "meta": None
         },
@@ -109,8 +120,8 @@ ADD_FLOW = {
             "users": ["123456"]
             }],
         "user": [{
-            "uuid": "123456",
-            "auth_id": "auth_id",
+            "uuid": user_uuid,
+            "auth_id": user_auth_id
             }],
         "meta": None
         },
@@ -124,8 +135,8 @@ ALL_FLOW = {
     "type": "all_flow",
     "data": {
         "user": [{
-            "uuid": "123456",
-            "auth_id": "auth_id"
+            "uuid": user_uuid,
+            "auth_id": user_auth_id
             }],
         "meta": None
         },
@@ -139,8 +150,8 @@ USER_INFO = {
     "type": "user_info",
     "data": {
         "user": [{
-            "uuid": "123456",
-            "auth_id": "auth_id"
+            "uuid": user_uuid,
+            "auth_id": user_auth_id
             },
             {
             "uuid": "123457"
@@ -166,8 +177,8 @@ REGISTER_USER = {
     "type": "register_user",
     "data": {
         "user": [{
-            "password": "password",
-            "login": "login",
+            "password": user_password,
+            "login": user_login,
             "email": "querty@querty.com",
             "username": "username"
             }],
@@ -183,8 +194,8 @@ AUTH = {
     "type": "auth",
     "data": {
         "user": [{
-            "password": "password",
-            "login": "login"
+            "password": user_password,
+            "login": user_login
             }],
         "meta": None
         },
@@ -198,10 +209,10 @@ DELETE_USER = {
     "type": "delete_user",
     "data": {
         "user": [{
-            "uuid": "123456",
-            "password": "password",
-            "login": "login",
-            "auth_id": "auth_id"
+            "uuid": user_uuid,
+            "password": user_password,
+            "login": user_login,
+            "auth_id": user_auth_id
             }],
         "meta": None
         },
@@ -215,14 +226,14 @@ DELETE_MESSAGE = {
     "type": "delete_message",
     "data": {
         "flow": [{
-            "uuid": "07d949"
+            "uuid": flow_uuid
             }],
         "message": [{
             "uuid": "1122"
             }],
         "user": [{
-            "uuid": "123456",
-            "auth_id": "auth_id"
+            "uuid": user_uuid,
+            "auth_id": user_auth_id
             }],
         "meta": None
         },
@@ -240,8 +251,8 @@ EDITED_MESSAGE = {
             "text": "New_Hello"
             }],
         "user": [{
-            "uuid": "123456",
-            "auth_id": "auth_id"
+            "uuid": user_uuid,
+            "auth_id": user_auth_id
             }],
         "meta": None
         },
@@ -255,8 +266,8 @@ PING_PONG = {
     "type": "ping-pong",
     "data": {
         "user": [{
-            "uuid": "123456",
-            "auth_id": "auth_id"
+            "uuid": user_uuid,
+            "auth_id": user_auth_id
             }],
         "meta": None
         },
@@ -270,8 +281,8 @@ ERRORS = {
     "type": "wrong type",
     "data": {
         "user": [{
-            "uuid": "123456",
-            "auth_id": "auth_id"
+            "uuid": user_uuid,
+            "auth_id": user_auth_id
             }],
         "meta": None
         },
@@ -284,8 +295,8 @@ ERRORS = {
 NON_VALID_ERRORS = {
     "data": {
         "user": [{
-            "uuid": "123456",
-            "auth_id": "auth_id"
+            "uuid": user_uuid,
+            "auth_id": user_auth_id
             }],
         "meta": None
         },
@@ -299,7 +310,7 @@ ERRORS_ONLY_TYPE = {
     "type": "send_message"
     }
 
-# end
+# **************** End examples of requests *****************
 
 
 class TestCheckAuthToken(unittest.TestCase):
@@ -743,7 +754,7 @@ class TestAddFlow(unittest.TestCase):
         self.assertEqual(result["errors"]["detail"], error)
 
     def test_add_flow_chat_single_user(self):
-        error = "Two users UUID must be specified for chat"
+        error = "Must be two users only"
         self.test.data.flow[0].type = "chat"
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
