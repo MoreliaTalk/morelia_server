@@ -8,6 +8,7 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 logging = config['LOGGING']
 expiration_date = logging.get("EXPIRATION_DATE")
+debug_expiration_date = logging.get("DEBUG_EXPIRATION_DATE")
 # ************** END **********************************
 
 
@@ -58,7 +59,7 @@ def add_logging(debug_status: int) -> None:
                    enqueue=True,
                    colorize=True,
                    catch=True,
-                   retention=f"{expiration_date} days",
+                   retention=f"{debug_expiration_date} days",
                    rotation="10 MB",
                    compression="zip")
     else:
