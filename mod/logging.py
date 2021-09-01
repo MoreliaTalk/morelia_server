@@ -3,14 +3,11 @@ import configparser
 from loguru import logger
 import sys
 
-from datetime import datetime
-
 # ************** Read "config.ini" ********************
 config = configparser.ConfigParser()
 config.read('config.ini')
 logging = config['LOGGING']
 # ************** END **********************************
-
 
 
 def add_logging(debug_status: int) -> None:
@@ -54,7 +51,7 @@ def add_logging(debug_status: int) -> None:
                    colorize=True)
 
         # Connect the output to a file, level DEBUG
-        logger.add('log/' + datetime.now() + 'debug.log',
+        logger.add('log/debug.log',
                    format=logging.get("debug"),
                    level="DEBUG",
                    enqueue=True,
