@@ -1,6 +1,7 @@
 # ************** Standart module *********************
 from datetime import datetime
 from json import JSONDecodeError
+import configparser
 # ************** Standart module end *****************
 
 
@@ -15,41 +16,52 @@ import sqlobject as orm
 
 
 # ************** Morelia module **********************
-from mod import config
 from mod import controller
 from mod import models
-# ************** Morelia module end ********************
+# ************** Morelia module end ******************
 
 
-# ************** Logging beginning *********************
+# ************** Logging beginning *******************
 from loguru import logger
-from settings.logging import add_logging
+from mod.logging import add_logging
+# ************** Unicorn logger off ******************
+import logging
+logging.disable()
+# ************** Logging end *************************
 
-# ### unicorn logger off
-# import logging
-# logging.disable()
+# ************** Read "config.ini" ********************
+config = configparser.ConfigParser()
+config.read('config.ini')
+logging = config['LOGGING']
+database = config["DATABASE"]
+directory = config["TEMPLATES"]
+# ************** END **********************************
 
-# ### loguru logger on
-add_logging(debug_status=config.DEBUG_LEVEL)
-# ************** Logging end **************************
+# loguru logger on
+add_logging(logging.getint("level"))
 
-# Record server start time
+# Record server start time (UTC)
 server_started = datetime.now()
 
 # Connect to database
-connection = orm.connectionForURI(config.LOCAL_POSTGRESQL)
-orm.sqlhub.processConnection = connection
+try:
+    connection = orm.connectionForURI(database.get("uri"))
+except Exception as ERROR:
+    logger.exception(str(ERROR))
+finally:
+    orm.sqlhub.processConnection = connection
 
 # Server instance creation
 app = FastAPI()
+logger.info("Start server")
 
 # Specifying where to load HTML page templates
-templates = Jinja2Templates(directory=config.TEMPLATE_FOLDER)
+templates = Jinja2Templates(directory.get("folder"))
 
 
 # Save clients session
 # TODO: Нужно подумать как их компактно хранить
-clients = []
+CLIENTS = []
 
 
 # Server home page
@@ -65,7 +77,7 @@ def status_page(request: Request):
     stats = {
         'Server time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'Server uptime': str(datetime.now()-server_started),
-        'Users': len(clients),
+        'Users': len(CLIENTS),
         'Messages': dbquery.count()
         }
     return templates.TemplateResponse('status.html',
@@ -76,32 +88,50 @@ def status_page(request: Request):
 # Chat websocket
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    # Waiting for the client to connect via websockets
     await websocket.accept()
-    clients.append(websocket)
+    CLIENTS.append(websocket)
     logger.info("".join(("Clients information: ",
                          "host: ", str(websocket.client.host),
                          " port: ", str(websocket.client.port))))
-    logger.debug(str(websocket.scope))
+    logger.debug(f"Websocket scope: {str(websocket.scope)}")
     while True:
         try:
+            # Receive a request from the client as a JSON object
             data = await websocket.receive_json()
-            logger.debug(str(data))
+            logger.success("Receive a request from client")
+            logger.debug(f"Request: {str(data)}")
+            # create a "client" object and pass the request body to
+            # it as a parameter. The "get_response" method generates
+            # a response in JSON-object format.
             client = controller.ProtocolMethods(data)
-            await websocket.send_bytes(client.get_response())
-        except WebSocketDisconnect as error:
-            logger.info("".join(("Disconnection error: ", str(error))))
-            clients.remove(websocket)
+            response = await websocket.send_bytes(client.get_response())
+            logger.info("Response sent to client")
+            logger.debug(f"Result of processing: {response}")
+        # After disconnecting the client (by the decision of the client,
+        # the error) must interrupt the cycle otherwise the next clients
+        # will not be able to connect.
+        except WebSocketDisconnect as STATUS:
+            logger.debug(f"Disconnection status: {str(STATUS)}")
+            CLIENTS.remove(websocket)
             break
-        except (RuntimeError, JSONDecodeError) as error:
-            logger.info("".join(("Runtime or Decode error: ", str(error))))
-            clients.remove(websocket)
+        except (RuntimeError, JSONDecodeError) as ERROR:
+            CODE = 1002
+            logger.exception(f"Runtime or Decode error: {str(ERROR)}")
+            await websocket.close(CODE)
+            logger.info(f"Close with code: {CODE}")
+            CLIENTS.remove(websocket)
             break
         else:
             if websocket.client_state.value == 0:
-                await websocket.close(code=1000)
-                clients.remove(websocket)
+                CODE = 1000
+                # "code=1000" - normal session termination
+                await websocket.close(CODE)
+                CLIENTS.remove(websocket)
+                logger.info(f"Close with code: {CODE}")
 
 
 if __name__ == "__main__":
     print("to start the server, write the following command in the console:")
-    print("uvicorn server:app --host 0.0.0.0 --port 8000 --reload --use-colors --http h11 --ws websockets &")
+    print("uvicorn server:app --host 0.0.0.0 --port 8000 --reload --use-colors \
+          --http h11 --ws websockets &")

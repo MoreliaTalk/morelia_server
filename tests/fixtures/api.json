@@ -3,25 +3,25 @@
     "data": {
         "time": 1594492370,
         "flow": [{
-            "id": 1254,
+            "uuid": "1254",
             "time": 1594492370,
             "type": "chat",
             "title": "Name Chat",
             "info": "Info about this chat"
             },
             {
-            "id": 1254,
+            "uuid": "1254",
             "time": 1594492370,
             "type": "chat",
             "title": "Name Chat",
             "info": "Info about this chat"
             }],
         "message": [{
-            "id": 1,
+            "uuid": 666,
             "text": "some text...",
-            "from_user_uuid": 1254,
+            "from_user": "1254",
             "time": 1594492370,
-            "from_flow_id": 123655455,
+            "from_flow": 123655455,
             "file_picture": "jkfikdkdsd",
             "file_video": "sdfsdfsdf",
             "file_audio": "fgfsdfsdfsdf",
@@ -31,11 +31,11 @@
             "edited_status": true
             },
             {
-            "id": 1,
+            "uuid": "1",
             "text": "some text...",
-            "from_user_uuid": 1254,
+            "from_user": "1254",
             "time": 1594492370,
-            "from_flow_id": 123655455,
+            "from_flow": 123655455,
             "file_picture": "jkfikdkdsd",
             "file_video": "sdfsdfsdf",
             "file_audio": "fgfsdfsdfsdf",
@@ -45,7 +45,7 @@
             "edited_status": true
             }],
         "user": [{
-            "uuid": 5855,
+            "uuid": "5855",
             "login": "username1",
             "password": "lksdjflksjfsd",
             "username": "Vasya",

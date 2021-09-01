@@ -74,14 +74,6 @@ class TestHash(unittest.TestCase):
         self.assertRaises(TypeError,
                           generator.check_password)
 
-    def test_check_wrong_uuid_type(self):
-        self.uuid = '123123'
-        generator = lib.Hash(self.password,
-                             self.uuid,
-                             self.salt)
-        self.assertRaises(AttributeError,
-                          generator.auth_id)
-
     def test_check_password(self):
         self.new_generator = lib.Hash(self.password,
                                       self.uuid,

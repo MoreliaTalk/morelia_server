@@ -1,44 +1,12 @@
 import sqlobject as orm
 
 
-# Create table in database using ORM SQLobject
-class Message(orm.SQLObject):
-    """The class generates a Message table containing information
-    about user messages.
-
-    Args:
-        text (str, optional):
-        time (int, optional):
-        filePicture (byte, optional):
-        fileVideo (byte, optional):
-        fileAudio (byte, optional):
-        fileDocument (byte, optional):
-        emoji (str, optional):
-        editedTime (int, optional):
-        editedStatus (bool, optional):
-
-    Returns:
-        None
-    """
-    text = orm.StringCol(default=None)
-    time = orm.IntCol(default=None)
-    filePicture = orm.BLOBCol(default=None)
-    fileVideo = orm.BLOBCol(default=None)
-    fileAudio = orm.BLOBCol(default=None)
-    fileDocument = orm.BLOBCol(default=None)
-    emoji = orm.BLOBCol(default=None)
-    editedTime = orm.IntCol(default=None)
-    editedStatus = orm.BoolCol(default=False)
-    userConfig = orm.ForeignKey('UserConfig', refColumn="uuid")
-    flow = orm.ForeignKey('Flow', refColumn="flowId")
-
-
 class UserConfig(orm.SQLObject):
-    """The class generates a table containing data
-    about the user and his settings.
+    """Generates a table containing data
+    about user and his settings.
 
     Args:
-        uuid (int, required):
+        uuid (str, required):
         login (str, required):
         password (str, required):
         hash_password (str, optional)
@@ -54,11 +22,9 @@ class UserConfig(orm.SQLObject):
     Returns:
         None
     """
-    # added alternateID for added class method @byUUID
-    # which will return that object
-    uuid = orm.IntCol(alternateID=True, unique=True, notNone=True)
-    login = orm.StringCol()
-    password = orm.StringCol()
+    uuid = orm.StringCol(notNone=True, unique=True)
+    login = orm.StringCol(notNone=True)
+    password = orm.StringCol(notNone=True)
     hashPassword = orm.StringCol(default=None)
     username = orm.StringCol(default=None)
     isBot = orm.BoolCol(default=False)
@@ -68,16 +34,17 @@ class UserConfig(orm.SQLObject):
     bio = orm.StringCol(default=None)
     salt = orm.BLOBCol(default=None)
     key = orm.BLOBCol(default=None)
-    # Connection to the Message table
-    message = orm.MultipleJoin('Message')
+    # Connection to Message and Flow table
+    messages = orm.MultipleJoin('Message')
+    flows = orm.RelatedJoin('Flow')
 
 
 class Flow(orm.SQLObject):
-    """The class generates a Flow table containing information
+    """Generates a Flow table containing information
     about threads and their types (chat, channel, group).
 
     Args:
-        flowId (int, required):
+        uuid (str, required):
         timeCreated (int, optional):
         flowType (str, optional):
         title (str, optional):
@@ -86,28 +53,46 @@ class Flow(orm.SQLObject):
     Returns:
         None
     """
-    flowId = orm.IntCol(alternateID=True, unique=True, notNone=True)
+    uuid = orm.StringCol(notNone=True, unique=True)
     timeCreated = orm.IntCol(default=None)
     flowType = orm.StringCol(default=None)
     title = orm.StringCol(default=None)
     info = orm.StringCol(default=None)
-    # Connection to the Message table
-    message = orm.MultipleJoin('Message')
+    owner = orm.StringCol(default=None)
+    # Connection to the Message and UserConfig table
+    messages = orm.MultipleJoin('Message')
+    users = orm.RelatedJoin('UserConfig')
 
 
-class Errors(orm.SQLObject):
-    """The class generates an Errors table in which
-    all types of errors are pre-stored.
+class Message(orm.SQLObject):
+    """Generates a Message table containing information
+    about user messages.
 
     Args:
-        status (str, optional):
-        code (int, optional):
-        detail (str, optional):
+        uuid (str, required):
+        text (str, optional):
+        time (int, optional):
+        filePicture (byte, optional):
+        fileVideo (byte, optional):
+        fileAudio (byte, optional):
+        fileDocument (byte, optional):
+        emoji (str, optional):
+        editedTime (int, optional):
+        editedStatus (bool, optional):
 
     Returns:
         None
     """
-    # status and code is standart HTTP status code
-    status = orm.StringCol(default=None)
-    code = orm.IntCol(default=None)
-    detail = orm.StringCol(default=None)
+    uuid = orm.StringCol(notNone=True, unique=True)
+    text = orm.StringCol(default=None)
+    time = orm.IntCol(default=None)
+    filePicture = orm.BLOBCol(default=None)
+    fileVideo = orm.BLOBCol(default=None)
+    fileAudio = orm.BLOBCol(default=None)
+    fileDocument = orm.BLOBCol(default=None)
+    emoji = orm.BLOBCol(default=None)
+    editedTime = orm.IntCol(default=None)
+    editedStatus = orm.BoolCol(default=False)
+    # Connection to UserConfig and Flow table
+    user = orm.ForeignKey('UserConfig')
+    flow = orm.ForeignKey('Flow')

@@ -2,32 +2,40 @@ import sys
 from hashlib import blake2b
 from hmac import compare_digest
 from os import urandom
+from typing import Union
+import configparser
 
-from mod import config
+# ************** Read "config.ini" ********************
+config = configparser.ConfigParser()
+config.read('config.ini')
+hash_size = config['HASH_SIZE']
+# ************** END **********************************
 
 
 class Hash:
-    """Сlass generates password hashes, hashes for sessions,
+    """Generates password hashes, hashes for sessions,
     authenticator ID's, checks passwords hashes.
 
     Args:
         password (str, required): password.
 
-        uuid (int, required): unique user identity.
+        uuid (int or str, [str convert to int], required): unique user
+              identity.
 
         salt (Any, required): Salt. additional unique identifier
              (there can be any line: mother's maiden name,
              favorite writer, etc.).
 
         key (Any, optional): Additional argument. Defaults to None.
-            If the value of the 'key' parameter is 'None' then the function
+            If value of 'key' parameter is 'None' then function
             will generated it.
 
         hash_password (str, optional): password hash (previously calculated).
 
     """
-    def __init__(self, password: str, uuid: int, salt: bytes = None,
-                 key: bytes = None, hash_password: str = None):
+    def __init__(self, password: str, uuid: Union[int, str],
+                 salt: bytes = None, key: bytes = None,
+                 hash_password: str = None):
 
         if salt is None:
             self.salt = urandom(16)
@@ -39,11 +47,15 @@ class Hash:
         else:
             self.key = key
 
+        if isinstance(uuid, str):
+            self.uuid = int(uuid)
+        else:
+            self.uuid = uuid
+
         self.binary_password = password.encode('utf-8')
-        self.uuid = uuid
         self.hash_password = hash_password
-        self.size_password = config.PASSWORD_HASH_SIZE
-        self.size_auth_id = config.AUTH_ID_HASH_SIZE
+        self.size_password = hash_size.getint('password')
+        self.size_auth_id = hash_size.getint('auth_id')
 
     def get_salt(self) -> bytes:
         return self.salt
@@ -52,7 +64,7 @@ class Hash:
         return self.key
 
     def password_hash(self) -> str:
-        """Function generates a password hash.
+        """Generates a password hash.
 
         Returns:
             str: Returns hash password.
@@ -63,7 +75,7 @@ class Hash:
         return hash_password.hexdigest()
 
     def check_password(self) -> bool:
-        """Function checks the password hash and original password.
+        """Checks password hash and original password.
 
         Returns:
             bool: True or False
@@ -76,8 +88,8 @@ class Hash:
                                   verified_hash_password)
 
     def auth_id(self) -> str:
-        """Function generates an authenticator ID's for the client session
-        connection to the server.
+        """Generates an authenticator ID's for client session
+        connection to server.
 
         Returns:
             str: Returns auth_id

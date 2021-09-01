@@ -6,21 +6,28 @@ from typing import List
 from pydantic import BaseModel
 from pydantic import EmailStr
 
+# Version of MoreliaTalk Protocol
+VERSION: str = '1.0'
+
 
 class Flow(BaseModel):
     class Config:
         title = 'List of flow with description and type'
-    id: Optional[int] = None
+    uuid: Optional[str] = None
     time: Optional[int] = None
     type: Optional[str] = None
     title: Optional[str] = None
     info: Optional[str] = None
+    owner: Optional[str] = None
+    users: Optional[List] = None
+    message_start: Optional[int] = None
+    message_end: Optional[int] = None
 
 
 class User(BaseModel):
     class Config:
         title = 'List of user information'
-    uuid: Optional[int] = None
+    uuid: Optional[str] = None
     bio: Optional[str] = None
     avatar: Optional[bytes] = None
     password: Optional[str] = None
@@ -34,11 +41,12 @@ class User(BaseModel):
 class Message(BaseModel):
     class Config:
         title = 'List of message information'
-    id: Optional[int] = None
+    uuid: Optional[str] = None
+    client_id: Optional[int] = None
     text: Optional[str] = None
-    from_user_uuid: Optional[int] = None
+    from_user: Optional[str] = None
     time: Optional[int] = None
-    from_flow_id: Optional[int] = None
+    from_flow: Optional[str] = None
     file_picture: Optional[bytes] = None
     file_video: Optional[bytes] = None
     file_audio: Optional[bytes] = None
@@ -81,6 +89,7 @@ class ValidJSON(BaseModel):
     errors: Optional[Errors] = None
     jsonapi: Optional[Version] = None
     meta: Optional[Any] = None
+
     def toJSON(self):
         return json.dumps(self,
                           ensure_ascii=False,

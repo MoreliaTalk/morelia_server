@@ -1,36 +1,4 @@
-import os
-
-# Configuring database access
-# SQLite3
-LOCAL_SQLITE = ''.join(['sqlite:', os.path.abspath('db_sqlite.db')])
-
-# Local PostgreSQL
-LOCAL_POSTGRESQL = 'postgres://postgres:123456@127.0.0.1/morelia_server_db?debug=True'
-
-# Online PostgreSQL
-ONLINE_POSTGRESQL = os.getenv('DATABASE_URL')
-
-# Version of Morelia Protocol
-API_VERSION = '1.0'
-
-# LibHash config #
-# TODO
-# add constat for configurating iteration cycle
-
-# size of output hash digest in bytes
-PASSWORD_HASH_SIZE = 32
-
-# size of output auth_id digest in bytes
-AUTH_ID_HASH_SIZE = 16
-
-# Settings loguru
-DEBUG_LEVEL = 10
-
-# Settings Jinja2
-
-TEMPLATE_FOLDER = 'templates'
-
-DICT_ERRORS = {
+DICT: dict = {
             200: {
                 'status': 'OK',
                 'detail': 'successfully'
@@ -42,6 +10,10 @@ DICT_ERRORS = {
             202: {
                 'status': 'Accepted',
                 'detail': 'Accepted'
+                },
+            206: {
+                'status': "Partial Content",
+                'detail': "Partial Content"
                 },
             400: {
                 'status': 'Bad Request',
@@ -99,6 +71,10 @@ DICT_ERRORS = {
                 'status': 'Service Unavailable',
                 'detail': 'Service Unavailable'
                 },
+            520: {
+                'status': 'Unknown Error',
+                'detail': 'Unknown Error'
+            },
             526: {
                 'status': 'Invalid SSL Certificate',
                 'detail': 'Invalid SSL Certificate'

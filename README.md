@@ -1,16 +1,16 @@
 # Morelia Server - мессенджер (сервер) для Morelia Network #
 
-![]() *тут скриншот*
+Language [EN](./README_ENG.md), [RU](./README.md)
 
 ## В репозитории 2 бранча ##
 
-[master](https://github.com/MoreliaTalk/morelia_server/tree/master) - Основная и стабильная ветка.
+[master](https://github.com/MoreliaTalk/morelia_server/tree/master) - стабильная ветка.
 
-[master-develop](https://github.com/MoreliaTalk/morelia_server/tree/develop) - Ветка для добавления нового функционала.
+[develop](https://github.com/MoreliaTalk/morelia_server/tree/develop) - ветка для добавления нового функционала.
 
 ## В разработке применяется ##
 
-* [Python 3.8](https://www.python.org/) - язык программирования
+* [Python 3.9](https://www.python.org/) - язык программирования
 
 * [FastAPI](https://fastapi.tiangolo.com) - основной фреймворк
 
@@ -18,41 +18,38 @@
 
 * [Pydantic](https://pydantic-docs.helpmanual.io) - валидация данных
 
-* [Starlette](https://www.starlette.io) - лёгковесный ASGI фреймворк/тулкит.
+* [Starlette](https://www.starlette.io) - лёгковесный ASGI фреймворк/тулкит
+
+* [websockets](https://pypi.org/project/websockets/) - реализация протокола Websockets в Python (RFC 6455 & 7692)
 
 ## Описание репозитория ##
 
 * /mod
-  * api.py - модуль отвечает за описание АПИ, а так же валидацию данных.
-  * config.py - модуль отвечает за хранение настроек (констант).
-  * controller.py - модуль отвечает за реализацию методов описанных в [Morelia Protocol](https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md)
+  * api.py - модуль отвечает за описание API, а так же валидацию данных.
+  * error.py - модуль отвечает за хранение кодов ошибок.
+  * controller.py - модуль отвечает за реализацию методов описанных в [Morelia Protocol](https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md).
   * lib.py - модуль отвечает за хэширования пароля, сравнения пароля с его хэш-суммой, создание хэша для auth_id.
   * models.py - модуль отвечает за описание таблиц БД для работы через ОРМ.
-
-* /templates - шаблоны для вывода статистики сервера в браузере
-  * base.html - базовый шаблон с основными элементами меню, он имплементируется в каждый рабочий шаблон
-  * index.html - рабочий шаблон главной страницы
-  * status.thml - рабочий шаблон страницы со статусом работы сервера
-
-* /settings
-  * logging.py - настройки логирования
-
+  * logging.py - модуль настройки логирования.
+* /templates - шаблоны для вывода статистики сервера в браузере.
+  * base.html - базовый шаблон с основными элементами меню, он имплементируется в каждый рабочий шаблон.
+  * index.html - рабочий шаблон главной страницы.
+  * status.thml - рабочий шаблон страницы со статусом работы сервера.
 * server.py - основной код сервера
-
-* manage.py - менеджер миграции для БД
-
+* manage.py - менеджер миграции для БД (создание и удаление таблиц базы данных)
 * /tests
   * fixtures/
-    * api.json - json-файл с заранее подготовленными данными, для провдедения тестов
-  * test_api.py - тесты для проверки валидации
-  * test_controller.py - тесты для проверки класса который отвечает за обработкуметодов протокола
-  * test_lib.py - тесты хэш-функции
-
-* debug_server.py - обёртка для server.py для дебага через утилиту `pdb`
+    * api.json - json-файл с заранее подготовленными данными, для провдедения тестов.
+  * test_api.py - тесты для проверки валидации.
+  * test_controller.py - тесты для проверки класса который отвечает за обработкуметодов протокола.
+  * test_lib.py - тесты хэш-функции.
+* debug_server.py - обёртка для server.py для дебага через утилиту `pdb`.
+* example_config.ini - файл содержащий пример настроек сервера, перед запуском сервера просто переименуйте в `config.ini`.
+* client.py - мини-клиент для проверки работы сервера.
 
 ## Установка ##
 
-Установить [Python](https://www.python.org/downloads/) версии 3.8.
+Установить [Python](https://www.python.org/downloads/) версией 3.8 или выше.
 
 Загрузить и установить последнюю версию [git](https://git-scm.com/downloads).
 
@@ -99,7 +96,7 @@ git remote -v
 
 ## Настройка виртуального окружения Pipenv ##
 
-Для работы с проектом необходима установка библиотек которые он использует, т.н. `рабочее окружение`, для этого используется утилита [Pipenv](https://github.com/pypa/pipenv)
+Для работы с проектом необходимо установить библиотеки которые он использует и настроить т.н. `виртуальное рабочее окружение` или `virtualenv`, для этого используется утилита [Pipenv](https://github.com/pypa/pipenv)
 
 Если не установлен pipenv, выполнить
 
@@ -119,27 +116,43 @@ pipenv shell
 pipenv install --ignore-pipfile
 ```
 
-## Запуск сервера ##
+## Перед запуском сервера - используем менеджер настроек ##
 
-Перед запуском необходимо создать базу данных с пустыми таблицами, командой
+Перед запуском сервера необходимо выполнить некоторые настройки (создать БД, таблицы и добавить первого пользователя - администратора)
+
+Создаём базу данных с пустыми таблицами:
 
 ```cmd
-python ./manage.py --table create
+pipenv run python ./manage.py --db create
 ```
 
-Дополнительно можно добавить первого пользователя в таблицу
+Если необходимо удалить все таблицы в созданной базе данных (ВНИМАНИЕ удаляются только таблицы, БД не удаляется):
+
+```cmd
+pipenv run pipenv run python ./manage.py --db delete
+```
+
+Добавляем администратора в созданную БД:
 
 ```cmd
 python ./manage.py --table superuser
 ```
 
-Для дополнительной информации о возможностях менеджера миграций
+Дополнительно можно создать `flow` с типом группа:
 
 ```cmd
-python ./manage.py --help
+pipenv run python ./manage.py --table flow
 ```
 
-Для запуска сервера используйте команду
+Информация о всех возможностях менеджера настроек:
+
+```cmd
+pipenv run python ./manage.py --help
+```
+
+## Запуск сервера ##
+
+Для запуска сервера используйте команду:
 
 ```cmd
 uvicorn server:app --host 0.0.0.0 --port 8000 --reload --use-colors --http h11 --ws websockets
@@ -181,6 +194,31 @@ uvicorn server:app --host 0.0.0.0 --port 8000 --reload --use-colors --http h11 -
 
 `--timeout-keep-alive <int>` - Close Keep-Alive connections if no new data is received within this timeout. Default: 5.
 
+## Запуск сервера в режиме DEBUG ##
+
+Для лёгкого запуска сервера в режиме отладки нужно всего лишь запустить `debug_server.py`:
+
+```cmd
+pipenv run python ./debug_server.py
+```
+
+## Проверка работоспособности сервера с помощью встроенного клиента ##
+
+Для проверки работы сервера запустите мини-клиент `client.py` в консоли:
+
+```cmd
+pipenv run python -i ./client.py
+```
+
+После запуска клиент отправит на сервер сообщение об авторизации (AUTH), ответ сервера будет выведен в консоль, после чего `python` перейдёт в режим интерактивной строки `>>>`, для того чтобы была возможность провести дополнительные проверки.
+
+В интерактивной консоли будет доступна одна функция отправки сообщений `send_message` которая принимает два аргумента `message`-сообщение и `uri`-адрес сервера. В аргументе `message` необходимо передать объект с типом "dict" или "str", можно использовать готовые примеры запросов: AUTH, GET_UPDATE, ADD_FLOW, ALL_FLOW. В аргументе необходимо передать объект с типом "str", можно использовать готовый пример адреса сервера: LOCALHOST.
+
+```py
+>>> send_message(GET_UPDATE, LOCALHOST)
+```
+
+Если в функцию не передать ни одного аргумента, по умолчанию будет отправлено сообщение AUTH на LOCALHOST.
 
 ## Создание пулл-реквеста для внесенния изменений в develop-ветку Morelia Server ##
 
@@ -196,7 +234,7 @@ git pull upstream develop
 git push
 ```
 
-Для создания пулл-реквеста, необходимо перейти на [GitHub](https://www.github.com), выбрать свой форк и в правом меню нажать на `New pull request`, после чего выбрать бранч из которого будет производится перенос изменений в develop-ветку Morelia Qt и нажать `Create pull request`.
+Для создания пулл-реквеста, необходимо перейти на [GitHub](https://www.github.com), выбрать свой форк и в правом меню нажать на `New pull request`, после чего выбрать бранч из которого будет производится перенос изменений в develop-ветку Morelia Server и нажать `Create pull request`.
 
 ## Требования к стилю кода ##
 
@@ -216,13 +254,8 @@ INFO       | logger.info()
 SUCCESS    | logger.success()
 WARNING    | logger.warning()
 ERROR      | logger.error()
+           | logger.exception()
 CRITICAL   | logger.critical()
-```
-
-Для включения **DEBUG** режима, запускать сервер с параметром:
-
-```cmd
-uvicorn server:app --log-level debug
 ```
 
 ## Написание и запуск тестов ##
@@ -232,7 +265,7 @@ uvicorn server:app --log-level debug
 Для запуска тестов выполните (вместо звёздочки подставьте наименование теста)
 
 ```cmd
-python -v ./tests/test_*.py
+pipenv run python -v ./tests/test_*.py
 ```
 
 ## Запуск дебаггера ##
