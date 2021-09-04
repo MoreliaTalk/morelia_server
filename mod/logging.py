@@ -7,8 +7,8 @@ import sys
 config = configparser.ConfigParser()
 config.read('config.ini')
 logging = config['LOGGING']
-expiration_date = logging.get("EXPIRATION_DATE")
-debug_expiration_date = logging.get("DEBUG_EXPIRATION_DATE")
+expiration_date = logging.get('EXPIRATION_DATE')
+debug_expiration_date = logging.get('DEBUG_EXPIRATION_DATE')
 # ************** END **********************************
 
 
