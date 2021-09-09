@@ -323,6 +323,7 @@ class ProtocolMethods:
         def get_messages(db, end: int, start: int = 0) -> None:
             for element in db[start:end]:
                 message = api.Message()
+                message.uuid = element.uuid
                 message.from_flow = element.flow.uuid
                 message.from_user = element.user.uuid
                 message.text = element.text
@@ -446,6 +447,8 @@ class ProtocolMethods:
                     user.is_bot = dbquery.isBot
                     user.avatar = dbquery.avatar
                     user.bio = dbquery.bio
+                    if dbquery.uuid == self.request.data.user[0].uuid:
+                        user.email = dbquery.email
                     self.response.data.user.append(user)
             logger.success("\'_user_info\' executed successfully")
             self.__catching_error(200)
