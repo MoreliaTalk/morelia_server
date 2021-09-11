@@ -700,7 +700,7 @@ class TestAllMessages(unittest.TestCase):
                              cascade=True)
         del self.test
 
-    def test_all_message_message_fields_filled(self):
+    def test_all_message_fields_filled(self):
         self.test.data.flow[0].uuid = "07d950"
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
