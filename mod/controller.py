@@ -467,8 +467,6 @@ class ProtocolMethods:
                     user.is_bot = dbquery.isBot
                     user.avatar = dbquery.avatar
                     user.bio = dbquery.bio
-                    if dbquery.uuid == self.request.data.user[0].uuid:
-                        user.email = dbquery.email
                     self.response.data.user.append(user)
             logger.success("\'_user_info\' executed successfully")
             self.__catching_error(200)

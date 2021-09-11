@@ -685,7 +685,7 @@ class TestAllMessages(unittest.TestCase):
                            time=item,
                            user=new_user2,
                            flow=new_flow2)
-        models.Message(uuid=str(uuid4().int),
+        models.Message(uuid='271520724063176879757028074376756118591',
                        text="Privet",
                        time=666,
                        user=new_user2,
@@ -699,6 +699,21 @@ class TestAllMessages(unittest.TestCase):
                              dropJoinTables=True,
                              cascade=True)
         del self.test
+
+    def test_all_message_message_fields_filled(self):
+        self.test.data.flow[0].uuid = "07d950"
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        message_found = False
+        for _, item in enumerate(result["data"]["message"]):
+            if item["time"] == 666:
+                message_found = True
+                self.assertEqual(item["uuid"], '271520724063176879757028074376756118591')
+                self.assertEqual(item["text"], 'Privet')
+                self.assertEqual(item["from_user"], '654321')
+                self.assertEqual(item["from_flow"], '07d950')
+                break
+        self.assertTrue(message_found)
 
     def test_all_message_more_limit(self):
         run_method = controller.ProtocolMethods(self.test)
