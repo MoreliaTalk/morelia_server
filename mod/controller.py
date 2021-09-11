@@ -343,6 +343,7 @@ class ProtocolMethods:
         def get_messages(db, end: int, start: int = 0) -> None:
             for element in db[start:end]:
                 message = api.Message()
+                message.uuid = element.uuid
                 message.from_flow = element.flow.uuid
                 message.from_user = element.user.uuid
                 message.text = element.text
