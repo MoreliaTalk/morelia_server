@@ -293,3 +293,4 @@ To get help in debug mode
 Copyright (c) 2020 - present [NekrodNIK](https://github.com/NekrodNIK), [Stepan Skriabin](https://github.com/stepanskryabin), [rus-ai](https://github.com/rus-ai) and other. Look at the file AUTHORS.md for a complete list.
 
 Morelia Server is licensed under the GNU Lesser General Public License version 3 or later (LGPL-3.0-or-later). See the COPYING.LESSER file for details.
+
