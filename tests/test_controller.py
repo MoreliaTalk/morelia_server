@@ -1,3 +1,23 @@
+"""
+    Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+    Look at the file AUTHORS.md(located at the root of the project) to get the full list.
+
+    This file is part of Morelia Server.
+
+    Morelia Server is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Morelia Server is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
+"""
+
 import inspect
 import json
 import os
@@ -665,7 +685,7 @@ class TestAllMessages(unittest.TestCase):
                            time=item,
                            user=new_user2,
                            flow=new_flow2)
-        models.Message(uuid=str(uuid4().int),
+        models.Message(uuid='271520724063176879757028074376756118591',
                        text="Privet",
                        time=666,
                        user=new_user2,
@@ -679,6 +699,21 @@ class TestAllMessages(unittest.TestCase):
                              dropJoinTables=True,
                              cascade=True)
         del self.test
+
+    def test_all_message_fields_filled(self):
+        self.test.data.flow[0].uuid = "07d950"
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        message_found = False
+        for _, item in enumerate(result["data"]["message"]):
+            if item["time"] == 666:
+                message_found = True
+                self.assertEqual(item["uuid"], '271520724063176879757028074376756118591')
+                self.assertEqual(item["text"], 'Privet')
+                self.assertEqual(item["from_user"], '654321')
+                self.assertEqual(item["from_flow"], '07d950')
+                break
+        self.assertTrue(message_found)
 
     def test_all_message_more_limit(self):
         run_method = controller.ProtocolMethods(self.test)
