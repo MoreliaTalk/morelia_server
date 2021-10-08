@@ -23,9 +23,6 @@ from enum import Enum, IntEnum
 
 class ServerStatus(IntEnum):
     """Server status code and reason phrases
-
-    Args:
-        enum ([type]): [description]
     """
     def __new__(cls, value, phrase, description=''):
         obj = int.__new__(cls, value)
@@ -34,21 +31,24 @@ class ServerStatus(IntEnum):
         obj.description = description
         return obj
 
-    CLIENT_CLOSED_REQUEST = 499, 'Client Closed Request', 'Client Closed Request'
-    UNKNOWN_ERROR = 520, 'Unknown Error1', 'Unknown Error2'
-    INVALID_SSL_CERTIFICATE = 526, 'Invalid SSL Certificate', 'Invalid SSL Certificate'
+    CLIENT_CLOSED_REQUEST = (499,
+                             'Client Closed Request',
+                             'Full description: Client Closed Request')
+    UNKNOWN_ERROR = (520,
+                     'Unknown Error',
+                     'Full description: Unknown Error')
+    INVALID_SSL_CERTIFICATE = (526,
+                               'Invalid SSL Certificate',
+                               'Full description: Invalid SSL Certificate')
 
 
 def check_error_pattern(status: str) -> Enum:
     try:
-        code = getattr(HTTPStatus, status).value
+        getattr(HTTPStatus, status).value
     except AttributeError:
-        code = getattr(ServerStatus, status).value
-        status = getattr(ServerStatus, status).phrase
-        description = getattr(ServerStatus, status).description
+        obj = getattr(ServerStatus, status)
     else:
-        status = getattr(HTTPStatus, status).phrase
-        description = getattr(HTTPStatus, status).description
-    return Enum("Error", {"code": code,
-                          "status": status,
-                          "detail": description})
+        obj = getattr(HTTPStatus, status)
+    return Enum("Error", {"code": obj.value,
+                          "status": obj.phrase,
+                          "detail": obj.description})
