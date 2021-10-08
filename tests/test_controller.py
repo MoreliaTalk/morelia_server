@@ -702,13 +702,14 @@ class TestAllMessages(unittest.TestCase):
 
     def test_all_message_fields_filled(self):
         self.test.data.flow[0].uuid = "07d950"
+        check_uuid = '271520724063176879757028074376756118591'
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         message_found = False
         for _, item in enumerate(result["data"]["message"]):
             if item["time"] == 666:
                 message_found = True
-                self.assertEqual(item["uuid"], '271520724063176879757028074376756118591')
+                self.assertEqual(item["uuid"], check_uuid)
                 self.assertEqual(item["text"], 'Privet')
                 self.assertEqual(item["from_user"], '654321')
                 self.assertEqual(item["from_flow"], '07d950')

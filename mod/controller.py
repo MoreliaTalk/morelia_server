@@ -164,14 +164,12 @@ class ProtocolMethods:
         code "520" and status "Unknown Error" are used.
 
         Args:
-            code (Union[int, str]): Error code or type and exception
-            description.
-            add_info (Optional[str], optional): Additional information
-            to be added. 'Exception' field is not used for exceptions.
-            Defaults to None.
+            status (str): Error type
+            add_info (Union[Exception, str], optional): Additional information
+            to be added. Defaults to None.
 
         Returns:
-            dict: returns 'dict' according to  protocol,
+            dict: returns 'dict' according to protocol,
                 like: {
                     'code': 200,
                     'status': 'Ok',
@@ -391,7 +389,8 @@ class ProtocolMethods:
                     logger.success("\'_all_messages\' executed successfully")
                     self.__catching_error("PARTIAL_CONTENT")
                 else:
-                    self.__catching_error("FORBIDDEN", "Requested more messages"
+                    self.__catching_error("FORBIDDEN",
+                                          "Requested more messages"
                                           f" than server limit"
                                           f" (<{limit.getint('messages')})")
 
@@ -465,7 +464,8 @@ class ProtocolMethods:
                 try:
                     dbquery = models.UserConfig.selectBy(uuid=element.uuid).getOne()
                 except SQLObjectIntegrityError as user_info_error:
-                    self.__catching_error("UNKNOWN_ERROR", str(user_info_error))
+                    self.__catching_error("UNKNOWN_ERROR",
+                                          str(user_info_error))
                 else:
                     user = api.User()
                     user.uuid = dbquery.uuid
@@ -478,7 +478,8 @@ class ProtocolMethods:
             logger.success("\'_user_info\' executed successfully")
             self.__catching_error("OK")
         else:
-            self.__catching_error("FORBIDDEN", f"Requested more {limit.get('users')}"
+            self.__catching_error("FORBIDDEN",
+                                  f"Requested more {limit.get('users')}"
                                   " users than server limit")
 
     def _authentification(self):
