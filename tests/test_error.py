@@ -43,7 +43,6 @@ class TestCheckError(unittest.TestCase):
         self.assertEqual(result.code.value, 200)
         self.assertEqual(result.status.value, self.OK)
 
-    @unittest.skip("Not work")
     def test_check_wrong_status(self):
         self.assertRaises(TypeError,
                           lambda: error.check_error_pattern(self.CREATED))
@@ -51,4 +50,4 @@ class TestCheckError(unittest.TestCase):
     def test_check_ServerStatus_pattern(self):
         result = error.check_error_pattern(self.UNKNOWN)
         self.assertEqual(result.code.value, 520)
-        self.assertEqual(result.status.value, "Unknown Error1")
+        self.assertEqual(result.status.value, "Unknown Error")
