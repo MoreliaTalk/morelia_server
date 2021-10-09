@@ -68,73 +68,64 @@ class ProtocolMethods:
             logger.debug(f"Validation failed: {ERROR}")
         else:
             self.response.type = self.request.type
-            if self.request.type == 'register_user':
-                self._register_user()
-            elif self.request.type == 'auth':
-                self._authentification()
-            else:
-                if self.__check_auth_token(self.request.data.user[0].uuid,
-                                           self.request.data.user[0].auth_id):
-                    if self.request.type == 'send_message':
-                        self._send_message()
-                    elif self.request.type == 'all_flow':
-                        self._all_flow()
-                    elif self.request.type == 'add_flow':
-                        self._add_flow()
-                    elif self.request.type == 'all_messages':
-                        self._all_messages()
-                    elif self.request.type == 'delete_user':
-                        self._delete_user()
-                    elif self.request.type == 'delete_message':
-                        self._delete_message()
-                    elif self.request.type == 'edited_message':
-                        self._edited_message()
-                    elif self.request.type == "get_update":
-                        self._get_update()
-                    elif self.request.type == "ping-pong":
-                        self._ping_pong()
-                    elif self.request.type == 'user_info':
-                        self._user_info()
-                    else:
-                        self._errors()
-                else:
-                    self.__catching_error("UNAUTHORIZED")
+            match self.request.type:
+                case 'register_user':
+                    self._register_user()
+                case 'auth':
+                    self._authentification()
+                case 'send_message':
+                    self._send_message()
+                case 'all_flow':
+                    self._all_flow()
+                case 'add_flow':
+                    self._add_flow()
+                case 'all_messages':
+                    self._all_messages()
+                case 'delete_user':
+                    self._delete_user()
+                case 'delete_message':
+                    self._delete_message()
+                case 'edited_message':
+                    self._edited_message()
+                case 'get_update':
+                    self._get_update()
+                case 'ping-pong':
+                    self._ping_pong()
+                case 'user_info':
+                    self._user_info()
+                case _:
+                    self._errors()
 
     def get_response(self):
         """Generates a JSON-object containing result
         of an instance of ProtocolMethod class.
-
         """
         return self.response.toJSON()
 
-    def __check_auth_token(self, uuid: Union[str, int],
-                           auth_id: str) -> bool:
-        """Checks uuid and auth_id of user
-
-        Args:
-            uuid (int, requires): Unique User ID
-            auth_id (str, requires): authentification ID
-
-        Returns:
-            True if successful
-            False if unsuccessful
-        """
-        if isinstance(uuid, int):
-            uuid = str(uuid)
+    @staticmethod
+    def check_auth_token(self):
+        uuid = self.request.data.user[0].uuid
+        auth_id = self.request.data.user[0].auth_id
         try:
             dbquery = models.UserConfig.selectBy(uuid=uuid).getOne()
             logger.success("User was found in the database")
         except (dberrors.OperationalError,
                 SQLObjectIntegrityError, SQLObjectNotFound):
             logger.debug("User wasn't found in the database")
-            return False
+            return self.__catching_error("UNAUTHORIZED")
         else:
             if auth_id == dbquery.authId:
                 logger.success("Authentication token has been verified")
-                return True
+
+                def outer(func):
+                    def wrapper(*args, **kwargs):
+                        result = func(*args, **kwargs)
+                        return result
+                    return wrapper
+                return outer
             else:
                 logger.debug("Authentication token failed")
-                return False
+                return self.__catching_error("UNAUTHORIZED")
 
     def __check_login(self, login: str) -> bool:
         """Checks database for a user with the same login
@@ -202,7 +193,6 @@ class ProtocolMethods:
     def _register_user(self):
         """Registers user who is not in the database.
         Note: This version also authentificate user, that exist in database
-
         """
         uuid = str(uuid4().int)
         password = self.request.data.user[0].password
@@ -231,9 +221,9 @@ class ProtocolMethods:
             logger.success("User is registred")
             self.__catching_error("CREATED")
 
+    @check_auth_token
     def _get_update(self):
         """Provides updates of flows, messages and users in them from time "time"
-
         """
         # select all fields of the user table
         # TODO внеести измнения в протокол, добавить фильтр
@@ -290,6 +280,7 @@ class ProtocolMethods:
         logger.success("\'_get_update\' executed successfully")
         self.__catching_error("OK")
 
+    @check_auth_token
     def _send_message(self):
         """Saves user message in database.
 
@@ -330,6 +321,7 @@ class ProtocolMethods:
             logger.success("\'_send_message\' executed successfully")
             self.__catching_error("OK")
 
+    @check_auth_token
     def _all_messages(self):
         """Displays all messages of a specific flow retrieves them
         from database and issues them as an array consisting of JSON
@@ -394,6 +386,7 @@ class ProtocolMethods:
                                           f" than server limit"
                                           f" (<{limit.getint('messages')})")
 
+    @check_auth_token
     def _add_flow(self):
         """Allows add a new flow to database
 
@@ -432,6 +425,7 @@ class ProtocolMethods:
                 logger.success("\'_add_flow\' executed successfully")
                 self.__catching_error("OK")
 
+    @check_auth_token
     def _all_flow(self):
         """Allows to get a list of all flows and information about them
         from database
@@ -454,6 +448,7 @@ class ProtocolMethods:
         else:
             self.__catching_error("NOT_FOUND")
 
+    @check_auth_token
     def _user_info(self):
         """Provides information about all personal settings of user.
 
@@ -515,6 +510,7 @@ class ProtocolMethods:
             else:
                 self.__catching_error("UNAUTHORIZED")
 
+    @check_auth_token
     def _delete_user(self):
         """Function irretrievably deletes the user from database.
 
@@ -541,6 +537,7 @@ class ProtocolMethods:
             logger.success("\'_delete_user\' executed successfully")
             self.__catching_error("OK")
 
+    @check_auth_token
     def _delete_message(self):
         """Function deletes the message from database Message
         table by its ID.
@@ -563,6 +560,7 @@ class ProtocolMethods:
             logger.success("\'_delete_message\' executed successfully")
             self.__catching_error("OK")
 
+    @check_auth_token
     def _edited_message(self):
         """Changes text and time in database Message table.
         Value of editedStatus column changes from None to True.
@@ -581,6 +579,7 @@ class ProtocolMethods:
             logger.success("\'_edited_message\' executed successfully")
             self.__catching_error("OK")
 
+    @check_auth_token
     def _ping_pong(self):
         """Generates a response to a client's request
         for communication between server and client.
