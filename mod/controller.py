@@ -111,6 +111,25 @@ class User(Error):
                     return self.catching_error("UNAUTHORIZED")
         return wrapper
 
+    def check_login(self, login: str) -> bool:
+        """Checks database for a user with the same login
+
+        Args:
+            login (str, optional): user login
+
+        Returns:
+            True if there is such a user
+            False if no such user exists
+        """
+        try:
+            models.UserConfig.selectBy(login=login).getOne()
+        except (SQLObjectIntegrityError, SQLObjectNotFound):
+            logger.debug("There is no user in the database")
+            return False
+        else:
+            logger.success("User was found in the database")
+            return True
+
 
 class ProtocolMethods(User, Error):
     """Processing requests and forming answers according to "MTP" protocol.
@@ -174,25 +193,6 @@ class ProtocolMethods(User, Error):
         """
         return self.response.toJSON()
 
-    def __check_login(self, login: str) -> bool:
-        """Checks database for a user with the same login
-
-        Args:
-            login (str, optional): user login
-
-        Returns:
-            True if there is such a user
-            False if no such user exists
-        """
-        try:
-            models.UserConfig.selectBy(login=login).getOne()
-        except (SQLObjectIntegrityError, SQLObjectNotFound):
-            logger.debug("There is no user in the database")
-            return False
-        else:
-            logger.success("User was found in the database")
-            return True
-
     def _register_user(self):
         """Registers user who is not in the database.
         Note: This version also authentificate user, that exist in database
@@ -202,7 +202,7 @@ class ProtocolMethods(User, Error):
         login = self.request.data.user[0].login
         username = self.request.data.user[0].username
         email = self.request.data.user[0].email
-        if self.__check_login(login):
+        if self.check_login(login):
             self.catching_error("CONFLICT")
         else:
             generated = lib.Hash(password=password,
@@ -483,9 +483,7 @@ class ProtocolMethods(User, Error):
         """
         login = self.request.data.user[0].login
         password = self.request.data.user[0].password
-        if self.__check_login(login) is False:
-            self.catching_error("NOT_FOUND")
-        else:
+        if self.check_login(login):
             dbquery = models.UserConfig.selectBy(login=login).getOne()
             # to check password, we use same module as for its
             # hash generation. Specify password entered by user
@@ -506,6 +504,8 @@ class ProtocolMethods(User, Error):
                 self.catching_error("OK")
             else:
                 self.catching_error("UNAUTHORIZED")
+        else:
+            self.catching_error("NOT_FOUND")
 
     @User.check_auth
     def _delete_user(self, *args):
