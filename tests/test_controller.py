@@ -40,6 +40,7 @@ from mod import api  # noqa
 from mod import controller  # noqa
 from mod import lib  # noqa
 from mod import models  # noqa
+from mod.controller import User, Error
 
 # ************** Read "config.ini" ********************
 config = configparser.ConfigParser()
@@ -348,6 +349,7 @@ class TestCheckAuthToken(unittest.TestCase):
                           authId="auth_id")
         self.test = api.ValidJSON.parse_obj(SEND_MESSAGE)
         self.error = controller.Error
+        self.response = list()
 
     def tearDown(self):
         for item in classes:
@@ -368,19 +370,17 @@ class TestCheckAuthToken(unittest.TestCase):
         result = controller.User.check_auth(test_func)("", uuid, auth_id)
         self.assertTrue(result)
 
-    @unittest.skip("Not work")
     def test_check_wrong_uuid(self):
         uuid = "654321"
         auth_id = self.test.data.user[0].auth_id
-        result = controller.User.check_auth(lambda: True)(controller.Error, uuid, auth_id)
-        self.assertFalse(result)
+        self.assertRaises(AttributeError,
+                          lambda: User.check_auth(lambda: True)("", uuid, auth_id))
 
-    @unittest.skip("Not work")
     def test_check_wrong_auth_id(self):
         auth_id = "wrong_auth_id"
         uuid = self.test.data.user[0].uuid
-        result = controller.User.check_auth(lambda: True)("", uuid, auth_id)
-        self.assertFalse(result)
+        self.assertRaises(AttributeError,
+                          lambda: User.check_auth(lambda: True)("", uuid, auth_id))
 
 
 class TestCheckLogin(unittest.TestCase):
