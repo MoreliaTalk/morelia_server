@@ -391,7 +391,7 @@ class ProtocolMethods(User, Error):
     def _add_flow(self, *args):
         """Allows add a new flow to database
         """
-        flow_uuid = str(uuid4().hex)
+        flow_uuid = str(uuid4().int)
         owner = self.request.data.flow[0].owner
         users = self.request.data.flow[0].users
         flow_type = self.request.data.flow[0].type
