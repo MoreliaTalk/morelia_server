@@ -40,7 +40,7 @@ from mod import api  # noqa
 from mod import controller  # noqa
 from mod import lib  # noqa
 from mod import models  # noqa
-from mod.controller import User, Error
+from mod.controller import User  # noqa
 
 # ************** Read "config.ini" ********************
 config = configparser.ConfigParser()
@@ -374,13 +374,17 @@ class TestCheckAuthToken(unittest.TestCase):
         uuid = "654321"
         auth_id = self.test.data.user[0].auth_id
         self.assertRaises(AttributeError,
-                          lambda: User.check_auth(lambda: True)("", uuid, auth_id))
+                          lambda: User.check_auth(lambda: True)("",
+                                                                uuid,
+                                                                auth_id))
 
     def test_check_wrong_auth_id(self):
         auth_id = "wrong_auth_id"
         uuid = self.test.data.user[0].uuid
         self.assertRaises(AttributeError,
-                          lambda: User.check_auth(lambda: True)("", uuid, auth_id))
+                          lambda: User.check_auth(lambda: True)("",
+                                                                uuid,
+                                                                auth_id))
 
 
 class TestCheckLogin(unittest.TestCase):
@@ -409,12 +413,12 @@ class TestCheckLogin(unittest.TestCase):
     def test_check_true_result(self):
         login = self.test.data.user[0].login
         run_method = controller.ProtocolMethods(self.test)
-        result = run_method._ProtocolMethods__check_login(login)
+        result = run_method.check_login(login)
         self.assertTrue(result)
 
     def test_check_wrong_login(self):
         run_method = controller.ProtocolMethods(self.test)
-        result = run_method._ProtocolMethods__check_login("wrong_login")
+        result = run_method.check_login("wrong_login")
         self.assertFalse(result)
 
 
