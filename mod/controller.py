@@ -88,9 +88,6 @@ class Error:
 
 
 class User(Error):
-    def __init__(self):
-        pass
-
     def check_auth(method_to_decorate):
         def wrapper(self, *args):
             uuid, auth_id = args
@@ -115,7 +112,7 @@ class User(Error):
         """Checks database for a user with the same login
 
         Args:
-            login (str, optional): user login
+            login (str): user login
 
         Returns:
             True if there is such a user
