@@ -19,7 +19,6 @@
 """
 
 from time import time
-from typing import Union
 from uuid import uuid4
 import configparser
 
@@ -42,7 +41,94 @@ limit = config['SERVER_LIMIT']
 # ************** END **********************************
 
 
-class ProtocolMethods:
+class Error:
+    def catching_error(self, status: str,
+                       add_info: Exception | str = None) -> None:
+        """Сatches errors in "try...except" content.
+        Result is 'dict' with information about code, status,
+        time and detailed description of error that has occurred.
+        For errors like Exception and other unrecognized errors,
+        code "520" and status "Unknown Error" are used.
+
+        Args:
+            status (str): Error type
+            add_info (Union[Exception, str], optional): Additional information
+            to be added. Defaults to None.
+
+        Returns:
+            dict: returns 'dict' according to protocol,
+                like: {
+                    'code': 200,
+                    'status': 'Ok',
+                    'time': 123456545,
+                    'detail': 'successfully'
+                    }
+        """
+        try:
+            catch_error = error.check_error_pattern(status)
+        except Exception as ERROR:
+            logger.exception(str(ERROR))
+            self.response.errors.code = 520
+            self.response.errors.status = 'Unknown Error'
+            self.response.errors.time = self.get_time
+            self.response.errors.detail = (ERROR,
+                                           "Maybe wrong type status error? ",
+                                           f"Received {type(status)}, ",
+                                           "but expected str")
+        else:
+            self.response.errors.code = catch_error.code.value
+            self.response.errors.status = catch_error.status.value
+            self.response.errors.time = self.get_time
+            if add_info is None:
+                self.response.errors.detail = catch_error.detail.value
+            else:
+                self.response.errors.detail = add_info
+            logger.debug(f"Status code({catch_error.code.value}): ",
+                         f"{catch_error.status.value}")
+
+
+class User(Error):
+    def check_auth(method_to_decorate):
+        def wrapper(self, *args):
+            uuid, auth_id = args
+            try:
+                dbquery = models.UserConfig.selectBy(uuid=uuid).getOne()
+                logger.success("User was found in the database")
+            except (dberrors.OperationalError,
+                    SQLObjectIntegrityError,
+                    SQLObjectNotFound):
+                logger.debug("User wasn't found in the database")
+                return self.catching_error("UNAUTHORIZED")
+            else:
+                if auth_id == dbquery.authId:
+                    logger.success("Authentication User has been verified")
+                    return method_to_decorate(self, *args)
+                else:
+                    logger.debug("Authentication User failed")
+                    return self.catching_error("UNAUTHORIZED")
+        return wrapper
+
+    def check_login(self, login: str) -> bool:
+        """Checks database for a user with the same login
+
+        Args:
+            login (str): user login
+
+        Returns:
+            True if there is such a user
+            False if no such user exists
+        """
+        try:
+            models.UserConfig.selectBy(login=login).getOne()
+        except (SQLObjectIntegrityError, SQLObjectNotFound):
+            logger.debug("There is no user in the database")
+            return False
+        else:
+            logger.success("User was found in the database")
+            return True
+
+
+class ProtocolMethods(User, Error):
     """Processing requests and forming answers according to "MTP" protocol.
     Protocol version and it's actual description:
     https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md
@@ -63,149 +149,58 @@ class ProtocolMethods:
             logger.success("Validation was successful")
         except ValidationError as ERROR:
             self.response.type = "errors"
-            self.__catching_error(415, str(ERROR))
+            self.catching_error("UNSUPPORTED_MEDIA_TYPE",
+                                str(ERROR))
             logger.debug(f"Validation failed: {ERROR}")
         else:
             self.response.type = self.request.type
-            if self.request.type == 'register_user':
-                self._register_user()
-            elif self.request.type == 'auth':
-                self._authentification()
-            else:
-                if self.__check_auth_token(self.request.data.user[0].uuid,
-                                           self.request.data.user[0].auth_id):
-                    if self.request.type == 'send_message':
-                        self._send_message()
-                    elif self.request.type == 'all_flow':
-                        self._all_flow()
-                    elif self.request.type == 'add_flow':
-                        self._add_flow()
-                    elif self.request.type == 'all_messages':
-                        self._all_messages()
-                    elif self.request.type == 'delete_user':
-                        self._delete_user()
-                    elif self.request.type == 'delete_message':
-                        self._delete_message()
-                    elif self.request.type == 'edited_message':
-                        self._edited_message()
-                    elif self.request.type == "get_update":
-                        self._get_update()
-                    elif self.request.type == "ping-pong":
-                        self._ping_pong()
-                    elif self.request.type == 'user_info':
-                        self._user_info()
-                    else:
-                        self._errors()
-                else:
-                    self.__catching_error(401)
+            uuid = self.request.data.user[0].uuid
+            auth_id = self.request.data.user[0].auth_id
+            match self.request.type:
+                case 'register_user':
+                    self._register_user()
+                case 'auth':
+                    self._authentification()
+                case 'send_message':
+                    self._send_message(uuid, auth_id)
+                case 'all_flow':
+                    self._all_flow(uuid, auth_id)
+                case 'add_flow':
+                    self._add_flow(uuid, auth_id)
+                case 'all_messages':
+                    self._all_messages(uuid, auth_id)
+                case 'delete_user':
+                    self._delete_user(uuid, auth_id)
+                case 'delete_message':
+                    self._delete_message(uuid, auth_id)
+                case 'edited_message':
+                    self._edited_message(uuid, auth_id)
+                case 'get_update':
+                    self._get_update(uuid, auth_id)
+                case 'ping-pong':
+                    self._ping_pong(uuid, auth_id)
+                case 'user_info':
+                    self._user_info(uuid, auth_id)
+                case _:
+                    self._errors()
 
     def get_response(self):
         """Generates a JSON-object containing result
         of an instance of ProtocolMethod class.
-
         """
         return self.response.toJSON()
-
-    def __check_auth_token(self, uuid: Union[str, int],
-                           auth_id: str) -> bool:
-        """Checks uuid and auth_id of user
-
-        Args:
-            uuid (int, requires): Unique User ID
-            auth_id (str, requires): authentification ID
-
-        Returns:
-            True if successful
-            False if unsuccessful
-        """
-        if isinstance(uuid, int):
-            uuid = str(uuid)
-        try:
-            dbquery = models.UserConfig.selectBy(uuid=uuid).getOne()
-            logger.success("User was found in the database")
-        except (dberrors.OperationalError,
-                SQLObjectIntegrityError, SQLObjectNotFound):
-            logger.debug("User wasn't found in the database")
-            return False
-        else:
-            if auth_id == dbquery.authId:
-                logger.success("Authentication token has been verified")
-                return True
-            else:
-                logger.debug("Authentication token failed")
-                return False
-
-    def __check_login(self, login: str) -> bool:
-        """Checks database for a user with the same login
-
-        Args:
-            login (str, optional): user login
-
-        Returns:
-            True if there is such a user
-            False if no such user exists
-        """
-        try:
-            models.UserConfig.selectBy(login=login).getOne()
-        except (SQLObjectIntegrityError, SQLObjectNotFound):
-            logger.debug("There is no user in the database")
-            return False
-        else:
-            logger.success("User was found in the database")
-            return True
-
-    def __catching_error(self, code: Union[int, str],
-                         add_info: Union[Exception, str] = None) -> None:
-        """Сatches errors in "try...except" content.
-        Result is 'dict' with information about code, status,
-        time and detailed description of error that has occurred.
-        For errors like Exception and other unrecognized errors,
-        code "520" and status "Unknown Error" are used.
-
-        Args:
-            code (Union[int, str]): Error code or type and exception
-            description.
-            add_info (Optional[str], optional): Additional information
-            to be added. 'Exception' field is not used for exceptions.
-            Defaults to None.
-
-        Returns:
-            dict: returns 'dict' according to  protocol,
-                like: {
-                    'code': 200,
-                    'status': 'Ok',
-                    'time': 123456545,
-                    'detail': 'successfully'
-                    }
-        """
-        if code in error.DICT:
-            if add_info is None:
-                add_info = error.DICT[code]['detail']
-            else:
-                logger.exception(str(add_info))
-            self.response.errors.code = code
-            self.response.errors.status = error.DICT[code]['status']
-            self.response.errors.time = self.get_time
-            self.response.errors.detail = add_info
-        else:
-            self.response.errors.code = 520
-            self.response.errors.status = 'Unknown Error'
-            self.response.errors.time = self.get_time
-            self.response.errors.detail = code
-        logger.debug(f"Status code({code}): {error.DICT[code]['status']}")
 
     def _register_user(self):
         """Registers user who is not in the database.
         Note: This version also authentificate user, that exist in database
-
         """
         uuid = str(uuid4().int)
         password = self.request.data.user[0].password
         login = self.request.data.user[0].login
         username = self.request.data.user[0].username
         email = self.request.data.user[0].email
-        if self.__check_login(login):
-            self.__catching_error(409)
+        if self.check_login(login):
+            self.catching_error("CONFLICT")
         else:
             generated = lib.Hash(password=password,
                                  uuid=uuid)
@@ -224,11 +219,11 @@ class ProtocolMethods:
             user.auth_id = auth_id
             self.response.data.user.append(user)
             logger.success("User is registred")
-            self.__catching_error(201)
+            self.catching_error("CREATED")
 
-    def _get_update(self):
+    @User.check_auth
+    def _get_update(self, *args):
         """Provides updates of flows, messages and users in them from time "time"
-
         """
         # select all fields of the user table
         # TODO внеести измнения в протокол, добавить фильтр
@@ -283,11 +278,11 @@ class ProtocolMethods:
         else:
             self.response.data.user
         logger.success("\'_get_update\' executed successfully")
-        self.__catching_error(200)
+        self.catching_error("OK")
 
-    def _send_message(self):
+    @User.check_auth
+    def _send_message(self, *args):
         """Saves user message in database.
-
         """
         message_uuid = str(uuid4().int)
         flow_uuid = self.request.data.flow[0].uuid
@@ -297,12 +292,12 @@ class ProtocolMethods:
         audio = self.request.data.message[0].file_audio
         document = self.request.data.message[0].file_document
         emoji = self.request.data.message[0].emoji
-        user_uuid = self.request.data.user[0].uuid
+        user_uuid, _ = args
         try:
             flow = models.Flow.selectBy(uuid=flow_uuid).getOne()
             user = models.UserConfig.selectBy(uuid=user_uuid).getOne()
         except SQLObjectNotFound as ERROR:
-            self.__catching_error(404, str(ERROR))
+            self.catching_error("NOT_FOUND", str(ERROR))
         else:
             models.Message(uuid=message_uuid,
                            text=text,
@@ -323,12 +318,12 @@ class ProtocolMethods:
             message.uuid = message_uuid
             self.response.data.message.append(message)
             logger.success("\'_send_message\' executed successfully")
-            self.__catching_error(200)
+            self.catching_error("OK")
 
-    def _all_messages(self):
+    @User.check_auth
+    def _all_messages(self, *args):
         """Displays all messages of a specific flow retrieves them
         from database and issues them as an array consisting of JSON
-
         """
         flow = api.Flow()
         flow_uuid = self.request.data.flow[0].uuid
@@ -365,15 +360,15 @@ class ProtocolMethods:
             MESSAGE_COUNT: int = dbquery.count()
             dbquery[0]
         except SQLObjectIntegrityError as flow_error:
-            self.__catching_error(520, str(flow_error))
+            self.catching_error("UNKNOWN_ERROR", str(flow_error))
         except (IndexError, SQLObjectNotFound) as flow_error:
-            self.__catching_error(404, str(flow_error))
+            self.catching_error("NOT_FOUND", str(flow_error))
         else:
             if MESSAGE_COUNT <= limit.getint("messages"):
                 self.response.data.flow.append(flow)
                 get_messages(dbquery, limit.getint("messages"))
                 logger.success("\'_all_messages\' executed successfully")
-                self.__catching_error(200)
+                self.catching_error("OK")
             elif MESSAGE_COUNT > limit.getint("messages"):
                 flow.message_end = MESSAGE_COUNT
                 self.response.data.flow.append(flow)
@@ -382,24 +377,25 @@ class ProtocolMethods:
                                  self.request.data.flow[0].message_end,
                                  self.request.data.flow[0].message_start)
                     logger.success("\'_all_messages\' executed successfully")
-                    self.__catching_error(206)
+                    self.catching_error("PARTIAL_CONTENT")
                 else:
-                    self.__catching_error(403, "Requested more messages"
-                                          f" than server limit"
-                                          f" (<{limit.getint('messages')})")
+                    self.catching_error("FORBIDDEN",
+                                        "Requested more messages"
+                                        f" than server limit"
+                                        f" (<{limit.getint('messages')})")
 
-    def _add_flow(self):
+    @User.check_auth
+    def _add_flow(self, *args):
         """Allows add a new flow to database
-
         """
-        flow_uuid = str(uuid4().hex)
+        flow_uuid = str(uuid4().int)
         owner = self.request.data.flow[0].owner
         users = self.request.data.flow[0].users
         flow_type = self.request.data.flow[0].type
         if flow_type not in ["chat", "group", "channel"]:
-            self.__catching_error(400, "Wrong flow type")
+            self.catching_error("BAD_REQUEST", "Wrong flow type")
         elif flow_type == 'chat' and len(users) != 2:
-            self.__catching_error(400, "Must be two users only")
+            self.catching_error("BAD_REQUEST", "Must be two users only")
         else:
             try:
                 dbquery = models.Flow(uuid=flow_uuid,
@@ -412,7 +408,7 @@ class ProtocolMethods:
                     user = models.UserConfig.selectBy(uuid=user_uuid).getOne()
                     dbquery.addUserConfig(user)
             except SQLObjectIntegrityError as flow_error:
-                self.__catching_error(520, str(flow_error))
+                self.catching_error("UNKNOWN_ERROR", str(flow_error))
             else:
                 flow = api.Flow()
                 flow.uuid = flow_uuid
@@ -424,12 +420,12 @@ class ProtocolMethods:
                 flow.users = users
                 self.response.data.flow.append(flow)
                 logger.success("\'_add_flow\' executed successfully")
-                self.__catching_error(200)
+                self.catching_error("OK")
 
-    def _all_flow(self):
+    @User.check_auth
+    def _all_flow(self, *args):
         """Allows to get a list of all flows and information about them
         from database
-
         """
         dbquery = models.Flow.selectBy()
         if dbquery.count():
@@ -444,13 +440,13 @@ class ProtocolMethods:
                 flow.users = [item.uuid for item in element.users]
                 self.response.data.flow.append(flow)
             logger.success("\'_all_flow\' executed successfully")
-            self.__catching_error(200)
+            self.catching_error("OK")
         else:
-            self.__catching_error(404)
+            self.catching_error("NOT_FOUND")
 
-    def _user_info(self):
+    @User.check_auth
+    def _user_info(self, *args):
         """Provides information about all personal settings of user.
-
         """
         users_volume = len(self.request.data.user)
         if users_volume <= limit.getint("users"):
@@ -458,7 +454,8 @@ class ProtocolMethods:
                 try:
                     dbquery = models.UserConfig.selectBy(uuid=element.uuid).getOne()
                 except SQLObjectIntegrityError as user_info_error:
-                    self.__catching_error(520, str(user_info_error))
+                    self.catching_error("UNKNOWN_ERROR",
+                                        str(user_info_error))
                 else:
                     user = api.User()
                     user.uuid = dbquery.uuid
@@ -469,23 +466,21 @@ class ProtocolMethods:
                     user.bio = dbquery.bio
                     self.response.data.user.append(user)
             logger.success("\'_user_info\' executed successfully")
-            self.__catching_error(200)
+            self.catching_error("OK")
         else:
-            self.__catching_error(403, f"Requested more {limit.get('users')}"
-                                  " users than server limit")
+            self.catching_error("FORBIDDEN",
+                                f"Requested more {limit.get('users')}"
+                                " users than server limit")
 
     def _authentification(self):
         """Performs authentification of registered client,
         with issuance of a unique hash number of connection session.
         During authentification password transmitted by client
         and password contained in server database are verified.
-
         """
         login = self.request.data.user[0].login
         password = self.request.data.user[0].password
-        if self.__check_login(login) is False:
-            self.__catching_error(404)
-        else:
+        if self.check_login(login):
             dbquery = models.UserConfig.selectBy(login=login).getOne()
             # to check password, we use same module as for its
             # hash generation. Specify password entered by user
@@ -503,13 +498,15 @@ class ProtocolMethods:
                 user.auth_id = dbquery.authId
                 self.response.data.user.append(user)
                 logger.success("\'_authentification\' executed successfully")
-                self.__catching_error(200)
+                self.catching_error("OK")
             else:
-                self.__catching_error(401)
+                self.catching_error("UNAUTHORIZED")
+        else:
+            self.catching_error("NOT_FOUND")
 
-    def _delete_user(self):
+    @User.check_auth
+    def _delete_user(self, *args):
         """Function irretrievably deletes the user from database.
-
         """
         uuid = str(uuid4().int)
         login = self.request.data.user[0].login
@@ -518,7 +515,7 @@ class ProtocolMethods:
             dbquery = models.UserConfig.selectBy(login=login,
                                                  password=password).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound) as not_found:
-            self.__catching_error(404, str(not_found))
+            self.catching_error("NOT_FOUND", str(not_found))
         else:
             dbquery.login = "User deleted"
             dbquery.password = uuid
@@ -531,18 +528,18 @@ class ProtocolMethods:
             dbquery.salt = b"deleted"
             dbquery.key = b"deleted"
             logger.success("\'_delete_user\' executed successfully")
-            self.__catching_error(200)
+            self.catching_error("OK")
 
-    def _delete_message(self):
+    @User.check_auth
+    def _delete_message(self, *args):
         """Function deletes the message from database Message
         table by its ID.
-
         """
-        uuid = self.request.data.message[0].uuid
+        message_uuid = self.request.data.message[0].uuid
         try:
-            dbquery = models.Message.selectBy(uuid=uuid).getOne()
+            dbquery = models.Message.selectBy(uuid=message_uuid).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound) as not_found:
-            self.__catching_error(404, str(not_found))
+            self.catching_error("NOT_FOUND", str(not_found))
         else:
             dbquery.text = "Message deleted"
             dbquery.filePicture = b''
@@ -553,39 +550,38 @@ class ProtocolMethods:
             dbquery.editedTime = self.get_time
             dbquery.editedStatus = True
             logger.success("\'_delete_message\' executed successfully")
-            self.__catching_error(200)
+            self.catching_error("OK")
 
-    def _edited_message(self):
+    @User.check_auth
+    def _edited_message(self, *args):
         """Changes text and time in database Message table.
         Value of editedStatus column changes from None to True.
-
         """
-        uuid = self.request.data.message[0].uuid
+        message_uuid = self.request.data.message[0].uuid
         try:
-            dbquery = models.Message.selectBy(uuid=uuid).getOne()
+            dbquery = models.Message.selectBy(uuid=message_uuid).getOne()
         except (SQLObjectIntegrityError, SQLObjectNotFound) as not_found:
-            self.__catching_error(404, str(not_found))
+            self.catching_error("NOT_FOUND", str(not_found))
         else:
             # changing in DB text, time and status
             dbquery.text = self.request.data.message[0].text
             dbquery.editedTime = self.get_time
             dbquery.editedStatus = True
             logger.success("\'_edited_message\' executed successfully")
-            self.__catching_error(200)
+            self.catching_error("OK")
 
-    def _ping_pong(self):
+    @User.check_auth
+    def _ping_pong(self, *args):
         """Generates a response to a client's request
         for communication between server and client.
-
         """
         logger.success("\'_ping_pong\' executed successfully")
-        self.__catching_error(200)
+        self.catching_error("OK")
 
     def _errors(self):
         """Handles cases when a request to server is not recognized by it.
         Get a standard answer type: error, which contains an object
         with a description of error.
-
         """
         logger.success("\'_errors\' executed successfully")
-        self.__catching_error(405)
+        self.catching_error("METHOD_NOT_ALLOWED")

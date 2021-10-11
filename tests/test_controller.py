@@ -40,6 +40,7 @@ from mod import api  # noqa
 from mod import controller  # noqa
 from mod import lib  # noqa
 from mod import models  # noqa
+from mod.controller import User  # noqa
 
 # ************** Read "config.ini" ********************
 config = configparser.ConfigParser()
@@ -347,6 +348,8 @@ class TestCheckAuthToken(unittest.TestCase):
                           password="password",
                           authId="auth_id")
         self.test = api.ValidJSON.parse_obj(SEND_MESSAGE)
+        self.error = controller.Error
+        self.response = list()
 
     def tearDown(self):
         for item in classes:
@@ -356,29 +359,32 @@ class TestCheckAuthToken(unittest.TestCase):
                              cascade=True)
         del self.test
 
-    def test_check_true_result(self):
+    def test_check_decorator(self):
+        def test_func(*args):
+            _, uuid, auth_id = args
+            if uuid == "123456" and auth_id == "auth_id":
+                return True
+            return False
         uuid = self.test.data.user[0].uuid
         auth_id = self.test.data.user[0].auth_id
-        run_method = controller.ProtocolMethods(self.test)
-        result = run_method._ProtocolMethods__check_auth_token(uuid,
-                                                               auth_id)
+        result = controller.User.check_auth(test_func)("", uuid, auth_id)
         self.assertTrue(result)
 
     def test_check_wrong_uuid(self):
-        uuid = 654321
+        uuid = "654321"
         auth_id = self.test.data.user[0].auth_id
-        run_method = controller.ProtocolMethods(self.test)
-        result = run_method._ProtocolMethods__check_auth_token(uuid,
-                                                               auth_id)
-        self.assertFalse(result)
+        self.assertRaises(AttributeError,
+                          lambda: User.check_auth(lambda: True)("",
+                                                                uuid,
+                                                                auth_id))
 
     def test_check_wrong_auth_id(self):
         auth_id = "wrong_auth_id"
         uuid = self.test.data.user[0].uuid
-        run_method = controller.ProtocolMethods(self.test)
-        result = run_method._ProtocolMethods__check_auth_token(uuid,
-                                                               auth_id)
-        self.assertFalse(result)
+        self.assertRaises(AttributeError,
+                          lambda: User.check_auth(lambda: True)("",
+                                                                uuid,
+                                                                auth_id))
 
 
 class TestCheckLogin(unittest.TestCase):
@@ -407,12 +413,12 @@ class TestCheckLogin(unittest.TestCase):
     def test_check_true_result(self):
         login = self.test.data.user[0].login
         run_method = controller.ProtocolMethods(self.test)
-        result = run_method._ProtocolMethods__check_login(login)
+        result = run_method.check_login(login)
         self.assertTrue(result)
 
     def test_check_wrong_login(self):
         run_method = controller.ProtocolMethods(self.test)
-        result = run_method._ProtocolMethods__check_login("wrong_login")
+        result = run_method.check_login("wrong_login")
         self.assertFalse(result)
 
 
@@ -702,13 +708,14 @@ class TestAllMessages(unittest.TestCase):
 
     def test_all_message_fields_filled(self):
         self.test.data.flow[0].uuid = "07d950"
+        check_uuid = '271520724063176879757028074376756118591'
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         message_found = False
         for _, item in enumerate(result["data"]["message"]):
             if item["time"] == 666:
                 message_found = True
-                self.assertEqual(item["uuid"], '271520724063176879757028074376756118591')
+                self.assertEqual(item["uuid"], check_uuid)
                 self.assertEqual(item["text"], 'Privet')
                 self.assertEqual(item["from_user"], '654321')
                 self.assertEqual(item["from_flow"], '07d950')
