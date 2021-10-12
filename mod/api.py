@@ -18,7 +18,6 @@
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import json
 from typing import Any
 from typing import Optional
 from typing import List
@@ -33,7 +32,7 @@ VERSION: str = '1.0'
 class Flow(BaseModel):
     class Config:
         title = 'List of flow with description and type'
-    uuid: Optional[str] = None
+    uuid: str
     time: Optional[int] = None
     type: Optional[str] = None
     title: Optional[str] = None
@@ -61,8 +60,8 @@ class User(BaseModel):
 class Message(BaseModel):
     class Config:
         title = 'List of message information'
-    uuid: Optional[str] = None
-    client_id: Optional[int] = None
+    uuid: str
+    client_id: int
     text: Optional[str] = None
     from_user: Optional[str] = None
     time: Optional[int] = None
@@ -89,31 +88,42 @@ class Data(BaseModel):
 class Errors(BaseModel):
     class Config:
         title = 'Error information and statuses of request processing'
-    code: Optional[int] = None
-    status: Optional[str] = None
-    time: Optional[int] = None
-    detail: Optional[str] = None
+    code: int
+    status: str
+    time: int
+    detail: str
 
 
 class Version(BaseModel):
     class Config:
         title = 'Protocol version'
-    version: Optional[str] = None
+    version: str
 
 
 class ValidJSON(BaseModel):
     class Config:
-        title = 'MoreliaTalk protocol v1.0'
-    type: Optional[str] = None
+        title = 'MoreliaTalk protocol'
+    type: str
     data: Optional[Data] = None
-    errors: Optional[Errors] = None
-    jsonapi: Optional[Version] = None
+    errors: Errors
+    jsonapi: Version
     meta: Optional[Any] = None
 
-    def toJSON(self):
-        return json.dumps(self,
-                          ensure_ascii=False,
-                          default=lambda o: o.__dict__)
+
+class Request(ValidJSON):
+    """Global class for configuring query validation parameters.
+    """
+    class Config:
+        pass
+    pass
+
+
+class Response(ValidJSON):
+    """Global class for configuring responses validation parameters.
+    """
+    class Config:
+        use_enum_values = False
+    pass
 
 
 if __name__ == "__main__":
