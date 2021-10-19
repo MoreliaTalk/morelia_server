@@ -85,7 +85,6 @@ class BaseVersion(BaseModel):
 
 class BaseValidator(BaseModel):
     type: str
-    data: Optional[BaseData] = None
     jsonapi: BaseVersion
     meta: Optional[Any] = None
 
@@ -108,7 +107,7 @@ class UserRequest(BaseUser):
 class MessageRequest(BaseMessage):
     class Config:
         title = 'List of message information with client_id is int'
-    client_id: int
+    client_id: int = None
 
 
 class DataRequest(BaseData):
@@ -135,6 +134,7 @@ class VersionRequest(BaseVersion):
 class Request(BaseValidator):
     class Config:
         title = 'MoreliaTalk protocol (for request)'
+    data: Optional[DataRequest] = None
     errors: ErrorsRequest = None
 
 
@@ -184,6 +184,7 @@ class Response(BaseValidator):
     class Config:
         title = 'MoreliaTalk protocol (for response)'
         use_enum_values = False
+    data: Optional[DataResponse] = None
     errors: ErrorsResponse = None
 
 
