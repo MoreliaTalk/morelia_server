@@ -242,7 +242,9 @@ class ProtocolMethods(User, Error):
         # select all fields of the user table
         # TODO внеести измнения в протокол, добавить фильтр
         # по дате создания пользователя
-        message, flow, user = []
+        message = []
+        flow = []
+        user = []
 
         dbquery_user = models.UserConfig.selectBy()
         dbquery_flow = models.Flow.select(models.Flow.q.timeCreated >=
@@ -285,7 +287,7 @@ class ProtocolMethods(User, Error):
 
         if dbquery_user.count():
             for element in dbquery_user:
-                user.append(api.User(
+                user.append(api.UserResponse(
                             uuid=element.uuid,
                             username=element.username,
                             is_bot=element.isBot,
@@ -366,7 +368,8 @@ class ProtocolMethods(User, Error):
         flow_uuid = request.data.flow[0].uuid
         message_start = request.data.flow[0].message_start
         message_end = request.data.flow[0].message_end
-        flow, message = []
+        flow = []
+        message = []
 
         if message_start is None:
             message_start = 0
