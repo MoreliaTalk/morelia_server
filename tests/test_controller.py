@@ -91,6 +91,7 @@ SEND_MESSAGE = {
             "uuid": flow_uuid
             }],
         "message": [{
+            "uuid": "999666",
             "text": "Hello!",
             "client_id": 123,
             "file_picture": b"jkfikdkdsd",
@@ -134,6 +135,7 @@ ADD_FLOW = {
     "type": "add_flow",
     "data": {
         "flow": [{
+            "uuid": None,
             "type": "group",
             "title": "title",
             "info": "info",
@@ -250,7 +252,8 @@ DELETE_MESSAGE = {
             "uuid": flow_uuid
             }],
         "message": [{
-            "uuid": "1122"
+            "uuid": "1122",
+            "client_id": None
             }],
         "user": [{
             "uuid": user_uuid,
@@ -347,7 +350,7 @@ class TestCheckAuthToken(unittest.TestCase):
                           login="login",
                           password="password",
                           authId="auth_id")
-        self.test = api.ValidJSON.parse_obj(SEND_MESSAGE)
+        self.test = api.Request.parse_obj(SEND_MESSAGE)
         self.error = controller.Error
         self.response = list()
 
@@ -361,30 +364,24 @@ class TestCheckAuthToken(unittest.TestCase):
 
     def test_check_decorator(self):
         def test_func(*args):
-            _, uuid, auth_id = args
+            request = args[1]
+            uuid = request.data.user[0].uuid
+            auth_id = request.data.user[0].auth_id
             if uuid == "123456" and auth_id == "auth_id":
                 return True
             return False
-        uuid = self.test.data.user[0].uuid
-        auth_id = self.test.data.user[0].auth_id
-        result = controller.User.check_auth(test_func)("", uuid, auth_id)
+        result = controller.User.check_auth(test_func)("", self.test)
         self.assertTrue(result)
 
     def test_check_wrong_uuid(self):
-        uuid = "654321"
-        auth_id = self.test.data.user[0].auth_id
+        self.test.data.user[0].uuid = "654321"
         self.assertRaises(AttributeError,
-                          lambda: User.check_auth(lambda: True)("",
-                                                                uuid,
-                                                                auth_id))
+                          lambda: User.check_auth(lambda: True)("", self.test))
 
     def test_check_wrong_auth_id(self):
-        auth_id = "wrong_auth_id"
-        uuid = self.test.data.user[0].uuid
+        self.test.data.user[0].auth_id = "wrong_auth_id"
         self.assertRaises(AttributeError,
-                          lambda: User.check_auth(lambda: True)("",
-                                                                uuid,
-                                                                auth_id))
+                          lambda: User.check_auth(lambda: True)("", self.test))
 
 
 class TestCheckLogin(unittest.TestCase):
@@ -400,7 +397,7 @@ class TestCheckLogin(unittest.TestCase):
                           login="login",
                           password="password",
                           authId="auth_id")
-        self.test = api.ValidJSON.parse_obj(REGISTER_USER)
+        self.test = api.Request.parse_obj(REGISTER_USER)
 
     def tearDown(self):
         for item in classes:
@@ -431,7 +428,7 @@ class TestRegisterUser(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        self.test = api.ValidJSON.parse_obj(REGISTER_USER)
+        self.test = api.Request.parse_obj(REGISTER_USER)
 
     def tearDown(self):
         for item in classes:
@@ -547,7 +544,7 @@ class TestGetUpdate(unittest.TestCase):
                        time=333,
                        user=new_user3,
                        flow=new_flow2)
-        self.test = api.ValidJSON.parse_obj(GET_UPDATE)
+        self.test = api.Request.parse_obj(GET_UPDATE)
 
     def tearDown(self):
         for item in classes:
@@ -606,7 +603,7 @@ class TestSendMessage(unittest.TestCase):
                                flowType="group",
                                owner="123456")
         new_flow.addUserConfig(new_user)
-        self.test = api.ValidJSON.parse_obj(SEND_MESSAGE)
+        self.test = api.Request.parse_obj(SEND_MESSAGE)
 
     def tearDown(self):
         for item in classes:
@@ -696,7 +693,7 @@ class TestAllMessages(unittest.TestCase):
                        time=666,
                        user=new_user2,
                        flow=new_flow2)
-        self.test = api.ValidJSON.parse_obj(ALL_MESSAGES)
+        self.test = api.Request.parse_obj(ALL_MESSAGES)
 
     def tearDown(self):
         for item in classes:
@@ -767,7 +764,7 @@ class TestAddFlow(unittest.TestCase):
                           authId="auth_id")
         models.Flow(uuid="07d949")
         logger.remove()
-        self.test = api.ValidJSON.parse_obj(ADD_FLOW)
+        self.test = api.Request.parse_obj(ADD_FLOW)
 
     def tearDown(self):
         for item in classes:
@@ -830,7 +827,7 @@ class TestAllFlow(unittest.TestCase):
                           login="login",
                           password="password",
                           authId="auth_id")
-        self.test = api.ValidJSON.parse_obj(ALL_FLOW)
+        self.test = api.Request.parse_obj(ALL_FLOW)
 
     def tearDown(self):
         for item in classes:
@@ -876,7 +873,7 @@ class TestUserInfo(unittest.TestCase):
                               authId="auth_id",
                               email="email@email.com",
                               bio="bio")
-        self.test = api.ValidJSON.parse_obj(USER_INFO)
+        self.test = api.Request.parse_obj(USER_INFO)
 
     def tearDown(self):
         for item in classes:
@@ -922,7 +919,7 @@ class TestAuthentification(unittest.TestCase):
                           hashPassword=self.hash_password,
                           salt=b"salt",
                           key=b"key")
-        self.test = api.ValidJSON.parse_obj(AUTH)
+        self.test = api.Request.parse_obj(AUTH)
 
     def tearDown(self):
         for item in classes:
@@ -979,7 +976,7 @@ class TestDeleteUser(unittest.TestCase):
                           login="login",
                           password="password",
                           authId="auth_id")
-        self.test = api.ValidJSON.parse_obj(DELETE_USER)
+        self.test = api.Request.parse_obj(DELETE_USER)
         logger.remove()
 
     def tearDown(self):
@@ -1028,7 +1025,7 @@ class TestDeleteMessage(unittest.TestCase):
                        time=123456,
                        user=new_user,
                        flow=new_flow)
-        self.test = api.ValidJSON.parse_obj(DELETE_MESSAGE)
+        self.test = api.Request.parse_obj(DELETE_MESSAGE)
         logger.remove()
 
     def tearDown(self):
@@ -1085,7 +1082,7 @@ class TestEditedMessage(unittest.TestCase):
                        time=123456,
                        user=new_user,
                        flow=new_flow)
-        self.test = api.ValidJSON.parse_obj(EDITED_MESSAGE)
+        self.test = api.Request.parse_obj(EDITED_MESSAGE)
 
     def tearDown(self):
         for item in classes:
@@ -1121,7 +1118,7 @@ class TestPingPong(unittest.TestCase):
                           login="login",
                           password="password",
                           authId="auth_id")
-        self.test = api.ValidJSON.parse_obj(PING_PONG)
+        self.test = api.Request.parse_obj(PING_PONG)
         logger.remove()
 
     def tearDown(self):
@@ -1158,7 +1155,7 @@ class TestErrors(unittest.TestCase):
         del self.test
 
     def test_wrong_type(self):
-        self.test = api.ValidJSON.parse_obj(ERRORS)
+        self.test = api.Request.parse_obj(ERRORS)
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 405)
