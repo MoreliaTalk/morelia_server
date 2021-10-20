@@ -40,7 +40,7 @@ class TestAPI(unittest.TestCase):
         logger.remove()
 
     def setUp(self):
-        self.valid = api.ValidJSON.parse_file(VALID_JSON)
+        self.valid = api.Request.parse_file(VALID_JSON)
 
     def tearDown(self):
         del self.valid
