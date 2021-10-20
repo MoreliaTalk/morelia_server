@@ -23,12 +23,15 @@ import sys
 import unittest
 from loguru import logger
 
+from pydantic.error_wrappers import ValidationError
+
 # Add path to directory with code being checked
 # to variable 'PATH' to import modules from directory
 # above the directory with tests.
 BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 FIXTURES_PATH = os.path.join(BASE_PATH, 'fixtures')
-VALID_JSON = os.path.join(FIXTURES_PATH, 'api.json')
+VALID_JSON = os.path.join(FIXTURES_PATH, 'valid.json')
+WRONG_JSON = os.path.join(FIXTURES_PATH, 'wrong.json')
 sys.path.append(os.path.split(BASE_PATH)[0])
 
 from mod import api  # noqa
@@ -45,8 +48,14 @@ class TestAPI(unittest.TestCase):
     def tearDown(self):
         del self.valid
 
-    def test_validation_json(self):
+    def test_validation_valid_json(self):
         self.assertIsInstance(self.valid.dict(), dict)
+
+    def test_validation_wrong_json(self):
+        try:
+            api.Request.parse_file(WRONG_JSON)
+        except ValidationError as error:
+            self.assertEqual(ValidationError, type(error))
 
 
 if __name__ == "__main__":

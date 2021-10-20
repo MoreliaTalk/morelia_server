@@ -107,7 +107,7 @@ class UserRequest(BaseUser):
 class MessageRequest(BaseMessage):
     class Config:
         title = 'List of message information with client_id is int'
-    client_id: int = None
+    client_id: int
 
 
 class DataRequest(BaseData):
