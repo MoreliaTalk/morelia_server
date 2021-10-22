@@ -46,9 +46,23 @@ def check_error_pattern(status: str) -> Enum:
     try:
         getattr(HTTPStatus, status).value
     except AttributeError:
-        obj = getattr(ServerStatus, status)
+        http_status_not_found = True
+    except TypeError:
+        raise TypeError("".join(("Wrong status type passed",
+                                 f" it should be {type(str())}",
+                                 f" but it was passed {type(status)}")))
     else:
         obj = getattr(HTTPStatus, status)
+        http_status_not_found = False
+
+    if http_status_not_found:
+        try:
+            obj = getattr(ServerStatus, status)
+        except AttributeError:
+            raise AttributeError("Received a non-existent error status")
+        else:
+            obj = getattr(ServerStatus, status)
+
     return Enum("Error", {"code": obj.value,
                           "status": obj.phrase,
                           "detail": obj.description})
