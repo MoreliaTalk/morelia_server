@@ -34,12 +34,14 @@ VALID_JSON = os.path.join(FIXTURES_PATH, 'valid.json')
 WRONG_JSON = os.path.join(FIXTURES_PATH, 'wrong.json')
 WRONG_REQUEST = os.path.join(FIXTURES_PATH, 'wrong_request.json')
 WRONG_RESPONSE = os.path.join(FIXTURES_PATH, 'wrong_response.json')
+WRONG_DATA_ERRORS = os.path.join(FIXTURES_PATH, 'wrong_data_errors.json')
+WRONG_FLOW_MESSAGE = os.path.join(FIXTURES_PATH, 'wrong_flow_message.json')
 sys.path.append(os.path.split(BASE_PATH)[0])
 
 from mod import api  # noqa
 
 
-class TestAPI(unittest.TestCase):
+class TestApiValidation(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         logger.remove()
@@ -78,7 +80,7 @@ class TestAPI(unittest.TestCase):
             self.assertEqual(result[5].get("msg"),
                              "value is not a valid integer")
         else:
-            self.assertTrue(False)
+            self.assertIsNone(self.test)
 
     def test_api_response(self):
         try:
@@ -95,6 +97,54 @@ class TestAPI(unittest.TestCase):
                              "field required")
             self.assertEqual(result[4].get("msg"),
                              "field required")
+        else:
+            self.assertIsNone(self.test)
+
+    def test_api_wrong_data_and_errors_in_request(self):
+        try:
+            api.Request.parse_file(WRONG_DATA_ERRORS)
+        except Exception as ERROR:
+            result = ERROR.errors()
+            self.assertEqual(result[0].get("msg"),
+                             "value is not a valid dict")
+            self.assertEqual(result[1].get("msg"),
+                             "value is not a valid dict")
+        else:
+            self.assertIsNone(self.test)
+
+    def test_api_wrong_data_and_errors_in_response(self):
+        try:
+            api.Response.parse_file(WRONG_DATA_ERRORS)
+        except Exception as ERROR:
+            result = ERROR.errors()
+            self.assertEqual(result[0].get("msg"),
+                             "value is not a valid dict")
+            self.assertEqual(result[1].get("msg"),
+                             "value is not a valid dict")
+        else:
+            self.assertIsNone(self.test)
+
+    def test_api_wrong_flow_and_message_in_request(self):
+        try:
+            api.Request.parse_file(WRONG_FLOW_MESSAGE)
+        except Exception as ERROR:
+            result = ERROR.errors()
+            self.assertEqual(result[0].get("msg"),
+                             "value is not a valid list")
+            self.assertEqual(result[1].get("msg"),
+                             "value is not a valid list")
+        else:
+            self.assertIsNone(self.test)
+
+    def test_api_wrong_flow_and_message_in_response(self):
+        try:
+            api.Response.parse_file(WRONG_FLOW_MESSAGE)
+        except Exception as ERROR:
+            result = ERROR.errors()
+            self.assertEqual(result[0].get("msg"),
+                             "value is not a valid list")
+            self.assertEqual(result[1].get("msg"),
+                             "value is not a valid list")
         else:
             self.assertIsNone(self.test)
 
