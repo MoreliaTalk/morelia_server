@@ -3,7 +3,7 @@
     "data": {
         "time": 1594492370,
         "flow": [{
-            "uuid": "1254",
+            "uuid": ["1254"],
             "time": 1594492370,
             "type": "chat",
             "title": "Name Chat",
@@ -31,7 +31,6 @@
             "edited_status": true
             },
             {
-            "uuid": 999,
             "client_id": 987654,
             "text": "some text...",
             "from_user": "1254",
@@ -59,9 +58,9 @@
         "meta": null
         },
     "errors": {
-        "code": 200,
-        "status": "OK",
-        "time": 1594492370,
+        "code": [200],
+        "status": {"OK": 1},
+        "time": [15944, 92370],
         "detail": "successfully"
         },
     "jsonapi": {

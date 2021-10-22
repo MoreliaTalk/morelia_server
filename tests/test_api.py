@@ -32,6 +32,8 @@ BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 FIXTURES_PATH = os.path.join(BASE_PATH, 'fixtures')
 VALID_JSON = os.path.join(FIXTURES_PATH, 'valid.json')
 WRONG_JSON = os.path.join(FIXTURES_PATH, 'wrong.json')
+WRONG_REQUEST = os.path.join(FIXTURES_PATH, 'wrong_request.json')
+WRONG_RESPONSE = os.path.join(FIXTURES_PATH, 'wrong_response.json')
 sys.path.append(os.path.split(BASE_PATH)[0])
 
 from mod import api  # noqa
@@ -44,6 +46,7 @@ class TestAPI(unittest.TestCase):
 
     def setUp(self):
         self.valid = api.Request.parse_file(VALID_JSON)
+        self.test = "API VALIDATION SCHEME IS WRONG"
 
     def tearDown(self):
         del self.valid
@@ -56,6 +59,44 @@ class TestAPI(unittest.TestCase):
             api.Request.parse_file(WRONG_JSON)
         except ValidationError as error:
             self.assertEqual(ValidationError, type(error))
+
+    def test_api_request(self):
+        try:
+            api.Request.parse_file(WRONG_REQUEST)
+        except Exception as ERROR:
+            result = ERROR.errors()
+            self.assertEqual(result[0].get("msg"),
+                             "str type expected")
+            self.assertEqual(result[1].get("msg"),
+                             "field required")
+            self.assertEqual(result[2].get("msg"),
+                             "field required")
+            self.assertEqual(result[3].get("msg"),
+                             "value is not a valid integer")
+            self.assertEqual(result[4].get("msg"),
+                             "str type expected")
+            self.assertEqual(result[5].get("msg"),
+                             "value is not a valid integer")
+        else:
+            self.assertTrue(False)
+
+    def test_api_response(self):
+        try:
+            api.Response.parse_file(WRONG_RESPONSE)
+        except Exception as ERROR:
+            result = ERROR.errors()
+            self.assertEqual(result[0].get("msg"),
+                             "field required")
+            self.assertEqual(result[1].get("msg"),
+                             "value is not a valid integer")
+            self.assertEqual(result[2].get("msg"),
+                             "field required")
+            self.assertEqual(result[3].get("msg"),
+                             "field required")
+            self.assertEqual(result[4].get("msg"),
+                             "field required")
+        else:
+            self.assertIsNone(self.test)
 
 
 if __name__ == "__main__":
