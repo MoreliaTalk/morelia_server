@@ -29,6 +29,7 @@ import configparser
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi import WebSocket
+from starlette.responses import HTMLResponse
 from starlette.templating import Jinja2Templates
 from starlette.websockets import WebSocketDisconnect
 import sqlobject as orm
@@ -38,6 +39,7 @@ import sqlobject as orm
 # ************** Morelia module **********************
 from mod import controller
 from mod import models
+from admin import admin
 # ************** Morelia module end ******************
 
 
@@ -83,27 +85,11 @@ templates = Jinja2Templates(directory.get("folder"))
 # TODO: Нужно подумать как их компактно хранить
 CLIENTS = []
 
+app.include_router(admin.router)
 
-# Server home page
 @app.get('/')
 def home_page(request: Request):
-    return templates.TemplateResponse('index.html', {'request': request})
-
-
-# Server page with working statistics
-@app.get('/status')
-def status_page(request: Request):
-    dbquery = models.Message.select(models.Message.q.time >= 1)
-    stats = {
-        'Server time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        'Server uptime': str(datetime.now()-server_started),
-        'Users': len(CLIENTS),
-        'Messages': dbquery.count()
-        }
-    return templates.TemplateResponse('status.html',
-                                      {'request': request,
-                                       'stats': stats})
-
+    return HTMLResponse("Hello!")
 
 # Chat websocket
 @app.websocket("/ws")
