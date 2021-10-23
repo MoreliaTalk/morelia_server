@@ -57,8 +57,6 @@ ERRORS = os.path.join(FIXTURES_PATH, "errors.json")
 NON_VALID_ERRORS = os.path.join(FIXTURES_PATH, "non_valid_errors.json")
 ERRORS_ONLY_TYPE = os.path.join(FIXTURES_PATH, "errors_only_type.json")
 
-sys.path.append(os.path.split(BASE_PATH)[0])
-
 
 # ************** Read "config.ini" ********************
 config = configparser.ConfigParser()
@@ -72,13 +70,6 @@ orm.sqlhub.processConnection = connection
 classes = [cls_name for cls_name, cls_obj
            in inspect.getmembers(sys.modules["mod.models"])
            if inspect.isclass(cls_obj)]
-
-
-user_uuid = "123456"
-user_auth_id = "auth_id"
-user_password = "password"
-user_login = "login"
-flow_uuid = "07d949"
 
 
 class TestCheckAuthToken(unittest.TestCase):
