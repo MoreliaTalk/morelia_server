@@ -253,7 +253,7 @@ DELETE_MESSAGE = {
             }],
         "message": [{
             "uuid": "1122",
-            "client_id": None
+            "client_id": 123
             }],
         "user": [{
             "uuid": user_uuid,
@@ -272,6 +272,7 @@ EDITED_MESSAGE = {
     "data": {
         "message": [{
             "uuid": "1",
+            "client_id": 123,
             "text": "New_Hello"
             }],
         "user": [{
@@ -1010,6 +1011,7 @@ class TestDeleteMessage(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
+
         new_user = models.UserConfig(uuid="123456",
                                      login="login",
                                      password="password",
