@@ -29,18 +29,36 @@ from uuid import uuid4
 import sqlobject as orm
 from loguru import logger
 
-# Add path to directory with code being checked
-# to variable 'PATH' to import modules from directory
-# above the directory with the tests.
-BASE_PATH = os.path.abspath(os.path.dirname(__file__))
-FIXTURES_PATH = os.path.join(BASE_PATH, "fixtures")
-sys.path.append(os.path.split(BASE_PATH)[0])
-
 from mod import api  # noqa
 from mod import controller  # noqa
 from mod import lib  # noqa
 from mod import models  # noqa
 from mod.controller import User  # noqa
+
+# Add path to directory with code being checked
+# to variable 'PATH' to import modules from directory
+# above the directory with the tests.
+BASE_PATH = os.path.abspath(os.path.dirname(__file__))
+FIXTURES_PATH = os.path.join(BASE_PATH, "fixtures")
+
+GET_UPDATE = os.path.join(FIXTURES_PATH, "get_update.json")
+SEND_MESSAGE = os.path.join(FIXTURES_PATH, "send_message.json")
+ALL_MESSAGES = os.path.join(FIXTURES_PATH, "all_message.json")
+ADD_FLOW = os.path.join(FIXTURES_PATH, "add_flow.json")
+ALL_FLOW = os.path.join(FIXTURES_PATH, "all_flow.json")
+USER_INFO = os.path.join(FIXTURES_PATH, "user_info.json")
+REGISTER_USER = os.path.join(FIXTURES_PATH, "register_user.json")
+AUTH = os.path.join(FIXTURES_PATH, "auth.json")
+DELETE_USER = os.path.join(FIXTURES_PATH, "delete_user.json")
+DELETE_MESSAGE = os.path.join(FIXTURES_PATH, "delete_message.json")
+EDITED_MESSAGE = os.path.join(FIXTURES_PATH, "edited_message.json")
+PING_PONG = os.path.join(FIXTURES_PATH, "ping_pong.json")
+ERRORS = os.path.join(FIXTURES_PATH, "errors.json")
+NON_VALID_ERRORS = os.path.join(FIXTURES_PATH, "non_valid_errors.json")
+ERRORS_ONLY_TYPE = os.path.join(FIXTURES_PATH, "errors_only_type.json")
+
+sys.path.append(os.path.split(BASE_PATH)[0])
+
 
 # ************** Read "config.ini" ********************
 config = configparser.ConfigParser()
@@ -56,286 +74,11 @@ classes = [cls_name for cls_name, cls_obj
            if inspect.isclass(cls_obj)]
 
 
-# **************** Examples of requests ********************
-#
-#
-# variables for repeating fields in queries:
 user_uuid = "123456"
 user_auth_id = "auth_id"
 user_password = "password"
 user_login = "login"
 flow_uuid = "07d949"
-#
-#
-# requests
-GET_UPDATE = {
-    "type": "get_update",
-    "data": {
-        "time": 111,
-        "user": [{
-            "uuid": user_uuid,
-            "auth_id": user_auth_id
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-SEND_MESSAGE = {
-    "type": "send_message",
-    "data": {
-        "flow": [{
-            "uuid": flow_uuid
-            }],
-        "message": [{
-            "uuid": "999666",
-            "text": "Hello!",
-            "client_id": 123,
-            "file_picture": b"jkfikdkdsd",
-            "file_video": b"sdfsdfsdf",
-            "file_audio": b"fgfsdfsdfsdf",
-            "file_document": b"adgdfhfgth",
-            "emoji": b"sfdfsdfsdf"
-            }],
-        "user": [{
-            "uuid": user_uuid,
-            "auth_id": user_auth_id
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-ALL_MESSAGES = {
-    "type": "all_messages",
-    "data": {
-        "time": 2,
-        "flow": [{
-            "uuid": flow_uuid
-            }],
-        "user": [{
-            "uuid": user_uuid,
-            "auth_id": user_auth_id
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-ADD_FLOW = {
-    "type": "add_flow",
-    "data": {
-        "flow": [{
-            "uuid": None,
-            "type": "group",
-            "title": "title",
-            "info": "info",
-            "owner": "123456",
-            "users": ["123456"]
-            }],
-        "user": [{
-            "uuid": user_uuid,
-            "auth_id": user_auth_id
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-ALL_FLOW = {
-    "type": "all_flow",
-    "data": {
-        "user": [{
-            "uuid": user_uuid,
-            "auth_id": user_auth_id
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-USER_INFO = {
-    "type": "user_info",
-    "data": {
-        "user": [{
-            "uuid": user_uuid,
-            "auth_id": user_auth_id
-            },
-            {
-            "uuid": "123457"
-            },
-            {
-            "uuid": "123458"
-            },
-            {
-            "uuid": "123459"
-            },
-            {
-            "uuid": "123460"
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-REGISTER_USER = {
-    "type": "register_user",
-    "data": {
-        "user": [{
-            "password": user_password,
-            "login": user_login,
-            "email": "querty@querty.com",
-            "username": "username"
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-AUTH = {
-    "type": "auth",
-    "data": {
-        "user": [{
-            "password": user_password,
-            "login": user_login
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-DELETE_USER = {
-    "type": "delete_user",
-    "data": {
-        "user": [{
-            "uuid": user_uuid,
-            "password": user_password,
-            "login": user_login,
-            "auth_id": user_auth_id
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-DELETE_MESSAGE = {
-    "type": "delete_message",
-    "data": {
-        "flow": [{
-            "uuid": flow_uuid
-            }],
-        "message": [{
-            "uuid": "1122",
-            "client_id": 123
-            }],
-        "user": [{
-            "uuid": user_uuid,
-            "auth_id": user_auth_id
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-EDITED_MESSAGE = {
-    "type": "edited_message",
-    "data": {
-        "message": [{
-            "uuid": "1",
-            "client_id": 123,
-            "text": "New_Hello"
-            }],
-        "user": [{
-            "uuid": user_uuid,
-            "auth_id": user_auth_id
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-PING_PONG = {
-    "type": "ping-pong",
-    "data": {
-        "user": [{
-            "uuid": user_uuid,
-            "auth_id": user_auth_id
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-ERRORS = {
-    "type": "wrong type",
-    "data": {
-        "user": [{
-            "uuid": user_uuid,
-            "auth_id": user_auth_id
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-NON_VALID_ERRORS = {
-    "data": {
-        "user": [{
-            "uuid": user_uuid,
-            "auth_id": user_auth_id
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-ERRORS_ONLY_TYPE = {
-    "type": "send_message"
-    }
-
-# **************** End examples of requests *****************
 
 
 class TestCheckAuthToken(unittest.TestCase):
@@ -351,7 +94,7 @@ class TestCheckAuthToken(unittest.TestCase):
                           login="login",
                           password="password",
                           authId="auth_id")
-        self.test = api.Request.parse_obj(SEND_MESSAGE)
+        self.test = api.Request.parse_file(SEND_MESSAGE)
         self.error = controller.Error
         self.response = list()
 
@@ -398,7 +141,7 @@ class TestCheckLogin(unittest.TestCase):
                           login="login",
                           password="password",
                           authId="auth_id")
-        self.test = api.Request.parse_obj(REGISTER_USER)
+        self.test = api.Request.parse_file(REGISTER_USER)
 
     def tearDown(self):
         for item in classes:
@@ -429,7 +172,7 @@ class TestRegisterUser(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        self.test = api.Request.parse_obj(REGISTER_USER)
+        self.test = api.Request.parse_file(REGISTER_USER)
 
     def tearDown(self):
         for item in classes:
@@ -545,7 +288,7 @@ class TestGetUpdate(unittest.TestCase):
                        time=333,
                        user=new_user3,
                        flow=new_flow2)
-        self.test = api.Request.parse_obj(GET_UPDATE)
+        self.test = api.Request.parse_file(GET_UPDATE)
 
     def tearDown(self):
         for item in classes:
@@ -604,7 +347,7 @@ class TestSendMessage(unittest.TestCase):
                                flowType="group",
                                owner="123456")
         new_flow.addUserConfig(new_user)
-        self.test = api.Request.parse_obj(SEND_MESSAGE)
+        self.test = api.Request.parse_file(SEND_MESSAGE)
 
     def tearDown(self):
         for item in classes:
@@ -694,7 +437,7 @@ class TestAllMessages(unittest.TestCase):
                        time=666,
                        user=new_user2,
                        flow=new_flow2)
-        self.test = api.Request.parse_obj(ALL_MESSAGES)
+        self.test = api.Request.parse_file(ALL_MESSAGES)
 
     def tearDown(self):
         for item in classes:
@@ -765,7 +508,7 @@ class TestAddFlow(unittest.TestCase):
                           authId="auth_id")
         models.Flow(uuid="07d949")
         logger.remove()
-        self.test = api.Request.parse_obj(ADD_FLOW)
+        self.test = api.Request.parse_file(ADD_FLOW)
 
     def tearDown(self):
         for item in classes:
@@ -828,7 +571,7 @@ class TestAllFlow(unittest.TestCase):
                           login="login",
                           password="password",
                           authId="auth_id")
-        self.test = api.Request.parse_obj(ALL_FLOW)
+        self.test = api.Request.parse_file(ALL_FLOW)
 
     def tearDown(self):
         for item in classes:
@@ -874,7 +617,7 @@ class TestUserInfo(unittest.TestCase):
                               authId="auth_id",
                               email="email@email.com",
                               bio="bio")
-        self.test = api.Request.parse_obj(USER_INFO)
+        self.test = api.Request.parse_file(USER_INFO)
 
     def tearDown(self):
         for item in classes:
@@ -920,7 +663,7 @@ class TestAuthentification(unittest.TestCase):
                           hashPassword=self.hash_password,
                           salt=b"salt",
                           key=b"key")
-        self.test = api.Request.parse_obj(AUTH)
+        self.test = api.Request.parse_file(AUTH)
 
     def tearDown(self):
         for item in classes:
@@ -977,7 +720,7 @@ class TestDeleteUser(unittest.TestCase):
                           login="login",
                           password="password",
                           authId="auth_id")
-        self.test = api.Request.parse_obj(DELETE_USER)
+        self.test = api.Request.parse_file(DELETE_USER)
         logger.remove()
 
     def tearDown(self):
@@ -1027,7 +770,7 @@ class TestDeleteMessage(unittest.TestCase):
                        time=123456,
                        user=new_user,
                        flow=new_flow)
-        self.test = api.Request.parse_obj(DELETE_MESSAGE)
+        self.test = api.Request.parse_file(DELETE_MESSAGE)
         logger.remove()
 
     def tearDown(self):
@@ -1084,7 +827,7 @@ class TestEditedMessage(unittest.TestCase):
                        time=123456,
                        user=new_user,
                        flow=new_flow)
-        self.test = api.Request.parse_obj(EDITED_MESSAGE)
+        self.test = api.Request.parse_file(EDITED_MESSAGE)
 
     def tearDown(self):
         for item in classes:
@@ -1120,7 +863,7 @@ class TestPingPong(unittest.TestCase):
                           login="login",
                           password="password",
                           authId="auth_id")
-        self.test = api.Request.parse_obj(PING_PONG)
+        self.test = api.Request.parse_file(PING_PONG)
         logger.remove()
 
     def tearDown(self):
@@ -1157,7 +900,7 @@ class TestErrors(unittest.TestCase):
         del self.test
 
     def test_wrong_type(self):
-        self.test = api.Request.parse_obj(ERRORS)
+        self.test = api.Request.parse_file(ERRORS)
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 405)

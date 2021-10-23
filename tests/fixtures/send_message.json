@@ -1,0 +1,27 @@
+{
+    "type": "send_message",
+    "data": {
+        "flow": [{
+            "uuid": "07d949"
+            }],
+        "message": [{
+            "uuid": "999666",
+            "text": "Hello!",
+            "client_id": 123,
+            "file_picture": "jkfikdkdsd",
+            "file_video": "sdfsdfsdf",
+            "file_audio": "fgfsdfsdfsdf",
+            "file_document": "adgdfhfgth",
+            "emoji": "sfdfsdfsdf"
+            }],
+        "user": [{
+            "uuid": "123456",
+            "auth_id": "auth_id"
+            }],
+        "meta": null
+        },
+    "jsonapi": {
+        "version": "1.0"
+        },
+    "meta": null
+    }
