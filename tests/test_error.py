@@ -22,7 +22,6 @@ import unittest
 from loguru import logger
 
 from mod import error
-from mod.api import ErrorsRequest  # noqa
 
 
 class TestCheckError(unittest.TestCase):
