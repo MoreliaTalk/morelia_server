@@ -79,9 +79,11 @@ class Hash:
         self.size_password = hash_size.getint('password')
         self.size_auth_id = hash_size.getint('auth_id')
 
+    @property
     def get_salt(self) -> bytes:
         return self.salt
 
+    @property
     def get_key(self) -> bytes:
         return self.key
 
