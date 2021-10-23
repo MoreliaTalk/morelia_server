@@ -46,10 +46,6 @@ from admin import admin
 # ************** Logging beginning *******************
 from loguru import logger
 from mod.logging import add_logging
-# ************** Unicorn logger off ******************
-import logging
-logging.disable()
-# ************** Logging end *************************
 
 # ************** Read "config.ini" ********************
 config = configparser.ConfigParser()
@@ -58,6 +54,12 @@ logging = config['LOGGING']
 database = config["DATABASE"]
 directory = config["TEMPLATES"]
 # ************** END **********************************
+
+# ************** Unicorn logger off ******************
+import logging as standart_logging
+if logging.getboolean("UVICORN_LOGGING_DISABLE"):
+    standart_logging.disable()
+# ************** Logging end *************************
 
 # loguru logger on
 add_logging(logging.getint("level"))
