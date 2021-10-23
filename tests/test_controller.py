@@ -104,7 +104,6 @@ class TestCheckAuthToken(unittest.TestCase):
             auth_id = request.data.user[0].auth_id
             if uuid == "123456" and auth_id == "auth_id":
                 return True
-            return False
         result = controller.User.check_auth(test_func)("", self.test)
         self.assertTrue(result)
 
@@ -451,7 +450,6 @@ class TestAllMessages(unittest.TestCase):
                 self.assertEqual(item["text"], 'Privet')
                 self.assertEqual(item["from_user"], '654321')
                 self.assertEqual(item["from_flow"], '07d950')
-                break
         self.assertTrue(message_found)
 
     def test_all_message_more_limit(self):
