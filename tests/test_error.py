@@ -47,14 +47,14 @@ class TestCheckError(unittest.TestCase):
         self.assertEqual(result.status.value, self.OK)
 
     def test_check_wrong_type_status(self):
-        with self.assertRaises(TypeError) as raises:
-            error.check_error_pattern(self.WRONG_TYPE_STATUS)
-        self.assertIsInstance(raises.exception, TypeError)
+        self.assertRaises(TypeError,
+                          error.check_error_pattern,
+                          self.WRONG_TYPE_STATUS)
 
     def test_check_wrong_status(self):
-        with self.assertRaises(AttributeError) as raises:
-            error.check_error_pattern(self.WRONG_STATUS)
-        self.assertIsInstance(raises.exception, AttributeError)
+        self.assertRaises(AttributeError,
+                          error.check_error_pattern,
+                          self.WRONG_STATUS)
 
     def test_check_ServerStatus_pattern(self):
         result = error.check_error_pattern(self.UNKNOWN)
