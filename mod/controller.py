@@ -219,8 +219,8 @@ class ProtocolMethods(User, Error):
                               login=login,
                               username=username,
                               email=email,
-                              key=generated.get_key(),
-                              salt=generated.get_salt(),
+                              key=generated.get_key,
+                              salt=generated.get_salt,
                               authId=auth_id)
             user.append(api.UserResponse(uuid=uuid,
                                          auth_id=auth_id))
