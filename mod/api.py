@@ -186,9 +186,3 @@ class Response(BaseValidator):
         use_enum_values = False
     data: Optional[DataResponse] = None
     errors: ErrorsResponse = None
-
-
-if __name__ == "__main__":
-    print('Shema for Response=', Response.schema_json(indent=2))
-    print()
-    print('Shema for Request=', Request.schema_json(indent=2))
