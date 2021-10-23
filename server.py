@@ -21,6 +21,7 @@
 # ************** Standart module *********************
 from datetime import datetime
 from json import JSONDecodeError
+from pathlib import Path
 import configparser
 # ************** Standart module end *****************
 
@@ -29,6 +30,7 @@ import configparser
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi import WebSocket
+from fastapi.staticfiles import StaticFiles
 from starlette.responses import HTMLResponse
 from starlette.templating import Jinja2Templates
 from starlette.websockets import WebSocketDisconnect
@@ -88,6 +90,12 @@ templates = Jinja2Templates(directory.get("folder"))
 CLIENTS = []
 
 app.include_router(admin.router)
+
+app.mount(
+    "/static",
+    StaticFiles(directory="static"),
+    name="static"
+)
 
 @app.get('/')
 def home_page(request: Request):
