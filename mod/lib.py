@@ -22,7 +22,6 @@ import sys
 from hashlib import blake2b
 from hmac import compare_digest
 from os import urandom
-from typing import Union
 import configparser
 
 # ************** Read "config.ini" ********************
@@ -53,8 +52,11 @@ class Hash:
         hash_password (str, optional): password hash (previously calculated).
 
     """
-    def __init__(self, password: str, uuid: Union[int, str],
-                 salt: bytes = None, key: bytes = None,
+    def __init__(self,
+                 password: str,
+                 uuid: int | str,
+                 salt: bytes = None,
+                 key: bytes = None,
                  hash_password: str = None):
 
         if salt is None:
@@ -91,7 +93,8 @@ class Hash:
         """
         hash_password = blake2b(self.binary_password,
                                 digest_size=self.size_password,
-                                key=self.key, salt=self.salt)
+                                key=self.key,
+                                salt=self.salt)
         return hash_password.hexdigest()
 
     def check_password(self) -> bool:

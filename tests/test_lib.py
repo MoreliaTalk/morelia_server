@@ -24,12 +24,13 @@ import unittest
 
 from loguru import logger
 
+from mod import lib  # noqa
+
 # Add path to directory with code being checked
 # to variable 'PATH' to import modules from directory
 # above the directory with the tests.
 BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.split(BASE_PATH)[0])
-from mod import lib  # noqa
 
 
 class TestHash(unittest.TestCase):
