@@ -43,6 +43,6 @@ def login_token(data: OAuth2PasswordRequestForm = Depends()):
     )
 
     return {
-        "asess_token": token,
+        "access_token": token,
         "token_type": "bearer"
     }
