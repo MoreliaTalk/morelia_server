@@ -18,6 +18,7 @@
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from enum import unique
 import sqlobject as orm
 
 
@@ -116,3 +117,7 @@ class Message(orm.SQLObject):
     # Connection to UserConfig and Flow table
     user = orm.ForeignKey('UserConfig')
     flow = orm.ForeignKey('Flow')
+
+class Admin(orm.SQLObject):
+    username = orm.StringCol(notNone=True, unique=True)
+    password = orm.StringCol(notNone=True)
