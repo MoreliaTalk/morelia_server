@@ -25,7 +25,7 @@ login_manager = LoginManager(SECRET_KEY, token_url="/admin/login/token")
 
 @login_manager.user_loader()
 def get_admin_user_data(username: str):
-    models.Admin.selectBy(username=username)
+    return models.Admin.selectBy(username=username)[0]
 
 
 @router.post("/admin/login/token")
@@ -33,7 +33,7 @@ def login_token(data: OAuth2PasswordRequestForm = Depends()):
     admin_user_data_db = get_admin_user_data(data.username)
     if not admin_user_data_db:
         raise InvalidCredentialsException
-    elif data.password != admin_user_data_db["password"]:
+    elif data.password != admin_user_data_db.password:
         raise InvalidCredentialsException
 
     token = login_manager.create_access_token(
