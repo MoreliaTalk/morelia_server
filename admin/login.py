@@ -6,6 +6,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_login.exceptions import InvalidCredentialsException
 
 from configparser import ConfigParser
+
+from starlette.responses import Response
 from mod import models
 import sqlobject as orm
 
@@ -20,7 +22,12 @@ orm.sqlhub.processConnection = db_connection
 
 router = APIRouter()
 
-login_manager = LoginManager(SECRET_KEY, token_url="/admin/login/token")
+login_manager = LoginManager(
+    SECRET_KEY,
+    token_url="/admin/login/token",
+    use_cookie=True,
+    use_header=False
+    )
 
 
 @login_manager.user_loader()
@@ -42,7 +49,7 @@ def login_token(data: OAuth2PasswordRequestForm = Depends()):
         }
     )
 
-    return {
-        "access_token": token,
-        "token_type": "bearer"
-    }
+    response = Response()
+    login_manager.set_cookie(response, token)
+
+    return response
