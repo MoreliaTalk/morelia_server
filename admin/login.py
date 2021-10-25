@@ -31,9 +31,10 @@ login_manager = LoginManager(
     SECRET_KEY,
     token_url="/admin/login/token",
     use_cookie=True,
-    use_header=False,
-    custom_exception=NotLoginException
-    )
+    use_header=False
+)
+
+login_manager.not_authenticated_exception = NotLoginException
 
 
 @login_manager.user_loader()
