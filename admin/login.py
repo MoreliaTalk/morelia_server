@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi_login import LoginManager
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_login.exceptions import InvalidCredentialsException
@@ -22,11 +22,17 @@ orm.sqlhub.processConnection = db_connection
 
 router = APIRouter()
 
+
+class NotLoginException(Exception):
+    pass
+
+
 login_manager = LoginManager(
     SECRET_KEY,
     token_url="/admin/login/token",
     use_cookie=True,
-    use_header=False
+    use_header=False,
+    custom_exception=NotLoginException
     )
 
 
@@ -35,7 +41,7 @@ def get_admin_user_data(username: str):
     return models.Admin.selectBy(username=username)[0]
 
 
-@router.post("/admin/login/token")
+@router.post("login/token")
 def login_token(data: OAuth2PasswordRequestForm = Depends()):
     admin_user_data_db = get_admin_user_data(data.username)
     if not admin_user_data_db:
@@ -51,5 +57,16 @@ def login_token(data: OAuth2PasswordRequestForm = Depends()):
 
     response = Response()
     login_manager.set_cookie(response, token)
+
+    return response
+
+
+@router.post("login/logout")
+def logout(request: Request):
+    incorrect_token = "MoreliaTalk"
+
+    response = Response()
+
+    login_manager.set_cookie(response, incorrect_token)
 
     return response

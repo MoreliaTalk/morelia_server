@@ -89,7 +89,7 @@ templates = Jinja2Templates(directory.get("folder"))
 # TODO: Нужно подумать как их компактно хранить
 CLIENTS = []
 
-app.include_router(admin.router)
+app.mount("/admin", admin.app)
 
 app.mount(
     "/static",
