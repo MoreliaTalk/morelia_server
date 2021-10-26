@@ -8,7 +8,7 @@ from fastapi_login.exceptions import InvalidCredentialsException
 
 from configparser import ConfigParser
 
-from starlette.responses import RedirectResponse, Response
+from starlette.responses import HTMLResponse, RedirectResponse, Response
 from mod import models
 import sqlobject as orm
 
@@ -57,7 +57,13 @@ def login_token(data: OAuth2PasswordRequestForm = Depends()):
         }
     )
 
-    response = Response("Successful")
+    response = HTMLResponse(
+        """
+        <script>
+        window.document.location.href = "../"
+        </script>
+        """
+    )
     login_manager.set_cookie(response, token)
 
     return response
