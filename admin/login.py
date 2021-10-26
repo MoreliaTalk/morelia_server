@@ -1,4 +1,5 @@
 from pathlib import Path
+from types import MethodType
 
 from fastapi import APIRouter, Depends, Request
 from fastapi_login import LoginManager
@@ -7,7 +8,7 @@ from fastapi_login.exceptions import InvalidCredentialsException
 
 from configparser import ConfigParser
 
-from starlette.responses import Response
+from starlette.responses import RedirectResponse, Response
 from mod import models
 import sqlobject as orm
 
@@ -29,7 +30,7 @@ class NotLoginException(Exception):
 
 login_manager = LoginManager(
     SECRET_KEY,
-    token_url="/admin/login/token",
+    token_url="/login/token",
     use_cookie=True,
     use_header=False
 )
@@ -42,7 +43,7 @@ def get_admin_user_data(username: str):
     return models.Admin.selectBy(username=username)[0]
 
 
-@router.post("login/token")
+@router.post("/login/token")
 def login_token(data: OAuth2PasswordRequestForm = Depends()):
     admin_user_data_db = get_admin_user_data(data.username)
     if not admin_user_data_db:
@@ -56,13 +57,13 @@ def login_token(data: OAuth2PasswordRequestForm = Depends()):
         }
     )
 
-    response = Response()
+    response = Response("Successful")
     login_manager.set_cookie(response, token)
 
     return response
 
 
-@router.post("login/logout")
+@router.post("/login/logout")
 def logout(request: Request):
     incorrect_token = "MoreliaTalk"
 

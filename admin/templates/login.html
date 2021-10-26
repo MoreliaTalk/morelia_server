@@ -4,9 +4,20 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', path='bootstrap.min.css') }}">
+    <script src="{{ url_for('static', path='bootstrap.bundle.min.js') }}"></script>
+
+    <title>Login | Admin</title>
 </head>
 <body>
-    ff
+    <div class="d-flex justify-content-center align-items-center vh-100">
+        <form class="card p-3 gap-3" method="post" action="login/token">
+            <h1 class="text-center">Администрирование<br>MoreliaTalkServer</h1>
+            <input name="username" class="form-control" placeholder="Имя">
+            <input name="password" class="form-control" placeholder="Пароль">
+            <button type="submit" class="btn btn-primary">Войти</button>
+        </div>
+    </div>
 </body>
 </html>
