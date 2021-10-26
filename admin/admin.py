@@ -3,8 +3,12 @@ from fastapi.applications import FastAPI
 from fastapi.requests import Request
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
+from loguru import logger
+import sqlobject as orm
 
 from starlette.responses import RedirectResponse
+
+from mod import models
 from . import login
 
 app = FastAPI()
@@ -12,6 +16,13 @@ app = FastAPI()
 templates = Jinja2Templates(Path(__file__).parent / "templates")
 
 app.include_router(login.router)
+
+try:
+    db_connection = orm.connectionForURI(login.database.get("uri"))
+except Exception as ERROR:
+    logger.exception(str(ERROR))
+finally:
+    orm.sqlhub.processConnection = db_connection
 
 
 @app.exception_handler(login.NotLoginException)
@@ -30,3 +41,16 @@ def login_admin(request: Request):
 @app.get("/")
 def index_admin(request: Request, user=Depends(login.login_manager)):
     return templates.TemplateResponse("index_admin.html", {"request": request})
+
+@app.get("/status")
+def status_admin(request: Request, user=Depends(login.login_manager)):
+    Messages_count = models.Message.select().count()
+    Flows_count = models.Flow.select().count()
+    Users_count = models.UserConfig.select().count()
+
+    return templates.TemplateResponse("status_admin.html", {
+        "request": request,
+        "Messages_count": Messages_count,
+        "Flows_count": Flows_count,
+        "Users_count": Users_count
+    })

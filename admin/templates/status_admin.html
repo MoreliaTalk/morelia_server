@@ -1,0 +1,11 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Status{% endblock %}
+
+{% block content %}
+    <div class="card p-3 gap-3">
+        <h1 class="alert alert-primary">Кол-во сообщений: {{Messages_count}}</h1>
+        <h1 class="alert alert-primary">Кол-во потоков: {{Flows_count}}</h1>
+        <h1 class="alert alert-primary">Кол-во пользователей: {{Flows_count}}</h1>
+    </div>
+{% endblock %}

@@ -1,14 +1,13 @@
 from pathlib import Path
-from types import MethodType
+from loguru import logger
 
 from fastapi import APIRouter, Depends, Request
 from fastapi_login import LoginManager
 from fastapi.security import OAuth2PasswordRequestForm
-from fastapi_login.exceptions import InvalidCredentialsException
 
 from configparser import ConfigParser
 
-from starlette.responses import HTMLResponse, RedirectResponse, Response
+from starlette.responses import HTMLResponse
 from mod import models
 import sqlobject as orm
 
@@ -18,8 +17,13 @@ config.read(Path(__file__).parent.parent / "config.ini")
 SECRET_KEY = config["ADMIN"].get("SECRET_KEY")
 
 database = config["DATABASE"]
-db_connection = orm.connectionForURI(database.get("uri"))
-orm.sqlhub.processConnection = db_connection
+
+try:
+    db_connection = orm.connectionForURI(database.get("uri"))
+except Exception as ERROR:
+    logger.exception(str(ERROR))
+finally:
+    orm.sqlhub.processConnection = db_connection
 
 router = APIRouter()
 
