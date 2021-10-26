@@ -73,7 +73,13 @@ def login_token(data: OAuth2PasswordRequestForm = Depends()):
 def logout(request: Request):
     incorrect_token = "MoreliaTalk"
 
-    response = Response()
+    response = HTMLResponse(
+        """
+        <script>
+        window.document.location.href = "../"
+        </script>
+        """
+    )
 
     login_manager.set_cookie(response, incorrect_token)
 
