@@ -19,11 +19,13 @@ def not_login_exception_handler(
         request: Request,
         exc: login.NotLoginException
         ):
-    return RedirectResponse(url="/admin/login")
+    return RedirectResponse(url="/admin/login") 
+
 
 @app.get("/login")
 def login_admin(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
+
 
 @app.get("/")
 def index_admin(request: Request, user=Depends(login.login_manager)):

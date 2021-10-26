@@ -40,16 +40,30 @@ login_manager.not_authenticated_exception = NotLoginException
 
 @login_manager.user_loader()
 def get_admin_user_data(username: str):
-    return models.Admin.selectBy(username=username)[0]
+    data = models.Admin.selectBy(username=username)
+    if data.count():
+        return data[0]
 
 
 @router.post("/login/token")
 def login_token(data: OAuth2PasswordRequestForm = Depends()):
     admin_user_data_db = get_admin_user_data(data.username)
     if not admin_user_data_db:
-        raise InvalidCredentialsException
+        return HTMLResponse(
+            """
+            <script>
+            window.document.location.href = "./"
+            </script>
+            """
+        )
     elif data.password != admin_user_data_db.password:
-        raise InvalidCredentialsException
+        return HTMLResponse(
+            """
+            <script>
+            window.document.location.href = "./"
+            </script>
+            """
+        )
 
     token = login_manager.create_access_token(
         data={
