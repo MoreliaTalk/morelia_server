@@ -1,0 +1,18 @@
+{
+    "type": "all_messages",
+    "data": {
+        "time": 2,
+        "flow": [{
+            "uuid": "07d949"
+            }],
+        "user": [{
+            "uuid": "123456",
+            "auth_id": "auth_id"
+            }],
+        "meta": null
+        },
+    "jsonapi": {
+        "version": "1.0"
+        },
+    "meta": null
+    }

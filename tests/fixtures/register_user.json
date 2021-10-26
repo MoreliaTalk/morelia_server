@@ -1,0 +1,16 @@
+{
+    "type": "register_user",
+    "data": {
+        "user": [{
+            "password": "password",
+            "login": "login",
+            "email": "querty@querty.com",
+            "username": "username"
+            }],
+        "meta": null
+        },
+    "jsonapi": {
+        "version": "1.0"
+        },
+    "meta": null
+    }

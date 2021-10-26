@@ -1,0 +1,16 @@
+{
+    "type": "delete_user",
+    "data": {
+        "user": [{
+            "uuid": "123456",
+            "password": "password",
+            "login": "login",
+            "auth_id": "auth_id"
+            }],
+        "meta": null
+        },
+    "jsonapi": {
+        "version": "1.0"
+        },
+    "meta": null
+    }

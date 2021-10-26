@@ -1,0 +1,21 @@
+{
+    "type": "delete_message",
+    "data": {
+        "flow": [{
+            "uuid": "07d949"
+            }],
+        "message": [{
+            "uuid": "1122",
+            "client_id": 123
+            }],
+        "user": [{
+            "uuid": "123456",
+            "auth_id": "auth_id"
+            }],
+        "meta": null
+        },
+    "jsonapi": {
+        "version": "1.0"
+        },
+    "meta": null
+    }
