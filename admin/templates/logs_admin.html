@@ -1,0 +1,17 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Logs{% endblock %}
+
+{% block content %}
+    <textarea id="logs" class="form-control h-100" readonly>
+        logs
+    </textarea>
+    <script>
+        async function tick(){
+            logs_table = document.getElementById("logs")
+            response = await fetch("logs/get")
+            logs_table.value = (await response.json()).logs
+        }
+        setInterval(tick, 100)
+    </script>
+{% endblock %}

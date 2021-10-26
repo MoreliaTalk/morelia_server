@@ -6,16 +6,17 @@ from pathlib import Path
 from loguru import logger
 import sqlobject as orm
 
-from starlette.responses import RedirectResponse
+from starlette.responses import RedirectResponse, Response
 
 from mod import models
-from . import login
+from . import login, logs
 
 app = FastAPI()
 
 templates = Jinja2Templates(Path(__file__).parent / "templates")
 
 app.include_router(login.router)
+app.include_router(logs.router)
 
 try:
     db_connection = orm.connectionForURI(login.database.get("uri"))
@@ -54,3 +55,13 @@ def status_admin(request: Request, user=Depends(login.login_manager)):
         "Flows_count": Flows_count,
         "Users_count": Users_count
     })
+
+
+@app.get("/manage")
+def manage_admin(request: Request, user=Depends(login.login_manager)):
+    return templates.TemplateResponse("manage_admin.html", {"request": request})
+
+
+@app.get("/logs")
+def manage_logs(request: Request, user=Depends(login.login_manager)):
+    return templates.TemplateResponse("logs_admin.html", {"request": request})
