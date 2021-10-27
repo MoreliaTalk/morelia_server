@@ -6,10 +6,10 @@ from pathlib import Path
 from loguru import logger
 import sqlobject as orm
 
-from starlette.responses import RedirectResponse, Response
+from starlette.responses import RedirectResponse
 
 from mod import models
-from . import login, logs
+from . import login, logs, manage
 
 app = FastAPI()
 
@@ -17,6 +17,7 @@ templates = Jinja2Templates(Path(__file__).parent / "templates")
 
 app.include_router(login.router)
 app.include_router(logs.router)
+app.include_router(manage.router)
 
 try:
     db_connection = orm.connectionForURI(login.database.get("uri"))
@@ -31,7 +32,7 @@ def not_login_exception_handler(
         request: Request,
         exc: login.NotLoginException
         ):
-    return RedirectResponse(url="/admin/login") 
+    return RedirectResponse(url="/admin/login")
 
 
 @app.get("/login")
@@ -59,7 +60,10 @@ def status_admin(request: Request, user=Depends(login.login_manager)):
 
 @app.get("/manage")
 def manage_admin(request: Request, user=Depends(login.login_manager)):
-    return templates.TemplateResponse("manage_admin.html", {"request": request})
+    return templates.TemplateResponse("manage_admin.html", {
+        "request": request,
+        "users": models.UserConfig.select()
+    })
 
 
 @app.get("/logs")
