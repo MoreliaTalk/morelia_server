@@ -21,7 +21,7 @@ import unittest
 
 from loguru import logger
 
-from mod import error  # noqa
+from mod import error
 
 
 class TestCheckError(unittest.TestCase):
@@ -31,21 +31,30 @@ class TestCheckError(unittest.TestCase):
 
     def setUp(self):
         self.OK = "OK"
-        self.CREATED = 201
+        self.WRONG_TYPE_STATUS = 201
         self.UNKNOWN = "UNKNOWN_ERROR"
+        self.WRONG_STATUS = "WRONG"
 
     def tearDown(self):
         del self.OK
-        del self.CREATED
+        del self.WRONG_TYPE_STATUS
+        del self.UNKNOWN
+        del self.WRONG_STATUS
 
     def test_check_HTTPStatus_pattern(self):
         result = error.check_error_pattern(self.OK)
         self.assertEqual(result.code.value, 200)
         self.assertEqual(result.status.value, self.OK)
 
-    def test_check_wrong_status(self):
+    def test_check_wrong_type_status(self):
         self.assertRaises(TypeError,
-                          lambda: error.check_error_pattern(self.CREATED))
+                          error.check_error_pattern,
+                          self.WRONG_TYPE_STATUS)
+
+    def test_check_wrong_status(self):
+        self.assertRaises(AttributeError,
+                          error.check_error_pattern,
+                          self.WRONG_STATUS)
 
     def test_check_ServerStatus_pattern(self):
         result = error.check_error_pattern(self.UNKNOWN)

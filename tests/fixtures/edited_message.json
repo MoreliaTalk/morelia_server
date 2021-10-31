@@ -1,0 +1,19 @@
+{
+    "type": "edited_message",
+    "data": {
+        "message": [{
+            "uuid": "1",
+            "client_id": 123,
+            "text": "New_Hello"
+            }],
+        "user": [{
+            "uuid": "123456",
+            "auth_id": "auth_id"
+            }],
+        "meta": null
+        },
+    "jsonapi": {
+        "version": "1.0"
+        },
+    "meta": null
+    }

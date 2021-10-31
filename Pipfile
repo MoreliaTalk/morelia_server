@@ -22,6 +22,8 @@ pydantic = "==1.8.2"
 websocket-client = "*"
 fastapi-login = "*"
 python-multipart = "*"
+websocket-client = "==1.2.1"
+coverage = "==6.0.2"
 
 [requires]
 python_version = "3.10"

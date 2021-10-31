@@ -25,8 +25,8 @@ import configparser
 
 from pydantic import ValidationError
 from sqlobject import AND
-from sqlobject import SQLObjectIntegrityError
-from sqlobject import SQLObjectNotFound
+from sqlobject.main import SQLObjectIntegrityError
+from sqlobject.main import SQLObjectNotFound
 from sqlobject import dberrors
 from loguru import logger
 
@@ -219,8 +219,8 @@ class ProtocolMethods(User, Error):
                               login=login,
                               username=username,
                               email=email,
-                              key=generated.get_key(),
-                              salt=generated.get_salt(),
+                              key=generated.get_key,
+                              salt=generated.get_salt,
                               authId=auth_id)
             user.append(api.UserResponse(uuid=uuid,
                                          auth_id=auth_id))
@@ -268,8 +268,6 @@ class ProtocolMethods(User, Error):
                                emoji=element.emoji,
                                edited_time=element.editedTime,
                                edited_status=element.editedStatus))
-        else:
-            message = None
 
         if dbquery_flow.count():
             for element in dbquery_flow:
@@ -282,9 +280,6 @@ class ProtocolMethods(User, Error):
                             owner=element.owner,
                             users=[item.uuid for item in element.users]))
 
-        else:
-            flow = None
-
         if dbquery_user.count():
             for element in dbquery_user:
                 user.append(api.UserResponse(
@@ -293,8 +288,6 @@ class ProtocolMethods(User, Error):
                             is_bot=element.isBot,
                             avatar=element.avatar,
                             bio=element.bio))
-        else:
-            user = None
 
         errors = self.catching_error("OK")
         data = api.DataResponse(time=self.get_time,
@@ -366,15 +359,19 @@ class ProtocolMethods(User, Error):
         from database and issues them as an array consisting of JSON
         """
         flow_uuid = request.data.flow[0].uuid
-        message_start = request.data.flow[0].message_start
-        message_end = request.data.flow[0].message_end
         flow = []
         message = []
 
-        if message_start is None:
+        if request.data.flow[0].message_start is None:
             message_start = 0
-        if message_end is None:
+        else:
+            message_start = request.data.flow[0].message_start
+
+        if request.data.flow[0].message_end is None:
             message_end = 0
+        else:
+            message_end = request.data.flow[0].message_end
+
         message_volume = message_end - message_start
 
         def get_messages(db,
@@ -405,9 +402,6 @@ class ProtocolMethods(User, Error):
                     models.Message.q.time >= request.data.time))
             MESSAGE_COUNT: int = dbquery.count()
             dbquery[0]
-        except SQLObjectIntegrityError as flow_error:
-            errors = self.catching_error("UNKNOWN_ERROR",
-                                         str(flow_error))
         except (IndexError, SQLObjectNotFound) as flow_error:
             errors = self.catching_error("NOT_FOUND",
                                          str(flow_error))
@@ -420,7 +414,7 @@ class ProtocolMethods(User, Error):
                                        limit.getint("messages"))
                 errors = self.catching_error("OK")
                 logger.success("\'_all_messages\' executed successfully")
-            elif MESSAGE_COUNT > limit.getint("messages"):
+            else:
                 flow.append(api.FlowResponse(uuid=flow_uuid,
                                              message_start=message_start,
                                              message_end=MESSAGE_COUNT))
@@ -473,8 +467,9 @@ class ProtocolMethods(User, Error):
                 for user_uuid in users:
                     user = models.UserConfig.selectBy(uuid=user_uuid).getOne()
                     dbquery.addUserConfig(user)
-            except SQLObjectIntegrityError as flow_error:
-                errors = self.catching_error("UNKNOWN_ERROR",
+            except (SQLObjectNotFound,
+                    SQLObjectIntegrityError) as flow_error:
+                errors = self.catching_error("NOT_FOUND",
                                              str(flow_error))
             else:
                 flow.append(api.FlowResponse(uuid=flow_uuid,
@@ -539,7 +534,8 @@ class ProtocolMethods(User, Error):
             for element in request.data.user[1:]:
                 try:
                     dbquery = models.UserConfig.selectBy(uuid=element.uuid).getOne()
-                except SQLObjectIntegrityError as user_info_error:
+                except (SQLObjectNotFound,
+                        SQLObjectIntegrityError) as user_info_error:
                     errors = self.catching_error("UNKNOWN_ERROR",
                                                  str(user_info_error))
                 else:
@@ -716,10 +712,10 @@ class ProtocolMethods(User, Error):
         Get a standard answer type: error, which contains an object
         with a description of error.
         """
-        if request is None:
-            response = "error"
-        else:
+        if request is not None:
             response = request.type
+        else:
+            response = "error"
 
         if status is None:
             status = "METHOD_NOT_ALLOWED"

@@ -1,0 +1,14 @@
+{
+    "type": "ping-pong",
+    "data": {
+        "user": [{
+            "uuid": "123456",
+            "auth_id": "auth_id"
+            }],
+        "meta": null
+        },
+    "jsonapi": {
+        "version": "1.0"
+        },
+    "meta": null
+    }

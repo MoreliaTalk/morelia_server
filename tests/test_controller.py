@@ -28,19 +28,36 @@ from uuid import uuid4
 
 import sqlobject as orm
 from loguru import logger
-
-# Add path to directory with code being checked
-# to variable 'PATH' to import modules from directory
-# above the directory with the tests.
-BASE_PATH = os.path.abspath(os.path.dirname(__file__))
-FIXTURES_PATH = os.path.join(BASE_PATH, "fixtures")
-sys.path.append(os.path.split(BASE_PATH)[0])
+from sqlobject.main import SQLObjectNotFound
 
 from mod import api  # noqa
 from mod import controller  # noqa
 from mod import lib  # noqa
 from mod import models  # noqa
 from mod.controller import User  # noqa
+
+# Add path to directory with code being checked
+# to variable 'PATH' to import modules from directory
+# above the directory with the tests.
+BASE_PATH = os.path.abspath(os.path.dirname(__file__))
+FIXTURES_PATH = os.path.join(BASE_PATH, "fixtures")
+
+GET_UPDATE = os.path.join(FIXTURES_PATH, "get_update.json")
+SEND_MESSAGE = os.path.join(FIXTURES_PATH, "send_message.json")
+ALL_MESSAGES = os.path.join(FIXTURES_PATH, "all_message.json")
+ADD_FLOW = os.path.join(FIXTURES_PATH, "add_flow.json")
+ALL_FLOW = os.path.join(FIXTURES_PATH, "all_flow.json")
+USER_INFO = os.path.join(FIXTURES_PATH, "user_info.json")
+REGISTER_USER = os.path.join(FIXTURES_PATH, "register_user.json")
+AUTH = os.path.join(FIXTURES_PATH, "auth.json")
+DELETE_USER = os.path.join(FIXTURES_PATH, "delete_user.json")
+DELETE_MESSAGE = os.path.join(FIXTURES_PATH, "delete_message.json")
+EDITED_MESSAGE = os.path.join(FIXTURES_PATH, "edited_message.json")
+PING_PONG = os.path.join(FIXTURES_PATH, "ping_pong.json")
+ERRORS = os.path.join(FIXTURES_PATH, "errors.json")
+NON_VALID_ERRORS = os.path.join(FIXTURES_PATH, "non_valid_errors.json")
+ERRORS_ONLY_TYPE = os.path.join(FIXTURES_PATH, "errors_only_type.json")
+
 
 # ************** Read "config.ini" ********************
 config = configparser.ConfigParser()
@@ -56,287 +73,6 @@ classes = [cls_name for cls_name, cls_obj
            if inspect.isclass(cls_obj)]
 
 
-# **************** Examples of requests ********************
-#
-#
-# variables for repeating fields in queries:
-user_uuid = "123456"
-user_auth_id = "auth_id"
-user_password = "password"
-user_login = "login"
-flow_uuid = "07d949"
-#
-#
-# requests
-GET_UPDATE = {
-    "type": "get_update",
-    "data": {
-        "time": 111,
-        "user": [{
-            "uuid": user_uuid,
-            "auth_id": user_auth_id
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-SEND_MESSAGE = {
-    "type": "send_message",
-    "data": {
-        "flow": [{
-            "uuid": flow_uuid
-            }],
-        "message": [{
-            "uuid": "999666",
-            "text": "Hello!",
-            "client_id": 123,
-            "file_picture": b"jkfikdkdsd",
-            "file_video": b"sdfsdfsdf",
-            "file_audio": b"fgfsdfsdfsdf",
-            "file_document": b"adgdfhfgth",
-            "emoji": b"sfdfsdfsdf"
-            }],
-        "user": [{
-            "uuid": user_uuid,
-            "auth_id": user_auth_id
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-ALL_MESSAGES = {
-    "type": "all_messages",
-    "data": {
-        "time": 2,
-        "flow": [{
-            "uuid": flow_uuid
-            }],
-        "user": [{
-            "uuid": user_uuid,
-            "auth_id": user_auth_id
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-ADD_FLOW = {
-    "type": "add_flow",
-    "data": {
-        "flow": [{
-            "uuid": None,
-            "type": "group",
-            "title": "title",
-            "info": "info",
-            "owner": "123456",
-            "users": ["123456"]
-            }],
-        "user": [{
-            "uuid": user_uuid,
-            "auth_id": user_auth_id
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-ALL_FLOW = {
-    "type": "all_flow",
-    "data": {
-        "user": [{
-            "uuid": user_uuid,
-            "auth_id": user_auth_id
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-USER_INFO = {
-    "type": "user_info",
-    "data": {
-        "user": [{
-            "uuid": user_uuid,
-            "auth_id": user_auth_id
-            },
-            {
-            "uuid": "123457"
-            },
-            {
-            "uuid": "123458"
-            },
-            {
-            "uuid": "123459"
-            },
-            {
-            "uuid": "123460"
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-REGISTER_USER = {
-    "type": "register_user",
-    "data": {
-        "user": [{
-            "password": user_password,
-            "login": user_login,
-            "email": "querty@querty.com",
-            "username": "username"
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-AUTH = {
-    "type": "auth",
-    "data": {
-        "user": [{
-            "password": user_password,
-            "login": user_login
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-DELETE_USER = {
-    "type": "delete_user",
-    "data": {
-        "user": [{
-            "uuid": user_uuid,
-            "password": user_password,
-            "login": user_login,
-            "auth_id": user_auth_id
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-DELETE_MESSAGE = {
-    "type": "delete_message",
-    "data": {
-        "flow": [{
-            "uuid": flow_uuid
-            }],
-        "message": [{
-            "uuid": "1122",
-            "client_id": None
-            }],
-        "user": [{
-            "uuid": user_uuid,
-            "auth_id": user_auth_id
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-EDITED_MESSAGE = {
-    "type": "edited_message",
-    "data": {
-        "message": [{
-            "uuid": "1",
-            "text": "New_Hello"
-            }],
-        "user": [{
-            "uuid": user_uuid,
-            "auth_id": user_auth_id
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-PING_PONG = {
-    "type": "ping-pong",
-    "data": {
-        "user": [{
-            "uuid": user_uuid,
-            "auth_id": user_auth_id
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-ERRORS = {
-    "type": "wrong type",
-    "data": {
-        "user": [{
-            "uuid": user_uuid,
-            "auth_id": user_auth_id
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-NON_VALID_ERRORS = {
-    "data": {
-        "user": [{
-            "uuid": user_uuid,
-            "auth_id": user_auth_id
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
-    "meta": None
-    }
-
-ERRORS_ONLY_TYPE = {
-    "type": "send_message"
-    }
-
-# **************** End examples of requests *****************
-
-
 class TestCheckAuthToken(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -350,7 +86,7 @@ class TestCheckAuthToken(unittest.TestCase):
                           login="login",
                           password="password",
                           authId="auth_id")
-        self.test = api.Request.parse_obj(SEND_MESSAGE)
+        self.test = api.Request.parse_file(SEND_MESSAGE)
         self.error = controller.Error
         self.response = list()
 
@@ -369,7 +105,6 @@ class TestCheckAuthToken(unittest.TestCase):
             auth_id = request.data.user[0].auth_id
             if uuid == "123456" and auth_id == "auth_id":
                 return True
-            return False
         result = controller.User.check_auth(test_func)("", self.test)
         self.assertTrue(result)
 
@@ -397,7 +132,7 @@ class TestCheckLogin(unittest.TestCase):
                           login="login",
                           password="password",
                           authId="auth_id")
-        self.test = api.Request.parse_obj(REGISTER_USER)
+        self.test = api.Request.parse_file(REGISTER_USER)
 
     def tearDown(self):
         for item in classes:
@@ -428,7 +163,7 @@ class TestRegisterUser(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
-        self.test = api.Request.parse_obj(REGISTER_USER)
+        self.test = api.Request.parse_file(REGISTER_USER)
 
     def tearDown(self):
         for item in classes:
@@ -441,7 +176,8 @@ class TestRegisterUser(unittest.TestCase):
     def test_user_created(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 201)
+        self.assertEqual(result["errors"]["status"],
+                         "Created")
 
     def test_user_already_exists(self):
         models.UserConfig(uuid="123456",
@@ -449,7 +185,8 @@ class TestRegisterUser(unittest.TestCase):
                           password="password")
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 409)
+        self.assertEqual(result["errors"]["status"],
+                         "Conflict")
 
     def test_user_write_in_database(self):
         controller.ProtocolMethods(self.test)
@@ -544,7 +281,7 @@ class TestGetUpdate(unittest.TestCase):
                        time=333,
                        user=new_user3,
                        flow=new_flow2)
-        self.test = api.Request.parse_obj(GET_UPDATE)
+        self.test = api.Request.parse_file(GET_UPDATE)
 
     def tearDown(self):
         for item in classes:
@@ -557,7 +294,8 @@ class TestGetUpdate(unittest.TestCase):
     def test_update(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 200)
+        self.assertEqual(result["errors"]["status"],
+                         "OK")
 
     def test_check_message_in_result(self):
         run_method = controller.ProtocolMethods(self.test)
@@ -582,7 +320,8 @@ class TestGetUpdate(unittest.TestCase):
         self.test.data.time = 444
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 404)
+        self.assertEqual(result["errors"]["status"],
+                         "Not Found")
 
 
 class TestSendMessage(unittest.TestCase):
@@ -603,7 +342,7 @@ class TestSendMessage(unittest.TestCase):
                                flowType="group",
                                owner="123456")
         new_flow.addUserConfig(new_user)
-        self.test = api.Request.parse_obj(SEND_MESSAGE)
+        self.test = api.Request.parse_file(SEND_MESSAGE)
 
     def tearDown(self):
         for item in classes:
@@ -616,7 +355,8 @@ class TestSendMessage(unittest.TestCase):
     def test_send_message(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 200)
+        self.assertEqual(result["errors"]["status"],
+                         "OK")
 
     def test_check_id_in_response(self):
         run_method = controller.ProtocolMethods(self.test)
@@ -635,7 +375,8 @@ class TestSendMessage(unittest.TestCase):
         self.test.data.flow[0].uuid = "666666"
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 404)
+        self.assertEqual(result["errors"]["status"],
+                         "Not Found")
 
     def test_write_text_in_database(self):
         controller.ProtocolMethods(self.test)
@@ -693,7 +434,7 @@ class TestAllMessages(unittest.TestCase):
                        time=666,
                        user=new_user2,
                        flow=new_flow2)
-        self.test = api.Request.parse_obj(ALL_MESSAGES)
+        self.test = api.Request.parse_file(ALL_MESSAGES)
 
     def tearDown(self):
         for item in classes:
@@ -716,24 +457,30 @@ class TestAllMessages(unittest.TestCase):
                 self.assertEqual(item["text"], 'Privet')
                 self.assertEqual(item["from_user"], '654321')
                 self.assertEqual(item["from_flow"], '07d950')
-                break
         self.assertTrue(message_found)
 
     def test_all_message_more_limit(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 206)
+        self.assertEqual(result["errors"]["status"],
+                         "Partial Content")
 
     def test_all_message_less_limit(self):
         self.test.data.flow[0].uuid = "07d950"
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 200)
+        self.assertEqual(result["errors"]["status"],
+                         "OK")
 
     def test_message_end_in_response(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["data"]["flow"][0]["message_end"], 108)
+
+    def test_message_start_in_response(self):
+        run_method = controller.ProtocolMethods(self.test)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["data"]["flow"][0]["message_start"], 0)
 
     def test_check_message_in_database(self):
         controller.ProtocolMethods(self.test)
@@ -744,13 +491,15 @@ class TestAllMessages(unittest.TestCase):
         self.test.data.flow[0].message_end = 256
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 403)
+        self.assertEqual(result["errors"]["status"],
+                         "Forbidden")
 
     def test_wrong_flow_id(self):
         self.test.data.flow[0].uuid = "666666"
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 404)
+        self.assertEqual(result["errors"]["status"],
+                         "Not Found")
 
 
 class TestAddFlow(unittest.TestCase):
@@ -764,7 +513,7 @@ class TestAddFlow(unittest.TestCase):
                           authId="auth_id")
         models.Flow(uuid="07d949")
         logger.remove()
-        self.test = api.Request.parse_obj(ADD_FLOW)
+        self.test = api.Request.parse_file(ADD_FLOW)
 
     def tearDown(self):
         for item in classes:
@@ -777,13 +526,15 @@ class TestAddFlow(unittest.TestCase):
     def test_add_flow_group(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 200)
+        self.assertEqual(result["errors"]["status"],
+                         "OK")
 
     def test_add_flow_channel(self):
         self.test.data.flow[0].type = "channel"
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 200)
+        self.assertEqual(result["errors"]["status"],
+                         "OK")
 
     def test_add_flow_bad_type(self):
         error = "Wrong flow type"
@@ -804,7 +555,8 @@ class TestAddFlow(unittest.TestCase):
         self.test.data.flow[0].users.extend(["666555", "888999"])
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 400)
+        self.assertEqual(result["errors"]["status"],
+                         "Bad Request")
 
     def test_check_flow_in_database(self):
         run_method = controller.ProtocolMethods(self.test)
@@ -827,7 +579,7 @@ class TestAllFlow(unittest.TestCase):
                           login="login",
                           password="password",
                           authId="auth_id")
-        self.test = api.Request.parse_obj(ALL_FLOW)
+        self.test = api.Request.parse_file(ALL_FLOW)
 
     def tearDown(self):
         for item in classes:
@@ -851,7 +603,8 @@ class TestAllFlow(unittest.TestCase):
     def test_blank_flow_table_in_database(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 404)
+        self.assertEqual(result["errors"]["status"],
+                         "Not Found")
 
 
 class TestUserInfo(unittest.TestCase):
@@ -873,7 +626,7 @@ class TestUserInfo(unittest.TestCase):
                               authId="auth_id",
                               email="email@email.com",
                               bio="bio")
-        self.test = api.Request.parse_obj(USER_INFO)
+        self.test = api.Request.parse_file(USER_INFO)
 
     def tearDown(self):
         for item in classes:
@@ -886,7 +639,8 @@ class TestUserInfo(unittest.TestCase):
     def test_user_info(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 200)
+        self.assertEqual(result["errors"]["status"],
+                         "OK")
 
     def test_check_user_info(self):
         run_method = controller.ProtocolMethods(self.test)
@@ -898,7 +652,8 @@ class TestUserInfo(unittest.TestCase):
         self.test.data.user.extend(users)
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 403)
+        self.assertEqual(result["errors"]["status"],
+                         "Forbidden")
 
 
 class TestAuthentification(unittest.TestCase):
@@ -919,7 +674,7 @@ class TestAuthentification(unittest.TestCase):
                           hashPassword=self.hash_password,
                           salt=b"salt",
                           key=b"key")
-        self.test = api.Request.parse_obj(AUTH)
+        self.test = api.Request.parse_file(AUTH)
 
     def tearDown(self):
         for item in classes:
@@ -932,7 +687,8 @@ class TestAuthentification(unittest.TestCase):
     def test_authentification(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 200)
+        self.assertEqual(result["errors"]["status"],
+                         "OK")
 
     def test_blank_database(self):
         login = self.test.data.user[0].login
@@ -940,7 +696,8 @@ class TestAuthentification(unittest.TestCase):
         dbquery.delete(dbquery.id)
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 404)
+        self.assertEqual(result["errors"]["status"],
+                         "Not Found")
 
     def test_two_element_in_database(self):
         models.UserConfig(uuid="654321",
@@ -950,13 +707,15 @@ class TestAuthentification(unittest.TestCase):
                           key=b"key")
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 404)
+        self.assertEqual(result["errors"]["status"],
+                         "Not Found")
 
     def test_wrong_password(self):
         self.test.data.user[0].password = "wrong_password"
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 401)
+        self.assertEqual(result["errors"]["status"],
+                         "Unauthorized")
 
     def test_write_in_database(self):
         login = self.test.data.user[0].login
@@ -976,7 +735,7 @@ class TestDeleteUser(unittest.TestCase):
                           login="login",
                           password="password",
                           authId="auth_id")
-        self.test = api.Request.parse_obj(DELETE_USER)
+        self.test = api.Request.parse_file(DELETE_USER)
         logger.remove()
 
     def tearDown(self):
@@ -990,19 +749,22 @@ class TestDeleteUser(unittest.TestCase):
     def test_delete_user(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 200)
+        self.assertEqual(result["errors"]["status"],
+                         "OK")
 
     def test_wrong_login(self):
         self.test.data.user[0].login = "wrong_login"
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 404)
+        self.assertEqual(result["errors"]["status"],
+                         "Not Found")
 
     def test_wrong_password(self):
         self.test.data.user[0].password = "wrong_password"
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 404)
+        self.assertEqual(result["errors"]["status"],
+                         "Not Found")
 
 
 class TestDeleteMessage(unittest.TestCase):
@@ -1010,6 +772,7 @@ class TestDeleteMessage(unittest.TestCase):
         for item in classes:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True)
+
         new_user = models.UserConfig(uuid="123456",
                                      login="login",
                                      password="password",
@@ -1025,7 +788,7 @@ class TestDeleteMessage(unittest.TestCase):
                        time=123456,
                        user=new_user,
                        flow=new_flow)
-        self.test = api.Request.parse_obj(DELETE_MESSAGE)
+        self.test = api.Request.parse_file(DELETE_MESSAGE)
         logger.remove()
 
     def tearDown(self):
@@ -1039,7 +802,8 @@ class TestDeleteMessage(unittest.TestCase):
     def test_delete_message(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 200)
+        self.assertEqual(result["errors"]["status"],
+                         "OK")
 
     def test_check_delete_message_in_database(self):
         controller.ProtocolMethods(self.test)
@@ -1055,7 +819,8 @@ class TestDeleteMessage(unittest.TestCase):
         self.test.data.message[0].uuid = "2"
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 404)
+        self.assertEqual(result["errors"]["status"],
+                         "Not Found")
 
 
 class TestEditedMessage(unittest.TestCase):
@@ -1082,7 +847,7 @@ class TestEditedMessage(unittest.TestCase):
                        time=123456,
                        user=new_user,
                        flow=new_flow)
-        self.test = api.Request.parse_obj(EDITED_MESSAGE)
+        self.test = api.Request.parse_file(EDITED_MESSAGE)
 
     def tearDown(self):
         for item in classes:
@@ -1095,7 +860,8 @@ class TestEditedMessage(unittest.TestCase):
     def test_edited_message(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 200)
+        self.assertEqual(result["errors"]["status"],
+                         "OK")
 
     def test_new_edited_message(self):
         controller.ProtocolMethods(self.test)
@@ -1106,7 +872,8 @@ class TestEditedMessage(unittest.TestCase):
         self.test.data.message[0].uuid = "3"
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 404)
+        self.assertEqual(result["errors"]["status"],
+                         "Not Found")
 
 
 class TestPingPong(unittest.TestCase):
@@ -1118,7 +885,7 @@ class TestPingPong(unittest.TestCase):
                           login="login",
                           password="password",
                           authId="auth_id")
-        self.test = api.Request.parse_obj(PING_PONG)
+        self.test = api.Request.parse_file(PING_PONG)
         logger.remove()
 
     def tearDown(self):
@@ -1132,7 +899,8 @@ class TestPingPong(unittest.TestCase):
     def test_ping_pong(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 200)
+        self.assertEqual(result["errors"]["status"],
+                         "OK")
 
 
 class TestErrors(unittest.TestCase):
@@ -1144,6 +912,7 @@ class TestErrors(unittest.TestCase):
                           login="login",
                           password="password",
                           authId="auth_id")
+        self.test = controller.Error()
         logger.remove()
 
     def tearDown(self):
@@ -1155,22 +924,39 @@ class TestErrors(unittest.TestCase):
         del self.test
 
     def test_wrong_type(self):
-        self.test = api.Request.parse_obj(ERRORS)
+        self.test = api.Request.parse_file(ERRORS)
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 405)
+        self.assertEqual(result["errors"]["status"],
+                         "Method Not Allowed")
 
     def test_unsupported_media_type(self):
         self.test = json.dumps(NON_VALID_ERRORS)
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 415)
+        self.assertEqual(result["errors"]["status"],
+                         "Unsupported Media Type")
 
     def test_only_type_in_request(self):
         self.test = json.dumps(ERRORS_ONLY_TYPE)
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["code"], 415)
+        self.assertEqual(result["errors"]["status"],
+                         "Unsupported Media Type")
+
+    def test_wrong_status_in_catching_error(self):
+        result = self.test.catching_error(status='err')
+        self.assertEqual(result.code, 520)
+        self.assertEqual(result.status, "Unknown Error")
+        self.assertIsInstance(result.time, int)
+        self.assertIsInstance(result.detail, str)
+
+    def test_correct_status_in_catching_error(self):
+        result = self.test.catching_error(status='BAD_REQUEST')
+        self.assertEqual(result.code, 400)
+        self.assertEqual(result.status, "Bad Request")
+        self.assertIsInstance(result.time, int)
+        self.assertIsInstance(result.detail, str)
 
 
 if __name__ == "__main__":
