@@ -14,7 +14,7 @@ def delete_user(request: Request, uuid: str = Form(...)):
     dbquery = models.UserConfig.selectBy(uuid=uuid).getOne()
 
     fake_uuid = str(uuid4().int)
-    
+
     dbquery.login = "User deleted"
     dbquery.password = fake_uuid
     dbquery.hashPassword = fake_uuid
