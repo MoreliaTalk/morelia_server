@@ -17,8 +17,6 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
-
-from enum import unique
 import sqlobject as orm
 
 
@@ -118,6 +116,7 @@ class Message(orm.SQLObject):
     user = orm.ForeignKey('UserConfig')
     flow = orm.ForeignKey('Flow')
 
+
 class Admin(orm.SQLObject):
     username = orm.StringCol(notNone=True, unique=True)
-    password = orm.StringCol(notNone=True)
+    hashPassword = orm.StringCol(notNone=True)

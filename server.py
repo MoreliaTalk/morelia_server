@@ -21,7 +21,6 @@
 # ************** Standart module *********************
 from datetime import datetime
 from json import JSONDecodeError
-from pathlib import Path
 import configparser
 # ************** Standart module end *****************
 
@@ -40,7 +39,6 @@ import sqlobject as orm
 
 # ************** Morelia module **********************
 from mod import controller
-from mod import models
 from admin import admin
 # ************** Morelia module end ******************
 
@@ -48,7 +46,7 @@ from admin import admin
 # ************** Logging beginning *******************
 from loguru import logger
 from mod.logging import add_logging
-
+import logging as standart_logging
 # ************** Read "config.ini" ********************
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -58,7 +56,6 @@ directory = config["TEMPLATES"]
 # ************** END **********************************
 
 # ************** Unicorn logger off ******************
-import logging as standart_logging
 if logging.getboolean("UVICORN_LOGGING_DISABLE"):
     standart_logging.disable()
 # ************** Logging end *************************
@@ -97,9 +94,11 @@ app.mount(
     name="static"
 )
 
+
 @app.get('/')
 def home_page(request: Request):
     return HTMLResponse("Hello!")
+
 
 # Chat websocket
 @app.websocket("/ws")

@@ -9,6 +9,7 @@ from configparser import ConfigParser
 
 from starlette.responses import HTMLResponse
 from mod import models
+from mod import lib
 import sqlobject as orm
 
 config = ConfigParser()
@@ -46,7 +47,8 @@ login_manager.not_authenticated_exception = NotLoginException
 def get_admin_user_data(username: str):
     data = models.Admin.selectBy(username=username)
     if data.count():
-        return data[0]
+        return_data: models.Admin = data[0]
+        return return_data
 
 
 @router.post("/login/token")
@@ -60,7 +62,16 @@ def login_token(data: OAuth2PasswordRequestForm = Depends()):
             </script>
             """
         )
-    elif data.password != admin_user_data_db.password:
+
+    generator = lib.Hash(
+        data.password,
+        admin_user_data_db.id,
+        hash_password=admin_user_data_db.hashPassword,
+        key=b"key",
+        salt=b"salt"
+    )
+    print(generator.check_password())
+    if not generator.check_password():
         return HTMLResponse(
             """
             <script>

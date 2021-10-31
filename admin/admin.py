@@ -44,6 +44,7 @@ def login_admin(request: Request):
 def index_admin(request: Request, user=Depends(login.login_manager)):
     return templates.TemplateResponse("index_admin.html", {"request": request})
 
+
 @app.get("/status")
 def status_admin(request: Request, user=Depends(login.login_manager)):
     Messages_count = models.Message.select().count()
@@ -58,6 +59,8 @@ def status_admin(request: Request, user=Depends(login.login_manager)):
     })
 
 
+# TODO Полностью доделать(на данный момент управление сервером не работает)
+# после того, как будут сделаны методы работы с бд
 @app.get("/manage")
 def manage_admin(request: Request, user=Depends(login.login_manager)):
     return templates.TemplateResponse("manage_admin.html", {
