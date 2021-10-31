@@ -19,10 +19,11 @@ sqlobject = "==3.9.1"
 loguru = "==0.5.3"
 websockets = "==10.0"
 pydantic = "==1.8.2"
-fastapi-login = "*"
-python-multipart = "*"
+fastapi-login = "==1.7.3"
+python-multipart = "==0.0.5"
 websocket-client = "==1.2.1"
 coverage = "==6.0.2"
+requests = "==2.26.0"
 
 [requires]
 python_version = "3.10"

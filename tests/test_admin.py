@@ -17,3 +17,16 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
+import unittest
+from fastapi.testclient import TestClient
+import server
+
+
+class TestMainAdmin(unittest.TestCase):
+    def test_main_page_no_login(self):
+        client = TestClient(server.app)
+        print(client.get(url="admin"))
+
+
+if __name__ == "__main__":
+    unittest.main()
