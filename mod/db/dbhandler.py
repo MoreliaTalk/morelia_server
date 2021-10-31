@@ -24,6 +24,7 @@ import sys
 import sqlobject as orm
 from sqlobject import AND
 from sqlobject.main import SQLObjectNotFound
+from sqlobject.main import SelectResults
 
 from mod import models
 
@@ -55,7 +56,7 @@ class DbHandler:
                    if inspect.isclass(cls_obj)]
         return tuple(classes)
 
-    def create(self):
+    def create(self) -> None:
         # looking for all Classes listed in models.py
         for item in self.__search_db_in_models():
             # Create tables in database for each class
@@ -64,7 +65,7 @@ class DbHandler:
             class_.createTable(ifNotExists=True)
         return "Ok"
 
-    def delete(self):
+    def delete(self) -> None:
         # looking for all Classes listed in models.py
         for item in self.__search_db_in_models():
             class_ = getattr(models, item)
@@ -73,7 +74,7 @@ class DbHandler:
 
     @staticmethod
     def __read_userconfig(get_one: bool,
-                          **kwargs):
+                          **kwargs) -> SelectResults:
         if get_one:
             try:
                 dbquery = models.UserConfig.selectBy(**kwargs).getOne()
@@ -88,7 +89,7 @@ class DbHandler:
             return dbquery
 
     @staticmethod
-    def __write_userconfig(**kwargs):
+    def __write_userconfig(**kwargs) -> None:
         try:
             models.UserConfig(**kwargs)
         except Exception:
@@ -96,7 +97,7 @@ class DbHandler:
 
     @staticmethod
     def __read_flow(get_one: bool,
-                    **kwargs):
+                    **kwargs) -> SelectResults:
         if get_one:
             try:
                 models.Flow.selectBy(**kwargs).getOne()
@@ -109,7 +110,7 @@ class DbHandler:
                 raise ReadDatabaseError
 
     @staticmethod
-    def __write_flow(**kwargs):
+    def __write_flow(**kwargs) -> None:
         try:
             models.Flow(**kwargs)
         except SQLObjectNotFound:
@@ -117,7 +118,7 @@ class DbHandler:
 
     @staticmethod
     def __read_message(get_one: bool,
-                       **kwargs):
+                       **kwargs) -> SelectResults:
         if get_one:
             try:
                 models.Message.selectBy(**kwargs).getOne()
@@ -130,25 +131,25 @@ class DbHandler:
                 raise ReadDatabaseError
 
     @staticmethod
-    def __write_message(**kwargs):
+    def __write_message(**kwargs) -> None:
         models.Message(**kwargs)
 
-    def get_all_user(self):
+    def get_all_user(self) -> SelectResults:
         return self.__read_userconfig(get_one=False)
 
     def get_user_by_uuid(self,
-                         uuid: str):
+                         uuid: str) -> SelectResults:
         return self.__read_userconfig(get_one=True,
                                       uuid=uuid)
 
     def get_user_by_login(self,
-                          login: str):
+                          login: str) -> SelectResults:
         return self.__read_userconfig(get_one=True,
                                       login=login)
 
     def get_user_by_login_and_password(self,
                                        login: str,
-                                       password: str):
+                                       password: str) -> SelectResults:
         return self.__read_userconfig(get_one=True,
                                       login=login,
                                       password=password)
@@ -162,7 +163,7 @@ class DbHandler:
                      auth_id: str,
                      email: str,
                      salt: str,
-                     key: str):
+                     key: str) -> None:
         return self.__write_userconfig(uuid=uuid,
                                        login=login,
                                        password=password,
@@ -176,51 +177,25 @@ class DbHandler:
                                        salt=salt,
                                        key=key)
 
-    def get_message_by_date_and_flow(self,
-                                     flow_uuid: str,
-                                     time: int):
-        flow = self.__read_flow(uuid=flow_uuid)
-        return models.Message.select(
-            AND(models.Message.q.flow == flow,
-                models.Message.q.time >= time))
-
-    def add_flow(self,
-                 uuid: str,
-                 time_created: int,
-                 flow_type: str,
-                 title: str,
-                 info: str,
-                 owner: str):
-        return self.__write_flow(uuid=uuid,
-                                 timeCreated=time_created,
-                                 flowType=flow_type,
-                                 title=title,
-                                 info=info,
-                                 owner=owner)
-
-    def get_flow_by_uuid(self,
-                         uuid: str):
-        return self.__read_flow(get_one=True,
-                                uuid=uuid)
-
-    def get_flow_by_date(self,
-                         time: int):
-        return models.Flow.select(models.Flow.q.timeCreated >= time)
-
-    def get_all_flow(self):
-        return self.__read_flow(get_one=False)
+    def get_all_message(self) -> SelectResults:
+        return self.__read_message(get_one=False)
 
     def get_message_by_uuid(self,
-                            uuid: str):
+                            uuid: str) -> SelectResults:
         return self.__read_message(get_one=True,
                                    uuid=uuid)
 
     def get_message_by_date(self,
-                            time: int):
+                            time: int) -> SelectResults:
         return models.Flow.select(models.Message.q.time >= time)
 
-    def get_all_message(self):
-        return self.__read_message(get_one=False)
+    def get_message_by_date_and_flow(self,
+                                     flow_uuid: str,
+                                     time: int) -> SelectResults:
+        flow = self.__read_flow(uuid=flow_uuid)
+        return models.Message.select(
+            AND(models.Message.q.flow == flow,
+                models.Message.q.time >= time))
 
     def add_message(self,
                     flow_uuid: str,
@@ -232,7 +207,7 @@ class DbHandler:
                     video: bytes,
                     audio: bytes,
                     document: bytes,
-                    emoji: bytes):
+                    emoji: bytes) -> None:
         flow = self.__read_flow(get_one=True,
                                 uuid=flow_uuid)
         user = self.__read_userconfig(get_one=True,
@@ -249,3 +224,29 @@ class DbHandler:
                                     editedStatus=False,
                                     user=user,
                                     flow=flow)
+
+    def get_all_flow(self) -> SelectResults:
+        return self.__read_flow(get_one=False)
+
+    def get_flow_by_uuid(self,
+                         uuid: str) -> SelectResults:
+        return self.__read_flow(get_one=True,
+                                uuid=uuid)
+
+    def get_flow_by_date(self,
+                         time: int) -> SelectResults:
+        return models.Flow.select(models.Flow.q.timeCreated >= time)
+
+    def add_flow(self,
+                 uuid: str,
+                 time_created: int,
+                 flow_type: str,
+                 title: str,
+                 info: str,
+                 owner: str) -> None:
+        return self.__write_flow(uuid=uuid,
+                                 timeCreated=time_created,
+                                 flowType=flow_type,
+                                 title=title,
+                                 info=info,
+                                 owner=owner)
