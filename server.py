@@ -97,7 +97,7 @@ app.mount(
 
 @app.get('/')
 def home_page(request: Request):
-    return HTMLResponse("Hello!")
+    return HTMLResponse("<h1>MoreliaTalkServer</h1>")
 
 
 # Chat websocket
