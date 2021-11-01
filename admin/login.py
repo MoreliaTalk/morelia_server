@@ -67,7 +67,7 @@ login_manager.not_authenticated_exception = NotAuthenticatedException
 def get_admin_user_data(username: str):
     data = models.Admin.selectBy(username=username)
     if data.count():
-        return_data: models.Admin = data[0]
+        return_data = data[0]
         return return_data
 
 
