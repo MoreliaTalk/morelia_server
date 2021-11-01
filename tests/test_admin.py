@@ -25,7 +25,7 @@ import server
 class TestMainAdmin(unittest.TestCase):
     def test_main_page_no_login(self):
         client = TestClient(server.app)
-        print(client.get(url="admin"))
+        self.assertIsNotNone(client.get(url="admin"))
 
 
 if __name__ == "__main__":
