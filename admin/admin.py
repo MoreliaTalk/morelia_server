@@ -47,10 +47,10 @@ finally:
     orm.sqlhub.processConnection = db_connection
 
 
-@app.exception_handler(login.NotLoginException)
+@app.exception_handler(login.NotAuthenticatedException)
 def not_login_exception_handler(
         request: Request,
-        exc: login.NotLoginException
+        exc: login.NotAuthenticatedException
         ):
     return RedirectResponse(url="/admin/login")
 

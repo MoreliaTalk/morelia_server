@@ -49,7 +49,7 @@ finally:
 router = APIRouter()
 
 
-class NotLoginException(Exception):
+class NotAuthenticatedException(Exception):
     pass
 
 
@@ -60,7 +60,7 @@ login_manager = LoginManager(
     use_header=False
 )
 
-login_manager.not_authenticated_exception = NotLoginException
+login_manager.not_authenticated_exception = NotAuthenticatedException
 
 
 @login_manager.user_loader()
