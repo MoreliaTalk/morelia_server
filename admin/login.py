@@ -90,7 +90,6 @@ def login_token(data: OAuth2PasswordRequestForm = Depends()):
         key=b"key",
         salt=b"salt"
     )
-    print(generator.check_password())
     if not generator.check_password():
         return HTMLResponse(
             """
