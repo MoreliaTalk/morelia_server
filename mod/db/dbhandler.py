@@ -23,7 +23,7 @@ import sys
 
 import sqlobject as orm
 from sqlobject import AND
-from sqlobject.main import SQLObjectNotFound
+from sqlobject.main import SQLObjectIntegrityError, SQLObjectNotFound
 from sqlobject.main import SelectResults
 
 from mod import models
@@ -36,10 +36,22 @@ database = config["DATABASE"]
 
 
 class ReadDatabaseError(SQLObjectNotFound):
+    #
+    pass
+
+
+class AnotherError(Exception):
+    #
     pass
 
 
 class WriteDatabaseError(SQLObjectNotFound):
+    #
+    pass
+
+
+class WriteDatabaseError2(SQLObjectIntegrityError):
+    #
     pass
 
 
@@ -78,61 +90,98 @@ class DbHandler:
         if get_one:
             try:
                 dbquery = models.UserConfig.selectBy(**kwargs).getOne()
-            except SQLObjectNotFound:
-                raise ReadDatabaseError
-            return dbquery
+            except SQLObjectNotFound as error:
+                raise ReadDatabaseError("") from error
+            except Exception as error:
+                raise AnotherError("") from error
+            else:
+                return dbquery
         else:
             try:
                 dbquery = models.UserConfig.selectBy(**kwargs)
-            except SQLObjectNotFound:
-                raise ReadDatabaseError
-            return dbquery
+            except SQLObjectNotFound as error:
+                raise ReadDatabaseError("") from error
+            except Exception as error:
+                raise AnotherError("") from error
+            else:
+                return dbquery
 
     @staticmethod
     def __write_userconfig(**kwargs) -> None:
         try:
             models.UserConfig(**kwargs)
-        except Exception:
-            raise WriteDatabaseError
+        except SQLObjectNotFound as error:
+            raise WriteDatabaseError("") from error
+        except SQLObjectIntegrityError as error:
+            raise WriteDatabaseError2("") from error
+        except Exception as error:
+            raise AnotherError("") from error
 
     @staticmethod
     def __read_flow(get_one: bool,
                     **kwargs) -> SelectResults:
         if get_one:
             try:
-                models.Flow.selectBy(**kwargs).getOne()
-            except SQLObjectNotFound:
-                raise ReadDatabaseError
+                dbquery = models.Flow.selectBy(**kwargs).getOne()
+            except SQLObjectNotFound as error:
+                raise ReadDatabaseError("") from error
+            except Exception as error:
+                raise AnotherError("") from error
+            else:
+                return dbquery
         else:
             try:
-                models.Flow.selectBy(**kwargs)
-            except SQLObjectNotFound:
-                raise ReadDatabaseError
+                dbquery = models.Flow.selectBy(**kwargs)
+            except SQLObjectNotFound as error:
+                raise ReadDatabaseError("") from error
+            except Exception as error:
+                raise AnotherError("") from error
+            else:
+                return dbquery
 
     @staticmethod
     def __write_flow(**kwargs) -> None:
         try:
             models.Flow(**kwargs)
-        except SQLObjectNotFound:
-            raise WriteDatabaseError
+        except SQLObjectNotFound as error:
+            raise WriteDatabaseError("") from error
+        except SQLObjectIntegrityError as error:
+            raise WriteDatabaseError2("") from error
+        except Exception as error:
+            raise AnotherError("") from error
 
     @staticmethod
     def __read_message(get_one: bool,
                        **kwargs) -> SelectResults:
         if get_one:
             try:
-                models.Message.selectBy(**kwargs).getOne()
-            except SQLObjectNotFound:
-                raise ReadDatabaseError
+                dbquery = models.Message.selectBy(**kwargs).getOne()
+            except SQLObjectNotFound as error:
+                raise ReadDatabaseError("") from error
+            except Exception as error:
+                raise AnotherError("") from error
+            else:
+                return dbquery
         else:
             try:
-                models.Message.selectBy(**kwargs)
-            except SQLObjectNotFound:
-                raise ReadDatabaseError
+                dbquery = models.Message.selectBy(**kwargs)
+            except SQLObjectNotFound as error:
+                raise ReadDatabaseError("") from error
+            except Exception as error:
+                raise AnotherError("") from error
+            else:
+                return dbquery
 
     @staticmethod
     def __write_message(**kwargs) -> None:
-        models.Message(**kwargs)
+        try:
+            models.Message(**kwargs)
+        except SQLObjectNotFound as error:
+            raise WriteDatabaseError("") from error
+        except SQLObjectIntegrityError as error:
+            raise WriteDatabaseError2("") from error
+        except Exception as error:
+            raise AnotherError("") from error
 
     def get_all_user(self) -> SelectResults:
         return self.__read_userconfig(get_one=False)
@@ -176,6 +225,32 @@ class DbHandler:
                                        bio=None,
                                        salt=salt,
                                        key=key)
+
+    def update_user_info(self,
+                         uuid: str,
+                         hash_password: str = None,
+                         username: str = None,
+                         is_bot: bool = False,
+                         auth_id: str = None,
+                         email: str = None,
+                         avatar: bytes = None,
+                         bio: str = None) -> None:
+        dbquery = self.__read_userconfig(get_one=True,
+                                         uuid=uuid)
+        if hash_password:
+            dbquery.hashPassword = hash_password
+        if username:
+            dbquery.username = username
+        if is_bot:
+            dbquery.isBot = is_bot
+        if auth_id:
+            dbquery.authId = auth_id
+        if email:
+            dbquery.email = email
+        if avatar:
+            dbquery.avatar = avatar
+        if bio:
+            dbquery.bio = bio
 
     def get_all_message(self) -> SelectResults:
         return self.__read_message(get_one=False)
@@ -225,6 +300,35 @@ class DbHandler:
                                     user=user,
                                     flow=flow)
 
+    def update_message(self,
+                       uuid: str,
+                       text: str = None,
+                       picture: bytes = None,
+                       video: bytes = None,
+                       audio: bytes = None,
+                       document: bytes = None,
+                       emoji: bytes = None,
+                       edited_time: int = None,
+                       edited_status: bool = False) -> None:
+        dbquery = self.__read_message(get_one=True,
+                                      uuid=uuid)
+        if text:
+            dbquery.text = text
+        if text:
+            dbquery.filePicture = picture
+        if text:
+            dbquery.fileVideo = video
+        if text:
+            dbquery.fileAudio = audio
+        if text:
+            dbquery.fileDocument = document
+        if text:
+            dbquery.emoji = emoji
+        if text:
+            dbquery.editedTime = edited_time
+        if text:
+            dbquery.editedStatus = edited_status
+
     def get_all_flow(self) -> SelectResults:
         return self.__read_flow(get_one=False)
 
@@ -250,3 +354,20 @@ class DbHandler:
                                  title=title,
                                  info=info,
                                  owner=owner)
+
+    def update_flow(self,
+                    uuid: str,
+                    flow_type: str,
+                    title: str,
+                    info: str,
+                    owner: str) -> None:
+        dbquery = self.__read_flow(get_one=True,
+                                   uuid=uuid)
+        if flow_type:
+            dbquery.flowType = flow_type
+        if flow_type:
+            dbquery.title = title
+        if flow_type:
+            dbquery.info = info
+        if flow_type:
+            dbquery.owner = owner
