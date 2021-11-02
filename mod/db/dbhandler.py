@@ -17,6 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
+from collections import namedtuple
 import configparser
 import inspect
 import sys
@@ -234,6 +235,39 @@ class DbHandler:
         except Exception as error:
             raise AnotherError("") from error
 
+    @staticmethod
+    def __read_admin(get_one: bool,
+                     **kwargs) -> SelectResults:
+        if get_one:
+            try:
+                dbquery = models.Admin.selectBy(**kwargs).getOne()
+            except SQLObjectNotFound as error:
+                raise ReadDatabaseError("") from error
+            except Exception as error:
+                raise AnotherError("") from error
+            else:
+                return dbquery
+        else:
+            try:
+                dbquery = models.Admin.selectBy(**kwargs)
+            except SQLObjectNotFound as error:
+                raise ReadDatabaseError("") from error
+            except Exception as error:
+                raise AnotherError("") from error
+            else:
+                return dbquery
+
+    @staticmethod
+    def __write_admin(**kwargs) -> None:
+        try:
+            models.Admin(**kwargs)
+        except SQLObjectNotFound as error:
+            raise WriteDatabaseError("") from error
+        except SQLObjectIntegrityError as error:
+            raise WriteDatabaseError2("") from error
+        except Exception as error:
+            raise AnotherError("") from error
+
     def get_all_user(self) -> SelectResults:
         return self.__read_userconfig(get_one=False)
 
@@ -260,10 +294,10 @@ class DbHandler:
                      password: str,
                      hash_password: str,
                      username: str,
-                     auth_id: str,
-                     email: str,
                      salt: str,
-                     key: str) -> None:
+                     key: str,
+                     email: str = None,
+                     auth_id: str = None) -> None:
         return self.__write_userconfig(uuid=uuid,
                                        login=login,
                                        password=password,
@@ -452,3 +486,26 @@ class DbHandler:
             dbquery.info = info
         if flow_type:
             dbquery.owner = owner
+
+    def table_count(self) -> namedtuple:
+        TableCount = namedtuple('TableCount', ["user_count",
+                                               "flow_count",
+                                               "message_count"])
+        user = self.__read_userconfig(get_one=False)
+        flow = self.__read_flow(get_one=False)
+        message = self.__read_message(get_one=False)
+        result = TableCount(user.count(),
+                            flow.count(),
+                            message.count())
+        return result
+
+    def get_admin(self,
+                  username: str) -> SelectResults:
+        return self.__read_admin(get_one=True,
+                                 username=username)
+
+    def add_admin(self,
+                  username: str,
+                  hash_password: str) -> None:
+        return self.__write_admin(username=username,
+                                  hashPassword=hash_password)
