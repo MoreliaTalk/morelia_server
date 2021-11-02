@@ -57,10 +57,34 @@ class WriteDatabaseError2(SQLObjectIntegrityError):
 
 class DbHandler:
     def __init__(self,
-                 uri: str = database.get("uri")) -> None:
-        self.uri = uri
-        self.connection = orm.connectionForURI(uri)
-        orm.sqlhub.processConnection = self.connection
+                 uri: str = database.get("uri"),
+                 debug: bool = False,
+                 logger: str = None,
+                 loglevel: str = None) -> None:
+        self._uri = uri
+        self._debug = "0"
+
+        if logger is None:
+            self._logger = logger
+
+        if loglevel in ["debug",
+                        "info",
+                        "warning",
+                        "error",
+                        "critical",
+                        "exception"]:
+            self._loglevel = loglevel
+        else:
+            self._loglevel = ""
+
+        if debug:
+            self._debug = "1"
+
+        self._connection = orm.connectionForURI(self._uri,
+                                                debug=self._debug,
+                                                logger=self._logger,
+                                                loglevel=self._loglevel)
+        orm.sqlhub.processConnection = self._connection
 
     def __str__(self):
         return f"Connect to database: {self.uri}"
@@ -90,6 +114,26 @@ class DbHandler:
             class_ = getattr(models, item)
             class_.dropTable(ifExists=True, dropJoinTables=True, cascade=True)
         return "Ok"
+
+    @property
+    def debug(self) -> bool | None:
+        match self._debug:
+            case "0":
+                return False
+            case "1":
+                return True
+            case _:
+                return None
+
+    @debug.setter
+    def debug(self,
+              value: bool = False) -> None:
+        self._debug = "0"
+        if value:
+            self._debug = "1"
+        self._connection = orm.connectionForURI(self._uri,
+                                                debug=self._debug)
+        orm.sqlhub.processConnection = self._connection
 
     @staticmethod
     def __read_userconfig(get_one: bool,
