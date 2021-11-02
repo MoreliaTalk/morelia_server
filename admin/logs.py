@@ -25,14 +25,14 @@ from . import login
 
 router = APIRouter()
 
-log_list = str()
+log_string = str()
 
 
 @router.get("/logs/get")
 def get_logs(request: Request, user=Depends(login.login_manager)):
-    return {"logs": log_list}
+    return {"logs": log_string}
 
 
 def loguru_handler(log):
-    global log_list
-    log_list += log
+    global log_string
+    log_string += log
