@@ -23,7 +23,7 @@ import inspect
 import sys
 
 import sqlobject as orm
-from sqlobject import AND
+from sqlobject.sqlbuilder import AND
 from sqlobject.main import SQLObjectIntegrityError, SQLObjectNotFound
 from sqlobject.main import SelectResults
 
