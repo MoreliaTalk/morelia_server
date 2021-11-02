@@ -17,7 +17,6 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
-
 import sqlobject as orm
 
 
@@ -116,3 +115,8 @@ class Message(orm.SQLObject):
     # Connection to UserConfig and Flow table
     user = orm.ForeignKey('UserConfig')
     flow = orm.ForeignKey('Flow')
+
+
+class Admin(orm.SQLObject):
+    username = orm.StringCol(notNone=True, unique=True)
+    hashPassword = orm.StringCol(notNone=True)

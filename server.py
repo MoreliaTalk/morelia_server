@@ -29,6 +29,8 @@ import configparser
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi import WebSocket
+from fastapi.staticfiles import StaticFiles
+from starlette.responses import HTMLResponse
 from starlette.templating import Jinja2Templates
 from starlette.websockets import WebSocketDisconnect
 import sqlobject as orm
@@ -37,18 +39,14 @@ import sqlobject as orm
 
 # ************** Morelia module **********************
 from mod import controller
-from mod import models
+from admin import admin
 # ************** Morelia module end ******************
 
 
 # ************** Logging beginning *******************
 from loguru import logger
 from mod.logging import add_logging
-# ************** Unicorn logger off ******************
-import logging
-logging.disable()
-# ************** Logging end *************************
-
+import logging as standart_logging
 # ************** Read "config.ini" ********************
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -56,6 +54,11 @@ logging = config['LOGGING']
 database = config["DATABASE"]
 directory = config["TEMPLATES"]
 # ************** END **********************************
+
+# ************** Unicorn logger off ******************
+if logging.getboolean("UVICORN_LOGGING_DISABLE"):
+    standart_logging.disable()
+# ************** Logging end *************************
 
 # loguru logger on
 add_logging(logging.getint("level"))
@@ -83,26 +86,18 @@ templates = Jinja2Templates(directory.get("folder"))
 # TODO: Нужно подумать как их компактно хранить
 CLIENTS = []
 
+app.mount("/admin", admin.app)
 
-# Server home page
+app.mount(
+    "/static",
+    StaticFiles(directory="static"),
+    name="static"
+)
+
+
 @app.get('/')
 def home_page(request: Request):
-    return templates.TemplateResponse('index.html', {'request': request})
-
-
-# Server page with working statistics
-@app.get('/status')
-def status_page(request: Request):
-    dbquery = models.Message.select(models.Message.q.time >= 1)
-    stats = {
-        'Server time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        'Server uptime': str(datetime.now()-server_started),
-        'Users': len(CLIENTS),
-        'Messages': dbquery.count()
-        }
-    return templates.TemplateResponse('status.html',
-                                      {'request': request,
-                                       'stats': stats})
+    return HTMLResponse("<h1>MoreliaTalkServer</h1>")
 
 
 # Chat websocket

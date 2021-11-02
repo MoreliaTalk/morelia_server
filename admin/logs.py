@@ -18,17 +18,21 @@
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import uvicorn
+from fastapi import APIRouter
+from fastapi import Depends
+from starlette.requests import Request
+from . import login
 
-import server  # noqa
+router = APIRouter()
 
-if __name__ == "__main__":
-    uvicorn.run("server:app",
-                host="0.0.0.0",
-                port=8000,
-                http="h11",
-                ws="websockets",
-                log_level="debug",
-                use_colors=True,
-                debug=True,
-                reload=True)
+log_string = str()
+
+
+@router.get("/logs/get")
+def get_logs(request: Request, user=Depends(login.login_manager)):
+    return {"logs": log_string}
+
+
+def loguru_handler(log):
+    global log_string
+    log_string += log

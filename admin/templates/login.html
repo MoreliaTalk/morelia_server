@@ -1,0 +1,42 @@
+<!--
+    Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+    Look at the file AUTHORS.md(located at the root of the project) to get the full list.
+
+    This file is part of Morelia Server.
+
+    Morelia Server is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Morelia Server is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="{{ url_for('static', path='bootstrap.min.css') }}">
+    <script src="{{ url_for('static', path='bootstrap.bundle.min.js') }}"></script>
+
+    <title>Login | Admin</title>
+</head>
+<body>
+    <div class="d-flex justify-content-center align-items-center vh-100">
+        <form class="card p-3 gap-3" method="post" action="login/token">
+            <h1 class="text-center">Администрирование<br>MoreliaTalkServer</h1>
+            <input name="username" class="form-control" placeholder="Имя">
+            <input name="password" class="form-control" placeholder="Пароль">
+            <button type="submit" class="btn btn-primary">Войти</button>
+        </div>
+    </div>
+</body>
+</html>

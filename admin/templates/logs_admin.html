@@ -17,9 +17,20 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 -->
+{% extends "base_admin.html" %}
 
-{% extends "base.html" %}
+{% block title %}Logs{% endblock %}
 
 {% block content %}
-    <p>MoreliaTalk - простой мессенджер который разрабатывает группа энтузиастов в своё свободное время.</p>
-{% endblock content %}
+    <textarea id="logs" class="form-control h-100" readonly>
+        logs
+    </textarea>
+    <script>
+        async function tick(){
+            logs_table = document.getElementById("logs")
+            response = await fetch("logs/get")
+            logs_table.value = (await response.json()).logs
+        }
+        setInterval(tick, 100)
+    </script>
+{% endblock %}
