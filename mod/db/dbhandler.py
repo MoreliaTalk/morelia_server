@@ -57,9 +57,16 @@ class WriteDatabaseError2(SQLObjectIntegrityError):
 
 class DbHandler:
     def __init__(self,
-                 URI: str = database.get("uri")) -> None:
-        self.connection = orm.connectionForURI(URI)
+                 uri: str = database.get("uri")) -> None:
+        self.uri = uri
+        self.connection = orm.connectionForURI(uri)
         orm.sqlhub.processConnection = self.connection
+
+    def __str__(self):
+        return f"Connect to database: {self.uri}"
+
+    def __repr__(self):
+        return f"{self.__class__.__name__} at uri: {self.uri}"
 
     @staticmethod
     def __search_db_in_models(path: str = 'mod.models') -> tuple:
@@ -264,25 +271,41 @@ class DbHandler:
                             time: int) -> SelectResults:
         return models.Flow.select(models.Message.q.time >= time)
 
-    def get_message_by_date_and_flow(self,
-                                     flow_uuid: str,
-                                     time: int) -> SelectResults:
+    def get_message_by_more_date_and_flow(self,
+                                          flow_uuid: str,
+                                          time: int) -> SelectResults:
         flow = self.__read_flow(uuid=flow_uuid)
         return models.Message.select(
             AND(models.Message.q.flow == flow,
                 models.Message.q.time >= time))
 
+    def get_message_by_less_date_and_flow(self,
+                                          flow_uuid: str,
+                                          time: int) -> SelectResults:
+        flow = self.__read_flow(uuid=flow_uuid)
+        return models.Message.select(
+            AND(models.Message.q.flow == flow,
+                models.Message.q.time <= time))
+
+    def get_message_by_exact_date_and_flow(self,
+                                           flow_uuid: str,
+                                           time: int) -> SelectResults:
+        flow = self.__read_flow(uuid=flow_uuid)
+        return models.Message.select(
+            AND(models.Message.q.flow == flow,
+                models.Message.q.time == time))
+
     def add_message(self,
                     flow_uuid: str,
                     user_uuid: str,
                     message_uuid: str,
-                    text: str,
                     time: int,
-                    picture: bytes,
-                    video: bytes,
-                    audio: bytes,
-                    document: bytes,
-                    emoji: bytes) -> None:
+                    text: str = None,
+                    picture: bytes = None,
+                    video: bytes = None,
+                    audio: bytes = None,
+                    document: bytes = None,
+                    emoji: bytes = None) -> None:
         flow = self.__read_flow(get_one=True,
                                 uuid=flow_uuid)
         user = self.__read_userconfig(get_one=True,
@@ -337,9 +360,17 @@ class DbHandler:
         return self.__read_flow(get_one=True,
                                 uuid=uuid)
 
-    def get_flow_by_date(self,
-                         time: int) -> SelectResults:
+    def get_flow_by_more_date(self,
+                              time: int) -> SelectResults:
         return models.Flow.select(models.Flow.q.timeCreated >= time)
+
+    def get_flow_by_less_date(self,
+                              time: int) -> SelectResults:
+        return models.Flow.select(models.Flow.q.timeCreated <= time)
+
+    def get_flow_by_exact_date(self,
+                               time: int) -> SelectResults:
+        return models.Flow.select(models.Flow.q.timeCreated == time)
 
     def add_flow(self,
                  uuid: str,
