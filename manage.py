@@ -123,7 +123,7 @@ def create_flow():
         click.echo(f'Failed to create a flow. Error text: {error}')
 
 
-@cli.command("admin-create-user", help="Create user in admin panel")
+@cli.command("createadmin", help="Create user in admin panel")
 @click.option("--username", help="username admin")
 @click.option("--password", help="password admin")
 def admin_create_user(username, password):
