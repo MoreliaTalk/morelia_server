@@ -422,13 +422,19 @@ class DbHandler:
                  flow_type: str,
                  title: str,
                  info: str,
-                 owner: str) -> None:
-        return self.__write_flow(uuid=uuid,
-                                 timeCreated=time_created,
-                                 flowType=flow_type,
-                                 title=title,
-                                 info=info,
-                                 owner=owner)
+                 owner: str,
+                 users: list | tuple = None) -> None:
+        dbquery = self.__write_flow(uuid=uuid,
+                                    timeCreated=time_created,
+                                    flowType=flow_type,
+                                    title=title,
+                                    info=info,
+                                    owner=owner)
+        for user_uuid in users:
+            user = self.__read_userconfig(get_one=True,
+                                          uuid=user_uuid)
+            dbquery.addUserConfig(user)
+        return
 
     def update_flow(self,
                     uuid: str,
