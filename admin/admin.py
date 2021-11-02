@@ -29,7 +29,8 @@ import sqlobject as orm
 from starlette.responses import RedirectResponse
 
 from mod import models
-from . import login, logs, manage
+from . import login, logs
+from . import control as manage
 
 app = FastAPI()
 
