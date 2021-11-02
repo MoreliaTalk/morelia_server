@@ -1,0 +1,99 @@
+<!--
+    Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+    Look at the file AUTHORS.md(located at the root of the project) to get the full list.
+
+    This file is part of Morelia Server.
+
+    Morelia Server is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Morelia Server is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
+-->
+{% extends "base_admin.html" %}
+
+{% block title %}Manage{% endblock %}
+
+{% block content %}
+    <div class="card gap-3">
+        <button class="btn btn-primary" style="width: max-content;" data-bs-toggle="modal" data-bs-target="#UserAdd">Добавить пользователя</button>
+        <div class="modal fade" style="color: black" id="UserAdd" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Добавление пользователя</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form>
+                        <div class="modal-body">
+                            <p>username: <input class="form-control"></p>
+                            <p>password: <input class="form-control"></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <table class="table table-dark table-striped">
+            <thead>
+                <tr>
+                    <td>uuid</td>
+                    <td>login</td>
+                    <td>username</td>
+                    <td>hashPassword</td>
+                    <td>isBot</td>
+                    <td>authId</td>
+                    <td>email</td>
+                    <td>avatar</td>
+                    <td>bio</td>
+                    <td>delete?</td>
+                </tr>
+            </thead>
+            {% for item in users %}
+                <tr>
+                    <td>{{ item.uuid }}</td>
+                    <td>{{ item.login }}</td>
+                    <td>{{ item.username }}</td>
+                    <td>{{ item.hashPassword }}</td>
+                    <td>{{ item.isBot }}</td>
+                    <td>{{ item.authId }}</td>
+                    <td>{{ item.email }}</td>
+                    <td>{{ item.avatar }}</td>
+                    <td>{{ item.bio }}</td>
+                    <td>
+                        <button class="btn-close btn-close-white" data-bs-toggle="modal" data-bs-target="#{{ item.username+item.uuid }}"></button>
+                        <div class="modal fade" style="color: black" id="{{ item.username+item.uuid }}" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered modal-sm">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Вы точно хотите удалить пользователя с uuid {{ item.uuid }}?</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Это действие не возможно обратить</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                                        <form method="post" action="manage/delete_user">
+                                            <input style="display: none;" name="uuid" value="{{item.uuid}}"></input>
+                                            <button type="submit" class="btn btn-danger" id="delete{{ item.uuid }}">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock %}

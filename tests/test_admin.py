@@ -17,18 +17,16 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
+import unittest
+from fastapi.testclient import TestClient
+import server
 
-import uvicorn
 
-import server  # noqa
+class TestMainAdmin(unittest.TestCase):
+    def test_main_page_no_login(self):
+        client = TestClient(server.app)
+        self.assertIsNotNone(client.get(url="admin"))
+
 
 if __name__ == "__main__":
-    uvicorn.run("server:app",
-                host="0.0.0.0",
-                port=8000,
-                http="h11",
-                ws="websockets",
-                log_level="debug",
-                use_colors=True,
-                debug=True,
-                reload=True)
+    unittest.main()

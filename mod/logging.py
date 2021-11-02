@@ -23,6 +23,8 @@ import configparser
 from loguru import logger
 import sys
 
+from admin import logs
+
 # ************** Read "config.ini" ********************
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -102,3 +104,9 @@ def add_logging(debug_status: int) -> None:
                retention=f"{expiration_date} days",
                rotation="10 MB",
                compression="zip")
+
+    logger.add(logs.loguru_handler,
+               format=logging.get("info"),
+               level="DEBUG",
+               enqueue=True,
+               catch=True)

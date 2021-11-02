@@ -1,0 +1,65 @@
+<!--
+    Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+    Look at the file AUTHORS.md(located at the root of the project) to get the full list.
+
+    This file is part of Morelia Server.
+
+    Morelia Server is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Morelia Server is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="{{ url_for('static', path='bootstrap.min.css') }}">
+    <script src="{{ url_for('static', path='bootstrap.bundle.min.js') }}"></script>
+
+    <title>{% block title %}{% endblock %} | Admin</title>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+        <a class="navbar-brand" href="./">
+            <img src="{{ url_for('static', path='logo.png') }}" width="30" height="30"></img>
+            Администрирование
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+                <a class="nav-link" href="status">Статус</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="manage">Управление</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="logs">Логи</a>
+            </li>
+            </ul>
+            <form class="d-flex" method="post" action="login/logout">
+                <button type="submit" class="btn btn-primary">Выйти</button>
+            </form>
+        </div>
+        </div>
+    </nav>
+    <div class="d-flex justify-content-center align-items-center" style="height: 80vh">
+        {% block content %}
+        {% endblock %}
+    </div>
+</body>
+</html>
