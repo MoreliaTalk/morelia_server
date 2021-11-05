@@ -28,7 +28,7 @@ import sqlobject as orm
 
 from starlette.responses import RedirectResponse
 
-from mod import models
+from mod.db import models
 from . import login, logs
 from . import control as manage
 

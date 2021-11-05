@@ -24,7 +24,7 @@ from fastapi import Form
 from starlette.requests import Request
 from starlette.responses import HTMLResponse
 
-from mod import models
+from mod.db import models
 
 router = APIRouter()
 

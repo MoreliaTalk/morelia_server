@@ -33,7 +33,7 @@ from loguru import logger
 from mod import api
 from mod import error
 from mod import lib
-from mod import models
+from mod.db import models
 
 # ************** Read "config.ini" ********************
 config = configparser.ConfigParser()

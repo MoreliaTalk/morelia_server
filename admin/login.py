@@ -28,7 +28,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from configparser import ConfigParser
 
 from starlette.responses import HTMLResponse
-from mod import models
+from mod.db import models
 from mod import lib
 import sqlobject as orm
 

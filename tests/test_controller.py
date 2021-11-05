@@ -28,12 +28,11 @@ from uuid import uuid4
 
 import sqlobject as orm
 from loguru import logger
-from sqlobject.main import SQLObjectNotFound
 
 from mod import api  # noqa
 from mod import controller  # noqa
 from mod import lib  # noqa
-from mod import models  # noqa
+from mod.db import models  # noqa
 from mod.controller import User  # noqa
 
 # Add path to directory with code being checked
@@ -69,7 +68,7 @@ connection = orm.connectionForURI("sqlite:/:memory:")
 orm.sqlhub.processConnection = connection
 
 classes = [cls_name for cls_name, cls_obj
-           in inspect.getmembers(sys.modules["mod.models"])
+           in inspect.getmembers(sys.modules["mod.db.models"])
            if inspect.isclass(cls_obj)]
 
 
