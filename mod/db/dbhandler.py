@@ -27,7 +27,7 @@ from sqlobject.sqlbuilder import AND
 from sqlobject.main import SQLObjectIntegrityError, SQLObjectNotFound
 from sqlobject.main import SelectResults
 
-from mod import models
+from mod.db import models
 
 # ************** Read "config.ini" ********************
 config = configparser.ConfigParser()
@@ -86,7 +86,7 @@ class DbHandler:
         return f"{self.__class__.__name__} at uri: {self.uri}"
 
     @staticmethod
-    def __search_db_in_models(path: str = 'mod.models') -> tuple:
+    def __search_db_in_models(path: str = 'mod.db.models') -> tuple:
         classes = [cls_name for cls_name, cls_obj
                    in inspect.getmembers(sys.modules[path])
                    if inspect.isclass(cls_obj)]
@@ -98,14 +98,18 @@ class DbHandler:
             # Create tables in database for each class
             # that is located in models module
             class_ = getattr(models, item)
-            class_.createTable(ifNotExists=True)
+            class_.createTable(ifNotExists=True,
+                               connection=self._connection)
         return "Ok"
 
     def delete(self) -> None:
         # looking for all Classes listed in models.py
         for item in self.__search_db_in_models():
             class_ = getattr(models, item)
-            class_.dropTable(ifExists=True, dropJoinTables=True, cascade=True)
+            class_.dropTable(ifExists=True,
+                             dropJoinTables=True,
+                             cascade=True,
+                             connection=self._connection)
         return "Ok"
 
     @property
@@ -125,15 +129,18 @@ class DbHandler:
         if value:
             self._debug = "1"
         self._connection = orm.connectionForURI(self._uri,
-                                                debug=self._debug)
+                                                debug=self._debug,
+                                                logger=self._logger,
+                                                loglevel=self._loglevel)
         orm.sqlhub.processConnection = self._connection
 
-    @staticmethod
-    def __read_userconfig(get_one: bool,
+    def __read_userconfig(self,
+                          get_one: bool,
                           **kwargs) -> SelectResults:
         if get_one:
             try:
-                dbquery = models.UserConfig.selectBy(**kwargs).getOne()
+                dbquery = models.UserConfig.selectBy(self._connection,
+                                                     **kwargs).getOne()
             except SQLObjectNotFound:
                 raise DatabaseReadError("User is not in the database")
             except Exception as err:
@@ -142,7 +149,8 @@ class DbHandler:
                 return dbquery
         else:
             try:
-                dbquery = models.UserConfig.selectBy(**kwargs)
+                dbquery = models.UserConfig.selectBy(self._connection,
+                                                     **kwargs)
             except SQLObjectNotFound:
                 raise DatabaseReadError("No users data in the database")
             except Exception as err:
@@ -150,21 +158,24 @@ class DbHandler:
             else:
                 return dbquery
 
-    @staticmethod
-    def __write_userconfig(**kwargs) -> None:
+    def __write_userconfig(self,
+                           **kwargs) -> None:
         try:
-            models.UserConfig(**kwargs)
+            dbquery = models.UserConfig(**kwargs)
         except SQLObjectIntegrityError:
             raise DatabaseWriteError("Writing is restricted")
         except Exception as err:
             raise DatabaseAccessError from err
+        else:
+            return dbquery
 
-    @staticmethod
-    def __read_flow(get_one: bool,
+    def __read_flow(self,
+                    get_one: bool,
                     **kwargs) -> SelectResults:
         if get_one:
             try:
-                dbquery = models.Flow.selectBy(**kwargs).getOne()
+                dbquery = models.Flow.selectBy(self._connection,,
+                                               **kwargs).getOne()
             except SQLObjectNotFound:
                 raise DatabaseReadError("Flow is not in the database")
             except Exception as err:
@@ -173,7 +184,8 @@ class DbHandler:
                 return dbquery
         else:
             try:
-                dbquery = models.Flow.selectBy(**kwargs)
+                dbquery = models.Flow.selectBy(self._connection,
+                                               **kwargs)
             except SQLObjectNotFound:
                 raise DatabaseReadError("No flows data in the database")
             except Exception as err:
@@ -181,21 +193,24 @@ class DbHandler:
             else:
                 return dbquery
 
-    @staticmethod
-    def __write_flow(**kwargs) -> None:
+    def __write_flow(self,
+                     **kwargs) -> None:
         try:
-            models.Flow(**kwargs)
+            dbquery = models.Flow(**kwargs)
         except SQLObjectIntegrityError:
             raise DatabaseWriteError("Writing is restricted")
         except Exception as err:
             raise DatabaseAccessError from err
+        else:
+            return dbquery
 
-    @staticmethod
-    def __read_message(get_one: bool,
+    def __read_message(self,
+                       get_one: bool,
                        **kwargs) -> SelectResults:
         if get_one:
             try:
-                dbquery = models.Message.selectBy(**kwargs).getOne()
+                dbquery = models.Message.selectBy(self._connection,
+                                                  **kwargs).getOne()
             except SQLObjectNotFound:
                 raise DatabaseReadError("Message is not in the database")
             except Exception as err:
@@ -204,7 +219,8 @@ class DbHandler:
                 return dbquery
         else:
             try:
-                dbquery = models.Message.selectBy(**kwargs)
+                dbquery = models.Message.selectBy(self._connection,
+                                                  **kwargs)
             except SQLObjectNotFound:
                 raise DatabaseReadError("No messages data in the database")
             except Exception as err:
@@ -212,21 +228,24 @@ class DbHandler:
             else:
                 return dbquery
 
-    @staticmethod
-    def __write_message(**kwargs) -> None:
+    def __write_message(self,
+                        **kwargs) -> None:
         try:
-            models.Message(**kwargs)
+            dbquery = models.Message(**kwargs)
         except SQLObjectIntegrityError:
             raise DatabaseWriteError("Writing is restricted")
         except Exception as err:
             raise DatabaseAccessError from err
+        else:
+            return dbquery
 
-    @staticmethod
-    def __read_admin(get_one: bool,
+    def __read_admin(self,
+                     get_one: bool,
                      **kwargs) -> SelectResults:
         if get_one:
             try:
-                dbquery = models.Admin.selectBy(**kwargs).getOne()
+                dbquery = models.Admin.selectBy(self._connection,
+                                                **kwargs).getOne()
             except SQLObjectNotFound:
                 raise DatabaseReadError("Admin is not in the database")
             except Exception as err:
@@ -235,7 +254,8 @@ class DbHandler:
                 return dbquery
         else:
             try:
-                dbquery = models.Admin.selectBy(**kwargs)
+                dbquery = models.Admin.selectBy(self._connection,
+                                                **kwargs)
             except SQLObjectNotFound:
                 raise DatabaseReadError("No admins data in the database")
             except Exception as err:
@@ -243,14 +263,16 @@ class DbHandler:
             else:
                 return dbquery
 
-    @staticmethod
-    def __write_admin(**kwargs) -> None:
+    def __write_admin(self,
+                      **kwargs) -> None:
         try:
-            models.Admin(**kwargs)
+            dbquery = models.Admin(**kwargs)
         except SQLObjectIntegrityError:
             raise DatabaseWriteError("Writing is restricted")
         except Exception as err:
             raise DatabaseAccessError from err
+        else:
+            return dbquery
 
     def get_all_user(self) -> SelectResults:
         return self.__read_userconfig(get_one=False)
@@ -331,7 +353,7 @@ class DbHandler:
 
     def get_message_by_date(self,
                             time: int) -> SelectResults:
-        return models.Flow.select(models.Message.q.time >= time)
+        return models.Flow.select(models.Message.q.time == time)
 
     def get_message_by_more_date_and_flow(self,
                                           flow_uuid: str,
@@ -478,10 +500,9 @@ class DbHandler:
         user = self.__read_userconfig(get_one=False)
         flow = self.__read_flow(get_one=False)
         message = self.__read_message(get_one=False)
-        result = TableCount(user.count(),
+        return TableCount(user.count(),
                             flow.count(),
                             message.count())
-        return result
 
     def get_admin(self,
                   username: str) -> SelectResults:
