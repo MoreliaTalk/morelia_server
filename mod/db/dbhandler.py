@@ -24,7 +24,8 @@ import sys
 
 import sqlobject as orm
 from sqlobject.sqlbuilder import AND
-from sqlobject.main import SQLObjectIntegrityError, SQLObjectNotFound
+from sqlobject.main import SQLObjectIntegrityError
+from sqlobject.main import SQLObjectNotFound
 from sqlobject.main import SelectResults
 
 from mod.db import models
@@ -48,7 +49,7 @@ class DatabaseWriteError(SQLObjectNotFound):
     pass
 
 
-class DbHandler:
+class DBHandler:
     def __init__(self,
                  uri: str = database.get("uri"),
                  debug: bool = False,
@@ -73,10 +74,7 @@ class DbHandler:
         if debug:
             self._debug = "1"
 
-        self._connection = orm.connectionForURI(self._uri,
-                                                debug=self._debug,
-                                                logger=self._logger,
-                                                loglevel=self._loglevel)
+        self._connection = orm.connectionForURI(self._uri)
         orm.sqlhub.processConnection = self._connection
 
     def __str__(self):
@@ -128,10 +126,7 @@ class DbHandler:
         self._debug = "0"
         if value:
             self._debug = "1"
-        self._connection = orm.connectionForURI(self._uri,
-                                                debug=self._debug,
-                                                logger=self._logger,
-                                                loglevel=self._loglevel)
+        self._connection = orm.connectionForURI(self._uri)
         orm.sqlhub.processConnection = self._connection
 
     def __read_userconfig(self,
@@ -174,7 +169,7 @@ class DbHandler:
                     **kwargs) -> SelectResults:
         if get_one:
             try:
-                dbquery = models.Flow.selectBy(self._connection,,
+                dbquery = models.Flow.selectBy(self._connection,
                                                **kwargs).getOne()
             except SQLObjectNotFound:
                 raise DatabaseReadError("Flow is not in the database")
