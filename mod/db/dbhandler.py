@@ -27,6 +27,7 @@ from sqlobject.sqlbuilder import AND
 from sqlobject.main import SQLObjectIntegrityError
 from sqlobject.main import SQLObjectNotFound
 from sqlobject.main import SelectResults
+from sqlobject import SQLObject
 
 from mod.db import models
 
@@ -55,24 +56,21 @@ class DBHandler:
                  debug: bool = False,
                  logger: str = None,
                  loglevel: str = None) -> None:
-        self._uri = uri
-        self._debug = "0"
 
-        if logger is None:
-            self._logger = logger
-
-        if loglevel in ["debug",
-                        "info",
-                        "warning",
-                        "error",
-                        "critical",
-                        "exception"]:
-            self._loglevel = loglevel
-        else:
-            self._loglevel = ""
-
-        if debug:
+        if debug and logger and loglevel:
             self._debug = "1"
+            self._logger = logger
+            self._loglevel = loglevel
+            self._uri = "".join((uri,
+                                 f"?debug={self._debug}",
+                                 f"?logger={self._logger}",
+                                 f"?loglevel{self._loglevel}"))
+        elif debug and logger is None or loglevel is None:
+            self._debug = "0"
+            self._uri = "".join((uri,
+                                 f"?debug={self._debug}"))
+        else:
+            self._uri = uri
 
         self._connection = orm.connectionForURI(self._uri)
         orm.sqlhub.processConnection = self._connection
@@ -126,168 +124,71 @@ class DBHandler:
         self._debug = "0"
         if value:
             self._debug = "1"
+        self._uri = "".join((self._uri,
+                             f"?debug={self._debug}"))
         self._connection = orm.connectionForURI(self._uri)
         orm.sqlhub.processConnection = self._connection
 
-    def __read_userconfig(self,
-                          get_one: bool,
-                          **kwargs) -> SelectResults:
+    def __read_db(self,
+                  table: str,
+                  get_one: bool,
+                  **kwargs) -> SelectResults:
+        db = getattr(models, table)
         if get_one:
             try:
-                dbquery = models.UserConfig.selectBy(self._connection,
-                                                     **kwargs).getOne()
+                dbquery = db.selectBy(self._connection,
+                                      **kwargs).getOne()
             except SQLObjectNotFound:
-                raise DatabaseReadError("User is not in the database")
+                raise DatabaseReadError
             except Exception as err:
                 raise DatabaseAccessError from err
             else:
                 return dbquery
         else:
             try:
-                dbquery = models.UserConfig.selectBy(self._connection,
-                                                     **kwargs)
+                dbquery = db.selectBy(self._connection,
+                                      **kwargs)
             except SQLObjectNotFound:
-                raise DatabaseReadError("No users data in the database")
+                raise DatabaseReadError
             except Exception as err:
                 raise DatabaseAccessError from err
             else:
                 return dbquery
 
-    def __write_userconfig(self,
-                           **kwargs) -> None:
+    def __write_db(self,
+                   table: str,
+                   **kwargs) -> SQLObject:
+        db = getattr(models, table)
         try:
-            dbquery = models.UserConfig(**kwargs)
-        except SQLObjectIntegrityError:
-            raise DatabaseWriteError("Writing is restricted")
-        except Exception as err:
-            raise DatabaseAccessError from err
-        else:
-            return dbquery
-
-    def __read_flow(self,
-                    get_one: bool,
-                    **kwargs) -> SelectResults:
-        if get_one:
-            try:
-                dbquery = models.Flow.selectBy(self._connection,
-                                               **kwargs).getOne()
-            except SQLObjectNotFound:
-                raise DatabaseReadError("Flow is not in the database")
-            except Exception as err:
-                raise DatabaseAccessError from err
-            else:
-                return dbquery
-        else:
-            try:
-                dbquery = models.Flow.selectBy(self._connection,
-                                               **kwargs)
-            except SQLObjectNotFound:
-                raise DatabaseReadError("No flows data in the database")
-            except Exception as err:
-                raise DatabaseAccessError from err
-            else:
-                return dbquery
-
-    def __write_flow(self,
-                     **kwargs) -> None:
-        try:
-            dbquery = models.Flow(**kwargs)
-        except SQLObjectIntegrityError:
-            raise DatabaseWriteError("Writing is restricted")
-        except Exception as err:
-            raise DatabaseAccessError from err
-        else:
-            return dbquery
-
-    def __read_message(self,
-                       get_one: bool,
-                       **kwargs) -> SelectResults:
-        if get_one:
-            try:
-                dbquery = models.Message.selectBy(self._connection,
-                                                  **kwargs).getOne()
-            except SQLObjectNotFound:
-                raise DatabaseReadError("Message is not in the database")
-            except Exception as err:
-                raise DatabaseAccessError from err
-            else:
-                return dbquery
-        else:
-            try:
-                dbquery = models.Message.selectBy(self._connection,
-                                                  **kwargs)
-            except SQLObjectNotFound:
-                raise DatabaseReadError("No messages data in the database")
-            except Exception as err:
-                raise DatabaseAccessError from err
-            else:
-                return dbquery
-
-    def __write_message(self,
-                        **kwargs) -> None:
-        try:
-            dbquery = models.Message(**kwargs)
-        except SQLObjectIntegrityError:
-            raise DatabaseWriteError("Writing is restricted")
-        except Exception as err:
-            raise DatabaseAccessError from err
-        else:
-            return dbquery
-
-    def __read_admin(self,
-                     get_one: bool,
-                     **kwargs) -> SelectResults:
-        if get_one:
-            try:
-                dbquery = models.Admin.selectBy(self._connection,
-                                                **kwargs).getOne()
-            except SQLObjectNotFound:
-                raise DatabaseReadError("Admin is not in the database")
-            except Exception as err:
-                raise DatabaseAccessError from err
-            else:
-                return dbquery
-        else:
-            try:
-                dbquery = models.Admin.selectBy(self._connection,
-                                                **kwargs)
-            except SQLObjectNotFound:
-                raise DatabaseReadError("No admins data in the database")
-            except Exception as err:
-                raise DatabaseAccessError from err
-            else:
-                return dbquery
-
-    def __write_admin(self,
-                      **kwargs) -> None:
-        try:
-            dbquery = models.Admin(**kwargs)
-        except SQLObjectIntegrityError:
-            raise DatabaseWriteError("Writing is restricted")
-        except Exception as err:
-            raise DatabaseAccessError from err
+            dbquery = db(**kwargs)
+        except (Exception, SQLObjectIntegrityError) as err:
+            raise DatabaseWriteError from err
         else:
             return dbquery
 
     def get_all_user(self) -> SelectResults:
-        return self.__read_userconfig(get_one=False)
+        return self.__read_db(table="UserConfig",
+                              get_one=False)
 
     def get_user_by_uuid(self,
                          uuid: str) -> SelectResults:
-        return self.__read_userconfig(get_one=True,
-                                      uuid=uuid)
+        return self.__read_db(table="UserConfig",
+                              get_one=True,
+                              uuid=uuid)
 
     def get_user_by_login(self,
                           login: str) -> SelectResults:
-        return self.__read_userconfig(get_one=True,
-                                      login=login)
+        return self.__read_db(table="UserConfig",
+                              get_one=True,
+                              login=login)
 
     def get_user_by_login_and_password(self,
                                        login: str,
                                        password: str) -> SelectResults:
-        return self.__read_userconfig(get_one=True,
-                                      login=login,
-                                      password=password)
+        return self.__read_db(table="UserConfig",
+                              get_one=True,
+                              login=login,
+                              password=password)
 
     def add_new_user(self,
                      uuid: str,
@@ -299,18 +200,19 @@ class DBHandler:
                      key: str,
                      email: str = None,
                      auth_id: str = None) -> None:
-        return self.__write_userconfig(uuid=uuid,
-                                       login=login,
-                                       password=password,
-                                       hashPassword=hash_password,
-                                       username=username,
-                                       isBot=False,
-                                       authId=auth_id,
-                                       email=email,
-                                       avatar=None,
-                                       bio=None,
-                                       salt=salt,
-                                       key=key)
+        return self.__write_db(table="UserConfig",
+                               uuid=uuid,
+                               login=login,
+                               password=password,
+                               hashPassword=hash_password,
+                               username=username,
+                               isBot=False,
+                               authId=auth_id,
+                               email=email,
+                               avatar=None,
+                               bio=None,
+                               salt=salt,
+                               key=key)
 
     def update_user_info(self,
                          uuid: str,
@@ -321,8 +223,9 @@ class DBHandler:
                          email: str = None,
                          avatar: bytes = None,
                          bio: str = None) -> None:
-        dbquery = self.__read_userconfig(get_one=True,
-                                         uuid=uuid)
+        dbquery = self.__read_db(table="UserConfig",
+                                 get_one=True,
+                                 uuid=uuid)
         if hash_password:
             dbquery.hashPassword = hash_password
         if username:
@@ -339,12 +242,14 @@ class DBHandler:
             dbquery.bio = bio
 
     def get_all_message(self) -> SelectResults:
-        return self.__read_message(get_one=False)
+        return self.__read_db(table="Message",
+                              get_one=False)
 
     def get_message_by_uuid(self,
                             uuid: str) -> SelectResults:
-        return self.__read_message(get_one=True,
-                                   uuid=uuid)
+        return self.__read_db(table="Message",
+                              get_one=True,
+                              uuid=uuid)
 
     def get_message_by_date(self,
                             time: int) -> SelectResults:
@@ -353,7 +258,8 @@ class DBHandler:
     def get_message_by_more_date_and_flow(self,
                                           flow_uuid: str,
                                           time: int) -> SelectResults:
-        flow = self.__read_flow(uuid=flow_uuid)
+        flow = self.__read_db(table="Flow",
+                              uuid=flow_uuid)
         return models.Message.select(
             AND(models.Message.q.flow == flow,
                 models.Message.q.time >= time))
@@ -361,7 +267,8 @@ class DBHandler:
     def get_message_by_less_date_and_flow(self,
                                           flow_uuid: str,
                                           time: int) -> SelectResults:
-        flow = self.__read_flow(uuid=flow_uuid)
+        flow = self.__read_db(table="Flow",
+                              uuid=flow_uuid)
         return models.Message.select(
             AND(models.Message.q.flow == flow,
                 models.Message.q.time <= time))
@@ -369,7 +276,8 @@ class DBHandler:
     def get_message_by_exact_date_and_flow(self,
                                            flow_uuid: str,
                                            time: int) -> SelectResults:
-        flow = self.__read_flow(uuid=flow_uuid)
+        flow = self.__read_db(table="Flow",
+                              uuid=flow_uuid)
         return models.Message.select(
             AND(models.Message.q.flow == flow,
                 models.Message.q.time == time))
@@ -385,22 +293,25 @@ class DBHandler:
                     audio: bytes = None,
                     document: bytes = None,
                     emoji: bytes = None) -> None:
-        flow = self.__read_flow(get_one=True,
-                                uuid=flow_uuid)
-        user = self.__read_userconfig(get_one=True,
-                                      uuid=user_uuid)
-        return self.__write_message(uuid=message_uuid,
-                                    text=text,
-                                    time=time,
-                                    filePicture=picture,
-                                    fileVideo=video,
-                                    fileAudio=audio,
-                                    fileDocument=document,
-                                    emoji=emoji,
-                                    editedTime=None,
-                                    editedStatus=False,
-                                    user=user,
-                                    flow=flow)
+        flow = self.__read_db(table="Flow",
+                              get_one=True,
+                              uuid=flow_uuid)
+        user = self.__read_db(table="UserConfig",
+                              get_one=True,
+                              uuid=user_uuid)
+        return self.__write_db(table="Message",
+                               uuid=message_uuid,
+                               text=text,
+                               time=time,
+                               filePicture=picture,
+                               fileVideo=video,
+                               fileAudio=audio,
+                               fileDocument=document,
+                               emoji=emoji,
+                               editedTime=None,
+                               editedStatus=False,
+                               user=user,
+                               flow=flow)
 
     def update_message(self,
                        uuid: str,
@@ -412,8 +323,9 @@ class DBHandler:
                        emoji: bytes = None,
                        edited_time: int = None,
                        edited_status: bool = False) -> None:
-        dbquery = self.__read_message(get_one=True,
-                                      uuid=uuid)
+        dbquery = self.__read_db(tbale="Message",
+                                 get_one=True,
+                                 uuid=uuid)
         if text:
             dbquery.text = text
         if text:
@@ -432,12 +344,14 @@ class DBHandler:
             dbquery.editedStatus = edited_status
 
     def get_all_flow(self) -> SelectResults:
-        return self.__read_flow(get_one=False)
+        return self.__read_db(table="Flow",
+                              get_one=False)
 
     def get_flow_by_uuid(self,
                          uuid: str) -> SelectResults:
-        return self.__read_flow(get_one=True,
-                                uuid=uuid)
+        return self.__read_db(table="Flow",
+                              get_one=True,
+                              uuid=uuid)
 
     def get_flow_by_more_date(self,
                               time: int) -> SelectResults:
@@ -458,16 +372,18 @@ class DBHandler:
                  title: str,
                  info: str,
                  owner: str,
-                 users: list | tuple = None) -> None:
-        dbquery = self.__write_flow(uuid=uuid,
-                                    timeCreated=time_created,
-                                    flowType=flow_type,
-                                    title=title,
-                                    info=info,
-                                    owner=owner)
+                 users: list | tuple) -> None:
+        dbquery = self.__write_db(table="Flow",
+                                  uuid=uuid,
+                                  timeCreated=time_created,
+                                  flowType=flow_type,
+                                  title=title,
+                                  info=info,
+                                  owner=owner)
         for user_uuid in users:
-            user = self.__read_userconfig(get_one=True,
-                                          uuid=user_uuid)
+            user = self.__read_db(table="UserConfig",
+                                  get_one=True,
+                                  uuid=user_uuid)
             dbquery.addUserConfig(user)
         return
 
@@ -477,8 +393,9 @@ class DBHandler:
                     title: str,
                     info: str,
                     owner: str) -> None:
-        dbquery = self.__read_flow(get_one=True,
-                                   uuid=uuid)
+        dbquery = self.__read_db(table="Flow",
+                                 get_one=True,
+                                 uuid=uuid)
         if flow_type:
             dbquery.flowType = flow_type
         if flow_type:
@@ -492,20 +409,25 @@ class DBHandler:
         TableCount = namedtuple('TableCount', ["user_count",
                                                "flow_count",
                                                "message_count"])
-        user = self.__read_userconfig(get_one=False)
-        flow = self.__read_flow(get_one=False)
-        message = self.__read_message(get_one=False)
+        user = self.__read_db(table="UserConfig",
+                              get_one=False)
+        flow = self.__read_db(table="Flow",
+                              get_one=False)
+        message = self.__read_db(table="Message",
+                                 get_one=False)
         return TableCount(user.count(),
-                            flow.count(),
-                            message.count())
+                          flow.count(),
+                          message.count())
 
     def get_admin(self,
                   username: str) -> SelectResults:
-        return self.__read_admin(get_one=True,
-                                 username=username)
+        return self.__read_db(table="Admin",
+                              get_one=True,
+                              username=username)
 
     def add_admin(self,
                   username: str,
                   hash_password: str) -> None:
-        return self.__write_admin(username=username,
-                                  hashPassword=hash_password)
+        return self.__write_db(table="Admin",
+                               username=username,
+                               hashPassword=hash_password)
