@@ -33,7 +33,6 @@ from mod.db.dbhandler import DatabaseReadError  # noqa
 class TestDBHandlerMainMethods(unittest.TestCase):
     def setUp(self):
         self.db = dbhandler.DBHandler(uri="sqlite:/:memory:")
-        self.db.delete()
 
     def tearDown(self):
         self.db.delete()
@@ -56,6 +55,12 @@ class TestDBHandlerMainMethods(unittest.TestCase):
         self.assertIsInstance(result, tuple)
         self.assertEqual(result[0], 'Admin')
 
+    def test_create_db_not_set_debug(self):
+        result = dbhandler.DBHandler(uri="sqlite:/:memory:")
+        self.assertFalse(result.debug)
+        self.assertEqual(result._uri,
+                         "sqlite:/:memory:?debug=0")
+
     def test_create_db_set_debug(self):
         result = dbhandler.DBHandler(uri="sqlite:/:memory:",
                                      debug=True)
@@ -77,6 +82,14 @@ class TestDBHandlerMainMethods(unittest.TestCase):
                                      loglevel='debug')
         self.assertEqual(result._uri,
                          "sqlite:/:memory:?debug=1?logger=Test?loglevel=debug")
+
+    def test_str(self):
+        self.assertEqual(str(self.db),
+                         "Connected to database: sqlite:/:memory:?debug=0")
+
+    def test_repr(self):
+        self.assertEqual(repr(self.db),
+                         "class DBHandler: debug=0 logger=None loglevel=None")
 
 
 class TestDBHandlerMethods(unittest.TestCase):
@@ -144,7 +157,8 @@ class TestDBHandlerMethods(unittest.TestCase):
                                                    username="username")
         self.assertEqual(dbquery_one.login, "User1")
         self.assertEqual(dbquery_many.count(), 2)
-        self.assertIsInstance(dbquery_many, SelectResults)
+        self.assertIsInstance(dbquery_many,
+                              SelectResults)
         self.assertRaises(DatabaseReadError,
                           self.db._DBHandler__read_db,
                           table="UserConfig",
@@ -176,6 +190,8 @@ class TestDBHandlerMethods(unittest.TestCase):
     def test_set_debug(self):
         self.db.debug = True
         self.assertTrue(self.db.debug)
+        self.db.debug = False
+        self.assertFalse(self.db.debug)
 
     def test_get_all_user(self):
         dbquery = self.db.get_all_user()
@@ -216,13 +232,31 @@ class TestDBHandlerMethods(unittest.TestCase):
 
     def test_update_user_info(self):
         new_hash = "new_hash"
+        new_username = "new_username"
+        new_is_bot = True
+        new_auth_id = "new_auth_id"
+        new_email = "new_email@email.com"
+        new_avatar = b'avatar'
+        new_bio = "new_bio"
         dbquery = self.db.update_user_info(uuid="123456",
-                                           hash_password=new_hash)
+                                           hash_password=new_hash,
+                                           username=new_username,
+                                           is_bot=new_is_bot,
+                                           auth_id=new_auth_id,
+                                           email=new_email,
+                                           avatar=new_avatar,
+                                           bio=new_bio)
         new_query = self.db.get_user_by_uuid(uuid="123456")
         self.assertIsInstance(dbquery,
                               str)
         self.assertEqual(dbquery, "Updated")
         self.assertEqual(new_query.hashPassword, new_hash)
+        self.assertEqual(new_query.username, new_username)
+        self.assertEqual(new_query.isBot, new_is_bot)
+        self.assertEqual(new_query.authId, new_auth_id)
+        self.assertEqual(new_query.email, new_email)
+        self.assertEqual(new_query.avatar, new_avatar)
+        self.assertEqual(new_query.bio, new_bio)
 
     def test_get_all_message(self):
         dbquery = self.db.get_all_message()
@@ -276,13 +310,34 @@ class TestDBHandlerMethods(unittest.TestCase):
 
     def test_update_message(self):
         new_text = "new_text"
+        new_picture = b"new_picture"
+        new_video = b"new_video"
+        new_audio =b"new_audio"
+        new_document = b"new_document"
+        new_emoji = b"new_emoji"
+        new_edited_time = 123456
+        new_edited_status = True
         dbquery = self.db.update_message(uuid="111222",
-                                         text=new_text)
+                                         text=new_text,
+                                         picture=new_picture,
+                                         video=new_video,
+                                         audio=new_audio,
+                                         document=new_document,
+                                         emoji=new_emoji,
+                                         edited_time=new_edited_time,
+                                         edited_status=new_edited_status)
         new_query = self.db.get_message_by_uuid(uuid="111222")
         self.assertIsInstance(dbquery,
                               str)
         self.assertEqual(dbquery, "Updated")
         self.assertEqual(new_query.text, new_text)
+        self.assertEqual(new_query.filePicture, new_picture)
+        self.assertEqual(new_query.fileVideo, new_video)
+        self.assertEqual(new_query.fileAudio, new_audio)
+        self.assertEqual(new_query.fileDocument, new_document)
+        self.assertEqual(new_query.emoji, new_emoji)
+        self.assertEqual(new_query.editedTime, new_edited_time)
+        self.assertEqual(new_query.editedStatus, new_edited_status)
 
     def test_get_all_flow(self):
         dbquery = self.db.get_all_flow()
@@ -335,14 +390,23 @@ class TestDBHandlerMethods(unittest.TestCase):
         self.assertEqual(dbquery.users[0].login, "User9")
 
     def test_update_flow(self):
-        new_info = "newTestTest"
+        new_flow_type = "new_flow_type"
+        new_title = "new_title"
+        new_info = "new_info"
+        new_owner = "new_owner"
         dbquery = self.db.update_flow(uuid="666999",
-                                      info=new_info)
+                                      flow_type=new_flow_type,
+                                      title=new_title,
+                                      info=new_info,
+                                      owner=new_owner)
         self.assertIsInstance(dbquery,
                               str)
         self.assertEqual(dbquery, "Updated")
         new_query = self.db.get_flow_by_uuid(uuid="666999")
+        self.assertEqual(new_query.flowType, new_flow_type)
+        self.assertEqual(new_query.title, new_title)
         self.assertEqual(new_query.info, new_info)
+        self.assertEqual(new_query.owner, new_owner)
 
     def test_table_count(self):
         dbquery = self.db.table_count()
