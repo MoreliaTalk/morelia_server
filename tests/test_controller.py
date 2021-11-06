@@ -476,7 +476,7 @@ class TestAddFlow(unittest.TestCase):
         self.db.add_user(uuid="123456",
                          login="login",
                          password="password",
-                         authId="auth_id")
+                         auth_id="auth_id")
         self.db.add(uuid="07d949")
         logger.remove()
         self.test = api.Request.parse_file(ADD_FLOW)
