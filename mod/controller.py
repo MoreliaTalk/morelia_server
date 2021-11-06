@@ -25,7 +25,6 @@ from uuid import uuid4
 import configparser
 
 from pydantic import ValidationError
-from sqlobject import AND
 from sqlobject.main import SQLObjectIntegrityError
 from sqlobject.main import SQLObjectNotFound
 from sqlobject import dberrors
@@ -34,12 +33,15 @@ from loguru import logger
 from mod import api
 from mod import error
 from mod import lib
-from mod.db import models
+from mod.db.dbhandler import DBHandler, DatabaseWriteError
+from mod.db.dbhandler import DatabaseReadError
+from mod.db.dbhandler import DatabaseAccessError
 
 # ************** Read "config.ini" ********************
 config = configparser.ConfigParser()
 config.read('config.ini')
 limit = config['SERVER_LIMIT']
+database = config['DATABASE']
 # ************** END **********************************
 
 
@@ -94,31 +96,35 @@ class Error:
                                   detail=detail)
 
 
-class User(Error):
+class User:
     def check_auth(method_to_decorate):
-        def wrapper(self, request):
+        db = DBHandler(uri=database.get('uri'))
+
+        def wrapper(*args):
+            _, request = args
             uuid = request.data.user[0].uuid
             auth_id = request.data.user[0].auth_id
 
             try:
-                dbquery = models.UserConfig.selectBy(uuid=uuid).getOne()
+                dbquery = db.get_user_by_uuid(uuid).getOne()
                 logger.success("User was found in the database")
             except (dberrors.OperationalError,
                     SQLObjectIntegrityError,
                     SQLObjectNotFound):
                 logger.debug("User wasn't found in the database")
-                return self.catching_error("UNAUTHORIZED")
+                return Error.catching_error("UNAUTHORIZED")
             else:
                 if auth_id == dbquery.authId:
                     logger.success("Authentication User has been verified")
-                    return method_to_decorate(self, request)
+                    return method_to_decorate(*args)
                 else:
                     logger.debug("Authentication User failed")
-                    return self.catching_error("UNAUTHORIZED")
+                    return Error.catching_error("UNAUTHORIZED")
 
         return wrapper
 
-    def check_login(self, login: str) -> bool:
+    def check_login(self,
+                    login: str) -> bool:
         """Checks database for a user with the same login
 
         Args:
@@ -129,8 +135,8 @@ class User(Error):
             False if no such user exists
         """
         try:
-            models.UserConfig.selectBy(login=login).getOne()
-        except (SQLObjectIntegrityError, SQLObjectNotFound):
+            self._db.get_user_by_login(login=login)
+        except (DatabaseReadError, DatabaseAccessError):
             logger.debug("There is no user in the database")
             return False
         else:
@@ -148,6 +154,7 @@ class ProtocolMethods(User, Error):
         self.get_time: int = int(time())
         self.response = None
         self.request = None
+        self._db = DBHandler(uri=database.get("uri"))
 
         try:
             self.request = api.Request.parse_obj(request)
@@ -214,7 +221,7 @@ class ProtocolMethods(User, Error):
             generated = lib.Hash(password=password,
                                  uuid=uuid)
             auth_id = generated.auth_id()
-            models.UserConfig(uuid=uuid,
+            self._db.add_user(uuid=uuid,
                               password=password,
                               hashPassword=generated.password_hash(),
                               login=login,
@@ -247,11 +254,9 @@ class ProtocolMethods(User, Error):
         flow = []
         user = []
 
-        dbquery_user = models.UserConfig.selectBy()
-        dbquery_flow = models.Flow.select(models.Flow.q.timeCreated >=
-                                          request.data.time)
-        dbquery_message = models.Message.select(models.Message.q.time >=
-                                                request.data.time)
+        dbquery_user = self._db.get_all_user()
+        dbquery_flow = self._db.get_flow_by_more_time(request.data.time)
+        dbquery_message = self._db.get_message_by_more_time(request.data.time)
 
         if dbquery_message.count():
             for element in dbquery_message:
@@ -321,24 +326,20 @@ class ProtocolMethods(User, Error):
         data = None
 
         try:
-            flow = models.Flow.selectBy(uuid=flow_uuid).getOne()
-            user = models.UserConfig.selectBy(uuid=user_uuid).getOne()
-        except SQLObjectNotFound as ERROR:
+            self._db.add_message(flow_uuid=flow_uuid,
+                                 user_uuid=user_uuid,
+                                 message_uuid=message_uuid,
+                                 time=self.get_time,
+                                 text=text,
+                                 picture=picture,
+                                 video=video,
+                                 audio=audio,
+                                 document=document,
+                                 emoji=emoji)
+        except DatabaseWriteError as ERROR:
             errors = self.catching_error("NOT_FOUND",
                                          str(ERROR))
         else:
-            models.Message(uuid=message_uuid,
-                           text=text,
-                           time=self.get_time,
-                           filePicture=picture,
-                           fileVideo=video,
-                           fileAudio=audio,
-                           fileDocument=document,
-                           emoji=emoji,
-                           editedTime=None,
-                           editedStatus=False,
-                           user=user,
-                           flow=flow)
             message.append(api.MessageResponse(uuid=message_uuid,
                                                client_id=client_id,
                                                from_flow=flow_uuid,
@@ -397,13 +398,11 @@ class ProtocolMethods(User, Error):
             return message
 
         try:
-            flow_dbquery = models.Flow.selectBy(uuid=flow_uuid).getOne()
-            dbquery = models.Message.select(
-                AND(models.Message.q.flow == flow_dbquery,
-                    models.Message.q.time >= request.data.time))
+            dbquery = self._db.get_message_by_more_time_and_flow(flow_uuid,
+                                                                 request.data.time)
             MESSAGE_COUNT: int = dbquery.count()
             dbquery[0]
-        except (IndexError, SQLObjectNotFound) as flow_error:
+        except DatabaseReadError as flow_error:
             errors = self.catching_error("NOT_FOUND",
                                          str(flow_error))
         else:
@@ -459,17 +458,13 @@ class ProtocolMethods(User, Error):
                                          "Must be two users only")
         else:
             try:
-                dbquery = models.Flow(uuid=flow_uuid,
-                                      timeCreated=self.get_time,
-                                      flowType=flow_type,
-                                      title=request.data.flow[0].title,
-                                      info=request.data.flow[0].info,
-                                      owner=owner)
-                for user_uuid in users:
-                    user = models.UserConfig.selectBy(uuid=user_uuid).getOne()
-                    dbquery.addUserConfig(user)
-            except (SQLObjectNotFound,
-                    SQLObjectIntegrityError) as flow_error:
+                self._db.add_flow(flow_uuid,
+                                  self.get_time,
+                                  flow_type,
+                                  request.data.flow[0].title,
+                                  request.data.flow[0].info,
+                                  owner)
+            except DatabaseWriteError as flow_error:
                 errors = self.catching_error("NOT_FOUND",
                                              str(flow_error))
             else:
@@ -498,7 +493,7 @@ class ProtocolMethods(User, Error):
         from database
         """
         flow = []
-        dbquery = models.Flow.selectBy()
+        dbquery = self._db.get_all_flow()
 
         if dbquery.count():
             for element in dbquery:
@@ -534,9 +529,9 @@ class ProtocolMethods(User, Error):
         if users_volume <= limit.getint("users"):
             for element in request.data.user[1:]:
                 try:
-                    dbquery = models.UserConfig.selectBy(uuid=element.uuid).getOne()
-                except (SQLObjectNotFound,
-                        SQLObjectIntegrityError) as user_info_error:
+                    dbquery = self._db.get_flow_by_uuid(element.uuid)
+                except (DatabaseReadError,
+                        DatabaseAccessError) as user_info_error:
                     errors = self.catching_error("UNKNOWN_ERROR",
                                                  str(user_info_error))
                 else:
@@ -573,7 +568,7 @@ class ProtocolMethods(User, Error):
         user = []
 
         if self.check_login(login):
-            dbquery = models.UserConfig.selectBy(login=login).getOne()
+            dbquery = self._db.get_user_by_login(login)
             # to check password, we use same module as for its
             # hash generation. Specify password entered by user
             # and hash of old password as parameters.
@@ -612,9 +607,10 @@ class ProtocolMethods(User, Error):
         password = request.data.user[0].password
 
         try:
-            dbquery = models.UserConfig.selectBy(login=login,
-                                                 password=password).getOne()
-        except (SQLObjectIntegrityError, SQLObjectNotFound) as not_found:
+            dbquery = self._db.get_user_by_login_and_password(login,
+                                                              password)
+        except (DatabaseReadError,
+                DatabaseAccessError) as not_found:
             errors = self.catching_error("NOT_FOUND",
                                          str(not_found))
         else:
@@ -645,8 +641,9 @@ class ProtocolMethods(User, Error):
         message_uuid = request.data.message[0].uuid
 
         try:
-            dbquery = models.Message.selectBy(uuid=message_uuid).getOne()
-        except (SQLObjectIntegrityError, SQLObjectNotFound) as not_found:
+            dbquery = self._db.get_message_by_uuid(message_uuid)
+        except (DatabaseReadError,
+                DatabaseAccessError) as not_found:
             errors = self.catching_error("NOT_FOUND",
                                          str(not_found))
         else:
@@ -675,8 +672,9 @@ class ProtocolMethods(User, Error):
         message_uuid = request.data.message[0].uuid
 
         try:
-            dbquery = models.Message.selectBy(uuid=message_uuid).getOne()
-        except (SQLObjectIntegrityError, SQLObjectNotFound) as not_found:
+            dbquery = self._db.get_message_by_uuid(message_uuid)
+        except (DatabaseReadError,
+                DatabaseAccessError) as not_found:
             errors = self.catching_error("NOT_FOUND",
                                          str(not_found))
         else:

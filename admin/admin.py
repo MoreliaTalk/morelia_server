@@ -18,20 +18,25 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
+import configparser
 
 from fastapi import Depends
 from fastapi.applications import FastAPI
 from fastapi.requests import Request
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
-from loguru import logger
-import sqlobject as orm
-
 from starlette.responses import RedirectResponse
 
-from mod.db import models
-from . import login, logs
+from mod.db import dbhandler
+from . import login
+from . import logs
 from . import control as manage
+
+# ************** Read "config.ini" ********************
+config = configparser.ConfigParser()
+config.read('config.ini')
+database = config["DATABASE"]
+# ************** END **********************************
 
 app = FastAPI()
 
@@ -41,56 +46,52 @@ app.include_router(login.router)
 app.include_router(logs.router)
 app.include_router(manage.router)
 
-try:
-    db_connection = orm.connectionForURI(login.database.get("uri"))
-except Exception as ERROR:
-    logger.exception(str(ERROR))
-finally:
-    orm.sqlhub.processConnection = db_connection
+db = dbhandler.DBHandler(uri=database.get('uri'))
 
 
 @app.exception_handler(login.NotAuthenticatedException)
-def not_login_exception_handler(
-        request: Request,
-        exc: login.NotAuthenticatedException
-        ):
+def not_login_exception_handler(request: Request,
+                                exc: login.NotAuthenticatedException):
     return RedirectResponse(url="/admin/login")
 
 
 @app.get("/login")
 def login_admin(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse("login.html",
+                                      {"request": request})
 
 
 @app.get("/")
-def index_admin(request: Request, user=Depends(login.login_manager)):
-    return templates.TemplateResponse("index_admin.html", {"request": request})
+def index_admin(request: Request,
+                user=Depends(login.login_manager)):
+    return templates.TemplateResponse("index_admin.html",
+                                      {"request": request})
 
 
 @app.get("/status")
-def status_admin(request: Request, user=Depends(login.login_manager)):
-    Messages_count = models.Message.select().count()
-    Flows_count = models.Flow.select().count()
-    Users_count = models.UserConfig.select().count()
-
-    return templates.TemplateResponse("status_admin.html", {
-        "request": request,
-        "Messages_count": Messages_count,
-        "Flows_count": Flows_count,
-        "Users_count": Users_count
-    })
+def status_admin(request: Request,
+                 user=Depends(login.login_manager)):
+    dbcount = db.table_count()
+    return templates.TemplateResponse("status_admin.html",
+                                      {"request": request,
+                                       "Messages_count": dbcount.message_count,
+                                       "Flows_count": dbcount.flow_count,
+                                       "Users_count": dbcount.user_count})
 
 
 # TODO Полностью доделать(на данный момент управление сервером не работает)
 # после того, как будут сделаны методы работы с бд
 @app.get("/manage")
-def manage_admin(request: Request, user=Depends(login.login_manager)):
-    return templates.TemplateResponse("manage_admin.html", {
-        "request": request,
-        "users": models.UserConfig.select()
-    })
+def manage_admin(request: Request,
+                 user=Depends(login.login_manager)):
+    dbquery = db.get_all_user()
+    return templates.TemplateResponse("manage_admin.html",
+                                      {"request": request,
+                                       "users": dbquery.count()})
 
 
 @app.get("/logs")
-def manage_logs(request: Request, user=Depends(login.login_manager)):
-    return templates.TemplateResponse("logs_admin.html", {"request": request})
+def manage_logs(request: Request,
+                user=Depends(login.login_manager)):
+    return templates.TemplateResponse("logs_admin.html",
+                                      {"request": request})

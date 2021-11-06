@@ -34,7 +34,6 @@ from fastapi.staticfiles import StaticFiles
 from starlette.responses import HTMLResponse
 from starlette.templating import Jinja2Templates
 from starlette.websockets import WebSocketDisconnect
-import sqlobject as orm
 # ************** External module end *****************
 
 
@@ -66,14 +65,6 @@ add_logging(logging.getint("level"))
 
 # Record server start time (UTC)
 server_started = datetime.now()
-
-# Connect to database
-try:
-    connection = orm.connectionForURI(database.get("uri"))
-except Exception as ERROR:
-    logger.exception(str(ERROR))
-finally:
-    orm.sqlhub.processConnection = connection
 
 # Server instance creation
 app = FastAPI()

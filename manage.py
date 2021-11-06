@@ -19,16 +19,18 @@
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import sys
-from time import time, process_time
-import inspect
+from time import time
+from time import process_time
 from uuid import uuid4
 import configparser
 
-import sqlobject as orm
 import click
 
-from mod import lib, models
+from mod import lib
+from mod.db import dbhandler
+from mod.db.dbhandler import DatabaseWriteError
+from mod.db.dbhandler import DatabaseReadError
+from mod.db.dbhandler import DatabaseAccessError
 
 # ************** Read "config.ini" ********************
 config = configparser.ConfigParser()
@@ -44,103 +46,74 @@ def cli():
     pass
 
 
-@cli.command("db_create", help="Create all table with all data")
+@cli.command("db-create", help="Create all table with all data")
 def db_create():
-    # Connect to database
-    connection = orm.connectionForURI(database.get("uri"))
-    orm.sqlhub.processConnection = connection
-
-    # looking for all Classes listed in models.py
-    classes = [cls_name for cls_name, cls_obj
-               in inspect.getmembers(sys.modules['mod.models'])
-               if inspect.isclass(cls_obj)]
-
     start_time = process_time()
-    for item in classes:
-        # Create tables in database for each class
-        # that is located in models module
-        class_ = getattr(models, item)
-        class_.createTable(ifNotExists=True)
+    db = dbhandler.DBHandler(uri=database.get('uri'))
+    db.create()
     click.echo(f'Table is created at: '
                f'{process_time() - start_time} sec.')
 
 
-@cli.command("db_delete", help="Delete all table with all data")
+@cli.command("db-delete", help="Delete all table with all data")
 def db_delete():
-    # Connect to database
-    connection = orm.connectionForURI(database.get("uri"))
-    orm.sqlhub.processConnection = connection
-
-    # looking for all Classes listed in models.py
-    classes = [cls_name for cls_name, cls_obj
-               in inspect.getmembers(sys.modules['mod.models'])
-               if inspect.isclass(cls_obj)]
-
     start_time = process_time()
-    for item in classes:
-        class_ = getattr(models, item)
-        class_.dropTable(ifExists=True, dropJoinTables=True, cascade=True)
+    db = dbhandler.DBHandler(uri=database.get('uri'))
+    db.delete()
     click.echo(f'Table is deleted at: '
                f'{process_time() - start_time} sec.')
 
 
-@cli.command("create-superuser", help="Create superuser in database")
+@cli.command("superuser-create", help="Create superuser in database")
 def create_superuser():
-    connection = orm.connectionForURI(database.get("uri"))
-    orm.sqlhub.processConnection = connection
-
+    db = dbhandler.DBHandler(uri=database.get('uri'))
     user_uuid = str(123456789)
     hash_password = superuser.get('hash_password')
     try:
-        models.UserConfig(uuid=user_uuid,
-                          login="login",
-                          password="password",
-                          hashPassword=hash_password,
-                          username="superuser",
-                          salt=b"salt",
-                          key=b"key")
+        db.add_user(uuid=user_uuid,
+                    login="login",
+                    password="password",
+                    hashPassword=hash_password,
+                    username="superuser",
+                    salt=b"salt",
+                    key=b"key")
         click.echo("Superuser created")
-    except orm.dberrors.OperationalError as error:
+    except DatabaseWriteError as error:
         click.echo(f'Failed to create a user. Error text: {error}')
 
 
-@cli.command("create-flow", help="Create flow type group in database")
+@cli.command("flow-create", help="Create flow type group in database")
 def create_flow():
-    connection = orm.connectionForURI(database.get("uri"))
-    orm.sqlhub.processConnection = connection
-
+    db = dbhandler.DBHandler(uri=database.get('uri'))
     user_uuid = str(123456789)
     try:
-        new_user = models.UserConfig.selectBy(uuid=user_uuid).getOne()
-        new_flow = models.Flow(uuid=str(uuid4().hex),
-                               timeCreated=int(time()),
-                               flowType="group",
+        new_user = db.get_user_by_uuid(uuid=user_uuid)
+        new_flow = db.add_flow(uuid=str(uuid4().hex),
+                               time_created=int(time()),
+                               flow_type="group",
                                title="Test",
                                info="Test flow",
                                owner=user_uuid)
         new_flow.addUserConfig(new_user)
         click.echo("Flow created")
-    except orm.dberrors.OperationalError as error:
+    except (DatabaseReadError,
+            DatabaseAccessError,
+            DatabaseWriteError) as error:
         click.echo(f'Failed to create a flow. Error text: {error}')
 
 
-@cli.command("createadmin", help="Create user in admin panel")
+@cli.command("admin-create", help="Create user in admin panel")
 @click.option("--username", help="username admin")
 @click.option("--password", help="password admin")
 def admin_create_user(username, password):
-    connection = orm.connectionForURI(database.get("uri"))
-    orm.sqlhub.processConnection = connection
+    db = dbhandler.DBHandler(uri=database.get('uri'))
 
-    generator = lib.Hash(
-        password,
-        models.Admin.select().count()+1,
-        key=b"key",
-        salt=b"salt"
-    )
-    models.Admin(
-        username=username,
-        hashPassword=generator.password_hash()
-    )
+    generator = lib.Hash(password,
+                         str(uuid4().hex),
+                         key=b"key",
+                         salt=b"salt")
+    db.add_admin(username=username,
+                 hash_password=generator.password_hash())
     click.echo(f"Admin created\nusername: {username}\npassword: {password}")
 
 
