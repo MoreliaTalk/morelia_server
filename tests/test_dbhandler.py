@@ -101,20 +101,20 @@ class TestDBHandlerMethods(unittest.TestCase):
         self.db = dbhandler.DBHandler(uri="sqlite:/:memory:")
         self.db.delete()
         self.db.create()
-        self.db.add_new_user(uuid="123456",
-                             login="User1",
-                             password="password",
-                             hash_password="hash",
-                             username="username",
-                             salt=b"salt",
-                             key=b"key")
-        self.db.add_new_user(uuid="123457",
-                             login="User2",
-                             password="password",
-                             hash_password="hash",
-                             username="username",
-                             salt=b"salt",
-                             key=b"key")
+        self.db.add_user(uuid="123456",
+                         login="User1",
+                         password="password",
+                         hash_password="hash",
+                         username="username",
+                         salt=b"salt",
+                         key=b"key")
+        self.db.add_user(uuid="123457",
+                         login="User2",
+                         password="password",
+                         hash_password="hash",
+                         username="username",
+                         salt=b"salt",
+                         key=b"key")
         self.db.add_admin(username="User1",
                           hash_password="hash")
         self.db.add_admin(username="User2",
@@ -219,13 +219,13 @@ class TestDBHandlerMethods(unittest.TestCase):
         self.assertEqual(dbquery.uuid, "123456")
 
     def test_new_user(self):
-        dbquery = self.db.add_new_user(uuid="123458",
-                                       login="Nick",
-                                       password="password",
-                                       hash_password="hash",
-                                       username="username",
-                                       salt=b"salt",
-                                       key=b"key")
+        dbquery = self.db.add_user(uuid="123458",
+                                   login="Nick",
+                                   password="password",
+                                   hash_password="hash",
+                                   username="username",
+                                   salt=b"salt",
+                                   key=b"key")
         self.assertIsInstance(dbquery,
                               SQLObject)
         self.assertEqual(dbquery.uuid, "123458")
@@ -269,6 +269,12 @@ class TestDBHandlerMethods(unittest.TestCase):
         self.assertIsInstance(dbquery,
                               SQLObject)
         self.assertEqual(dbquery.time, 123123)
+
+    def test_get_message_by_text(self):
+        dbquery = self.db.get_message_by_text(text="Hello World!")
+        self.assertIsInstance(dbquery,
+                              SelectResults)
+        self.assertEqual(dbquery[0].time, 123123)
 
     def test_get_message_by_time(self):
         dbquery = self.db.get_message_by_time(time=123124)
@@ -345,6 +351,12 @@ class TestDBHandlerMethods(unittest.TestCase):
                               SelectResults)
         self.assertEqual(dbquery[0].info, "TestTest")
 
+    def test_get_flow_by_title(self):
+        dbquery = self.db.get_flow_by_title(title="test1")
+        self.assertIsInstance(dbquery,
+                              SelectResults)
+        self.assertEqual(dbquery[0].info, "TestTest")
+
     def test_get_flow_by_uuid(self):
         dbquery = self.db.get_flow_by_uuid(uuid="666999")
         self.assertIsInstance(dbquery,
@@ -370,13 +382,13 @@ class TestDBHandlerMethods(unittest.TestCase):
         self.assertEqual(dbquery[0].title, "test2")
 
     def test_add_flow(self):
-        new_user = self.db.add_new_user(uuid="123459",
-                                        login="User9",
-                                        password="password",
-                                        hash_password="hash",
-                                        username="username",
-                                        salt=b"salt",
-                                        key=b"key")
+        new_user = self.db.add_user(uuid="123459",
+                                    login="User9",
+                                    password="password",
+                                    hash_password="hash",
+                                    username="username",
+                                    salt=b"salt",
+                                    key=b"key")
         dbquery = self.db.add_flow(uuid="666996",
                                    time_created=555666996,
                                    flow_type="Test",
