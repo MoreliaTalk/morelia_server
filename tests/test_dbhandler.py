@@ -312,7 +312,7 @@ class TestDBHandlerMethods(unittest.TestCase):
         new_text = "new_text"
         new_picture = b"new_picture"
         new_video = b"new_video"
-        new_audio =b"new_audio"
+        new_audio = b"new_audio"
         new_document = b"new_document"
         new_emoji = b"new_emoji"
         new_edited_time = 123456
