@@ -196,16 +196,16 @@ class DBHandler:
                               login=login,
                               password=password)
 
-    def add_new_user(self,
-                     uuid: str,
-                     login: str,
-                     password: str,
-                     hash_password: str,
-                     username: str,
-                     salt: str,
-                     key: str,
-                     email: str = None,
-                     auth_id: str = None) -> SQLObject:
+    def add_user(self,
+                 uuid: str,
+                 login: str,
+                 password: str,
+                 hash_password: str,
+                 username: str,
+                 salt: str,
+                 key: str,
+                 email: str = None,
+                 auth_id: str = None) -> SQLObject:
         return self.__write_db(table="UserConfig",
                                uuid=uuid,
                                login=login,
@@ -264,6 +264,12 @@ class DBHandler:
         return self.__read_db(table="Message",
                               get_one=True,
                               uuid=uuid)
+
+    def get_message_by_text(self,
+                            text: str) -> SelectResults:
+        return self.__read_db(table="Message",
+                              get_one=False,
+                              text=text)
 
     def get_message_by_time(self,
                             time: int) -> SelectResults:
@@ -374,10 +380,16 @@ class DBHandler:
                               get_one=False)
 
     def get_flow_by_uuid(self,
-                         uuid: str) -> SelectResults:
+                         uuid: str) -> SQLObject:
         return self.__read_db(table="Flow",
                               get_one=True,
                               uuid=uuid)
+
+    def get_flow_by_title(self,
+                          title: str) -> SelectResults:
+        return self.__read_db(table="Flow",
+                              get_one=False,
+                              title=title)
 
     def get_flow_by_more_time(self,
                               time: int) -> SelectResults:
