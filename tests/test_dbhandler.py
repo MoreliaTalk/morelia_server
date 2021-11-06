@@ -57,13 +57,26 @@ class TestDBHandlerMainMethods(unittest.TestCase):
         self.assertEqual(result[0], 'Admin')
 
     def test_create_db_set_debug(self):
-        pass
+        result = dbhandler.DBHandler(uri="sqlite:/:memory:",
+                                     debug=True)
+        self.assertFalse(result.debug)
+        self.assertEqual(result._uri,
+                         "sqlite:/:memory:?debug=0")
 
     def test_create_db_set_debug_logger(self):
-        pass
+        result = dbhandler.DBHandler(uri="sqlite:/:memory:",
+                                     debug=True,
+                                     logger='Test')
+        self.assertEqual(result._uri,
+                         "sqlite:/:memory:?debug=0")
 
     def test_create_db_set_debug_logger_loglevel(self):
-        pass
+        result = dbhandler.DBHandler(uri="sqlite:/:memory:",
+                                     debug=True,
+                                     logger='Test',
+                                     loglevel='debug')
+        self.assertEqual(result._uri,
+                         "sqlite:/:memory:?debug=1?logger=Test?loglevel=debug")
 
 
 class TestDBHandlerMethods(unittest.TestCase):
