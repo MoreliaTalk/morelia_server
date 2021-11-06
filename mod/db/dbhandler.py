@@ -67,7 +67,7 @@ class DBHandler:
             self._uri = "".join((uri,
                                  f"?debug={self._debug}",
                                  f"?logger={self._logger}",
-                                 f"?loglevel{self._loglevel}"))
+                                 f"?loglevel={self._loglevel}"))
         elif debug and logger is None or loglevel is None:
             self._debug = "0"
             self._uri = "".join((uri,
