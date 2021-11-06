@@ -230,7 +230,9 @@ class TestDBHandlerMethods(unittest.TestCase):
                               SQLObject)
         self.assertEqual(dbquery.uuid, "123458")
 
-    def test_update_user_info(self):
+    def test_update_user(self):
+        new_login = "new_login"
+        new_password = "new_password"
         new_hash = "new_hash"
         new_username = "new_username"
         new_is_bot = True
@@ -238,18 +240,26 @@ class TestDBHandlerMethods(unittest.TestCase):
         new_email = "new_email@email.com"
         new_avatar = b'avatar'
         new_bio = "new_bio"
-        dbquery = self.db.update_user_info(uuid="123456",
-                                           hash_password=new_hash,
-                                           username=new_username,
-                                           is_bot=new_is_bot,
-                                           auth_id=new_auth_id,
-                                           email=new_email,
-                                           avatar=new_avatar,
-                                           bio=new_bio)
+        new_key = b"new_key"
+        new_salt = b"new_salt"
+        dbquery = self.db.update_user(uuid="123456",
+                                      login=new_login,
+                                      password=new_password,
+                                      hash_password=new_hash,
+                                      username=new_username,
+                                      is_bot=new_is_bot,
+                                      auth_id=new_auth_id,
+                                      email=new_email,
+                                      avatar=new_avatar,
+                                      bio=new_bio,
+                                      key=new_key,
+                                      salt=new_salt)
         new_query = self.db.get_user_by_uuid(uuid="123456")
         self.assertIsInstance(dbquery,
                               str)
         self.assertEqual(dbquery, "Updated")
+        self.assertEqual(new_query.login, new_login)
+        self.assertEqual(new_query.password, new_password)
         self.assertEqual(new_query.hashPassword, new_hash)
         self.assertEqual(new_query.username, new_username)
         self.assertEqual(new_query.isBot, new_is_bot)
@@ -257,6 +267,8 @@ class TestDBHandlerMethods(unittest.TestCase):
         self.assertEqual(new_query.email, new_email)
         self.assertEqual(new_query.avatar, new_avatar)
         self.assertEqual(new_query.bio, new_bio)
+        self.assertEqual(new_query.key, new_key)
+        self.assertEqual(new_query.salt, new_salt)
 
     def test_get_all_message(self):
         dbquery = self.db.get_all_message()
@@ -276,8 +288,20 @@ class TestDBHandlerMethods(unittest.TestCase):
                               SelectResults)
         self.assertEqual(dbquery[0].time, 123123)
 
-    def test_get_message_by_time(self):
-        dbquery = self.db.get_message_by_time(time=123124)
+    def test_get_message_by_exact_time(self):
+        dbquery = self.db.get_message_by_exact_time(time=123124)
+        self.assertIsInstance(dbquery,
+                              SelectResults)
+        self.assertEqual(dbquery[0].uuid, "333444")
+
+    def test_get_message_by_less_time(self):
+        dbquery = self.db.get_message_by_less_time(time=123124)
+        self.assertIsInstance(dbquery,
+                              SelectResults)
+        self.assertEqual(dbquery[0].uuid, "111222")
+
+    def test_get_message_by_more_time(self):
+        dbquery = self.db.get_message_by_more_time(time=123124)
         self.assertIsInstance(dbquery,
                               SelectResults)
         self.assertEqual(dbquery[0].uuid, "333444")
