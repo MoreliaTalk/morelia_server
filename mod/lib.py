@@ -58,7 +58,7 @@ class Hash:
                  uuid: int | str,
                  salt: bytes = None,
                  key: bytes = None,
-                 hash_password: str = None):
+                 hash_password: str = None) -> None:
 
         if salt is None:
             self.salt = urandom(16)
