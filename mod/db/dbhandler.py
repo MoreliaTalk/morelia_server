@@ -68,21 +68,24 @@ class DBHandler:
                                  f"?debug={self._debug}",
                                  f"?logger={self._logger}",
                                  f"?loglevel={self._loglevel}"))
-        elif debug and logger is None or loglevel is None:
+        else:
             self._debug = "0"
+            self._logger = logger
+            self._loglevel = loglevel
             self._uri = "".join((uri,
                                  f"?debug={self._debug}"))
-        else:
-            self._uri = uri
 
         self._connection = orm.connectionForURI(self._uri)
         orm.sqlhub.processConnection = self._connection
 
     def __str__(self):
-        return f"Connect to database: {self.uri}"
+        return f"Connected to database: {self._uri}"
 
     def __repr__(self):
-        return f"{self.__class__.__name__} at uri: {self.uri}"
+        return "".join((f"class {self.__class__.__name__}: ",
+                        f"debug={self._debug} ",
+                        f"logger={self._logger} ",
+                        f"loglevel={self._loglevel}"))
 
     @staticmethod
     def __search_db_in_models(path: str = 'mod.db.models') -> tuple:
@@ -113,19 +116,16 @@ class DBHandler:
 
     @property
     def debug(self) -> bool | None:
-        match self._debug:
-            case "0":
-                return False
-            case "1":
-                return True
-            case _:
-                return None
+        if self._debug == "0":
+            return False
+        else:
+            return True
 
     @debug.setter
     def debug(self,
               value: bool = False) -> None:
         self._debug = "0"
-        if value:
+        if value is True:
             self._debug = "1"
         self._uri = "".join((self._uri,
                              f"?debug={self._debug}"))
@@ -234,18 +234,25 @@ class DBHandler:
                                  uuid=uuid)
         if hash_password:
             dbquery.hashPassword = hash_password
+
         if username:
             dbquery.username = username
+
         if is_bot:
             dbquery.isBot = is_bot
+
         if auth_id:
             dbquery.authId = auth_id
+
         if email:
             dbquery.email = email
+
         if avatar:
             dbquery.avatar = avatar
+
         if bio:
             dbquery.bio = bio
+
         return "Updated"
 
     def get_all_message(self) -> SelectResults:
@@ -338,20 +345,28 @@ class DBHandler:
                                  uuid=uuid)
         if text:
             dbquery.text = text
-        if text:
+
+        if picture:
             dbquery.filePicture = picture
-        if text:
+
+        if video:
             dbquery.fileVideo = video
-        if text:
+
+        if audio:
             dbquery.fileAudio = audio
-        if text:
+
+        if document:
             dbquery.fileDocument = document
-        if text:
+
+        if emoji:
             dbquery.emoji = emoji
-        if text:
+
+        if edited_time:
             dbquery.editedTime = edited_time
-        if text:
+
+        if edited_status:
             dbquery.editedStatus = edited_status
+
         return "Updated"
 
     def get_all_flow(self) -> SelectResults:
@@ -412,12 +427,16 @@ class DBHandler:
                                  uuid=uuid)
         if flow_type:
             dbquery.flowType = flow_type
+
         if title:
             dbquery.title = title
+
         if info:
             dbquery.info = info
+
         if owner:
             dbquery.owner = owner
+
         return "Updated"
 
     def table_count(self) -> Type[Tuple]:
