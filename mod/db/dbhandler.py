@@ -220,18 +220,28 @@ class DBHandler:
                                salt=salt,
                                key=key)
 
-    def update_user_info(self,
-                         uuid: str,
-                         hash_password: str = None,
-                         username: str = None,
-                         is_bot: bool = False,
-                         auth_id: str = None,
-                         email: str = None,
-                         avatar: bytes = None,
-                         bio: str = None) -> str:
+    def update_user(self,
+                    uuid: str,
+                    login: str = None,
+                    password: str = None,
+                    hash_password: str = None,
+                    username: str = None,
+                    is_bot: bool = False,
+                    auth_id: str = None,
+                    email: str = None,
+                    avatar: bytes = None,
+                    bio: str = None,
+                    key: bytes = None,
+                    salt: bytes = None) -> str:
         dbquery = self.__read_db(table="UserConfig",
                                  get_one=True,
                                  uuid=uuid)
+        if login:
+            dbquery.login = login
+
+        if password:
+            dbquery.password = password
+
         if hash_password:
             dbquery.hashPassword = hash_password
 
@@ -253,6 +263,12 @@ class DBHandler:
         if bio:
             dbquery.bio = bio
 
+        if key:
+            dbquery.key = key
+
+        if salt:
+            dbquery.salt = salt
+
         return "Updated"
 
     def get_all_message(self) -> SelectResults:
@@ -271,9 +287,17 @@ class DBHandler:
                               get_one=False,
                               text=text)
 
-    def get_message_by_time(self,
-                            time: int) -> SelectResults:
+    def get_message_by_exact_time(self,
+                                  time: int) -> SelectResults:
         return models.Message.select(models.Message.q.time == time)
+
+    def get_message_by_less_time(self,
+                                 time: int) -> SelectResults:
+        return models.Message.select(models.Message.q.time <= time)
+
+    def get_message_by_more_time(self,
+                                 time: int) -> SelectResults:
+        return models.Message.select(models.Message.q.time >= time)
 
     def get_message_by_more_time_and_flow(self,
                                           flow_uuid: str,
