@@ -1,6 +1,7 @@
 """
     Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the full list.
+    Look at the file AUTHORS.md(located at the root of the project) to get the
+    full list.
 
     This file is part of Morelia Server.
 
@@ -18,6 +19,8 @@
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 from collections import namedtuple
+from typing import Type
+from typing import Tuple
 import configparser
 import inspect
 import sys
@@ -132,7 +135,10 @@ class DBHandler:
     def __read_db(self,
                   table: str,
                   get_one: bool,
-                  **kwargs) -> SelectResults:
+                  **kwargs) -> SelectResults | SQLObject:
+        # The SelectResults object type when the result
+        # is in the form of a list. SQLObject type when
+        # the result is a single object.
         db = getattr(models, table)
         if get_one:
             try:
@@ -171,20 +177,20 @@ class DBHandler:
                               get_one=False)
 
     def get_user_by_uuid(self,
-                         uuid: str) -> SelectResults:
+                         uuid: str) -> SQLObject:
         return self.__read_db(table="UserConfig",
                               get_one=True,
                               uuid=uuid)
 
     def get_user_by_login(self,
-                          login: str) -> SelectResults:
+                          login: str) -> SQLObject:
         return self.__read_db(table="UserConfig",
                               get_one=True,
                               login=login)
 
     def get_user_by_login_and_password(self,
                                        login: str,
-                                       password: str) -> SelectResults:
+                                       password: str) -> SQLObject:
         return self.__read_db(table="UserConfig",
                               get_one=True,
                               login=login,
@@ -199,7 +205,7 @@ class DBHandler:
                      salt: str,
                      key: str,
                      email: str = None,
-                     auth_id: str = None) -> None:
+                     auth_id: str = None) -> SQLObject:
         return self.__write_db(table="UserConfig",
                                uuid=uuid,
                                login=login,
@@ -222,7 +228,7 @@ class DBHandler:
                          auth_id: str = None,
                          email: str = None,
                          avatar: bytes = None,
-                         bio: str = None) -> None:
+                         bio: str = None) -> str:
         dbquery = self.__read_db(table="UserConfig",
                                  get_one=True,
                                  uuid=uuid)
@@ -240,43 +246,47 @@ class DBHandler:
             dbquery.avatar = avatar
         if bio:
             dbquery.bio = bio
+        return "Updated"
 
     def get_all_message(self) -> SelectResults:
         return self.__read_db(table="Message",
                               get_one=False)
 
     def get_message_by_uuid(self,
-                            uuid: str) -> SelectResults:
+                            uuid: str) -> SQLObject:
         return self.__read_db(table="Message",
                               get_one=True,
                               uuid=uuid)
 
-    def get_message_by_date(self,
+    def get_message_by_time(self,
                             time: int) -> SelectResults:
-        return models.Flow.select(models.Message.q.time == time)
+        return models.Message.select(models.Message.q.time == time)
 
-    def get_message_by_more_date_and_flow(self,
+    def get_message_by_more_time_and_flow(self,
                                           flow_uuid: str,
                                           time: int) -> SelectResults:
         flow = self.__read_db(table="Flow",
+                              get_one=True,
                               uuid=flow_uuid)
         return models.Message.select(
             AND(models.Message.q.flow == flow,
                 models.Message.q.time >= time))
 
-    def get_message_by_less_date_and_flow(self,
+    def get_message_by_less_time_and_flow(self,
                                           flow_uuid: str,
                                           time: int) -> SelectResults:
         flow = self.__read_db(table="Flow",
+                              get_one=True,
                               uuid=flow_uuid)
         return models.Message.select(
             AND(models.Message.q.flow == flow,
                 models.Message.q.time <= time))
 
-    def get_message_by_exact_date_and_flow(self,
+    def get_message_by_exact_time_and_flow(self,
                                            flow_uuid: str,
                                            time: int) -> SelectResults:
         flow = self.__read_db(table="Flow",
+                              get_one=True,
                               uuid=flow_uuid)
         return models.Message.select(
             AND(models.Message.q.flow == flow,
@@ -292,7 +302,7 @@ class DBHandler:
                     video: bytes = None,
                     audio: bytes = None,
                     document: bytes = None,
-                    emoji: bytes = None) -> None:
+                    emoji: bytes = None) -> SQLObject:
         flow = self.__read_db(table="Flow",
                               get_one=True,
                               uuid=flow_uuid)
@@ -322,8 +332,8 @@ class DBHandler:
                        document: bytes = None,
                        emoji: bytes = None,
                        edited_time: int = None,
-                       edited_status: bool = False) -> None:
-        dbquery = self.__read_db(tbale="Message",
+                       edited_status: bool = False) -> str:
+        dbquery = self.__read_db(table="Message",
                                  get_one=True,
                                  uuid=uuid)
         if text:
@@ -342,6 +352,7 @@ class DBHandler:
             dbquery.editedTime = edited_time
         if text:
             dbquery.editedStatus = edited_status
+        return "Updated"
 
     def get_all_flow(self) -> SelectResults:
         return self.__read_db(table="Flow",
@@ -353,15 +364,15 @@ class DBHandler:
                               get_one=True,
                               uuid=uuid)
 
-    def get_flow_by_more_date(self,
+    def get_flow_by_more_time(self,
                               time: int) -> SelectResults:
         return models.Flow.select(models.Flow.q.timeCreated >= time)
 
-    def get_flow_by_less_date(self,
+    def get_flow_by_less_time(self,
                               time: int) -> SelectResults:
         return models.Flow.select(models.Flow.q.timeCreated <= time)
 
-    def get_flow_by_exact_date(self,
+    def get_flow_by_exact_time(self,
                                time: int) -> SelectResults:
         return models.Flow.select(models.Flow.q.timeCreated == time)
 
@@ -372,7 +383,7 @@ class DBHandler:
                  title: str,
                  info: str,
                  owner: str,
-                 users: list | tuple) -> None:
+                 users: list | tuple) -> SQLObject:
         dbquery = self.__write_db(table="Flow",
                                   uuid=uuid,
                                   timeCreated=time_created,
@@ -380,32 +391,36 @@ class DBHandler:
                                   title=title,
                                   info=info,
                                   owner=owner)
-        for user_uuid in users:
-            user = self.__read_db(table="UserConfig",
-                                  get_one=True,
-                                  uuid=user_uuid)
-            dbquery.addUserConfig(user)
-        return
+        if isinstance(users, list):
+            for user_uuid in users:
+                user = self.__read_db(table="UserConfig",
+                                      get_one=True,
+                                      uuid=user_uuid)
+                dbquery.addUserConfig(user)
+        else:
+            dbquery.addUserConfig(users)
+        return dbquery
 
     def update_flow(self,
                     uuid: str,
-                    flow_type: str,
-                    title: str,
-                    info: str,
-                    owner: str) -> None:
+                    flow_type: str = None,
+                    title: str = None,
+                    info: str = None,
+                    owner: str = None) -> str:
         dbquery = self.__read_db(table="Flow",
                                  get_one=True,
                                  uuid=uuid)
         if flow_type:
             dbquery.flowType = flow_type
-        if flow_type:
+        if title:
             dbquery.title = title
-        if flow_type:
+        if info:
             dbquery.info = info
-        if flow_type:
+        if owner:
             dbquery.owner = owner
+        return "Updated"
 
-    def table_count(self) -> namedtuple:
+    def table_count(self) -> Type[Tuple]:
         TableCount = namedtuple('TableCount', ["user_count",
                                                "flow_count",
                                                "message_count"])
@@ -419,15 +434,19 @@ class DBHandler:
                           flow.count(),
                           message.count())
 
-    def get_admin(self,
-                  username: str) -> SelectResults:
+    def get_all_admin(self) -> SelectResults:
+        return self.__read_db(table="Admin",
+                              get_one=False)
+
+    def get_admin_by_name(self,
+                          username: str) -> SQLObject:
         return self.__read_db(table="Admin",
                               get_one=True,
                               username=username)
 
     def add_admin(self,
                   username: str,
-                  hash_password: str) -> None:
+                  hash_password: str) -> SQLObject:
         return self.__write_db(table="Admin",
                                username=username,
                                hashPassword=hash_password)
