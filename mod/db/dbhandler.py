@@ -54,83 +54,110 @@ class DatabaseWriteError(SQLObjectNotFound):
 
 
 class DBHandler:
+
+    _uri: str = "sqlite:/:memory:"
+    _debug = "0"
+    _logger = None
+    _loglevel = None
+    _connection = orm.connectionForURI(_uri)
+    orm.sqlhub.processConnection = _connection
+    _path = "mod.db.models"
+
     def __init__(self,
-                 uri: str = database.get("uri"),
-                 debug: bool = False,
-                 logger: str = None,
-                 loglevel: str = None) -> None:
+                 connection=None) -> None:
+        if connection is None:
+            pass
+        self._connection = connection
+
+    @classmethod
+    def __str__(cls):
+        return f"Connected to database: {cls._uri}"
+
+    @classmethod
+    def __repr__(cls):
+        return "".join((f"class {cls.__name__}: ",
+                        f"debug={cls._debug} ",
+                        f"logger={cls._logger} ",
+                        f"loglevel={cls._loglevel}"))
+
+    @classmethod
+    def connect(cls,
+                uri: str = database.get("uri"),
+                debug: bool = False,
+                logger: str = None,
+                loglevel: str = None) -> None:
 
         if debug and logger and loglevel:
-            self._debug = "1"
-            self._logger = logger
-            self._loglevel = loglevel
-            self._uri = "".join((uri,
-                                 f"?debug={self._debug}",
-                                 f"?logger={self._logger}",
-                                 f"?loglevel={self._loglevel}"))
+            cls._debug = "1"
+            cls._logger = logger
+            cls._loglevel = loglevel
+            cls._uri = "".join((uri,
+                                f"?debug={cls._debug}",
+                                f"?logger={cls._logger}",
+                                f"?loglevel={cls._loglevel}"))
         else:
-            self._debug = "0"
-            self._logger = logger
-            self._loglevel = loglevel
-            self._uri = "".join((uri,
-                                 f"?debug={self._debug}"))
+            cls._uri = uri
 
-        self._connection = orm.connectionForURI(self._uri)
-        orm.sqlhub.processConnection = self._connection
+        cls._connection = orm.connectionForURI(cls._uri)
+        orm.sqlhub.processConnection = cls._connection
+        return cls(connection=cls._connection)
 
-    def __str__(self):
-        return f"Connected to database: {self._uri}"
+    @classmethod
+    def __reset_config(cls) -> None:
+        cls._uri = "sqlite:/:memory:"
+        cls._debug = "0"
+        cls._logger = None
+        cls._loglevel = None
+        cls._connection = orm.connectionForURI(cls._uri)
+        orm.sqlhub.processConnection = cls._connection
+        cls._path = "mod.db.models"
+        return cls(connection=cls._connection)
 
-    def __repr__(self):
-        return "".join((f"class {self.__class__.__name__}: ",
-                        f"debug={self._debug} ",
-                        f"logger={self._logger} ",
-                        f"loglevel={self._loglevel}"))
-
-    @staticmethod
-    def __search_db_in_models(path: str = 'mod.db.models') -> tuple:
+    @classmethod
+    def __search_db_in_models(cls) -> tuple:
         classes = [cls_name for cls_name, cls_obj
-                   in inspect.getmembers(sys.modules[path])
+                   in inspect.getmembers(sys.modules[cls._path])
                    if inspect.isclass(cls_obj)]
         return tuple(classes)
 
-    def create(self) -> None:
+    @classmethod
+    def create(cls) -> None:
         # looking for all Classes listed in models.py
-        for item in self.__search_db_in_models():
+        for item in cls.__search_db_in_models():
             # Create tables in database for each class
             # that is located in models module
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True,
-                               connection=self._connection)
+                               connection=cls._connection)
         return "Ok"
 
-    def delete(self) -> None:
+    @classmethod
+    def delete(cls) -> None:
         # looking for all Classes listed in models.py
-        for item in self.__search_db_in_models():
+        for item in cls.__search_db_in_models():
             class_ = getattr(models, item)
             class_.dropTable(ifExists=True,
                              dropJoinTables=True,
                              cascade=True,
-                             connection=self._connection)
+                             connection=cls._connection)
         return "Ok"
 
-    @property
-    def debug(self) -> bool | None:
-        if self._debug == "0":
+    @classmethod
+    def get_debug(cls) -> bool | None:
+        if cls._debug == "0":
             return False
         else:
             return True
 
-    @debug.setter
-    def debug(self,
-              value: bool = False) -> None:
-        self._debug = "0"
+    @classmethod
+    def set_debug(cls,
+                  value: bool = False) -> None:
         if value is True:
-            self._debug = "1"
-        self._uri = "".join((self._uri,
-                             f"?debug={self._debug}"))
-        self._connection = orm.connectionForURI(self._uri)
-        orm.sqlhub.processConnection = self._connection
+            cls._debug = "1"
+        cls._uri = "".join((cls._uri,
+                            f"?debug={cls._debug}"))
+        cls._connection = orm.connectionForURI(cls._uri)
+        orm.sqlhub.processConnection = cls._connection
 
     def __read_db(self,
                   table: str,
@@ -165,6 +192,7 @@ class DBHandler:
                    table: str,
                    **kwargs) -> SQLObject:
         db = getattr(models, table)
+        kwargs.update({'connection': self._connection})
         try:
             dbquery = db(**kwargs)
         except (Exception, SQLObjectIntegrityError) as err:
@@ -199,11 +227,11 @@ class DBHandler:
     def add_user(self,
                  uuid: str,
                  login: str,
-                 password: str,
-                 hash_password: str,
-                 username: str,
-                 salt: str,
-                 key: str,
+                 password: str = None,
+                 hash_password: str = None,
+                 username: str = None,
+                 salt: str = None,
+                 key: str = None,
                  email: str = None,
                  auth_id: str = None) -> SQLObject:
         return self.__write_db(table="UserConfig",
@@ -429,12 +457,12 @@ class DBHandler:
 
     def add_flow(self,
                  uuid: str,
-                 time_created: int,
-                 flow_type: str,
-                 title: str,
-                 info: str,
-                 owner: str,
-                 users: list | tuple) -> SQLObject:
+                 users: list | tuple,
+                 time_created: int = None,
+                 flow_type: str = None,
+                 title: str = None,
+                 info: str = None,
+                 owner: str = None) -> SQLObject:
         dbquery = self.__write_db(table="Flow",
                                   uuid=uuid,
                                   timeCreated=time_created,
@@ -442,14 +470,10 @@ class DBHandler:
                                   title=title,
                                   info=info,
                                   owner=owner)
-        if isinstance(users, list):
-            for user_uuid in users:
-                user = self.__read_db(table="UserConfig",
-                                      get_one=True,
-                                      uuid=user_uuid)
-                dbquery.addUserConfig(user)
-        else:
-            dbquery.addUserConfig(users)
+        for user_uuid in users:
+            dbquery.addUserConfig(self.__read_db(table="UserConfig",
+                                                 get_one=True,
+                                                 uuid=user_uuid))
         return dbquery
 
     def update_flow(self,
