@@ -32,7 +32,8 @@ from mod.db.dbhandler import DatabaseReadError  # noqa
 
 class TestDBHandlerMainMethods(unittest.TestCase):
     def setUp(self):
-        self.db = dbhandler.DBHandler(uri="sqlite:/:memory:")
+        dbhandler.DBHandler._DBHandler__reset_config()
+        self.db = dbhandler.DBHandler()
 
     def tearDown(self):
         self.db.delete()
@@ -51,45 +52,68 @@ class TestDBHandlerMainMethods(unittest.TestCase):
                           username="User")
 
     def test_search_db_in_models(self):
-        result = self.db._DBHandler__search_db_in_models()
-        self.assertIsInstance(result, tuple)
-        self.assertEqual(result[0], 'Admin')
+        dbhandler.DBHandler._DBHandler__reset_config()
+        dbquery = self.db._DBHandler__search_db_in_models()
+        self.assertIsInstance(dbquery, tuple)
+        self.assertEqual(dbquery[0], 'Admin')
 
     def test_create_db_not_set_debug(self):
-        result = dbhandler.DBHandler(uri="sqlite:/:memory:")
-        self.assertFalse(result.debug)
-        self.assertEqual(result._uri,
-                         "sqlite:/:memory:?debug=0")
+        dbhandler.DBHandler._DBHandler__reset_config()
+        db = dbhandler.DBHandler()
+        self.assertFalse(db.get_debug())
+        self.assertEqual(db._uri,
+                         "sqlite:/:memory:")
 
     def test_create_db_set_debug(self):
-        result = dbhandler.DBHandler(uri="sqlite:/:memory:",
-                                     debug=True)
-        self.assertFalse(result.debug)
-        self.assertEqual(result._uri,
-                         "sqlite:/:memory:?debug=0")
+        dbhandler.DBHandler._DBHandler__reset_config()
+        db = dbhandler.DBHandler()
+        db.connect(uri="sqlite:/:memory:",
+                   debug=True)
+        self.assertFalse(db.get_debug())
+        self.assertEqual(db._uri,
+                         "sqlite:/:memory:")
 
     def test_create_db_set_debug_logger(self):
-        result = dbhandler.DBHandler(uri="sqlite:/:memory:",
-                                     debug=True,
-                                     logger='Test')
-        self.assertEqual(result._uri,
-                         "sqlite:/:memory:?debug=0")
+        dbhandler.DBHandler._DBHandler__reset_config()
+        db = dbhandler.DBHandler()
+        db.connect(uri="sqlite:/:memory:",
+                   debug=True,
+                   logger='Test')
+        self.assertEqual(db._uri,
+                         "sqlite:/:memory:")
 
     def test_create_db_set_debug_logger_loglevel(self):
-        result = dbhandler.DBHandler(uri="sqlite:/:memory:",
-                                     debug=True,
-                                     logger='Test',
-                                     loglevel='debug')
-        self.assertEqual(result._uri,
+        dbhandler.DBHandler._DBHandler__reset_config()
+        db = dbhandler.DBHandler()
+        db.connect(uri="sqlite:/:memory:",
+                   debug=True,
+                   logger='Test',
+                   loglevel='debug')
+        self.assertEqual(db._uri,
                          "sqlite:/:memory:?debug=1?logger=Test?loglevel=debug")
 
     def test_str(self):
+        dbhandler.DBHandler._DBHandler__reset_config()
         self.assertEqual(str(self.db),
-                         "Connected to database: sqlite:/:memory:?debug=0")
+                         "Connected to database: sqlite:/:memory:")
 
     def test_repr(self):
+        dbhandler.DBHandler._DBHandler__reset_config()
         self.assertEqual(repr(self.db),
                          "class DBHandler: debug=0 logger=None loglevel=None")
+
+    def test_classmethod(self):
+        dbhandler.DBHandler._DBHandler__reset_config()
+        self.assertEqual(self.db._uri, "sqlite:/:memory:")
+        self.db.connect()
+        self.assertEqual(self.db._uri, "sqlite:db_sqlite.db")
+        self.db.connect(uri="sqlite:/:memory:",
+                        debug=True,
+                        logger='Test',
+                        loglevel="debug")
+        self.assertEqual(self.db._debug, "1")
+        self.assertEqual(self.db._logger, "Test")
+        self.assertEqual(self.db._loglevel, "debug")
 
 
 class TestDBHandlerMethods(unittest.TestCase):
@@ -98,7 +122,9 @@ class TestDBHandlerMethods(unittest.TestCase):
         pass
 
     def setUp(self):
-        self.db = dbhandler.DBHandler(uri="sqlite:/:memory:")
+        dbhandler.DBHandler._DBHandler__reset_config()
+        self.db = dbhandler.DBHandler()
+        self.db.connect()
         self.db.delete()
         self.db.create()
         self.db.add_user(uuid="123456",
@@ -120,19 +146,19 @@ class TestDBHandlerMethods(unittest.TestCase):
         self.db.add_admin(username="User2",
                           hash_password="hash")
         self.db.add_flow(uuid="6669",
+                         users=["123456"],
                          time_created=5556669,
                          flow_type="Test",
                          title="test1",
                          info="TestTest",
-                         owner="User1",
-                         users=["123456"])
+                         owner="User1")
         self.db.add_flow(uuid="666999",
+                         users=["123456"],
                          time_created=555666999,
                          flow_type="Test",
                          title="test2",
                          info="TestTest",
-                         owner="User2",
-                         users=["123456"])
+                         owner="User2")
         self.db.add_message(flow_uuid="6669",
                             user_uuid="123456",
                             message_uuid="111222",
@@ -185,13 +211,11 @@ class TestDBHandlerMethods(unittest.TestCase):
                           password="password")
 
     def test_get_debug(self):
-        self.assertFalse(self.db.debug)
+        self.assertFalse(self.db.get_debug())
 
     def test_set_debug(self):
-        self.db.debug = True
-        self.assertTrue(self.db.debug)
-        self.db.debug = False
-        self.assertFalse(self.db.debug)
+        self.db.set_debug(True)
+        self.assertTrue(self.db.get_debug())
 
     def test_get_all_user(self):
         dbquery = self.db.get_all_user()
@@ -406,20 +430,20 @@ class TestDBHandlerMethods(unittest.TestCase):
         self.assertEqual(dbquery[0].title, "test2")
 
     def test_add_flow(self):
-        new_user = self.db.add_user(uuid="123459",
-                                    login="User9",
-                                    password="password",
-                                    hash_password="hash",
-                                    username="username",
-                                    salt=b"salt",
-                                    key=b"key")
+        self.db.add_user(uuid="123459",
+                         login="User9",
+                         password="password",
+                         hash_password="hash",
+                         username="username",
+                         salt=b"salt",
+                         key=b"key")
         dbquery = self.db.add_flow(uuid="666996",
+                                   users=["123459"],
                                    time_created=555666996,
                                    flow_type="Test",
                                    title="test9",
                                    info="TestTest",
-                                   owner="User9",
-                                   users=new_user)
+                                   owner="User9")
         self.assertIsInstance(dbquery,
                               SQLObject)
         self.assertEqual(dbquery.owner, "User9")
