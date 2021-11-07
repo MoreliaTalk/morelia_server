@@ -26,7 +26,7 @@ from fastapi import Form
 from starlette.requests import Request
 from starlette.responses import HTMLResponse
 
-from mod.db import dbhandler
+from mod.db.dbhandler import DBHandler
 
 # ************** Read "config.ini" ********************
 config = configparser.ConfigParser()
@@ -36,7 +36,7 @@ database = config["DATABASE"]
 
 router = APIRouter()
 
-db = dbhandler.DBHandler(uri=database.get('uri'))
+db = DBHandler()
 
 
 @router.post("/manage/delete_user")

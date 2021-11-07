@@ -26,7 +26,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from starlette.responses import HTMLResponse
 from mod import lib
-from mod.db import dbhandler
+from mod.db.dbhandler import DBHandler
 
 # ************** Read "config.ini" ********************
 config = configparser.ConfigParser()
@@ -35,7 +35,7 @@ database = config["DATABASE"]
 SECRET_KEY = config["ADMIN"].get("SECRET_KEY")
 # ************** END **********************************
 
-db = dbhandler.DBHandler(uri=database.get('uri'))
+db = DBHandler()
 
 router = APIRouter()
 

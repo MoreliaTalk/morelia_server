@@ -39,6 +39,7 @@ from starlette.websockets import WebSocketDisconnect
 
 # ************** Morelia module **********************
 from mod import controller
+from mod.db.dbhandler import DBHandler
 from admin import admin
 # ************** Morelia module end ******************
 
@@ -78,13 +79,16 @@ templates = Jinja2Templates(directory.get("folder"))
 # TODO: Нужно подумать как их компактно хранить
 CLIENTS = []
 
-app.mount("/admin", admin.app)
+# Set dtatabase connection
+db = DBHandler()
+db.connect(database.get('uri'))
 
-app.mount(
-    "/static",
-    StaticFiles(directory="static"),
-    name="static"
-)
+app.mount("/admin",
+          admin.app)
+
+app.mount("/static",
+          StaticFiles(directory="static"),
+          name="static")
 
 
 @app.get('/')
