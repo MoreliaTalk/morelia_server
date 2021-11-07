@@ -70,12 +70,13 @@ class TestCheckAuthToken(unittest.TestCase):
         logger.remove()
 
     def setUp(self):
-        self.db = dbhandler.DBHandler(uri="sqlite:/:memory:")
+        self.db = dbhandler.DBHandler()
+        self.db.connect(uri="sqlite:/:memory:")
         self.db.create()
-        self.db.add_new_user(uuid="123456",
-                             login="login",
-                             password="password",
-                             authId="auth_id")
+        self.db.add_user(uuid="123456",
+                         login="login",
+                         password="password",
+                         auth_id="auth_id")
         self.test = api.Request.parse_file(SEND_MESSAGE)
         self.error = controller.Error
         self.response = list()
@@ -112,12 +113,13 @@ class TestCheckLogin(unittest.TestCase):
         logger.remove()
 
     def setUp(self):
-        self.db = dbhandler.DBHandler(uri="sqlite:/:memory:")
+        self.db = dbhandler.DBHandler()
+        self.db.connect(uri="sqlite:/:memory:")
         self.db.create()
-        self.db.add_new_user(uuid="123456",
-                             login="login",
-                             password="password",
-                             authId="auth_id")
+        self.db.add_user(uuid="123456",
+                         login="login",
+                         password="password",
+                         auth_id="auth_id")
         self.test = api.Request.parse_file(REGISTER_USER)
 
     def tearDown(self):
@@ -143,7 +145,8 @@ class TestRegisterUser(unittest.TestCase):
         logger.remove()
 
     def setUp(self):
-        self.db = dbhandler.DBHandler(uri="sqlite:/:memory:")
+        self.db = dbhandler.DBHandler()
+        self.db.connect(uri="sqlite:/:memory:")
         self.db.create()
         self.test = api.Request.parse_file(REGISTER_USER)
 
@@ -159,9 +162,9 @@ class TestRegisterUser(unittest.TestCase):
                          "Created")
 
     def test_user_already_exists(self):
-        self.db.add_new_user(uuid="123456",
-                             login="login",
-                             password="password")
+        self.db.add_user(uuid="123456",
+                         login="login",
+                         password="password")
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
@@ -175,25 +178,25 @@ class TestRegisterUser(unittest.TestCase):
     def test_uuid_write_in_database(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        dbquery = self.db.get_user_by_login(login="login")
+        dbquery = self.db.get_user_by_login("login")
         self.assertEqual(dbquery.uuid,
                          result["data"]["user"][0]["uuid"])
 
     def test_auth_id_write_in_database(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        dbquery = self.db.get_user_by_login(login="login")
+        dbquery = self.db.get_user_by_login("login")
         self.assertEqual(dbquery.authId,
                          result["data"]["user"][0]["auth_id"])
 
     def test_type_of_salt(self):
         controller.ProtocolMethods(self.test)
-        dbquery = self.db.get_user_by_login(login="login")
+        dbquery = self.db.get_user_by_login("login")
         self.assertIsInstance(dbquery.salt, bytes)
 
     def test_type_of_key(self):
         controller.ProtocolMethods(self.test)
-        dbquery = self.db.get_user_by_login(login="login")
+        dbquery = self.db.get_user_by_login("login")
         self.assertIsInstance(dbquery.key, bytes)
 
 
@@ -203,62 +206,63 @@ class TestGetUpdate(unittest.TestCase):
         logger.remove()
 
     def setUp(self):
-        self.db = dbhandler.DBHandler(uri="sqlite:/:memory:")
+        self.db = dbhandler.DBHandler()
+        self.db.connect(uri="sqlite:/:memory:")
         self.db.create()
-        new_user1 = self.db.add_user(uuid="123456",
-                                     login="login",
-                                     password="password",
-                                     authId="auth_id")
-        new_user2 = self.db.add_user(uuid="987654",
-                                     login="login2",
-                                     password="password2",
-                                     authId="auth_id2")
-        new_user3 = self.db.add_user(uuid="666555",
-                                     login="login3",
-                                     password="password3",
-                                     authId="auth_id3")
-        new_flow1 = self.db.add_flow(uuid="07d949",
-                                     timeCreated=111,
-                                     flowType="chat",
-                                     title="title1",
-                                     info="info1",
-                                     owner="123456")
-        new_flow2 = self.db.add_flow(uuid="07d950",
-                                     timeCreated=222,
-                                     flowType="group",
-                                     title="title2",
-                                     info="info2",
-                                     owner="987654")
-        new_flow1.addUserConfig(new_user1)
-        new_flow1.addUserConfig(new_user2)
-        new_flow2.addUserConfig(new_user2)
-        new_flow2.addUserConfig(new_user1)
-        new_flow2.addUserConfig(new_user3)
-        self.db.add_message(uuid="111",
+        self.db.add_user(uuid="123456",
+                         login="login",
+                         password="password",
+                         auth_id="auth_id")
+        self.db.add_user(uuid="987654",
+                         login="login2",
+                         password="password2",
+                         auth_id="auth_id2")
+        self.db.add_user(uuid="666555",
+                         login="login3",
+                         password="password3",
+                         auth_id="auth_id3")
+        self.db.add_flow(uuid="07d949",
+                         users=["123456",
+                                "987654"],
+                         time_created=111,
+                         flow_type="chat",
+                         title="title1",
+                         info="info1",
+                         owner="123456")
+        self.db.add_flow(uuid="07d950",
+                         users=["987654",
+                                "987654",
+                                "666555"],
+                         time_created=222,
+                         flow_type="group",
+                         title="title2",
+                         info="info2",
+                         owner="987654")
+        self.db.add_message(flow_uuid="07d949",
+                            user_uuid="123456",
+                            messge_uuid="111",
                             text="Hello1",
-                            time=111,
-                            user=new_user1,
-                            flow=new_flow1)
-        self.db.add_message(uuid="112",
+                            time=111)
+        self.db.add_message(flow_uuid="07d949",
+                            user_uuid="987654",
+                            messge_uuid="112",
                             text="Hello2",
-                            time=222,
-                            user=new_user2,
-                            flow=new_flow1)
-        self.db.add_message(uuid="113",
+                            time=222)
+        self.db.add_message(flow_uuid="07d950",
+                            user_uuid="123456",
+                            messge_uuid="113",
                             text="Heeeello1",
-                            time=111,
-                            user=new_user1,
-                            flow=new_flow2)
-        self.db.add_message(uuid="114",
+                            time=111)
+        self.db.add_message(flow_uuid="07d950",
+                            user_uuid="987654",
+                            messge_uuid="114",
                             text="Heeeello2",
-                            time=222,
-                            user=new_user2,
-                            flow=new_flow2)
-        self.db.add_message(uuid="115",
+                            time=222)
+        self.db.add_message(flow_uuid="07d950",
+                            user_uuid="666555",
+                            messge_uuid="115",
                             text="Heeeello3",
-                            time=333,
-                            user=new_user3,
-                            flow=new_flow2)
+                            time=333)
         self.test = api.Request.parse_file(GET_UPDATE)
 
     def tearDown(self):
@@ -305,17 +309,18 @@ class TestSendMessage(unittest.TestCase):
         logger.remove()
 
     def setUp(self):
-        self.db = dbhandler.DBHandler(uri="sqlite:/:memory:")
+        self.db = dbhandler.DBHandler()
+        self.db.connect(uri="sqlite:/:memory:")
         self.db.create()
-        new_user = self.db.add_user(uuid="123456",
-                                    login="login",
-                                    password="password",
-                                    authId="auth_id")
-        new_flow = self.db.add_flow(uuid="07d949",
-                                    timeCreated=111,
-                                    flowType="group",
-                                    owner="123456")
-        new_flow.addUserConfig(new_user)
+        self.db.add_user(uuid="123456",
+                         login="login",
+                         password="password",
+                         auth_id="auth_id")
+        self.db.add_flow(uuid="07d949",
+                         users=["123456"],
+                         time_created=111,
+                         flow_type="group",
+                         owner="123456")
         self.test = api.Request.parse_file(SEND_MESSAGE)
 
     def tearDown(self):
@@ -332,7 +337,7 @@ class TestSendMessage(unittest.TestCase):
     def test_check_id_in_response(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        dbquery = self.db.get_message_by_uuid(uuid="999666")
+        dbquery = self.db.get_message_by_uuid("999666")
         self.assertEqual(result["data"]["message"][0]["uuid"],
                          dbquery.uuid)
 
@@ -351,13 +356,13 @@ class TestSendMessage(unittest.TestCase):
 
     def test_write_text_in_database(self):
         controller.ProtocolMethods(self.test)
-        dbquery = self.db.get_message_by_uuid(uuid="999666")
+        dbquery = self.db.get_message_by_uuid("999666")
         self.assertEqual(dbquery.text,
                          self.test.data.message[0].text)
 
     def test_write_time_in_database(self):
         controller.ProtocolMethods(self.test)
-        dbquery = self.db.get_message_by_uuid(uuid="999666")
+        dbquery = self.db.get_message_by_uuid("999666")
         self.assertIsInstance(dbquery.time, int)
 
 
@@ -367,43 +372,44 @@ class TestAllMessages(unittest.TestCase):
         logger.remove()
 
     def setUp(self):
-        self.db = dbhandler.DBHandler(uri="sqlite:/:memory:")
+        self.db = dbhandler.DBHandler()
+        self.db.connect(uri="sqlite:/:memory:")
         self.db.create()
-        new_user = self.db.add_user(uuid="123456",
-                                    login="login",
-                                    password="password",
-                                    authId="auth_id")
-        new_user2 = self.db.add_user(uuid="654321",
-                                     login="login2",
-                                     password="password2",
-                                     authId="auth_id2")
-        new_flow = self.db.add_flow(uuid="07d949",
-                                    flowType="chat",
-                                    owner="123456")
-        new_flow2 = self.db.add_flow(uuid="07d950",
-                                     flowType="chat",
-                                     owner="654321")
-        new_flow.addUserConfig(new_user)
-        new_flow.addUserConfig(new_user2)
-        new_flow2.addUserConfig(new_user)
-        new_flow2.addUserConfig(new_user2)
+        self.db.add_user(uuid="123456",
+                         login="login",
+                         password="password",
+                         auth_id="auth_id")
+        self.db.add_user(uuid="654321",
+                         login="login2",
+                         password="password2",
+                         auth_id="auth_id2")
+        self.db.add_flow(uuid="07d949",
+                         users=["123456",
+                                "654321"],
+                         flow_type="chat",
+                         owner="123456")
+        self.db.add_flow(uuid="07d950",
+                         users=["123456",
+                                "654321"],
+                         flow_type="chat",
+                         owner="654321")
         for item in range(limit.getint("messages") + 10):
-            self.db.add_message(uuid=str(uuid4().int),
+            self.db.add_message(flow_uuid="07d949",
+                                user_uuid="123456",
+                                message_uuid=str(uuid4().int),
                                 text=f"Hello{item}",
-                                time=item,
-                                user=new_user,
-                                flow=new_flow)
+                                time=item)
         for item in range(limit.getint("messages") - 10):
-            self.db.add_message(uuid=str(uuid4().int),
+            self.db.add_message(flow_uuid="07d950",
+                                user_uuid="654321",
+                                message_uuid=str(uuid4().int),
                                 text=f"Kak Dela{item}",
-                                time=item,
-                                user=new_user2,
-                                flow=new_flow2)
-        self.db.add_message(uuid='271520724063176879757028074376756118591',
+                                time=item)
+        self.db.add_message(flow_uuid="07d950",
+                            user_uuid="654321",
+                            message_uuid='2715207240631768797',
                             text="Privet",
-                            time=666,
-                            user=new_user2,
-                            flow=new_flow2)
+                            time=666)
         self.test = api.Request.parse_file(ALL_MESSAGES)
 
     def tearDown(self):
@@ -413,7 +419,7 @@ class TestAllMessages(unittest.TestCase):
 
     def test_all_message_fields_filled(self):
         self.test.data.flow[0].uuid = "07d950"
-        check_uuid = '271520724063176879757028074376756118591'
+        check_uuid = '2715207240631768797'
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
         message_found = False
@@ -451,7 +457,7 @@ class TestAllMessages(unittest.TestCase):
 
     def test_check_message_in_database(self):
         controller.ProtocolMethods(self.test)
-        dbquery = self.db.get_message_by_time(time=666)
+        dbquery = self.db.get_message_by_exact_time(666)
         self.assertEqual(dbquery.text, "Privet")
 
     def test_wrong_message_volume(self):
@@ -471,13 +477,15 @@ class TestAllMessages(unittest.TestCase):
 
 class TestAddFlow(unittest.TestCase):
     def setUp(self):
-        self.db = dbhandler.DBHandler(uri="sqlite:/:memory:")
+        self.db = dbhandler.DBHandler()
+        self.db.connect(uri="sqlite:/:memory:")
         self.db.create()
         self.db.add_user(uuid="123456",
                          login="login",
                          password="password",
                          auth_id="auth_id")
-        self.db.add(uuid="07d949")
+        self.db.add_flow(uuid="07d949",
+                         users=["123456"])
         logger.remove()
         self.test = api.Request.parse_file(ADD_FLOW)
 
@@ -524,7 +532,7 @@ class TestAddFlow(unittest.TestCase):
     def test_check_flow_in_database(self):
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        dbquery = self.db.get_flow_by_title(title="title")
+        dbquery = self.db.get_flow_by_title("title")
         self.assertEqual(dbquery.uuid,
                          result["data"]["flow"][0]["uuid"])
 
@@ -535,12 +543,13 @@ class TestAllFlow(unittest.TestCase):
         logger.remove()
 
     def setUp(self):
-        self.db = dbhandler.DBHandler(uri="sqlite:/:memory:")
+        self.db = dbhandler.DBHandler()
+        self.db.connect(uri="sqlite:/:memory:")
         self.db.create()
         self.db.add_user(uuid="123456",
                          login="login",
                          password="password",
-                         authId="auth_id")
+                         auth_id="auth_id")
         self.test = api.Request.parse_file(ALL_FLOW)
 
     def tearDown(self):
@@ -550,8 +559,9 @@ class TestAllFlow(unittest.TestCase):
 
     def test_all_flow(self):
         self.db.add_flow(uuid="07d949",
-                         timeCreated=123456,
-                         flowType="group",
+                         users=["123456"],
+                         time_created=123456,
+                         flow_type="group",
                          title="title",
                          info="info",
                          owner="123456")
@@ -572,7 +582,8 @@ class TestUserInfo(unittest.TestCase):
         logger.remove()
 
     def setUp(self):
-        self.db = dbhandler.DBHandler(uri="sqlite:/:memory:")
+        self.db = dbhandler.DBHandler()
+        self.db.connect(uri="sqlite:/:memory:")
         self.db.create()
         for item in range(5):
             uuid = str(123456 + item)
@@ -580,8 +591,8 @@ class TestUserInfo(unittest.TestCase):
                              login="login",
                              password="password",
                              username="username",
-                             isBot=False,
-                             authId="auth_id",
+                             is_bot=False,
+                             auth_id="auth_id",
                              email="email@email.com",
                              bio="bio")
         self.test = api.Request.parse_file(USER_INFO)
@@ -620,12 +631,13 @@ class TestAuthentification(unittest.TestCase):
         gen_hash = lib.Hash("password", 123456,
                             b"salt", b"key")
         self.hash_password = gen_hash.password_hash()
-        self.db = dbhandler.DBHandler(uri="sqlite:/:memory:")
+        self.db = dbhandler.DBHandler()
+        self.db.connect(uri="sqlite:/:memory:")
         self.db.create()
         self.db.add_user(uuid="123456",
                          login="login",
                          password="password",
-                         hashPassword=self.hash_password,
+                         hash_password=self.hash_password,
                          salt=b"salt",
                          key=b"key")
         self.test = api.Request.parse_file(AUTH)
@@ -643,7 +655,7 @@ class TestAuthentification(unittest.TestCase):
 
     def test_blank_database(self):
         login = self.test.data.user[0].login
-        dbquery = self.db.get_user_by_login(login=login)
+        dbquery = self.db.get_user_by_login(login)
         dbquery.delete(dbquery.id)
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
@@ -672,19 +684,20 @@ class TestAuthentification(unittest.TestCase):
         login = self.test.data.user[0].login
         run_method = controller.ProtocolMethods(self.test)
         result = json.loads(run_method.get_response())
-        dbquery = self.db.get_user_by_login(login=login)
+        dbquery = self.db.get_user_by_login(login)
         self.assertEqual(dbquery.authId,
                          result["data"]["user"][0]["auth_id"])
 
 
 class TestDeleteUser(unittest.TestCase):
     def setUp(self):
-        self.db = dbhandler.DBHandler(uri="sqlite:/:memory:")
+        self.db = dbhandler.DBHandler()
+        self.db.connect(uri="sqlite:/:memory:")
         self.db.create()
         self.db.add_user(uuid="123456",
                          login="login",
                          password="password",
-                         authId="auth_id")
+                         auth_id="auth_id")
         self.test = api.Request.parse_file(DELETE_USER)
         logger.remove()
 
@@ -716,23 +729,24 @@ class TestDeleteUser(unittest.TestCase):
 
 class TestDeleteMessage(unittest.TestCase):
     def setUp(self):
-        self.db = dbhandler.DBHandler(uri="sqlite:/:memory:")
+        self.db = dbhandler.DBHandler()
+        self.db.connect(uri="sqlite:/:memory:")
         self.db.create()
-        new_user = self.db.add_user(uuid="123456",
-                                    login="login",
-                                    password="password",
-                                    authId="auth_id")
-        new_flow = self.db.add_flow(uuid="07d949",
-                                    timeCreated=111,
-                                    flowType="group",
-                                    title="group",
-                                    owner="123456")
-        new_flow.addUserConfig(new_user)
-        self.db.add_message(uuid="1122",
+        self.db.add_user(uuid="123456",
+                         login="login",
+                         password="password",
+                         auth_id="auth_id")
+        self.db.add_flow(uuid="07d949",
+                         users=["123456"],
+                         time_created=111,
+                         flow_type="group",
+                         title="group",
+                         owner="123456")
+        self.db.add_message(flow_uuid="07d949",
+                            user_uuid="123456",
+                            message_uuid="1122",
                             text="Hello",
-                            time=123456,
-                            user=new_user,
-                            flow=new_flow)
+                            time=123456)
         self.test = api.Request.parse_file(DELETE_MESSAGE)
         logger.remove()
 
@@ -749,12 +763,12 @@ class TestDeleteMessage(unittest.TestCase):
 
     def test_check_delete_message_in_database(self):
         controller.ProtocolMethods(self.test)
-        dbquery = self.db.get_message_by_text(text="Hello")
+        dbquery = self.db.get_message_by_text("Hello")
         self.assertEqual(dbquery.count(), 0)
 
     def test_check_deleted_message_in_database(self):
         controller.ProtocolMethods(self.test)
-        dbquery = self.db.get_message_by_text(text="Message deleted")
+        dbquery = self.db.get_message_by_text("Message deleted")
         self.assertEqual(dbquery.count(), 1)
 
     def test_wrong_message_id(self):
@@ -771,23 +785,24 @@ class TestEditedMessage(unittest.TestCase):
         logger.remove()
 
     def setUp(self):
-        self.db = dbhandler.DBHandler(uri="sqlite:/:memory:")
+        self.db = dbhandler.DBHandler()
+        self.db.connect(uri="sqlite:/:memory:")
         self.db.create()
-        new_user = self.db.add_user(uuid="123456",
-                                    login="login",
-                                    password="password",
-                                    authId="auth_id")
-        new_flow = self.db.add_flow(uuid="07d949",
-                                    timeCreated=112,
-                                    flowType="group",
-                                    title="group",
-                                    owner="123456")
-        new_flow.addUserConfig(new_user)
-        self.db.add_message(uuid="1",
+        self.db.add_user(uuid="123456",
+                         login="login",
+                         password="password",
+                         auth_id="auth_id")
+        self.db.add_flow(uuid="07d949",
+                         users=["123456"],
+                         time_created=112,
+                         flow_type="group",
+                         title="group",
+                         owner="123456")
+        self.db.add_message(flow_uuid="07d949",
+                            user_uuid="123456",
+                            message_uuid="1",
                             text="Hello",
-                            time=123456,
-                            user=new_user,
-                            flow=new_flow)
+                            time=123456)
         self.test = api.Request.parse_file(EDITED_MESSAGE)
 
     def tearDown(self):
@@ -803,7 +818,7 @@ class TestEditedMessage(unittest.TestCase):
 
     def test_new_edited_message(self):
         controller.ProtocolMethods(self.test)
-        dbquery = self.db.get_message_by_uuid(uuid="1")
+        dbquery = self.db.get_message_by_uuid("1")
         self.assertEqual(dbquery.text, "New_Hello")
 
     def test_wrong_message_id(self):
@@ -816,12 +831,13 @@ class TestEditedMessage(unittest.TestCase):
 
 class TestPingPong(unittest.TestCase):
     def setUp(self):
-        self.db = dbhandler.DBHandler(uri="sqlite:/:memory:")
+        self.db = dbhandler.DBHandler()
+        self.db.connect(uri="sqlite:/:memory:")
         self.db.create()
         self.db.add_user(uuid="123456",
                          login="login",
                          password="password",
-                         authId="auth_id")
+                         auth_id="auth_id")
         self.test = api.Request.parse_file(PING_PONG)
         logger.remove()
 
@@ -839,12 +855,13 @@ class TestPingPong(unittest.TestCase):
 
 class TestErrors(unittest.TestCase):
     def setUp(self):
-        self.db = dbhandler.DBHandler(uri="sqlite:/:memory:")
+        self.db = dbhandler.DBHandler()
+        self.db.connect(uri="sqlite:/:memory:")
         self.db.create()
         self.db.add_user(uuid="123456",
                          login="login",
                          password="password",
-                         authId="auth_id")
+                         auth_id="auth_id")
         self.test = controller.Error()
         logger.remove()
 
