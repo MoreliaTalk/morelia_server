@@ -25,15 +25,13 @@ from uuid import uuid4
 import configparser
 
 from pydantic import ValidationError
-from sqlobject.main import SQLObjectIntegrityError
-from sqlobject.main import SQLObjectNotFound
-from sqlobject import dberrors
 from loguru import logger
 
 from mod import api
 from mod import error
 from mod import lib
-from mod.db.dbhandler import DBHandler, DatabaseWriteError
+from mod.db.dbhandler import DBHandler
+from mod.db.dbhandler import DatabaseWriteError
 from mod.db.dbhandler import DatabaseReadError
 from mod.db.dbhandler import DatabaseAccessError
 
@@ -98,31 +96,29 @@ class Error:
 
 class User:
     def __init__(self) -> None:
-        self._db = DBHandler(database.get('uri'))
+        self._db = DBHandler()
 
     def check_auth(method_to_decorate):
-        db = DBHandler(database.get('uri'))
+        db = DBHandler()
+        error = Error()
 
-        def wrapper(*args):
-            _, request = args
+        def wrapper(self, request):
             uuid = request.data.user[0].uuid
             auth_id = request.data.user[0].auth_id
 
             try:
                 dbquery = db.get_user_by_uuid(uuid)
                 logger.success("User was found in the database")
-            except (dberrors.OperationalError,
-                    SQLObjectIntegrityError,
-                    SQLObjectNotFound):
+            except DatabaseReadError:
                 logger.debug("User wasn't found in the database")
-                return Error.catching_error("UNAUTHORIZED")
+                return error.catching_error("UNAUTHORIZED")
             else:
                 if auth_id == dbquery.authId:
                     logger.success("Authentication User has been verified")
-                    return method_to_decorate(*args)
+                    return method_to_decorate(self, request)
                 else:
                     logger.debug("Authentication User failed")
-                    return Error.catching_error("UNAUTHORIZED")
+                    return error.catching_error("UNAUTHORIZED")
 
         return wrapper
 
@@ -157,7 +153,8 @@ class ProtocolMethods(User, Error):
         self.get_time: int = int(time())
         self.response = None
         self.request = None
-        self._db = DBHandler(uri=database.get("uri"))
+        self._db = DBHandler()
+        self._db.connect(uri=database.get('uri'))
 
         try:
             self.request = api.Request.parse_obj(request)
