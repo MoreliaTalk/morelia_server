@@ -66,7 +66,7 @@ class DBHandler:
     def __init__(self,
                  connection=None) -> None:
         if connection is None:
-            pass
+            self._connection = self.__class__._connection
         self._connection = connection
 
     @classmethod
@@ -192,7 +192,6 @@ class DBHandler:
                    table: str,
                    **kwargs) -> SQLObject:
         db = getattr(models, table)
-        kwargs.update({'connection': self._connection})
         try:
             dbquery = db(**kwargs)
         except (Exception, SQLObjectIntegrityError) as err:
