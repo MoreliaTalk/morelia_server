@@ -226,24 +226,33 @@ class DBHandler:
     def add_user(self,
                  uuid: str,
                  login: str,
-                 password: str = None,
+                 password: str,
                  hash_password: str = None,
                  username: str = None,
-                 salt: str = None,
-                 key: str = None,
+                 is_bot: bool = False,
+                 auth_id: str = None,
                  email: str = None,
-                 auth_id: str = None) -> SQLObject:
+                 avatar: bytes = None,
+                 bio: str = None,
+                 salt: bytes = None,
+                 key: bytes = None) -> SQLObject:
+        if salt is None:
+            salt = b''
+
+        if key is None:
+            key = b''
+
         return self.__write_db(table="UserConfig",
                                uuid=uuid,
                                login=login,
                                password=password,
                                hashPassword=hash_password,
                                username=username,
-                               isBot=False,
+                               isBot=is_bot,
                                authId=auth_id,
                                email=email,
-                               avatar=None,
-                               bio=None,
+                               avatar=avatar,
+                               bio=bio,
                                salt=salt,
                                key=key)
 

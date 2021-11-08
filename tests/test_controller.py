@@ -88,23 +88,24 @@ class TestCheckAuthToken(unittest.TestCase):
 
     def test_check_decorator(self):
         def test_func(*args):
-            request = args[1]
-            uuid = request.data.user[0].uuid
-            auth_id = request.data.user[0].auth_id
+            uuid = args[0].data.user[0].uuid
+            auth_id = args[0].data.user[0].auth_id
             if uuid == "123456" and auth_id == "auth_id":
                 return True
-        result = controller.User.check_auth(test_func)("", self.test)
+        result = controller.User.check_auth(test_func)(self.test)
         self.assertTrue(result)
 
     def test_check_wrong_uuid(self):
         self.test.data.user[0].uuid = "654321"
         self.assertRaises(AttributeError,
-                          lambda: User.check_auth(lambda: True)("", self.test))
+                          User.check_auth(lambda: True),
+                          self.test)
 
     def test_check_wrong_auth_id(self):
         self.test.data.user[0].auth_id = "wrong_auth_id"
         self.assertRaises(AttributeError,
-                          lambda: User.check_auth(lambda: True)("", self.test))
+                          User.check_auth,
+                          self.test)
 
 
 class TestCheckLogin(unittest.TestCase):
@@ -128,6 +129,7 @@ class TestCheckLogin(unittest.TestCase):
         del self.test
 
     def test_check_true_result(self):
+        self.db.delete()
         login = self.test.data.user[0].login
         run_method = controller.ProtocolMethods(self.test)
         result = run_method.check_login(login)
@@ -240,27 +242,27 @@ class TestGetUpdate(unittest.TestCase):
                          owner="987654")
         self.db.add_message(flow_uuid="07d949",
                             user_uuid="123456",
-                            messge_uuid="111",
+                            message_uuid="111",
                             text="Hello1",
                             time=111)
         self.db.add_message(flow_uuid="07d949",
                             user_uuid="987654",
-                            messge_uuid="112",
+                            message_uuid="112",
                             text="Hello2",
                             time=222)
         self.db.add_message(flow_uuid="07d950",
                             user_uuid="123456",
-                            messge_uuid="113",
+                            message_uuid="113",
                             text="Heeeello1",
                             time=111)
         self.db.add_message(flow_uuid="07d950",
                             user_uuid="987654",
-                            messge_uuid="114",
+                            message_uuid="114",
                             text="Heeeello2",
                             time=222)
         self.db.add_message(flow_uuid="07d950",
                             user_uuid="666555",
-                            messge_uuid="115",
+                            message_uuid="115",
                             text="Heeeello3",
                             time=333)
         self.test = api.Request.parse_file(GET_UPDATE)

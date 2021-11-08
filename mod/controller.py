@@ -102,9 +102,9 @@ class User:
         db = DBHandler()
         error = Error()
 
-        def wrapper(self, request):
-            uuid = request.data.user[0].uuid
-            auth_id = request.data.user[0].auth_id
+        def wrapper(*args):
+            uuid = args[0].data.user[0].uuid
+            auth_id = args[0].data.user[0].auth_id
 
             try:
                 dbquery = db.get_user_by_uuid(uuid)
@@ -115,7 +115,7 @@ class User:
             else:
                 if auth_id == dbquery.authId:
                     logger.success("Authentication User has been verified")
-                    return method_to_decorate(self, request)
+                    return method_to_decorate(*args)
                 else:
                     logger.debug("Authentication User failed")
                     return error.catching_error("UNAUTHORIZED")
@@ -155,6 +155,7 @@ class ProtocolMethods(User, Error):
         self.request = None
         self._db = DBHandler()
         self._db.connect(uri=database.get('uri'))
+        self._db.create()
 
         try:
             self.request = api.Request.parse_obj(request)
@@ -222,14 +223,17 @@ class ProtocolMethods(User, Error):
                                  uuid)
             auth_id = generated.auth_id()
             self._db.add_user(uuid,
-                              password,
-                              generated.password_hash(),
                               login,
-                              username,
-                              email,
-                              generated.get_key,
-                              generated.get_salt,
-                              auth_id)
+                              password,
+                              hash_password=generated.password_hash(),
+                              username=username,
+                              is_bot=False,
+                              auth_id=auth_id,
+                              email=email,
+                              avatar=None,
+                              bio=None,
+                              salt=generated.get_salt,
+                              key=generated.get_key)
             user.append(api.UserResponse(uuid,
                                          auth_id))
             data = api.DataResponse(self.get_time,
