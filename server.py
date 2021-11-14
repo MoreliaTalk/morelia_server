@@ -80,8 +80,7 @@ templates = Jinja2Templates(directory.get("folder"))
 CLIENTS = []
 
 # Set dtatabase connection
-db = DBHandler()
-db.connect(database.get('uri'))
+db = DBHandler(uri=database.get('uri'))
 
 app.mount("/admin",
           admin.app)

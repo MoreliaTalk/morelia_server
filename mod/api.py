@@ -45,14 +45,14 @@ class BaseFlow(BaseModel):
 
 class BaseUser(BaseModel):
     uuid: Optional[str] = None
+    login: Optional[str] = None
+    username: Optional[str] = None
     bio: Optional[str] = None
     avatar: Optional[bytes] = None
     password: Optional[str] = None
-    login: Optional[str] = None
     is_bot: Optional[bool] = None
     auth_id: Optional[str] = None
     email: Optional[EmailStr] = None
-    username: Optional[str] = None
 
 
 class BaseMessage(BaseModel):
