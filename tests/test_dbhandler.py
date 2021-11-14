@@ -20,10 +20,11 @@
 """
 
 import unittest
+from loguru import logger
 
 from sqlobject.main import SQLObject, SelectResults
 
-from mod.db import dbhandler  # noqa
+from mod.db.dbhandler import DBHandler  # noqa
 from mod.db import models  # noqa
 from mod.db.dbhandler import DatabaseAccessError  # noqa
 from mod.db.dbhandler import DatabaseWriteError  # noqa
@@ -31,101 +32,82 @@ from mod.db.dbhandler import DatabaseReadError  # noqa
 
 
 class TestDBHandlerMainMethods(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        logger.remove()
+        cls.db = DBHandler(uri="sqlite:/:memory:")
+
     def setUp(self):
-        dbhandler.DBHandler._DBHandler__reset_config()
-        self.db = dbhandler.DBHandler()
+        self.db.create()
 
     def tearDown(self):
         self.db.delete()
-        del self.db
 
     def test_create_database(self):
-        self.db.create()
         dbquery = self.db.get_all_user()
         self.assertIsInstance(dbquery, SelectResults)
 
     def test_delete_database(self):
-        self.db.create()
         self.db.delete()
         self.assertRaises(DatabaseAccessError,
                           self.db.get_admin_by_name,
                           username="User")
 
     def test_search_db_in_models(self):
-        dbhandler.DBHandler._DBHandler__reset_config()
+        self.db.delete()
         dbquery = self.db._DBHandler__search_db_in_models()
         self.assertIsInstance(dbquery, tuple)
         self.assertEqual(dbquery[0], 'Admin')
 
     def test_create_db_not_set_debug(self):
-        dbhandler.DBHandler._DBHandler__reset_config()
-        db = dbhandler.DBHandler()
-        self.assertFalse(db.get_debug())
+        self.db.delete()
+        db = DBHandler(uri="sqlite:/:memory:")
+        self.assertFalse(db.debug)
         self.assertEqual(db._uri,
                          "sqlite:/:memory:")
 
     def test_create_db_set_debug(self):
-        dbhandler.DBHandler._DBHandler__reset_config()
-        db = dbhandler.DBHandler()
-        db.connect(uri="sqlite:/:memory:",
-                   debug=True)
-        self.assertFalse(db.get_debug())
+        self.db.delete()
+        db = DBHandler(uri="sqlite:/:memory:",
+                       debug=True)
+        self.assertFalse(db.debug)
         self.assertEqual(db._uri,
                          "sqlite:/:memory:")
 
     def test_create_db_set_debug_logger(self):
-        dbhandler.DBHandler._DBHandler__reset_config()
-        db = dbhandler.DBHandler()
-        db.connect(uri="sqlite:/:memory:",
-                   debug=True,
-                   logger='Test')
+        self.db.delete()
+        db = DBHandler(uri="sqlite:/:memory:",
+                       debug=True,
+                       logger='Test')
+        self.assertFalse(db.debug)
         self.assertEqual(db._uri,
                          "sqlite:/:memory:")
 
     def test_create_db_set_debug_logger_loglevel(self):
-        dbhandler.DBHandler._DBHandler__reset_config()
-        db = dbhandler.DBHandler()
-        db.connect(uri="sqlite:/:memory:",
-                   debug=True,
-                   logger='Test',
-                   loglevel='debug')
+        db = DBHandler(uri="sqlite:/:memory:",
+                       debug=True,
+                       logger='Test',
+                       loglevel='debug')
+        self.assertTrue(db.debug)
         self.assertEqual(db._uri,
                          "sqlite:/:memory:?debug=1?logger=Test?loglevel=debug")
 
     def test_str(self):
-        dbhandler.DBHandler._DBHandler__reset_config()
         self.assertEqual(str(self.db),
                          "Connected to database: sqlite:/:memory:")
 
     def test_repr(self):
-        dbhandler.DBHandler._DBHandler__reset_config()
         self.assertEqual(repr(self.db),
                          "class DBHandler: debug=0 logger=None loglevel=None")
-
-    def test_classmethod(self):
-        dbhandler.DBHandler._DBHandler__reset_config()
-        self.assertEqual(self.db._uri, "sqlite:/:memory:")
-        self.db.connect()
-        self.assertEqual(self.db._uri, "sqlite:db_sqlite.db")
-        self.db.connect(uri="sqlite:/:memory:",
-                        debug=True,
-                        logger='Test',
-                        loglevel="debug")
-        self.assertEqual(self.db._debug, "1")
-        self.assertEqual(self.db._logger, "Test")
-        self.assertEqual(self.db._loglevel, "debug")
 
 
 class TestDBHandlerMethods(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        pass
+        logger.remove()
+        cls.db = DBHandler(uri="sqlite:/:memory:")
 
     def setUp(self):
-        dbhandler.DBHandler._DBHandler__reset_config()
-        self.db = dbhandler.DBHandler()
-        self.db.connect()
-        self.db.delete()
         self.db.create()
         self.db.add_user(uuid="123456",
                          login="User1",
@@ -172,7 +154,6 @@ class TestDBHandlerMethods(unittest.TestCase):
 
     def tearDown(self):
         self.db.delete()
-        del self.db
 
     def test_read_db(self):
         dbquery_one = self.db._DBHandler__read_db(table="UserConfig",
@@ -211,11 +192,11 @@ class TestDBHandlerMethods(unittest.TestCase):
                           password="password")
 
     def test_get_debug(self):
-        self.assertFalse(self.db.get_debug())
+        self.assertFalse(self.db.debug)
 
     def test_set_debug(self):
-        self.db.set_debug(True)
-        self.assertTrue(self.db.get_debug())
+        self.db.debug = True
+        self.assertTrue(self.db.debug)
 
     def test_get_all_user(self):
         dbquery = self.db.get_all_user()
