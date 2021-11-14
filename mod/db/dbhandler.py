@@ -55,109 +55,82 @@ class DatabaseWriteError(SQLObjectNotFound):
 
 class DBHandler:
 
-    _uri: str = "sqlite:/:memory:"
-    _debug = "0"
-    _logger = None
-    _loglevel = None
-    _connection = orm.connectionForURI(_uri)
-    orm.sqlhub.processConnection = _connection
-    _path = "mod.db.models"
-
     def __init__(self,
-                 connection=None) -> None:
-        if connection is None:
-            self._connection = self.__class__._connection
-        self._connection = connection
-
-    @classmethod
-    def __str__(cls):
-        return f"Connected to database: {cls._uri}"
-
-    @classmethod
-    def __repr__(cls):
-        return "".join((f"class {cls.__name__}: ",
-                        f"debug={cls._debug} ",
-                        f"logger={cls._logger} ",
-                        f"loglevel={cls._loglevel}"))
-
-    @classmethod
-    def connect(cls,
-                uri: str = database.get("uri"),
-                debug: bool = False,
-                logger: str = None,
-                loglevel: str = None) -> None:
+                 uri: str = "sqlite:db_sqlite.db",
+                 debug: bool = False,
+                 logger: str = None,
+                 loglevel: str = None,
+                 path_to_models: str = "mod.db.models") -> None:
 
         if debug and logger and loglevel:
-            cls._debug = "1"
-            cls._logger = logger
-            cls._loglevel = loglevel
-            cls._uri = "".join((uri,
-                                f"?debug={cls._debug}",
-                                f"?logger={cls._logger}",
-                                f"?loglevel={cls._loglevel}"))
+            self._debug = "1"
+            self._logger = logger
+            self._loglevel = loglevel
+            self._uri = "".join((uri,
+                                 f"?debug={self._debug}",
+                                 f"?logger={self._logger}",
+                                 f"?loglevel={self._loglevel}"))
         else:
-            cls._uri = uri
+            self._uri = uri
+            self._debug = "0"
+            self._logger = None
+            self._loglevel = None
 
-        cls._connection = orm.connectionForURI(cls._uri)
-        orm.sqlhub.processConnection = cls._connection
-        return cls(connection=cls._connection)
+        self.connection = orm.connectionForURI(self._uri)
+        orm.sqlhub.processConnection = self.connection
+        self.path = path_to_models
 
-    @classmethod
-    def __reset_config(cls) -> None:
-        cls._uri = "sqlite:/:memory:"
-        cls._debug = "0"
-        cls._logger = None
-        cls._loglevel = None
-        cls._connection = orm.connectionForURI(cls._uri)
-        orm.sqlhub.processConnection = cls._connection
-        cls._path = "mod.db.models"
-        return cls(connection=cls._connection)
+    def __str__(self):
+        return f"Connected to database: {self._uri}"
 
-    @classmethod
-    def __search_db_in_models(cls) -> tuple:
+    def __repr__(self):
+        return "".join((f"class {self.__class__.__name__}: ",
+                        f"debug={self._debug} ",
+                        f"logger={self._logger} ",
+                        f"loglevel={self._loglevel}"))
+
+    def __search_db_in_models(self) -> tuple:
         classes = [cls_name for cls_name, cls_obj
-                   in inspect.getmembers(sys.modules[cls._path])
+                   in inspect.getmembers(sys.modules[self.path])
                    if inspect.isclass(cls_obj)]
         return tuple(classes)
 
-    @classmethod
-    def create(cls) -> None:
+    def create(self) -> None:
         # looking for all Classes listed in models.py
-        for item in cls.__search_db_in_models():
+        for item in self.__search_db_in_models():
             # Create tables in database for each class
             # that is located in models module
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True,
-                               connection=cls._connection)
+                               connection=self.connection)
         return "Ok"
 
-    @classmethod
-    def delete(cls) -> None:
+    def delete(self) -> None:
         # looking for all Classes listed in models.py
-        for item in cls.__search_db_in_models():
+        for item in self.__search_db_in_models():
             class_ = getattr(models, item)
             class_.dropTable(ifExists=True,
                              dropJoinTables=True,
                              cascade=True,
-                             connection=cls._connection)
+                             connection=self.connection)
         return "Ok"
 
-    @classmethod
-    def get_debug(cls) -> bool | None:
-        if cls._debug == "0":
+    @property
+    def debug(self) -> bool | None:
+        if self._debug == "0":
             return False
         else:
             return True
 
-    @classmethod
-    def set_debug(cls,
-                  value: bool = False) -> None:
+    @debug.setter
+    def debug(self,
+              value: bool = False) -> None:
         if value is True:
-            cls._debug = "1"
-        cls._uri = "".join((cls._uri,
-                            f"?debug={cls._debug}"))
-        cls._connection = orm.connectionForURI(cls._uri)
-        orm.sqlhub.processConnection = cls._connection
+            self._debug = "1"
+        self._uri = "".join((self._uri,
+                             f"?debug={self._debug}"))
+        self.connection = orm.connectionForURI(self._uri)
+        orm.sqlhub.processConnection = self.connection
 
     def __read_db(self,
                   table: str,
@@ -169,7 +142,7 @@ class DBHandler:
         db = getattr(models, table)
         if get_one:
             try:
-                dbquery = db.selectBy(self._connection,
+                dbquery = db.selectBy(self.connection,
                                       **kwargs).getOne()
             except SQLObjectNotFound:
                 raise DatabaseReadError
@@ -179,7 +152,7 @@ class DBHandler:
                 return dbquery
         else:
             try:
-                dbquery = db.selectBy(self._connection,
+                dbquery = db.selectBy(self.connection,
                                       **kwargs)
             except SQLObjectNotFound:
                 raise DatabaseReadError
