@@ -88,37 +88,39 @@ class Error:
             else:
                 detail = add_info
 
-        return api.ErrorsResponse(code,
-                                  status,
-                                  time,
-                                  detail)
+        return api.ErrorsResponse(code=code,
+                                  status=status,
+                                  time=time,
+                                  detail=detail)
 
 
 class User:
-    def __init__(self) -> None:
-        self._db = DBHandler()
+    def __init__(self, db: DBHandler) -> None:
+        self._db = db
 
-    def check_auth(method_to_decorate):
-        db = DBHandler()
-        error = Error()
+    def check_auth(self, method_to_decorate):
+        db = self._db
+        db.create()
 
         def wrapper(*args):
-            uuid = args[0].data.user[0].uuid
-            auth_id = args[0].data.user[0].auth_id
+            uuid = args[-1].data.user[0].uuid
+            auth_id = args[-1].data.user[0].auth_id
 
             try:
                 dbquery = db.get_user_by_uuid(uuid)
                 logger.success("User was found in the database")
             except DatabaseReadError:
-                logger.debug("User wasn't found in the database")
-                return error.catching_error("UNAUTHORIZED")
+                message = "User wasn't found in the database"
+                logger.debug(message)
+                return error.catching_error("UNAUTHORIZED", message)
             else:
                 if auth_id == dbquery.authId:
                     logger.success("Authentication User has been verified")
                     return method_to_decorate(*args)
                 else:
-                    logger.debug("Authentication User failed")
-                    return error.catching_error("UNAUTHORIZED")
+                    message = "Authentication User failed"
+                    logger.debug(message)
+                    return error.catching_error("UNAUTHORIZED", message)
 
         return wrapper
 
@@ -135,12 +137,12 @@ class User:
         """
         try:
             self._db.get_user_by_login(login)
-        except (DatabaseReadError, DatabaseAccessError):
+        except DatabaseReadError:
             logger.debug("There is no user in the database")
-            return False
+            return "NO_USER"
         else:
             logger.success("User was found in the database")
-            return True
+            return "FOUND"
 
 
 class ProtocolMethods(User, Error):
@@ -153,8 +155,7 @@ class ProtocolMethods(User, Error):
         self.get_time: int = int(time())
         self.response = None
         self.request = None
-        self._db = DBHandler()
-        self._db.connect(uri=database.get('uri'))
+        self._db = DBHandler(uri=database.get('uri'))
         self._db.create()
 
         try:
@@ -215,8 +216,9 @@ class ProtocolMethods(User, Error):
         email = request.data.user[0].email
         user = []
         data = None
-
-        if self.check_login(login):
+        self.connect_db = User(self._db)
+        print(f"CHECK_LOGIN: {self.check_login(login)}")
+        if User.check_login(login) == "FOUND":
             errors = self.catching_error("CONFLICT")
         else:
             generated = lib.Hash(password,
@@ -234,17 +236,17 @@ class ProtocolMethods(User, Error):
                               bio=None,
                               salt=generated.get_salt,
                               key=generated.get_key)
-            user.append(api.UserResponse(uuid,
-                                         auth_id))
-            data = api.DataResponse(self.get_time,
-                                    user)
+            user.append(api.UserResponse(uuid=uuid,
+                                         auth_id=auth_id))
+            data = api.DataResponse(time=self.get_time,
+                                    user=user)
             errors = self.catching_error("CREATED")
             logger.success("User is registred")
 
-        return api.Response(request.type,
-                            data,
-                            errors,
-                            self.jsonapi)
+        return api.Response(type=request.type,
+                            data=data,
+                            errors=errors,
+                            jsonapi=self.jsonapi)
 
     @User.check_auth
     def _get_update(self,
@@ -265,51 +267,51 @@ class ProtocolMethods(User, Error):
         if dbquery_message.count():
             for element in dbquery_message:
                 message.append(api.MessageResponse(
-                               element.uuid,
-                               None,
-                               element.text,
-                               element.user.uuid,
-                               element.time,
-                               element.flow.uuid,
-                               element.filePicture,
-                               element.fileVideo,
-                               element.fileAudio,
-                               element.fileDocument,
-                               element.emoji,
-                               element.editedTime,
-                               element.editedStatus))
+                               uuid=element.uuid,
+                               client_id=None,
+                               text=element.text,
+                               from_user=element.user.uuid,
+                               time=element.time,
+                               from_flow=element.flow.uuid,
+                               file_picture=element.filePicture,
+                               file_video=element.fileVideo,
+                               file_audio=element.fileAudio,
+                               file_document=element.fileDocument,
+                               emoji=element.emoji,
+                               edited_time=element.editedTime,
+                               edited_status=element.editedStatus))
 
         if dbquery_flow.count():
             for element in dbquery_flow:
                 flow.append(api.FlowResponse(
-                            element.uuid,
-                            element.timeCreated,
-                            element.flowType,
-                            element.title,
-                            element.info,
-                            element.owner,
+                            uuid=element.uuid,
+                            time=element.timeCreated,
+                            type=element.flowType,
+                            title=element.title,
+                            info=element.info,
+                            owner=element.owner,
                             users=[item.uuid for item in element.users]))
 
         if dbquery_user.count():
             for element in dbquery_user:
                 user.append(api.UserResponse(
-                            element.uuid,
-                            element.username,
-                            element.isBot,
-                            element.avatar,
-                            element.bio))
+                            uuid=element.uuid,
+                            username=element.username,
+                            is_bot=element.isBot,
+                            avatar=element.avatar,
+                            bio=element.bio))
 
         errors = self.catching_error("OK")
-        data = api.DataResponse(self.get_time,
-                                flow,
-                                message,
-                                user)
+        data = api.DataResponse(time=self.get_time,
+                                flow=flow,
+                                message=message,
+                                user=user)
         logger.success("\'_get_update\' executed successfully")
 
-        return api.Response(request.type,
-                            data,
-                            errors,
-                            self.jsonapi)
+        return api.Response(type=request.type,
+                            date=data,
+                            errors=errors,
+                            jsonapi=self.jsonapi)
 
     @User.check_auth
     def _send_message(self,
@@ -344,19 +346,19 @@ class ProtocolMethods(User, Error):
             errors = self.catching_error("NOT_FOUND",
                                          str(ERROR))
         else:
-            message.append(api.MessageResponse(message_uuid,
-                                               client_id,
-                                               flow_uuid,
-                                               user_uuid))
-            data = api.DataResponse(self.get_time,
-                                    message)
+            message.append(api.MessageResponse(uuid=message_uuid,
+                                               client_id=client_id,
+                                               from_user=user_uuid,
+                                               from_flow=flow_uuid))
+            data = api.DataResponse(time=self.get_time,
+                                    message=message)
             logger.success("\'_send_message\' executed successfully")
             errors = self.catching_error("OK")
 
-        return api.Response(request.type,
-                            data,
-                            errors,
-                            self.jsonapi)
+        return api.Response(type=request.type,
+                            data=data,
+                            errors=errors,
+                            jsonapi=self.jsonapi)
 
     @User.check_auth
     def _all_messages(self,
@@ -386,19 +388,19 @@ class ProtocolMethods(User, Error):
             message = []
             for element in db[start:end]:
                 message.append(api.MessageResponse(
-                               element.uuid,
-                               None,
-                               element.flow.uuid,
-                               element.user.uuid,
-                               element.text,
-                               element.time,
-                               element.filePicture,
-                               element.fileVideo,
-                               element.fileAudio,
-                               element.fileDocument,
-                               element.emoji,
-                               element.editedTime,
-                               element.editedStatus))
+                               uuid=element.uuid,
+                               client_id=None,
+                               text=element.text,
+                               from_user=element.user.uuid,
+                               time=element.time,
+                               from_flow=element.flow.uuid,
+                               file_picture=element.filePicture,
+                               file_video=element.fileVideo,
+                               file_audio=element.fileAudio,
+                               file_document=element.fileDocument,
+                               emoji=element.emoji,
+                               edited_time=element.editedTime,
+                               edited_status=element.editedStatus))
             return message
 
         try:
@@ -411,17 +413,17 @@ class ProtocolMethods(User, Error):
                                          str(flow_error))
         else:
             if MESSAGE_COUNT <= limit.getint("messages"):
-                flow.append(api.FlowResponse(flow_uuid,
-                                             message_start,
-                                             message_end))
+                flow.append(api.FlowResponse(uuid=flow_uuid,
+                                             message_start=message_start,
+                                             message_end=message_end))
                 message = get_messages(dbquery,
                                        limit.getint("messages"))
                 errors = self.catching_error("OK")
                 logger.success("\'_all_messages\' executed successfully")
             else:
-                flow.append(api.FlowResponse(flow_uuid,
-                                             message_start,
-                                             MESSAGE_COUNT))
+                flow.append(api.FlowResponse(uuid=flow_uuid,
+                                             message_start=message_start,
+                                             message_end=MESSAGE_COUNT))
                 if message_volume <= limit.getint("messages"):
                     message = get_messages(dbquery,
                                            request.data.flow[0].message_end,
@@ -434,14 +436,14 @@ class ProtocolMethods(User, Error):
                                                  f" than server limit"
                                                  f" (<{limit.getint('messages')})")
 
-        data = api.DataResponse(self.get_time,
-                                flow,
-                                message)
+        data = api.DataResponse(time=self.get_time,
+                                flow=flow,
+                                message=message)
 
-        return api.Response(request.type,
-                            data,
-                            errors,
-                            self.jsonapi)
+        return api.Response(type=request.type,
+                            data=data,
+                            errors=errors,
+                            jsonapi=self.jsonapi)
 
     @User.check_auth
     def _add_flow(self,
@@ -465,6 +467,7 @@ class ProtocolMethods(User, Error):
         else:
             try:
                 self._db.add_flow(flow_uuid,
+                                  users,
                                   self.get_time,
                                   flow_type,
                                   request.data.flow[0].title,
@@ -474,23 +477,23 @@ class ProtocolMethods(User, Error):
                 errors = self.catching_error("NOT_FOUND",
                                              str(flow_error))
             else:
-                flow.append(api.FlowResponse(flow_uuid,
-                                             self.get_time,
-                                             request.data.flow[0].type,
-                                             request.data.flow[0].title,
-                                             request.data.flow[0].info,
-                                             owner,
-                                             users))
+                flow.append(api.FlowResponse(uuid=flow_uuid,
+                                             time=self.get_time,
+                                             type=request.data.flow[0].type,
+                                             title=request.data.flow[0].title,
+                                             info=request.data.flow[0].info,
+                                             owner=owner,
+                                             users=users))
                 errors = self.catching_error("OK")
                 logger.success("\'_add_flow\' executed successfully")
 
-        data = api.DataResponse(self.get_time,
-                                flow)
+        data = api.DataResponse(time=self.get_time,
+                                flow=flow)
 
-        return api.Response(request.type,
-                            data,
-                            errors,
-                            self.jsonapi)
+        return api.Response(type=request.type,
+                            data=data,
+                            errors=errors,
+                            jsonapi=self.jsonapi)
 
     @User.check_auth
     def _all_flow(self,
@@ -504,25 +507,25 @@ class ProtocolMethods(User, Error):
         if dbquery.count():
             for element in dbquery:
                 flow.append(api.FlowResponse(
-                            element.uuid,
-                            element.timeCreated,
-                            element.flowType,
-                            element.title,
-                            element.info,
-                            element.owner,
+                            uuid=element.uuid,
+                            time=element.timeCreated,
+                            type=element.flowType,
+                            title=element.title,
+                            info=element.info,
+                            owner=element.owner,
                             users=[item.uuid for item in element.users]))
             errors = self.catching_error("OK")
             logger.success("\'_all_flow\' executed successfully")
         else:
             errors = self.catching_error("NOT_FOUND")
 
-        data = api.DataResponse(self.get_time,
-                                flow)
+        data = api.DataResponse(time=self.get_time,
+                                flow=flow)
 
-        return api.Response(request.type,
-                            data,
-                            errors,
-                            self.jsonapi)
+        return api.Response(type=request.type,
+                            data=data,
+                            errors=errors,
+                            jsonapi=self.jsonapi)
 
     @User.check_auth
     def _user_info(self,
@@ -541,12 +544,12 @@ class ProtocolMethods(User, Error):
                     errors = self.catching_error("UNKNOWN_ERROR",
                                                  str(user_info_error))
                 else:
-                    user.append(api.UserResponse(dbquery.uuid,
-                                                 dbquery.login,
-                                                 dbquery.username,
-                                                 dbquery.isBot,
-                                                 dbquery.avatar,
-                                                 dbquery.bio))
+                    user.append(api.UserResponse(uuid=dbquery.uuid,
+                                                 login=dbquery.login,
+                                                 username=dbquery.username,
+                                                 avatar=dbquery.avatar,
+                                                 bio=dbquery.bio,
+                                                 is_bot=dbquery.isBot))
             errors = self.catching_error("OK")
             logger.success("\'_user_info\' executed successfully")
         else:
@@ -554,13 +557,13 @@ class ProtocolMethods(User, Error):
                                          f"Requested more {limit.get('users')}"
                                          " users than server limit")
 
-        data = api.DataResponse(self.get_time,
-                                user)
+        data = api.DataResponse(time=self.get_time,
+                                user=user)
 
-        return api.Response(request.type,
-                            data,
-                            errors,
-                            self.jsonapi)
+        return api.Response(type=request.type,
+                            data=data,
+                            errors=errors,
+                            jsonapi=self.jsonapi)
 
     def _authentification(self,
                           request: api.Request) -> api.Response:
@@ -586,8 +589,8 @@ class ProtocolMethods(User, Error):
                                  dbquery.hashPassword)
             if generator.check_password():
                 dbquery.authId = generator.auth_id()
-                user.append(api.UserResponse(dbquery.uuid,
-                                             dbquery.authId))
+                user.append(api.UserResponse(uuid=dbquery.uuid,
+                                             auth_id=dbquery.authId))
                 errors = self.catching_error("OK")
                 logger.success("\'_authentification\' executed successfully")
             else:
@@ -595,13 +598,13 @@ class ProtocolMethods(User, Error):
         else:
             errors = self.catching_error("NOT_FOUND")
 
-        data = api.DataResponse(self.get_time,
-                                user)
+        data = api.DataResponse(time=self.get_time,
+                                user=user)
 
-        return api.Response(request.type,
-                            data,
-                            errors,
-                            self.jsonapi)
+        return api.Response(type=request.type,
+                            data=data,
+                            errors=errors,
+                            jsonapi=self.jsonapi)
 
     @User.check_auth
     def _delete_user(self,
@@ -633,10 +636,10 @@ class ProtocolMethods(User, Error):
             errors = self.catching_error("OK")
             logger.success("\'_delete_user\' executed successfully")
 
-        return api.Response(request.type,
-                            None,
-                            errors,
-                            self.jsonapi)
+        return api.Response(type=request.type,
+                            data=None,
+                            errors=errors,
+                            jsonapi=self.jsonapi)
 
     @User.check_auth
     def _delete_message(self,
@@ -664,10 +667,10 @@ class ProtocolMethods(User, Error):
             errors = self.catching_error("OK")
             logger.success("\'_delete_message\' executed successfully")
 
-        return api.Response(request.type,
-                            None,
-                            errors,
-                            self.jsonapi)
+        return api.Response(type=request.type,
+                            data=None,
+                            errors=errors,
+                            jsonapi=self.jsonapi)
 
     @User.check_auth
     def _edited_message(self,
@@ -690,10 +693,10 @@ class ProtocolMethods(User, Error):
             errors = self.catching_error("OK")
             logger.success("\'_edited_message\' executed successfully")
 
-        return api.Response(request.type,
-                            None,
-                            errors,
-                            self.jsonapi)
+        return api.Response(type=request.type,
+                            data=None,
+                            errors=errors,
+                            jsonapi=self.jsonapi)
 
     @User.check_auth
     def _ping_pong(self,
@@ -704,10 +707,10 @@ class ProtocolMethods(User, Error):
         errors = self.catching_error("OK")
         logger.success("\'_ping_pong\' executed successfully")
 
-        return api.Response(request.type,
-                            None,
-                            errors,
-                            self.jsonapi)
+        return api.Response(type=request.type,
+                            data=None,
+                            errors=errors,
+                            jsonapi=self.jsonapi)
 
     def _errors(self,
                 status: str = None,
@@ -728,7 +731,7 @@ class ProtocolMethods(User, Error):
         errors = self.catching_error(status, add_info)
         logger.success("\'_errors\' executed successfully")
 
-        return api.Response(response,
-                            None,
-                            errors,
-                            self.jsonapi)
+        return api.Response(type=response,
+                            data=None,
+                            errors=errors,
+                            jsonapi=self.jsonapi)
