@@ -20,9 +20,12 @@
 """
 
 import json
+from os import name
 from time import time
+from typing import Tuple, Type
 from uuid import uuid4
 import configparser
+from collections import namedtuple
 
 from pydantic import ValidationError
 from loguru import logger
@@ -30,7 +33,6 @@ from loguru import logger
 from mod import api
 from mod import error
 from mod import lib
-from mod.db.dbhandler import DBHandler
 from mod.db.dbhandler import DatabaseWriteError
 from mod.db.dbhandler import DatabaseReadError
 from mod.db.dbhandler import DatabaseAccessError
@@ -39,93 +41,130 @@ from mod.db.dbhandler import DatabaseAccessError
 config = configparser.ConfigParser()
 config.read('config.ini')
 limit = config['SERVER_LIMIT']
-database = config['DATABASE']
 # ************** END **********************************
 
 
-class Error:
-    def __init__(self):
-        self.get_time = int(time())
+class ErrorResponse:
+    """Сatches errors in "try...except" content.
+    Result is class 'api.ErrorsResponse' with information about code,
+    status, time and detailed description of error that has occurred.
+    For errors like Exception and other unrecognized errors,
+    code "520" and status "Unknown Error" are used.
 
-    def catching_error(self, status: str,
-                       add_info: Exception | str = None) -> api.ErrorsResponse:
-        """Сatches errors in "try...except" content.
-        Result is class 'api.ErrorsResponse' with information about code,
-        status, time and detailed description of error that has occurred.
-        For errors like Exception and other unrecognized errors,
-        code "520" and status "Unknown Error" are used.
+    Args:
+        status (str): Error type
+        add_info ([Exception] or [str], optional): Additional information
+        to be added. Defaults to None.
 
-        Args:
-            status (str): Error type
-            add_info ([Exception] or [str], optional): Additional information
-            to be added. Defaults to None.
-
-        Returns:
-            dict: returns class 'api.ErrorsResponse' according to protocol,
-                like: {
-                    'code': 200,
-                    'status': 'Ok',
-                    'time': 123456545,
-                    'detail': 'successfully'
-                    }
+    Returns:
+        ErrorResponse.result() returns class 'api.ErrorsResponse'
+        according to protocol, like:
+            {
+                'code': 200,
+                'status': 'Ok',
+                'time': 123456545,
+                'detail': 'successfully'
+                }
         """
+
+    def __init__(self,
+                 status: str,
+                 add_info: Exception | str = None) -> None:
+        self.status = status
+        self.detail = add_info
+
+    def result(self) -> api.ErrorsResponse:
         try:
-            catch_error = error.check_error_pattern(status)
+            catch_error = error.check_error_pattern(self.status)
         except Exception as ERROR:
             logger.exception(str(ERROR))
             code = 520
             status = "Unknown Error"
-            time = self.get_time
+            time_ = int(time())
             detail = str(ERROR)
         else:
             logger.debug(f"Status code({catch_error.code.value}):",
                          f" {catch_error.status.value}")
             code = catch_error.code.value
             status = catch_error.status.value
-            time = self.get_time
-            if add_info is None:
+            time_ = int(time())
+            if self.detail is None:
                 detail = catch_error.detail.value
             else:
-                detail = add_info
+                detail = self.detail
 
         return api.ErrorsResponse(code=code,
                                   status=status,
-                                  time=time,
+                                  time=time_,
                                   detail=detail)
 
 
-class User:
-    def __init__(self, db: DBHandler) -> None:
-        self._db = db
+class ProtocolMethods():
+    """Processing requests and forming answers according to "MTP" protocol.
+    Protocol version and it's actual description:
+    https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md
+    """
+    def __init__(self, request, database):
+        self.jsonapi = api.VersionResponse(version=api.VERSION)
+        self.get_time = int(time())
+        self._db = database
 
-    def check_auth(self, method_to_decorate):
-        db = self._db
-        db.create()
-
-        def wrapper(*args):
-            uuid = args[-1].data.user[0].uuid
-            auth_id = args[-1].data.user[0].auth_id
-
-            try:
-                dbquery = db.get_user_by_uuid(uuid)
-                logger.success("User was found in the database")
-            except DatabaseReadError:
-                message = "User wasn't found in the database"
-                logger.debug(message)
-                return error.catching_error("UNAUTHORIZED", message)
+        try:
+            self.request = api.Request.parse_obj(request)
+            logger.success("Validation was successful")
+        except ValidationError as ERROR:
+            self.response = self._errors("UNSUPPORTED_MEDIA_TYPE",
+                                         str(ERROR))
+            logger.debug(f"Validation failed: {ERROR}")
+        else:
+            self.method = getattr(self, f"_{self.request.type}")
+            auth = self._check_auth(self.request.data.user[0].uuid,
+                                    self.request.data.user[0].auth_id)
+            if auth.result:
+                self.response = self.method(self.request)
+            elif auth.result is not True and self.request.type == 'register_user':
+                self.response = self.method(self.request)
             else:
-                if auth_id == dbquery.authId:
-                    logger.success("Authentication User has been verified")
-                    return method_to_decorate(*args)
-                else:
-                    message = "Authentication User failed"
-                    logger.debug(message)
-                    return error.catching_error("UNAUTHORIZED", message)
+                self.response = self._errors("UNAUTHORIZED",
+                                             auth.error_message)
 
-        return wrapper
+    def _check_auth(self,
+                    uuid: str,
+                    auth_id: str) -> Type[Tuple]:
+        Result = namedtuple('Result', ['result',
+                                       'error_message'])
+        try:
+            dbquery = self._db.get_user_by_uuid(uuid)
+            logger.success("User was found in the database")
+        except DatabaseReadError:
+            message = "User wasn't found in the database"
+            logger.debug(message)
+            return Result(False,
+                          message)
+        else:
+            if auth_id == dbquery.authId:
+                message = "Authentication User has been verified"
+                logger.success(message)
+                return Result(True,
+                              message)
+            else:
+                message = "Authentication User failed"
+                logger.debug(message)
+                return Result(False,
+                              message)
 
-    def check_login(self,
-                    login: str) -> bool:
+    def get_response(self,
+                     response: api.Response = None) -> json:
+        """Generates a JSON-object containing result
+        of an instance of ProtocolMethod class.
+        """
+        if response is None:
+            return self.response.json()
+        else:
+            return response.json()
+
+    def _check_login(self,
+                     login: str) -> bool:
         """Checks database for a user with the same login
 
         Args:
@@ -139,70 +178,10 @@ class User:
             self._db.get_user_by_login(login)
         except DatabaseReadError:
             logger.debug("There is no user in the database")
-            return "NO_USER"
+            return False
         else:
             logger.success("User was found in the database")
-            return "FOUND"
-
-
-class ProtocolMethods(User, Error):
-    """Processing requests and forming answers according to "MTP" protocol.
-    Protocol version and it's actual description:
-    https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md
-    """
-    def __init__(self, request):
-        self.jsonapi = api.VersionResponse(version=api.VERSION)
-        self.get_time: int = int(time())
-        self.response = None
-        self.request = None
-        self._db = DBHandler(uri=database.get('uri'))
-        self._db.create()
-
-        try:
-            self.request = api.Request.parse_obj(request)
-            logger.success("Validation was successful")
-        except ValidationError as ERROR:
-            self.response = self._errors("UNSUPPORTED_MEDIA_TYPE",
-                                         str(ERROR))
-            logger.debug(f"Validation failed: {ERROR}")
-        else:
-            match self.request.type:
-                case 'register_user':
-                    self.response = self._register_user(self.request)
-                case 'auth':
-                    self.response = self._authentification(self.request)
-                case 'send_message':
-                    self.response = self._send_message(self.request)
-                case 'all_flow':
-                    self.response = self._all_flow(self.request)
-                case 'add_flow':
-                    self.response = self._add_flow(self.request)
-                case 'all_messages':
-                    self.response = self._all_messages(self.request)
-                case 'delete_user':
-                    self.response = self._delete_user(self.request)
-                case 'delete_message':
-                    self.response = self._delete_message(self.request)
-                case 'edited_message':
-                    self.response = self._edited_message(self.request)
-                case 'get_update':
-                    self.response = self._get_update(self.request)
-                case 'ping-pong':
-                    self.response = self._ping_pong(self.request)
-                case 'user_info':
-                    self.response = self._user_info(self.request)
-                case _:
-                    self.response = self._errors()
-
-    def get_response(self,
-                     response: api.Response = None) -> json:
-        """Generates a JSON-object containing result
-        of an instance of ProtocolMethod class.
-        """
-        if response is None:
-            return self.response.json()
-        else:
-            return response.json()
+            return True
 
     def _register_user(self,
                        request: api.Request) -> api.Response:
@@ -216,10 +195,9 @@ class ProtocolMethods(User, Error):
         email = request.data.user[0].email
         user = []
         data = None
-        self.connect_db = User(self._db)
-        print(f"CHECK_LOGIN: {self.check_login(login)}")
-        if User.check_login(login) == "FOUND":
-            errors = self.catching_error("CONFLICT")
+
+        if self._check_login(login):
+            errors = ErrorResponse("CONFLICT")
         else:
             generated = lib.Hash(password,
                                  uuid)
@@ -240,15 +218,14 @@ class ProtocolMethods(User, Error):
                                          auth_id=auth_id))
             data = api.DataResponse(time=self.get_time,
                                     user=user)
-            errors = self.catching_error("CREATED")
+            errors = ErrorResponse("CREATED")
             logger.success("User is registred")
 
         return api.Response(type=request.type,
                             data=data,
-                            errors=errors,
+                            errors=errors.result(),
                             jsonapi=self.jsonapi)
 
-    @User.check_auth
     def _get_update(self,
                     request: api.Request) -> api.Response:
         """Provides updates of flows, messages and users in them from time "time"
@@ -301,7 +278,7 @@ class ProtocolMethods(User, Error):
                             avatar=element.avatar,
                             bio=element.bio))
 
-        errors = self.catching_error("OK")
+        errors = ErrorResponse("OK")
         data = api.DataResponse(time=self.get_time,
                                 flow=flow,
                                 message=message,
@@ -310,10 +287,9 @@ class ProtocolMethods(User, Error):
 
         return api.Response(type=request.type,
                             date=data,
-                            errors=errors,
+                            errors=errors.result(),
                             jsonapi=self.jsonapi)
 
-    @User.check_auth
     def _send_message(self,
                       request: api.Request) -> api.Response:
         """Saves user message in database.
@@ -343,8 +319,8 @@ class ProtocolMethods(User, Error):
                                  document,
                                  emoji)
         except DatabaseWriteError as ERROR:
-            errors = self.catching_error("NOT_FOUND",
-                                         str(ERROR))
+            errors = ErrorResponse("NOT_FOUND",
+                                   str(ERROR))
         else:
             message.append(api.MessageResponse(uuid=message_uuid,
                                                client_id=client_id,
@@ -353,14 +329,13 @@ class ProtocolMethods(User, Error):
             data = api.DataResponse(time=self.get_time,
                                     message=message)
             logger.success("\'_send_message\' executed successfully")
-            errors = self.catching_error("OK")
+            errors = ErrorResponse("OK")
 
         return api.Response(type=request.type,
                             data=data,
-                            errors=errors,
+                            errors=errors.result(),
                             jsonapi=self.jsonapi)
 
-    @User.check_auth
     def _all_messages(self,
                       request: api.Request) -> api.Response:
         """Displays all messages of a specific flow retrieves them
@@ -409,8 +384,8 @@ class ProtocolMethods(User, Error):
             MESSAGE_COUNT: int = dbquery.count()
             dbquery[0]
         except DatabaseReadError as flow_error:
-            errors = self.catching_error("NOT_FOUND",
-                                         str(flow_error))
+            errors = ErrorResponse("NOT_FOUND",
+                                   str(flow_error))
         else:
             if MESSAGE_COUNT <= limit.getint("messages"):
                 flow.append(api.FlowResponse(uuid=flow_uuid,
@@ -418,7 +393,7 @@ class ProtocolMethods(User, Error):
                                              message_end=message_end))
                 message = get_messages(dbquery,
                                        limit.getint("messages"))
-                errors = self.catching_error("OK")
+                errors = ErrorResponse("OK")
                 logger.success("\'_all_messages\' executed successfully")
             else:
                 flow.append(api.FlowResponse(uuid=flow_uuid,
@@ -429,12 +404,12 @@ class ProtocolMethods(User, Error):
                                            request.data.flow[0].message_end,
                                            request.data.flow[0].message_start)
                     logger.success("\'_all_messages\' executed successfully")
-                    errors = self.catching_error("PARTIAL_CONTENT")
+                    errors = ErrorResponse("PARTIAL_CONTENT")
                 else:
-                    errors = self.catching_error("FORBIDDEN",
-                                                 "Requested more messages"
-                                                 f" than server limit"
-                                                 f" (<{limit.getint('messages')})")
+                    errors = ErrorResponse("FORBIDDEN",
+                                           "Requested more messages"
+                                           f" than server limit"
+                                           f" (<{limit.getint('messages')})")
 
         data = api.DataResponse(time=self.get_time,
                                 flow=flow,
@@ -442,10 +417,9 @@ class ProtocolMethods(User, Error):
 
         return api.Response(type=request.type,
                             data=data,
-                            errors=errors,
+                            errors=errors.result(),
                             jsonapi=self.jsonapi)
 
-    @User.check_auth
     def _add_flow(self,
                   request: api.Request) -> api.Response:
         """Allows add a new flow to database
@@ -459,11 +433,11 @@ class ProtocolMethods(User, Error):
         if flow_type not in ["chat",
                              "group",
                              "channel"]:
-            errors = self.catching_error("BAD_REQUEST",
-                                         "Wrong flow type")
+            errors = ErrorResponse("BAD_REQUEST",
+                                   "Wrong flow type")
         elif flow_type == 'chat' and len(users) != 2:
-            errors = self.catching_error("BAD_REQUEST",
-                                         "Must be two users only")
+            errors = ErrorResponse("BAD_REQUEST",
+                                   "Must be two users only")
         else:
             try:
                 self._db.add_flow(flow_uuid,
@@ -474,8 +448,8 @@ class ProtocolMethods(User, Error):
                                   request.data.flow[0].info,
                                   owner)
             except DatabaseWriteError as flow_error:
-                errors = self.catching_error("NOT_FOUND",
-                                             str(flow_error))
+                errors = ErrorResponse("NOT_FOUND",
+                                       str(flow_error))
             else:
                 flow.append(api.FlowResponse(uuid=flow_uuid,
                                              time=self.get_time,
@@ -484,7 +458,7 @@ class ProtocolMethods(User, Error):
                                              info=request.data.flow[0].info,
                                              owner=owner,
                                              users=users))
-                errors = self.catching_error("OK")
+                errors = ErrorResponse("OK")
                 logger.success("\'_add_flow\' executed successfully")
 
         data = api.DataResponse(time=self.get_time,
@@ -492,10 +466,9 @@ class ProtocolMethods(User, Error):
 
         return api.Response(type=request.type,
                             data=data,
-                            errors=errors,
+                            errors=errors.result(),
                             jsonapi=self.jsonapi)
 
-    @User.check_auth
     def _all_flow(self,
                   request: api.Request) -> api.Response:
         """Allows to get a list of all flows and information about them
@@ -514,20 +487,19 @@ class ProtocolMethods(User, Error):
                             info=element.info,
                             owner=element.owner,
                             users=[item.uuid for item in element.users]))
-            errors = self.catching_error("OK")
+            errors = ErrorResponse("OK")
             logger.success("\'_all_flow\' executed successfully")
         else:
-            errors = self.catching_error("NOT_FOUND")
+            errors = ErrorResponse("NOT_FOUND")
 
         data = api.DataResponse(time=self.get_time,
                                 flow=flow)
 
         return api.Response(type=request.type,
                             data=data,
-                            errors=errors,
+                            errors=errors.result(),
                             jsonapi=self.jsonapi)
 
-    @User.check_auth
     def _user_info(self,
                    request: api.Request) -> api.Response:
         """Provides information about all personal settings of user.
@@ -541,8 +513,8 @@ class ProtocolMethods(User, Error):
                     dbquery = self._db.get_flow_by_uuid(element.uuid)
                 except (DatabaseReadError,
                         DatabaseAccessError) as user_info_error:
-                    errors = self.catching_error("UNKNOWN_ERROR",
-                                                 str(user_info_error))
+                    errors = ErrorResponse("UNKNOWN_ERROR",
+                                           str(user_info_error))
                 else:
                     user.append(api.UserResponse(uuid=dbquery.uuid,
                                                  login=dbquery.login,
@@ -550,19 +522,19 @@ class ProtocolMethods(User, Error):
                                                  avatar=dbquery.avatar,
                                                  bio=dbquery.bio,
                                                  is_bot=dbquery.isBot))
-            errors = self.catching_error("OK")
+            errors = ErrorResponse("OK")
             logger.success("\'_user_info\' executed successfully")
         else:
-            errors = self.catching_error("FORBIDDEN",
-                                         f"Requested more {limit.get('users')}"
-                                         " users than server limit")
+            errors = ErrorResponse("FORBIDDEN",
+                                   f"Requested more {limit.get('users')}"
+                                   " users than server limit")
 
         data = api.DataResponse(time=self.get_time,
                                 user=user)
 
         return api.Response(type=request.type,
                             data=data,
-                            errors=errors,
+                            errors=errors.result(),
                             jsonapi=self.jsonapi)
 
     def _authentification(self,
@@ -591,22 +563,21 @@ class ProtocolMethods(User, Error):
                 dbquery.authId = generator.auth_id()
                 user.append(api.UserResponse(uuid=dbquery.uuid,
                                              auth_id=dbquery.authId))
-                errors = self.catching_error("OK")
+                errors = ErrorResponse("OK")
                 logger.success("\'_authentification\' executed successfully")
             else:
-                errors = self.catching_error("UNAUTHORIZED")
+                errors = ErrorResponse("UNAUTHORIZED")
         else:
-            errors = self.catching_error("NOT_FOUND")
+            errors = ErrorResponse("NOT_FOUND")
 
         data = api.DataResponse(time=self.get_time,
                                 user=user)
 
         return api.Response(type=request.type,
                             data=data,
-                            errors=errors,
+                            errors=errors.result(),
                             jsonapi=self.jsonapi)
 
-    @User.check_auth
     def _delete_user(self,
                      request: api.Request) -> api.Response:
         """Function irretrievably deletes the user from database.
@@ -620,8 +591,8 @@ class ProtocolMethods(User, Error):
                                                               password)
         except (DatabaseReadError,
                 DatabaseAccessError) as not_found:
-            errors = self.catching_error("NOT_FOUND",
-                                         str(not_found))
+            errors = ErrorResponse("NOT_FOUND",
+                                   str(not_found))
         else:
             dbquery.login = "User deleted"
             dbquery.password = uuid
@@ -633,15 +604,14 @@ class ProtocolMethods(User, Error):
             dbquery.bio = "deleted"
             dbquery.salt = b"deleted"
             dbquery.key = b"deleted"
-            errors = self.catching_error("OK")
+            errors = ErrorResponse("OK")
             logger.success("\'_delete_user\' executed successfully")
 
         return api.Response(type=request.type,
                             data=None,
-                            errors=errors,
+                            errors=errors.result(),
                             jsonapi=self.jsonapi)
 
-    @User.check_auth
     def _delete_message(self,
                         request: api.Request) -> api.Response:
         """Function deletes the message from database Message
@@ -653,8 +623,8 @@ class ProtocolMethods(User, Error):
             dbquery = self._db.get_message_by_uuid(message_uuid)
         except (DatabaseReadError,
                 DatabaseAccessError) as not_found:
-            errors = self.catching_error("NOT_FOUND",
-                                         str(not_found))
+            errors = ErrorResponse("NOT_FOUND",
+                                   str(not_found))
         else:
             dbquery.text = "Message deleted"
             dbquery.filePicture = b''
@@ -664,15 +634,14 @@ class ProtocolMethods(User, Error):
             dbquery.emoji = b''
             dbquery.editedTime = self.get_time
             dbquery.editedStatus = True
-            errors = self.catching_error("OK")
+            errors = ErrorResponse("OK")
             logger.success("\'_delete_message\' executed successfully")
 
         return api.Response(type=request.type,
                             data=None,
-                            errors=errors,
+                            errors=errors.result(),
                             jsonapi=self.jsonapi)
 
-    @User.check_auth
     def _edited_message(self,
                         request: api.Request) -> api.Response:
         """Changes text and time in database Message table.
@@ -684,32 +653,31 @@ class ProtocolMethods(User, Error):
             dbquery = self._db.get_message_by_uuid(message_uuid)
         except (DatabaseReadError,
                 DatabaseAccessError) as not_found:
-            errors = self.catching_error("NOT_FOUND",
-                                         str(not_found))
+            errors = ErrorResponse("NOT_FOUND",
+                                   str(not_found))
         else:
             dbquery.text = request.data.message[0].text
             dbquery.editedTime = self.get_time
             dbquery.editedStatus = True
-            errors = self.catching_error("OK")
+            errors = ErrorResponse("OK")
             logger.success("\'_edited_message\' executed successfully")
 
         return api.Response(type=request.type,
                             data=None,
-                            errors=errors,
+                            errors=errors.result(),
                             jsonapi=self.jsonapi)
 
-    @User.check_auth
     def _ping_pong(self,
                    request: api.Request) -> api.Response:
         """Generates a response to a client's request
         for communication between server and client.
         """
-        errors = self.catching_error("OK")
+        errors = ErrorResponse("OK")
         logger.success("\'_ping_pong\' executed successfully")
 
         return api.Response(type=request.type,
                             data=None,
-                            errors=errors,
+                            errors=errors.result(),
                             jsonapi=self.jsonapi)
 
     def _errors(self,
@@ -728,10 +696,11 @@ class ProtocolMethods(User, Error):
         if status is None:
             status = "METHOD_NOT_ALLOWED"
 
-        errors = self.catching_error(status, add_info)
+        errors = ErrorResponse(status,
+                               add_info)
         logger.success("\'_errors\' executed successfully")
 
         return api.Response(type=response,
                             data=None,
-                            errors=errors,
+                            errors=errors.result(),
                             jsonapi=self.jsonapi)
