@@ -24,6 +24,7 @@ python-multipart = "==0.0.5"
 websocket-client = "==1.2.1"
 coverage = "==6.0.2"
 requests = "==2.26.0"
+win32-setctime = "*"
 
 [requires]
 python_version = "3.10"
