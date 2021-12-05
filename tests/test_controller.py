@@ -31,7 +31,7 @@ from mod import api  # noqa
 from mod import controller  # noqa
 from mod import lib  # noqa
 from mod.db.dbhandler import DBHandler  # noqa
-from mod.controller import User  # noqa
+from mod.controller import ProtocolMethods
 from mod.db.dbhandler import DatabaseAccessError
 from mod.db.dbhandler import DatabaseReadError
 from mod.db.dbhandler import DatabaseWriteError
@@ -79,33 +79,37 @@ class TestCheckAuthToken(unittest.TestCase):
                          password="password",
                          auth_id="auth_id")
         self.test = api.Request.parse_file(SEND_MESSAGE)
-        self.error = controller.Error
-        self.response = list()
 
     def tearDown(self):
         self.db.delete()
         del self.test
 
-    def test_check_decorator(self):
-        def test_func(*args):
-            uuid = args[0].data.user[0].uuid
-            auth_id = args[0].data.user[0].auth_id
-            if uuid == "123456" and auth_id == "auth_id":
-                return True
-        result = controller.User.check_auth(test_func)(self.test)
-        self.assertTrue(result)
+    def test_check_auth(self):
+        run_method = ProtocolMethods('test',
+                                   database=self.db)
+        check_auth = run_method._check_auth('123456',
+                                          'auth_id')
+        self.assertTrue(check_auth.result)
+        self.assertEqual(check_auth.error_message,
+                         "Authentication User has been verified")
 
     def test_check_wrong_uuid(self):
-        self.test.data.user[0].uuid = "654321"
-        self.assertRaises(DatabaseReadError,
-                          User.check_auth,
-                          self.test)
+        run_method = ProtocolMethods('test',
+                                   database=self.db)
+        check_auth = run_method._check_auth('987654',
+                                          'auth_id')
+        self.assertFalse(check_auth.result)
+        self.assertEqual(check_auth.error_message,
+                         "User wasn't found in the database")
 
     def test_check_wrong_auth_id(self):
-        self.test.data.user[0].auth_id = "wrong_auth_id"
-        self.assertRaises(AttributeError,
-                          User.check_auth,
-                          self.test)
+        run_method = ProtocolMethods('test',
+                                   database=self.db)
+        check_auth = run_method._check_auth('123456',
+                                          'wrong_auth_id')
+        self.assertFalse(check_auth.result)
+        self.assertEqual(check_auth.error_message,
+                         "Authentication User failed")
 
 
 class TestCheckLogin(unittest.TestCase):
@@ -127,16 +131,16 @@ class TestCheckLogin(unittest.TestCase):
         del self.test
 
     def test_check_found_login(self):
-        self.db.delete()
-        login = self.test.data.user[0].login
-        run_method = controller.ProtocolMethods(self.test)
-        result = run_method.check_login(login)
-        self.assertEqual(result, "FOUND")
+        run_method = ProtocolMethods('test',
+                                     self.db)
+        result = run_method._check_login("login")
+        self.assertTrue(result)
 
     def test_check_wrong_login(self):
-        run_method = controller.ProtocolMethods(self.test)
-        result = run_method.check_login("wrong_login")
-        self.assertEqual(result, "NO_USER")
+        run_method = ProtocolMethods('test',
+                                     self.db)
+        result = run_method._check_login("wrong_login")
+        self.assertFalse(result)
 
 
 class TestRegisterUser(unittest.TestCase):
@@ -154,9 +158,8 @@ class TestRegisterUser(unittest.TestCase):
         del self.test
 
     def test_user_created(self):
-        self.db.delete()
-        self.db.create()
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Created")
@@ -165,37 +168,43 @@ class TestRegisterUser(unittest.TestCase):
         self.db.add_user(uuid="123456",
                          login="login",
                          password="password")
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Conflict")
 
     def test_user_write_in_database(self):
-        controller.ProtocolMethods(self.test)
+        ProtocolMethods(self.test,
+                        self.db)
         dbquery = self.db.get_user_by_login(login="login")
         self.assertEqual(dbquery.login, "login")
 
     def test_uuid_write_in_database(self):
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         dbquery = self.db.get_user_by_login("login")
         self.assertEqual(dbquery.uuid,
                          result["data"]["user"][0]["uuid"])
 
     def test_auth_id_write_in_database(self):
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         dbquery = self.db.get_user_by_login("login")
         self.assertEqual(dbquery.authId,
                          result["data"]["user"][0]["auth_id"])
 
     def test_type_of_salt(self):
-        controller.ProtocolMethods(self.test)
+        ProtocolMethods(self.test,
+                        self.db)
         dbquery = self.db.get_user_by_login("login")
         self.assertIsInstance(dbquery.salt, bytes)
 
     def test_type_of_key(self):
-        controller.ProtocolMethods(self.test)
+        ProtocolMethods(self.test,
+                        self.db)
         dbquery = self.db.get_user_by_login("login")
         self.assertIsInstance(dbquery.key, bytes)
 
@@ -269,25 +278,29 @@ class TestGetUpdate(unittest.TestCase):
         del self.test
 
     def test_update(self):
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
 
     def test_check_message_in_result(self):
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["data"]["message"][1]["uuid"],
                          "112")
 
     def test_check_flow_in_result(self):
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["data"]["flow"][0]["owner"],
                          "123456")
 
     def test_check_user_in_result(self):
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["data"]["user"][2]["uuid"],
                          "666555")
@@ -295,7 +308,8 @@ class TestGetUpdate(unittest.TestCase):
     @unittest.skip("Не работает, пока не будет добавлен фильтр по времени")
     def test_no_new_data_in_database(self):
         self.test.data.time = 444
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Not Found")
@@ -325,39 +339,45 @@ class TestSendMessage(unittest.TestCase):
         del self.test
 
     def test_send_message(self):
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
 
     def test_check_id_in_response(self):
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         dbquery = self.db.get_message_by_uuid("999666")
         self.assertEqual(result["data"]["message"][0]["uuid"],
                          dbquery.uuid)
 
     def test_check_client_id_in_response(self):
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["data"]["message"][0]["client_id"],
                          123)
 
     def test_wrong_flow(self):
         self.test.data.flow[0].uuid = "666666"
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Not Found")
 
     def test_write_text_in_database(self):
-        controller.ProtocolMethods(self.test)
+        ProtocolMethods(self.test,
+                        self.db)
         dbquery = self.db.get_message_by_uuid("999666")
         self.assertEqual(dbquery.text,
                          self.test.data.message[0].text)
 
     def test_write_time_in_database(self):
-        controller.ProtocolMethods(self.test)
+        ProtocolMethods(self.test,
+                        self.db)
         dbquery = self.db.get_message_by_uuid("999666")
         self.assertIsInstance(dbquery.time, int)
 
@@ -414,7 +434,8 @@ class TestAllMessages(unittest.TestCase):
     def test_all_message_fields_filled(self):
         self.test.data.flow[0].uuid = "07d950"
         check_uuid = '2715207240631768797'
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         message_found = False
         for _, item in enumerate(result["data"]["message"]):
@@ -427,43 +448,50 @@ class TestAllMessages(unittest.TestCase):
         self.assertTrue(message_found)
 
     def test_all_message_more_limit(self):
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Partial Content")
 
     def test_all_message_less_limit(self):
         self.test.data.flow[0].uuid = "07d950"
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
 
     def test_message_end_in_response(self):
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["data"]["flow"][0]["message_end"], 108)
 
     def test_message_start_in_response(self):
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["data"]["flow"][0]["message_start"], 0)
 
     def test_check_message_in_database(self):
-        controller.ProtocolMethods(self.test)
+        ProtocolMethods(self.test,
+                        self.db)
         dbquery = self.db.get_message_by_exact_time(666)
         self.assertEqual(dbquery.text, "Privet")
 
     def test_wrong_message_volume(self):
         self.test.data.flow[0].message_end = 256
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Forbidden")
 
     def test_wrong_flow_id(self):
         self.test.data.flow[0].uuid = "666666"
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Not Found")
@@ -491,14 +519,16 @@ class TestAddFlow(unittest.TestCase):
         del self.test
 
     def test_add_flow_group(self):
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
 
     def test_add_flow_channel(self):
         self.test.data.flow[0].type = "channel"
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
@@ -506,30 +536,34 @@ class TestAddFlow(unittest.TestCase):
     def test_add_flow_bad_type(self):
         error = "Wrong flow type"
         self.test.data.flow[0].type = "unknown"
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["detail"], error)
 
     def test_add_flow_chat_single_user(self):
         error = "Must be two users only"
         self.test.data.flow[0].type = "chat"
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["detail"], error)
 
     def test_add_flow_chat_more_users(self):
         self.test.data.flow[0].type = "chat"
         self.test.data.flow[0].users.extend(["666555", "888999"])
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Bad Request")
 
     def test_check_flow_in_database(self):
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         dbquery = self.db.get_flow_by_title("title")
-        self.assertEqual(dbquery.uuid,
+        self.assertEqual(dbquery[0].uuid,
                          result["data"]["flow"][0]["uuid"])
 
 
@@ -559,12 +593,14 @@ class TestAllFlow(unittest.TestCase):
                          title="title",
                          info="info",
                          owner="123456")
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["data"]["flow"][0]["info"], "info")
 
     def test_blank_flow_table_in_database(self):
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Not Found")
@@ -595,20 +631,23 @@ class TestUserInfo(unittest.TestCase):
         del self.test
 
     def test_user_info(self):
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
 
     def test_check_user_info(self):
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["data"]["user"][0]["bio"], "bio")
 
     def test_check_many_user_info(self):
         users = [{'uuid': str(123456 + item)} for item in range(120)]
         self.test.data.user.extend(users)
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Forbidden")
@@ -638,7 +677,8 @@ class TestAuthentification(unittest.TestCase):
         del self.test
 
     def test_authentification(self):
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
@@ -647,7 +687,8 @@ class TestAuthentification(unittest.TestCase):
         login = self.test.data.user[0].login
         dbquery = self.db.get_user_by_login(login)
         dbquery.delete(dbquery.id)
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Not Found")
@@ -658,21 +699,24 @@ class TestAuthentification(unittest.TestCase):
                          password="password",
                          salt=b"salt",
                          key=b"key")
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Not Found")
 
     def test_wrong_password(self):
         self.test.data.user[0].password = "wrong_password"
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Unauthorized")
 
     def test_write_in_database(self):
         login = self.test.data.user[0].login
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         dbquery = self.db.get_user_by_login(login)
         self.assertEqual(dbquery.authId,
@@ -698,21 +742,24 @@ class TestDeleteUser(unittest.TestCase):
         del self.test
 
     def test_delete_user(self):
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
 
     def test_wrong_login(self):
         self.test.data.user[0].login = "wrong_login"
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Not Found")
 
     def test_wrong_password(self):
         self.test.data.user[0].password = "wrong_password"
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Not Found")
@@ -749,24 +796,28 @@ class TestDeleteMessage(unittest.TestCase):
         del self.test
 
     def test_delete_message(self):
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
 
     def test_check_delete_message_in_database(self):
-        controller.ProtocolMethods(self.test)
+        ProtocolMethods(self.test,
+                        self.db)
         dbquery = self.db.get_message_by_text("Hello")
         self.assertEqual(dbquery.count(), 0)
 
     def test_check_deleted_message_in_database(self):
-        controller.ProtocolMethods(self.test)
+        ProtocolMethods(self.test,
+                        self.db)
         dbquery = self.db.get_message_by_text("Message deleted")
         self.assertEqual(dbquery.count(), 1)
 
     def test_wrong_message_id(self):
         self.test.data.message[0].uuid = "2"
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Not Found")
@@ -802,19 +853,22 @@ class TestEditedMessage(unittest.TestCase):
         del self.test
 
     def test_edited_message(self):
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
 
     def test_new_edited_message(self):
-        controller.ProtocolMethods(self.test)
+        ProtocolMethods(self.test,
+                        self.db)
         dbquery = self.db.get_message_by_uuid("1")
         self.assertEqual(dbquery.text, "New_Hello")
 
     def test_wrong_message_id(self):
         self.test.data.message[0].uuid = "3"
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Not Found")
@@ -839,7 +893,8 @@ class TestPingPong(unittest.TestCase):
         del self.test
 
     def test_ping_pong(self):
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
@@ -857,7 +912,6 @@ class TestErrors(unittest.TestCase):
                          login="login",
                          password="password",
                          auth_id="auth_id")
-        self.test = controller.Error()
 
     def tearDown(self):
         self.db.delete()
@@ -865,21 +919,24 @@ class TestErrors(unittest.TestCase):
 
     def test_wrong_type(self):
         self.test = api.Request.parse_file(ERRORS)
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Method Not Allowed")
 
     def test_unsupported_media_type(self):
         self.test = json.dumps(NON_VALID_ERRORS)
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Unsupported Media Type")
 
     def test_only_type_in_request(self):
         self.test = json.dumps(ERRORS_ONLY_TYPE)
-        run_method = controller.ProtocolMethods(self.test)
+        run_method = ProtocolMethods(self.test,
+                                     self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Unsupported Media Type")
