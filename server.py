@@ -81,6 +81,7 @@ CLIENTS = []
 
 # Set dtatabase connection
 db = DBHandler(uri=database.get('uri'))
+db.create()
 
 app.mount("/admin",
           admin.app)
@@ -114,7 +115,7 @@ async def websocket_endpoint(websocket: WebSocket):
             # create a "client" object and pass the request body to
             # it as a parameter. The "get_response" method generates
             # a response in JSON-object format.
-            client = controller.ProtocolMethods(data)
+            client = controller.ProtocolMethods(data, database=db)
             response = await websocket.send_bytes(client.get_response())
             logger.info("Response sent to client")
             logger.debug(f"Result of processing: {response}")
