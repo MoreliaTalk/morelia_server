@@ -1,5 +1,5 @@
 {
-    "type": "ping-pong",
+    "type": "ping_pong",
     "data": {
         "user": [{
             "uuid": "123456",
