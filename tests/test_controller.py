@@ -351,7 +351,7 @@ class TestSendMessage(unittest.TestCase):
         result = json.loads(run_method.get_response())
         dbquery = self.db.get_message_by_uuid("999666")
         self.assertEqual(result["data"]["message"][0]["uuid"],
-                         dbquery.uuid)
+                         dbquery[0].uuid)
 
     def test_check_client_id_in_response(self):
         run_method = ProtocolMethods(self.test,
