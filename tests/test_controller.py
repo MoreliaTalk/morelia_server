@@ -28,13 +28,10 @@ from uuid import uuid4
 from loguru import logger
 
 from mod import api  # noqa
-from mod import controller  # noqa
 from mod import lib  # noqa
 from mod.db.dbhandler import DBHandler  # noqa
-from mod.controller import ProtocolMethods
-from mod.db.dbhandler import DatabaseAccessError
-from mod.db.dbhandler import DatabaseReadError
-from mod.db.dbhandler import DatabaseWriteError
+from mod.controller import ProtocolMethods # noqa
+from mod.controller import ErrorResponse  # noqa
 
 # Add path to directory with code being checked
 # to variable 'PATH' to import modules from directory
@@ -86,27 +83,27 @@ class TestCheckAuthToken(unittest.TestCase):
 
     def test_check_auth(self):
         run_method = ProtocolMethods('test',
-                                   database=self.db)
+                                     self.db)
         check_auth = run_method._check_auth('123456',
-                                          'auth_id')
+                                            'auth_id')
         self.assertTrue(check_auth.result)
         self.assertEqual(check_auth.error_message,
                          "Authentication User has been verified")
 
     def test_check_wrong_uuid(self):
         run_method = ProtocolMethods('test',
-                                   database=self.db)
+                                     self.db)
         check_auth = run_method._check_auth('987654',
-                                          'auth_id')
+                                            'auth_id')
         self.assertFalse(check_auth.result)
         self.assertEqual(check_auth.error_message,
                          "User wasn't found in the database")
 
     def test_check_wrong_auth_id(self):
         run_method = ProtocolMethods('test',
-                                   database=self.db)
+                                     self.db)
         check_auth = run_method._check_auth('123456',
-                                          'wrong_auth_id')
+                                            'wrong_auth_id')
         self.assertFalse(check_auth.result)
         self.assertEqual(check_auth.error_message,
                          "Authentication User failed")
@@ -349,7 +346,7 @@ class TestSendMessage(unittest.TestCase):
         run_method = ProtocolMethods(self.test,
                                      self.db)
         result = json.loads(run_method.get_response())
-        dbquery = self.db.get_message_by_uuid("999666")
+        dbquery = self.db.get_message_by_text("Hello!")
         self.assertEqual(result["data"]["message"][0]["uuid"],
                          dbquery[0].uuid)
 
@@ -371,15 +368,15 @@ class TestSendMessage(unittest.TestCase):
     def test_write_text_in_database(self):
         ProtocolMethods(self.test,
                         self.db)
-        dbquery = self.db.get_message_by_uuid("999666")
-        self.assertEqual(dbquery.text,
+        dbquery = self.db.get_message_by_text("Hello!")
+        self.assertEqual(dbquery[0].text,
                          self.test.data.message[0].text)
 
     def test_write_time_in_database(self):
         ProtocolMethods(self.test,
                         self.db)
-        dbquery = self.db.get_message_by_uuid("999666")
-        self.assertIsInstance(dbquery.time, int)
+        dbquery = self.db.get_message_by_text("Hello!")
+        self.assertIsInstance(dbquery[0].time, int)
 
 
 class TestAllMessages(unittest.TestCase):
@@ -478,7 +475,7 @@ class TestAllMessages(unittest.TestCase):
         ProtocolMethods(self.test,
                         self.db)
         dbquery = self.db.get_message_by_exact_time(666)
-        self.assertEqual(dbquery.text, "Privet")
+        self.assertEqual(dbquery[0].text, "Privet")
 
     def test_wrong_message_volume(self):
         self.test.data.flow[0].message_end = 256
@@ -687,18 +684,6 @@ class TestAuthentification(unittest.TestCase):
         login = self.test.data.user[0].login
         dbquery = self.db.get_user_by_login(login)
         dbquery.delete(dbquery.id)
-        run_method = ProtocolMethods(self.test,
-                                     self.db)
-        result = json.loads(run_method.get_response())
-        self.assertEqual(result["errors"]["status"],
-                         "Not Found")
-
-    def test_two_element_in_database(self):
-        self.db.add_user(uuid="654321",
-                         login="login",
-                         password="password",
-                         salt=b"salt",
-                         key=b"key")
         run_method = ProtocolMethods(self.test,
                                      self.db)
         result = json.loads(run_method.get_response())
@@ -915,7 +900,6 @@ class TestErrors(unittest.TestCase):
 
     def tearDown(self):
         self.db.delete()
-        del self.test
 
     def test_wrong_type(self):
         self.test = api.Request.parse_file(ERRORS)
@@ -942,14 +926,16 @@ class TestErrors(unittest.TestCase):
                          "Unsupported Media Type")
 
     def test_wrong_status_in_catching_error(self):
-        result = self.test.catching_error(status='err')
+        run_method = ErrorResponse(status='err')
+        result = run_method.result()
         self.assertEqual(result.code, 520)
         self.assertEqual(result.status, "Unknown Error")
         self.assertIsInstance(result.time, int)
         self.assertIsInstance(result.detail, str)
 
     def test_correct_status_in_catching_error(self):
-        result = self.test.catching_error(status='BAD_REQUEST')
+        run_method = ErrorResponse(status='BAD_REQUEST')
+        result = run_method.result()
         self.assertEqual(result.code, 400)
         self.assertEqual(result.status, "Bad Request")
         self.assertIsInstance(result.time, int)

@@ -144,7 +144,7 @@ class DBHandler:
             try:
                 dbquery = db.selectBy(self.connection,
                                       **kwargs).getOne()
-            except SQLObjectNotFound:
+            except (SQLObjectNotFound, SQLObjectIntegrityError):
                 raise DatabaseReadError
             except Exception as err:
                 raise DatabaseAccessError from err
