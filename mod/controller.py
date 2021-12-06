@@ -20,7 +20,6 @@
 """
 
 import json
-from os import name
 from time import time
 from typing import Tuple, Type
 from uuid import uuid4
@@ -33,6 +32,7 @@ from loguru import logger
 from mod import api
 from mod import error
 from mod import lib
+from mod.db.dbhandler import DBHandler
 from mod.db.dbhandler import DatabaseWriteError
 from mod.db.dbhandler import DatabaseReadError
 from mod.db.dbhandler import DatabaseAccessError
@@ -107,7 +107,7 @@ class ProtocolMethods():
     def __init__(self, request, database):
         self.jsonapi = api.VersionResponse(version=api.VERSION)
         self.get_time = int(time())
-        self._db = database
+        self._db: DBHandler = database
 
         try:
             self.request = api.Request.parse_obj(request)
@@ -117,16 +117,41 @@ class ProtocolMethods():
                                          str(ERROR))
             logger.debug(f"Validation failed: {ERROR}")
         else:
-            self.method = getattr(self, f"_{self.request.type}")
             auth = self._check_auth(self.request.data.user[0].uuid,
                                     self.request.data.user[0].auth_id)
             if auth.result:
-                self.response = self.method(self.request)
-            elif auth.result is not True and self.request.type == 'register_user':
-                self.response = self.method(self.request)
+                match self.request.type:
+                    case "get_update":
+                        self.response = self._get_update(self.request)
+                    case "send_message":
+                        self.response = self._send_message(self.request)
+                    case "all_messages":
+                        self.response = self._all_messages(self.request)
+                    case "add_flow":
+                        self.response = self._add_flow(self.request)
+                    case "all_flow":
+                        self.response = self._all_flow(self.request)
+                    case "user_info":
+                        self.response = self._user_info(self.request)
+                    case "delete_user":
+                        self.response = self._delete_user(self.request)
+                    case "delete_message":
+                        self.response = self._delete_message(self.request)
+                    case "edited_message":
+                        self.response = self._edited_message(self.request)
+                    case "ping_pong":
+                        self.response = self._ping_pong(self.request)
+                    case _:
+                        self.response = self._errors("METHOD_NOT_ALLOWED")
             else:
-                self.response = self._errors("UNAUTHORIZED",
-                                             auth.error_message)
+                match self.request.type:
+                    case 'register_user':
+                        self.response = self._register_user(self.request)
+                    case 'authentification':
+                        self.response = self._authentification(self.request)
+                    case _:
+                        self.response = self._errors("UNAUTHORIZED",
+                                                     auth.error_message)
 
     def _check_auth(self,
                     uuid: str,
@@ -241,7 +266,7 @@ class ProtocolMethods():
         dbquery_flow = self._db.get_flow_by_more_time(request.data.time)
         dbquery_message = self._db.get_message_by_more_time(request.data.time)
 
-        if dbquery_message.count():
+        if dbquery_message.count() >= 1:
             for element in dbquery_message:
                 message.append(api.MessageResponse(
                                uuid=element.uuid,
@@ -258,7 +283,7 @@ class ProtocolMethods():
                                edited_time=element.editedTime,
                                edited_status=element.editedStatus))
 
-        if dbquery_flow.count():
+        if dbquery_flow.count() >= 1:
             for element in dbquery_flow:
                 flow.append(api.FlowResponse(
                             uuid=element.uuid,
@@ -269,7 +294,7 @@ class ProtocolMethods():
                             owner=element.owner,
                             users=[item.uuid for item in element.users]))
 
-        if dbquery_user.count():
+        if dbquery_user.count() >= 1:
             for element in dbquery_user:
                 user.append(api.UserResponse(
                             uuid=element.uuid,
@@ -286,7 +311,7 @@ class ProtocolMethods():
         logger.success("\'_get_update\' executed successfully")
 
         return api.Response(type=request.type,
-                            date=data,
+                            data=data,
                             errors=errors.result(),
                             jsonapi=self.jsonapi)
 
@@ -318,7 +343,8 @@ class ProtocolMethods():
                                  audio,
                                  document,
                                  emoji)
-        except DatabaseWriteError as ERROR:
+        except (DatabaseWriteError,
+                DatabaseReadError) as ERROR:
             errors = ErrorResponse("NOT_FOUND",
                                    str(ERROR))
         else:
@@ -510,7 +536,7 @@ class ProtocolMethods():
         if users_volume <= limit.getint("users"):
             for element in request.data.user[1:]:
                 try:
-                    dbquery = self._db.get_flow_by_uuid(element.uuid)
+                    dbquery = self._db.get_user_by_uuid(element.uuid)
                 except (DatabaseReadError,
                         DatabaseAccessError) as user_info_error:
                     errors = ErrorResponse("UNKNOWN_ERROR",
@@ -548,7 +574,7 @@ class ProtocolMethods():
         password = request.data.user[0].password
         user = []
 
-        if self.check_login(login):
+        if self._check_login(login):
             dbquery = self._db.get_user_by_login(login)
             # to check password, we use same module as for its
             # hash generation. Specify password entered by user
