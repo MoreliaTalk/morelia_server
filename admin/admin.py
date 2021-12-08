@@ -57,26 +57,29 @@ def not_login_exception_handler(request: Request,
 
 @app.get("/login")
 def login_admin(request: Request):
-    return templates.TemplateResponse("login.html",
-                                      {"request": request})
+    return templates.TemplateResponse("login.html", {
+                                        "request": request
+                                     })
 
 
 @app.get("/")
 def index_admin(request: Request,
                 user=Depends(login.login_manager)):
-    return templates.TemplateResponse("index_admin.html",
-                                      {"request": request})
+    return templates.TemplateResponse("index_admin.html", {
+                                        "request": request
+                                     })
 
 
 @app.get("/status")
 def status_admin(request: Request,
                  user=Depends(login.login_manager)):
     dbcount = db.table_count()
-    return templates.TemplateResponse("status_admin.html",
-                                      {"request": request,
-                                       "Messages_count": dbcount.message_count,
-                                       "Flows_count": dbcount.flow_count,
-                                       "Users_count": dbcount.user_count})
+    return templates.TemplateResponse("status_admin.html", {
+                                        "request": request,
+                                        "Messages_count": dbcount.message_count,
+                                        "Flows_count": dbcount.flow_count,
+                                        "Users_count": dbcount.user_count
+                                     })
 
 
 # TODO Полностью доделать(на данный момент управление сервером не работает)
@@ -85,13 +88,15 @@ def status_admin(request: Request,
 def manage_admin(request: Request,
                  user=Depends(login.login_manager)):
     dbquery = db.get_all_user()
-    return templates.TemplateResponse("manage_admin.html",
-                                      {"request": request,
-                                       "users": dbquery.count()})
+    return templates.TemplateResponse("manage_admin.html", {
+                                        "request": request,
+                                        "users": dbquery.count()
+                                     })
 
 
 @app.get("/logs")
 def manage_logs(request: Request,
                 user=Depends(login.login_manager)):
-    return templates.TemplateResponse("logs_admin.html",
-                                      {"request": request})
+    return templates.TemplateResponse("logs_admin.html", {
+                                        "request": request
+                                     })
