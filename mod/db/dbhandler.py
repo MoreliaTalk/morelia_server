@@ -103,7 +103,7 @@ class DBHandler:
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True,
                                connection=self.connection)
-        return "Ok"
+        return
 
     def delete(self) -> None:
         # looking for all Classes listed in models.py
@@ -113,7 +113,7 @@ class DBHandler:
                              dropJoinTables=True,
                              cascade=True,
                              connection=self.connection)
-        return "Ok"
+        return
 
     @property
     def debug(self) -> bool | None:
