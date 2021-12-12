@@ -265,10 +265,10 @@ class TestDBHandlerMethods(unittest.TestCase):
         self.assertEqual(dbquery, "Updated")
         self.assertEqual(new_query.login, new_login)
         self.assertEqual(new_query.password, new_password)
-        self.assertEqual(new_query.hashPassword, new_hash)
+        self.assertEqual(new_query.hash_password, new_hash)
         self.assertEqual(new_query.username, new_username)
-        self.assertEqual(new_query.isBot, new_is_bot)
-        self.assertEqual(new_query.authId, new_auth_id)
+        self.assertEqual(new_query.is_bot, new_is_bot)
+        self.assertEqual(new_query.auth_id, new_auth_id)
         self.assertEqual(new_query.email, new_email)
         self.assertEqual(new_query.avatar, new_avatar)
         self.assertEqual(new_query.bio, new_bio)
@@ -366,13 +366,13 @@ class TestDBHandlerMethods(unittest.TestCase):
                               str)
         self.assertEqual(dbquery, "Updated")
         self.assertEqual(new_query.text, new_text)
-        self.assertEqual(new_query.filePicture, new_picture)
-        self.assertEqual(new_query.fileVideo, new_video)
-        self.assertEqual(new_query.fileAudio, new_audio)
-        self.assertEqual(new_query.fileDocument, new_document)
+        self.assertEqual(new_query.file_picture, new_picture)
+        self.assertEqual(new_query.file_video, new_video)
+        self.assertEqual(new_query.file_audio, new_audio)
+        self.assertEqual(new_query.file_document, new_document)
         self.assertEqual(new_query.emoji, new_emoji)
-        self.assertEqual(new_query.editedTime, new_edited_time)
-        self.assertEqual(new_query.editedStatus, new_edited_status)
+        self.assertEqual(new_query.edited_time, new_edited_time)
+        self.assertEqual(new_query.edited_status, new_edited_status)
 
     def test_get_all_flow(self):
         dbquery = self.db.get_all_flow()
@@ -396,7 +396,7 @@ class TestDBHandlerMethods(unittest.TestCase):
         dbquery = self.db.get_flow_by_more_time(time=5556669)
         self.assertIsInstance(dbquery,
                               SelectResults)
-        self.assertEqual(dbquery[0].flowType, "Test")
+        self.assertEqual(dbquery[0].flow_type, "Test")
 
     def test_get_flow_by_less_time(self):
         dbquery = self.db.get_flow_by_less_time(time=555666999)
@@ -444,7 +444,7 @@ class TestDBHandlerMethods(unittest.TestCase):
                               str)
         self.assertEqual(dbquery, "Updated")
         new_query = self.db.get_flow_by_uuid(uuid="666999")
-        self.assertEqual(new_query.flowType, new_flow_type)
+        self.assertEqual(new_query.flow_type, new_flow_type)
         self.assertEqual(new_query.title, new_title)
         self.assertEqual(new_query.info, new_info)
         self.assertEqual(new_query.owner, new_owner)
@@ -461,17 +461,17 @@ class TestDBHandlerMethods(unittest.TestCase):
         dbquery = self.db.get_all_admin()
         self.assertIsInstance(dbquery,
                               SelectResults)
-        self.assertEqual(dbquery[0].hashPassword, "hash")
+        self.assertEqual(dbquery[0].hash_password, "hash")
 
     def test_get_admin_by_name(self):
         dbquery = self.db.get_admin_by_name(username="User2")
         self.assertIsInstance(dbquery,
                               SQLObject)
-        self.assertEqual(dbquery.hashPassword, "hash")
+        self.assertEqual(dbquery.hash_password, "hash")
 
     def test_add_admin(self):
         dbquery = self.db.add_admin(username="User3",
                                     hash_password="hash3")
         self.assertIsInstance(dbquery,
                               SQLObject)
-        self.assertEqual(dbquery.hashPassword, "hash3")
+        self.assertEqual(dbquery.hash_password, "hash3")

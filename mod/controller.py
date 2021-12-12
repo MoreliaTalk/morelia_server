@@ -167,7 +167,7 @@ class ProtocolMethods():
             return Result(False,
                           message)
         else:
-            if auth_id == dbquery.authId:
+            if auth_id == dbquery.auth_id:
                 message = "Authentication User has been verified"
                 logger.success(message)
                 return Result(True,
@@ -275,20 +275,20 @@ class ProtocolMethods():
                                from_user=element.user.uuid,
                                time=element.time,
                                from_flow=element.flow.uuid,
-                               file_picture=element.filePicture,
-                               file_video=element.fileVideo,
-                               file_audio=element.fileAudio,
-                               file_document=element.fileDocument,
+                               file_picture=element.file_picture,
+                               file_video=element.file_video,
+                               file_audio=element.file_audio,
+                               file_document=element.file_document,
                                emoji=element.emoji,
-                               edited_time=element.editedTime,
-                               edited_status=element.editedStatus))
+                               edited_time=element.edited_time,
+                               edited_status=element.edited_status))
 
         if dbquery_flow.count() >= 1:
             for element in dbquery_flow:
                 flow.append(api.FlowResponse(
                             uuid=element.uuid,
-                            time=element.timeCreated,
-                            type=element.flowType,
+                            time=element.time_created,
+                            type=element.flow_type,
                             title=element.title,
                             info=element.info,
                             owner=element.owner,
@@ -299,7 +299,7 @@ class ProtocolMethods():
                 user.append(api.UserResponse(
                             uuid=element.uuid,
                             username=element.username,
-                            is_bot=element.isBot,
+                            is_bot=element.is_bot,
                             avatar=element.avatar,
                             bio=element.bio))
 
@@ -395,13 +395,13 @@ class ProtocolMethods():
                                from_user=element.user.uuid,
                                time=element.time,
                                from_flow=element.flow.uuid,
-                               file_picture=element.filePicture,
-                               file_video=element.fileVideo,
-                               file_audio=element.fileAudio,
-                               file_document=element.fileDocument,
+                               file_picture=element.file_picture,
+                               file_video=element.file_video,
+                               file_audio=element.file_audio,
+                               file_document=element.file_document,
                                emoji=element.emoji,
-                               edited_time=element.editedTime,
-                               edited_status=element.editedStatus))
+                               edited_time=element.edited_time,
+                               edited_status=element.edited_status))
             return message
 
         try:
@@ -507,8 +507,8 @@ class ProtocolMethods():
             for element in dbquery:
                 flow.append(api.FlowResponse(
                             uuid=element.uuid,
-                            time=element.timeCreated,
-                            type=element.flowType,
+                            time=element.time_created,
+                            type=element.flow_type,
                             title=element.title,
                             info=element.info,
                             owner=element.owner,
@@ -547,7 +547,7 @@ class ProtocolMethods():
                                                  username=dbquery.username,
                                                  avatar=dbquery.avatar,
                                                  bio=dbquery.bio,
-                                                 is_bot=dbquery.isBot))
+                                                 is_bot=dbquery.is_bot))
             errors = ErrorResponse("OK")
             logger.success("\'_user_info\' executed successfully")
         else:
@@ -584,11 +584,11 @@ class ProtocolMethods():
                                  dbquery.uuid,
                                  dbquery.salt,
                                  dbquery.key,
-                                 dbquery.hashPassword)
+                                 dbquery.hash_password)
             if generator.check_password():
-                dbquery.authId = generator.auth_id()
+                dbquery.auth_id = generator.auth_id()
                 user.append(api.UserResponse(uuid=dbquery.uuid,
-                                             auth_id=dbquery.authId))
+                                             auth_id=dbquery.auth_id))
                 errors = ErrorResponse("OK")
                 logger.success("\'_authentification\' executed successfully")
             else:
@@ -622,9 +622,9 @@ class ProtocolMethods():
         else:
             dbquery.login = "User deleted"
             dbquery.password = uuid
-            dbquery.hashPassword = uuid
+            dbquery.hash_password = uuid
             dbquery.username = "User deleted"
-            dbquery.authId = uuid
+            dbquery.auth_id = uuid
             dbquery.email = ""
             dbquery.avatar = b""
             dbquery.bio = "deleted"
@@ -653,13 +653,13 @@ class ProtocolMethods():
                                    str(not_found))
         else:
             dbquery.text = "Message deleted"
-            dbquery.filePicture = b''
-            dbquery.fileVideo = b''
-            dbquery.fileAudio = b''
-            dbquery.fileDocument = b''
+            dbquery.file_picture = b''
+            dbquery.file_video = b''
+            dbquery.file_audio = b''
+            dbquery.file_document = b''
             dbquery.emoji = b''
-            dbquery.editedTime = self.get_time
-            dbquery.editedStatus = True
+            dbquery.edited_time = self.get_time
+            dbquery.edited_status = True
             errors = ErrorResponse("OK")
             logger.success("\'_delete_message\' executed successfully")
 
@@ -671,7 +671,7 @@ class ProtocolMethods():
     def _edited_message(self,
                         request: api.Request) -> api.Response:
         """Changes text and time in database Message table.
-        Value of editedStatus column changes from None to True.
+        Value of edited_status column changes from None to True.
         """
         message_uuid = request.data.message[0].uuid
 
@@ -683,8 +683,8 @@ class ProtocolMethods():
                                    str(not_found))
         else:
             dbquery.text = request.data.message[0].text
-            dbquery.editedTime = self.get_time
-            dbquery.editedStatus = True
+            dbquery.edited_time = self.get_time
+            dbquery.edited_status = True
             errors = ErrorResponse("OK")
             logger.success("\'_edited_message\' executed successfully")
 

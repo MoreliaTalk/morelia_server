@@ -219,10 +219,10 @@ class DBHandler:
                                uuid=uuid,
                                login=login,
                                password=password,
-                               hashPassword=hash_password,
+                               hash_password=hash_password,
                                username=username,
-                               isBot=is_bot,
-                               authId=auth_id,
+                               is_bot=is_bot,
+                               auth_id=auth_id,
                                email=email,
                                avatar=avatar,
                                bio=bio,
@@ -252,16 +252,16 @@ class DBHandler:
             dbquery.password = password
 
         if hash_password:
-            dbquery.hashPassword = hash_password
+            dbquery.hash_password = hash_password
 
         if username:
             dbquery.username = username
 
         if is_bot:
-            dbquery.isBot = is_bot
+            dbquery.is_bot = is_bot
 
         if auth_id:
-            dbquery.authId = auth_id
+            dbquery.auth_id = auth_id
 
         if email:
             dbquery.email = email
@@ -359,13 +359,13 @@ class DBHandler:
                                uuid=message_uuid,
                                text=text,
                                time=time,
-                               filePicture=picture,
-                               fileVideo=video,
-                               fileAudio=audio,
-                               fileDocument=document,
+                               file_picture=picture,
+                               file_video=video,
+                               file_audio=audio,
+                               file_document=document,
                                emoji=emoji,
-                               editedTime=None,
-                               editedStatus=False,
+                               edited_time=None,
+                               edited_status=False,
                                user=user,
                                flow=flow)
 
@@ -386,25 +386,25 @@ class DBHandler:
             dbquery.text = text
 
         if picture:
-            dbquery.filePicture = picture
+            dbquery.file_picture = picture
 
         if video:
-            dbquery.fileVideo = video
+            dbquery.file_video = video
 
         if audio:
-            dbquery.fileAudio = audio
+            dbquery.file_audio = audio
 
         if document:
-            dbquery.fileDocument = document
+            dbquery.file_document = document
 
         if emoji:
             dbquery.emoji = emoji
 
         if edited_time:
-            dbquery.editedTime = edited_time
+            dbquery.edited_time = edited_time
 
         if edited_status:
-            dbquery.editedStatus = edited_status
+            dbquery.edited_status = edited_status
 
         return "Updated"
 
@@ -426,15 +426,15 @@ class DBHandler:
 
     def get_flow_by_more_time(self,
                               time: int) -> SelectResults:
-        return models.Flow.select(models.Flow.q.timeCreated >= time)
+        return models.Flow.select(models.Flow.q.time_created >= time)
 
     def get_flow_by_less_time(self,
                               time: int) -> SelectResults:
-        return models.Flow.select(models.Flow.q.timeCreated <= time)
+        return models.Flow.select(models.Flow.q.time_created <= time)
 
     def get_flow_by_exact_time(self,
                                time: int) -> SelectResults:
-        return models.Flow.select(models.Flow.q.timeCreated == time)
+        return models.Flow.select(models.Flow.q.time_created == time)
 
     def add_flow(self,
                  uuid: str,
@@ -446,8 +446,8 @@ class DBHandler:
                  owner: str = None) -> SQLObject:
         dbquery = self.__write_db(table="Flow",
                                   uuid=uuid,
-                                  timeCreated=time_created,
-                                  flowType=flow_type,
+                                  time_created=time_created,
+                                  flow_type=flow_type,
                                   title=title,
                                   info=info,
                                   owner=owner)
@@ -466,17 +466,9 @@ class DBHandler:
         dbquery = self.__read_db(table="Flow",
                                  get_one=True,
                                  uuid=uuid)
-        if flow_type:
-            dbquery.flowType = flow_type
-
-        if title:
-            dbquery.title = title
-
-        if info:
-            dbquery.info = info
-
-        if owner:
-            dbquery.owner = owner
+        for var in (flow_type, title, info, owner):
+            if var:
+                setattr(dbquery, 'var', var)
 
         return "Updated"
 
@@ -509,4 +501,4 @@ class DBHandler:
                   hash_password: str) -> SQLObject:
         return self.__write_db(table="Admin",
                                username=username,
-                               hashPassword=hash_password)
+                               hash_password=hash_password)

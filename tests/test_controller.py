@@ -190,7 +190,7 @@ class TestRegisterUser(unittest.TestCase):
                                      self.db)
         result = json.loads(run_method.get_response())
         dbquery = self.db.get_user_by_login("login")
-        self.assertEqual(dbquery.authId,
+        self.assertEqual(dbquery.auth_id,
                          result["data"]["user"][0]["auth_id"])
 
     def test_type_of_salt(self):
@@ -704,7 +704,7 @@ class TestAuthentification(unittest.TestCase):
                                      self.db)
         result = json.loads(run_method.get_response())
         dbquery = self.db.get_user_by_login(login)
-        self.assertEqual(dbquery.authId,
+        self.assertEqual(dbquery.auth_id,
                          result["data"]["user"][0]["auth_id"])
 
 
