@@ -1,6 +1,7 @@
 """
     Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the full list.
+    Look at the file AUTHORS.md(located at the root of the project) to get the
+    full list.
 
     This file is part of Morelia Server.
 
@@ -118,7 +119,8 @@ ALL_FLOW = {
 
 
 # Chat websocket
-def send_message(message: Union[dict, str] = AUTH, uri: str = LOCALHOST) -> bytes:
+def send_message(message: Union[dict, str] = AUTH, 
+                 uri: str = LOCALHOST) -> bytes:
     result = b'None'
     """Sending a message via websockets, with a response
 

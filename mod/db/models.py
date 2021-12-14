@@ -1,6 +1,7 @@
 """
     Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the full list.
+    Look at the file AUTHORS.md(located at the root of the project) to get the
+    full list.
 
     This file is part of Morelia Server.
 
@@ -30,8 +31,8 @@ class UserConfig(orm.SQLObject):
         password (str, required):
         hash_password (str, optional)
         username (str, optional):
-        isBot (bool, optional): default False
-        authId (str, optional):
+        is_bot (bool, optional): default False
+        auth_id (str, optional):
         email (str, optional):
         avatar (str, optional):
         bio (str, optional):
@@ -44,10 +45,10 @@ class UserConfig(orm.SQLObject):
     uuid = orm.StringCol(notNone=True, unique=True)
     login = orm.StringCol(notNone=True)
     password = orm.StringCol(notNone=True)
-    hashPassword = orm.StringCol(default=None)
+    hash_password = orm.StringCol(default=None)
     username = orm.StringCol(default=None)
-    isBot = orm.BoolCol(default=False)
-    authId = orm.StringCol(default=None)
+    is_bot = orm.BoolCol(default=False)
+    auth_id = orm.StringCol(default=None)
     email = orm.StringCol(default=None)
     avatar = orm.BLOBCol(default=None)
     bio = orm.StringCol(default=None)
@@ -64,8 +65,8 @@ class Flow(orm.SQLObject):
 
     Args:
         uuid (str, required):
-        timeCreated (int, optional):
-        flowType (str, optional):
+        time_created (int, optional):
+        flow_type (str, optional):
         title (str, optional):
         info (str, optional):
 
@@ -73,8 +74,8 @@ class Flow(orm.SQLObject):
         None
     """
     uuid = orm.StringCol(notNone=True, unique=True)
-    timeCreated = orm.IntCol(default=None)
-    flowType = orm.StringCol(default=None)
+    time_created = orm.IntCol(default=None)
+    flow_type = orm.StringCol(default=None)
     title = orm.StringCol(default=None)
     info = orm.StringCol(default=None)
     owner = orm.StringCol(default=None)
@@ -91,13 +92,13 @@ class Message(orm.SQLObject):
         uuid (str, required):
         text (str, optional):
         time (int, optional):
-        filePicture (byte, optional):
-        fileVideo (byte, optional):
-        fileAudio (byte, optional):
-        fileDocument (byte, optional):
+        file_picture (byte, optional):
+        file_video (byte, optional):
+        file_audio (byte, optional):
+        file_document (byte, optional):
         emoji (str, optional):
-        editedTime (int, optional):
-        editedStatus (bool, optional):
+        edited_time (int, optional):
+        edited_status (bool, optional):
 
     Returns:
         None
@@ -105,13 +106,13 @@ class Message(orm.SQLObject):
     uuid = orm.StringCol(notNone=True, unique=True)
     text = orm.StringCol(default=None)
     time = orm.IntCol(default=None)
-    filePicture = orm.BLOBCol(default=None)
-    fileVideo = orm.BLOBCol(default=None)
-    fileAudio = orm.BLOBCol(default=None)
-    fileDocument = orm.BLOBCol(default=None)
+    file_picture = orm.BLOBCol(default=None)
+    file_video = orm.BLOBCol(default=None)
+    file_audio = orm.BLOBCol(default=None)
+    file_document = orm.BLOBCol(default=None)
     emoji = orm.BLOBCol(default=None)
-    editedTime = orm.IntCol(default=None)
-    editedStatus = orm.BoolCol(default=False)
+    edited_time = orm.IntCol(default=None)
+    edited_status = orm.BoolCol(default=False)
     # Connection to UserConfig and Flow table
     user = orm.ForeignKey('UserConfig')
     flow = orm.ForeignKey('Flow')
@@ -119,4 +120,4 @@ class Message(orm.SQLObject):
 
 class Admin(orm.SQLObject):
     username = orm.StringCol(notNone=True, unique=True)
-    hashPassword = orm.StringCol(notNone=True)
+    hash_password = orm.StringCol(notNone=True)

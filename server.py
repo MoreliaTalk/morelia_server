@@ -1,6 +1,7 @@
 """
     Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the full list.
+    Look at the file AUTHORS.md(located at the root of the project) to get the
+    full list.
 
     This file is part of Morelia Server.
 
@@ -33,12 +34,12 @@ from fastapi.staticfiles import StaticFiles
 from starlette.responses import HTMLResponse
 from starlette.templating import Jinja2Templates
 from starlette.websockets import WebSocketDisconnect
-import sqlobject as orm
 # ************** External module end *****************
 
 
 # ************** Morelia module **********************
 from mod import controller
+from mod.db.dbhandler import DBHandler
 from admin import admin
 # ************** Morelia module end ******************
 
@@ -66,14 +67,6 @@ add_logging(logging.getint("level"))
 # Record server start time (UTC)
 server_started = datetime.now()
 
-# Connect to database
-try:
-    connection = orm.connectionForURI(database.get("uri"))
-except Exception as ERROR:
-    logger.exception(str(ERROR))
-finally:
-    orm.sqlhub.processConnection = connection
-
 # Server instance creation
 app = FastAPI()
 logger.info("Start server")
@@ -86,13 +79,16 @@ templates = Jinja2Templates(directory.get("folder"))
 # TODO: Нужно подумать как их компактно хранить
 CLIENTS = []
 
-app.mount("/admin", admin.app)
+# Set dtatabase connection
+db = DBHandler(uri=database.get('uri'))
+db.create()
 
-app.mount(
-    "/static",
-    StaticFiles(directory="static"),
-    name="static"
-)
+app.mount("/admin",
+          admin.app)
+
+app.mount("/static",
+          StaticFiles(directory="static"),
+          name="static")
 
 
 @app.get('/')
@@ -119,7 +115,7 @@ async def websocket_endpoint(websocket: WebSocket):
             # create a "client" object and pass the request body to
             # it as a parameter. The "get_response" method generates
             # a response in JSON-object format.
-            client = controller.ProtocolMethods(data)
+            client = controller.ProtocolMethods(data, database=db)
             response = await websocket.send_bytes(client.get_response())
             logger.info("Response sent to client")
             logger.debug(f"Result of processing: {response}")

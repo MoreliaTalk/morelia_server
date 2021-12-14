@@ -1,6 +1,7 @@
 """
     Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the full list.
+    Look at the file AUTHORS.md(located at the root of the project) to get the
+    full list.
 
     This file is part of Morelia Server.
 
@@ -57,7 +58,7 @@ class Hash:
                  uuid: int | str,
                  salt: bytes = None,
                  key: bytes = None,
-                 hash_password: str = None):
+                 hash_password: str = None) -> None:
 
         if salt is None:
             self.salt = urandom(16)
