@@ -460,9 +460,18 @@ class DBHandler:
         dbquery = self.__read_db(table="Flow",
                                  get_one=True,
                                  uuid=uuid)
-        for var in (flow_type, title, info, owner):
-            if var:
-                setattr(dbquery, 'var', var)
+
+        if flow_type:
+            dbquery.flow_type = flow_type
+
+        if title:
+            dbquery.title = title
+
+        if info:
+            dbquery.info = info
+
+        if owner:
+            dbquery.owner = owner
 
         return "Updated"
 

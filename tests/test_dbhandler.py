@@ -22,7 +22,8 @@
 import unittest
 from loguru import logger
 
-from sqlobject.main import SQLObject, SelectResults
+from sqlobject.main import SQLObject
+from sqlobject.main import SelectResults
 
 from mod.db.dbhandler import DBHandler  # noqa
 from mod.db import models  # noqa
