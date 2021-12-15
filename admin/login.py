@@ -18,8 +18,6 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
-import configparser
-
 from fastapi import APIRouter, Depends, Request
 from fastapi_login import LoginManager
 from fastapi.security import OAuth2PasswordRequestForm
@@ -27,13 +25,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from starlette.responses import HTMLResponse
 from mod import lib
 from mod.db.dbhandler import DBHandler
+from mod.config import ADMIN
 
-# ************** Read "config.ini" ********************
-config = configparser.ConfigParser()
-config.read('config.ini')
-database = config["DATABASE"]
-SECRET_KEY = config["ADMIN"].get("SECRET_KEY")
-# ************** END **********************************
 
 db = DBHandler()
 
@@ -44,7 +37,7 @@ class NotAuthenticatedException(Exception):
     pass
 
 
-login_manager = LoginManager(SECRET_KEY,
+login_manager = LoginManager(ADMIN.get("SECRET_KEY"),
                              token_url="/login/token",
                              use_cookie=True,
                              use_header=False)

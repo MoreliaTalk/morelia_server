@@ -18,21 +18,16 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
-
-import configparser
-
-from loguru import logger
 import sys
 
-from admin import logs
+from loguru import logger
 
-# ************** Read "config.ini" ********************
-config = configparser.ConfigParser()
-config.read('config.ini')
-logging = config['LOGGING']
-expiration_date = logging.get('EXPIRATION_DATE')
-debug_expiration_date = logging.get('DEBUG_EXPIRATION_DATE')
-# ************** END **********************************
+from admin import logs
+from mod.config import LOGGING
+
+
+expiration_date = LOGGING.get('EXPIRATION_DATE')
+debug_expiration_date = LOGGING.get('DEBUG_EXPIRATION_DATE')
 
 
 def add_logging(debug_status: int) -> None:
@@ -70,14 +65,14 @@ def add_logging(debug_status: int) -> None:
     if DEBUG:
         # We connect the output to TTY, level DEBUG
         logger.add(sys.stdout,
-                   format=logging.get("debug"),
+                   format=LOGGING.get("debug"),
                    level="DEBUG",
                    enqueue=True,
                    colorize=True)
 
         # Connect the output to a file, level DEBUG
         logger.add('log/debug.log',
-                   format=logging.get("debug"),
+                   format=LOGGING.get("debug"),
                    level="DEBUG",
                    enqueue=True,
                    colorize=True,
@@ -88,14 +83,14 @@ def add_logging(debug_status: int) -> None:
     else:
         # We connect the output to TTY, level INFO
         logger.add(sys.stdout,
-                   format=logging.get("info"),
+                   format=LOGGING.get("info"),
                    level="INFO",
                    enqueue=True,
                    colorize=True)
 
     # We connect the output to a file, level ERROR
     logger.add('log/error.log',
-               format=logging.get("error"),
+               format=LOGGING.get("error"),
                level="ERROR",
                backtrace=True,
                diagnose=True,
@@ -107,7 +102,7 @@ def add_logging(debug_status: int) -> None:
                compression="zip")
 
     logger.add(logs.loguru_handler,
-               format=logging.get("info"),
+               format=LOGGING.get("info"),
                level="DEBUG",
                enqueue=True,
                catch=True)

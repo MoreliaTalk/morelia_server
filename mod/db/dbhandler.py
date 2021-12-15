@@ -21,7 +21,6 @@
 from collections import namedtuple
 from typing import Type
 from typing import Tuple
-import configparser
 import inspect
 import sys
 
@@ -33,12 +32,7 @@ from sqlobject.main import SelectResults
 from sqlobject import SQLObject
 
 from mod.db import models
-
-# ************** Read "config.ini" ********************
-config = configparser.ConfigParser()
-config.read('config.ini')
-database = config["DATABASE"]
-# ************** END **********************************
+from mod.config import DATABASE
 
 
 class DatabaseReadError(SQLObjectNotFound):
@@ -56,7 +50,7 @@ class DatabaseWriteError(SQLObjectNotFound):
 class DBHandler:
 
     def __init__(self,
-                 uri: str = "sqlite:db_sqlite.db",
+                 uri: str = DATABASE.get('uri'),
                  debug: bool = False,
                  logger: str = None,
                  loglevel: str = None,

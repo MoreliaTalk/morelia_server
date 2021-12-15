@@ -22,7 +22,6 @@
 import json
 import os
 import unittest
-import configparser
 from uuid import uuid4
 
 from loguru import logger
@@ -32,6 +31,7 @@ from mod import lib  # noqa
 from mod.db.dbhandler import DBHandler  # noqa
 from mod.controller import ProtocolMethods # noqa
 from mod.controller import ErrorResponse  # noqa
+from mod.config import SERVER_LIMIT as LIMIT # noqa
 
 # Add path to directory with code being checked
 # to variable 'PATH' to import modules from directory
@@ -54,13 +54,6 @@ PING_PONG = os.path.join(FIXTURES_PATH, "ping_pong.json")
 ERRORS = os.path.join(FIXTURES_PATH, "errors.json")
 NON_VALID_ERRORS = os.path.join(FIXTURES_PATH, "non_valid_errors.json")
 ERRORS_ONLY_TYPE = os.path.join(FIXTURES_PATH, "errors_only_type.json")
-
-
-# ************** Read "config.ini" ********************
-config = configparser.ConfigParser()
-config.read('config.ini')
-limit = config['SERVER_LIMIT']
-# ************** END **********************************
 
 
 class TestCheckAuthToken(unittest.TestCase):
@@ -405,13 +398,13 @@ class TestAllMessages(unittest.TestCase):
                                 "654321"],
                          flow_type="chat",
                          owner="654321")
-        for item in range(limit.getint("messages") + 10):
+        for item in range(LIMIT.getint("messages") + 10):
             self.db.add_message(flow_uuid="07d949",
                                 user_uuid="123456",
                                 message_uuid=str(uuid4().int),
                                 text=f"Hello{item}",
                                 time=item)
-        for item in range(limit.getint("messages") - 10):
+        for item in range(LIMIT.getint("messages") - 10):
             self.db.add_message(flow_uuid="07d950",
                                 user_uuid="654321",
                                 message_uuid=str(uuid4().int),
