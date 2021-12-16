@@ -18,8 +18,6 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
-import configparser
-
 from fastapi import Depends
 from fastapi.applications import FastAPI
 from fastapi.requests import Request
@@ -32,11 +30,6 @@ from . import login
 from . import logs
 from . import control as manage
 
-# ************** Read "config.ini" ********************
-config = configparser.ConfigParser()
-config.read('config.ini')
-database = config["DATABASE"]
-# ************** END **********************************
 
 app = FastAPI()
 

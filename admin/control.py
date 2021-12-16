@@ -18,7 +18,6 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
-import configparser
 from uuid import uuid4
 
 from fastapi import APIRouter
@@ -28,11 +27,6 @@ from starlette.responses import HTMLResponse
 
 from mod.db.dbhandler import DBHandler
 
-# ************** Read "config.ini" ********************
-config = configparser.ConfigParser()
-config.read('config.ini')
-database = config["DATABASE"]
-# ************** END **********************************
 
 router = APIRouter()
 

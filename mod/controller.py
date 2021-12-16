@@ -23,7 +23,6 @@ import json
 from time import time
 from typing import Tuple, Type
 from uuid import uuid4
-import configparser
 from collections import namedtuple
 
 from pydantic import ValidationError
@@ -36,12 +35,7 @@ from mod.db.dbhandler import DBHandler
 from mod.db.dbhandler import DatabaseWriteError
 from mod.db.dbhandler import DatabaseReadError
 from mod.db.dbhandler import DatabaseAccessError
-
-# ************** Read "config.ini" ********************
-config = configparser.ConfigParser()
-config.read('config.ini')
-limit = config['SERVER_LIMIT']
-# ************** END **********************************
+from mod.config import SERVER_LIMIT as LIMIT
 
 
 class ErrorResponse:
@@ -413,19 +407,19 @@ class ProtocolMethods():
             errors = ErrorResponse("NOT_FOUND",
                                    str(flow_error))
         else:
-            if MESSAGE_COUNT <= limit.getint("messages"):
+            if MESSAGE_COUNT <= LIMIT.getint("messages"):
                 flow.append(api.FlowResponse(uuid=flow_uuid,
                                              message_start=message_start,
                                              message_end=message_end))
                 message = get_messages(dbquery,
-                                       limit.getint("messages"))
+                                       LIMIT.getint("messages"))
                 errors = ErrorResponse("OK")
                 logger.success("\'_all_messages\' executed successfully")
             else:
                 flow.append(api.FlowResponse(uuid=flow_uuid,
                                              message_start=message_start,
                                              message_end=MESSAGE_COUNT))
-                if message_volume <= limit.getint("messages"):
+                if message_volume <= LIMIT.getint("messages"):
                     message = get_messages(dbquery,
                                            request.data.flow[0].message_end,
                                            request.data.flow[0].message_start)
@@ -435,7 +429,7 @@ class ProtocolMethods():
                     errors = ErrorResponse("FORBIDDEN",
                                            "Requested more messages"
                                            f" than server limit"
-                                           f" (<{limit.getint('messages')})")
+                                           f" (<{LIMIT.getint('messages')})")
 
         data = api.DataResponse(time=self.get_time,
                                 flow=flow,
@@ -533,7 +527,7 @@ class ProtocolMethods():
         users_volume = len(request.data.user)
         user = []
 
-        if users_volume <= limit.getint("users"):
+        if users_volume <= LIMIT.getint("users"):
             for element in request.data.user[1:]:
                 try:
                     dbquery = self._db.get_user_by_uuid(element.uuid)
@@ -552,7 +546,7 @@ class ProtocolMethods():
             logger.success("\'_user_info\' executed successfully")
         else:
             errors = ErrorResponse("FORBIDDEN",
-                                   f"Requested more {limit.get('users')}"
+                                   f"Requested more {LIMIT.get('users')}"
                                    " users than server limit")
 
         data = api.DataResponse(time=self.get_time,
