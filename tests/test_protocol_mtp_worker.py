@@ -26,7 +26,7 @@ from uuid import uuid4
 
 from loguru import logger
 
-from mod import api  # noqa
+from mod.protocol.mtp import api
 from mod import lib  # noqa
 from mod.db.dbhandler import DBHandler  # noqa
 from mod.controller import ProtocolMethods # noqa
