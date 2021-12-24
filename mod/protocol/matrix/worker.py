@@ -21,30 +21,16 @@
 import json
 
 from mod.db.dbhandler import DBHandler
-from mod.protocol.mtp.worker import MTProtocol
-from mod.protocol.matrix.worker import MatrixProtocol
 
 
-class MainHandler:
+class MatrixProtocol:
     def __init__(self,
                  request,
-                 database: DBHandler,
-                 protocol: str = 'mtp') -> None:
+                 database: DBHandler):
         self.request = request
-        self.database = database
-        self.protocol = protocol
+        self._db = database
 
-        if protocol == 'matrix':
-            self.matrix_handler()
-        else:
-            self.mtp_handler()
-
-    def mtp_handler(self) -> json:
-        result = MTProtocol(self.request,
-                            self.database)
-        return result.get_response()
-
-    def matrix_handler(self) -> json:
-        result = MatrixProtocol(self.request,
-                                self.database)
-        return result.get_response()
+    @staticmethod
+    def get_response() -> json:
+        result = "Method not worked"
+        return result

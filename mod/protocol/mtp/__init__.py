@@ -18,33 +18,3 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
-import json
-
-from mod.db.dbhandler import DBHandler
-from mod.protocol.mtp.worker import MTProtocol
-from mod.protocol.matrix.worker import MatrixProtocol
-
-
-class MainHandler:
-    def __init__(self,
-                 request,
-                 database: DBHandler,
-                 protocol: str = 'mtp') -> None:
-        self.request = request
-        self.database = database
-        self.protocol = protocol
-
-        if protocol == 'matrix':
-            self.matrix_handler()
-        else:
-            self.mtp_handler()
-
-    def mtp_handler(self) -> json:
-        result = MTProtocol(self.request,
-                            self.database)
-        return result.get_response()
-
-    def matrix_handler(self) -> json:
-        result = MatrixProtocol(self.request,
-                                self.database)
-        return result.get_response()
