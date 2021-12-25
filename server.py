@@ -112,7 +112,8 @@ async def websocket_endpoint(websocket: WebSocket):
             client_request = MainHandler(request=data,
                                          database=db,
                                          protocol='mtp')
-            response = await websocket.send_bytes(client_request)
+            response = await websocket.send_json(client_request.get_response(),
+                                                 mode="bytes")
             logger.info("Response sent to client")
             logger.debug(f"Result of processing: {response}")
         # After disconnecting the client (by the decision of the client,
