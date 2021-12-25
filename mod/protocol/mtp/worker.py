@@ -76,13 +76,13 @@ class MTPErrorResponse:
             time_ = int(time())
             detail = str(ERROR)
         else:
-            logger.debug(f"Status code({catch_error.code.value}):",
-                         f" {catch_error.status.value}")
-            code = catch_error.code.value
-            status = catch_error.status.value
+            logger.debug(f"Status code({catch_error.code}):",
+                         f" {catch_error.status}")
+            code = catch_error.code
+            status = catch_error.status
             time_ = int(time())
             if self.detail is None:
-                detail = catch_error.detail.value
+                detail = catch_error.detail
             else:
                 detail = self.detail
 
@@ -179,9 +179,11 @@ class MTProtocol:
         of an instance of ProtocolMethod class.
         """
         if response is None:
-            return self.response.json()
+            result = self.response.json()
+            return result
         else:
-            return response.json()
+            result = response.json()
+            return result
 
     def _check_login(self,
                      login: str) -> bool:
