@@ -35,16 +35,19 @@ class MainHandler:
         self.protocol = protocol
 
         if protocol == 'matrix':
-            self.matrix_handler()
+            self.response = self.matrix_handler()
         else:
-            self.mtp_handler()
+            self.response = self.mtp_handler()
+
+    def get_response(self):
+        return self.response
 
     def mtp_handler(self) -> json:
         result = MTProtocol(self.request,
-                            self.database)
-        return result.get_response()
+                            self.database).get_response()
+        return result
 
     def matrix_handler(self) -> json:
         result = MatrixProtocol(self.request,
-                                self.database)
-        return result.get_response()
+                                self.database).get_response()
+        return result
