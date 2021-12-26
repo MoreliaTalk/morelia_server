@@ -49,13 +49,11 @@ class DatabaseWriteError(SQLObjectNotFound):
 class DBHandler:
 
     def __init__(self,
-                 uri: str = None,
+                 uri: str = 'sqlite:/:memory:',
                  debug: bool = False,
                  logger: str = None,
                  loglevel: str = None,
                  path_to_models: str = "mod.db.models") -> None:
-        if uri is None:
-            uri = 'sqlite:/:memory:'
 
         if debug and logger and loglevel:
             self._debug = "1"
