@@ -37,7 +37,7 @@ from starlette.websockets import WebSocketDisconnect
 
 
 # ************** Morelia module **********************
-from mod import controller
+from mod.controller import MainHandler
 from mod.db.dbhandler import DBHandler
 from admin import admin
 from mod.config import LOGGING
@@ -109,8 +109,11 @@ async def websocket_endpoint(websocket: WebSocket):
             # create a "client" object and pass the request body to
             # it as a parameter. The "get_response" method generates
             # a response in JSON-object format.
-            client = controller.ProtocolMethods(data, database=db)
-            response = await websocket.send_bytes(client.get_response())
+            client_request = MainHandler(request=data,
+                                         database=db,
+                                         protocol='mtp')
+            response = await websocket.send_json(client_request.get_response(),
+                                                 mode="bytes")
             logger.info("Response sent to client")
             logger.debug(f"Result of processing: {response}")
         # After disconnecting the client (by the decision of the client,

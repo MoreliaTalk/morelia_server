@@ -32,7 +32,6 @@ from sqlobject.main import SelectResults
 from sqlobject import SQLObject
 
 from mod.db import models
-from mod.config import DATABASE
 
 
 class DatabaseReadError(SQLObjectNotFound):
@@ -50,7 +49,7 @@ class DatabaseWriteError(SQLObjectNotFound):
 class DBHandler:
 
     def __init__(self,
-                 uri: str = DATABASE.get('uri'),
+                 uri: str = 'sqlite:/:memory:',
                  debug: bool = False,
                  logger: str = None,
                  loglevel: str = None,

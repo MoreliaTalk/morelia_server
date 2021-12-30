@@ -18,8 +18,9 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
+from collections import namedtuple
 from http import HTTPStatus
-from enum import Enum, IntEnum
+from enum import IntEnum
 
 
 class ServerStatus(IntEnum):
@@ -43,7 +44,10 @@ class ServerStatus(IntEnum):
                                'Full description: Invalid SSL Certificate')
 
 
-def check_error_pattern(status: str) -> Enum:
+def check_error_pattern(status: str) -> namedtuple:
+    CatchError = namedtuple('CatchError', ['code',
+                                           'status',
+                                           'detail'])
     try:
         getattr(HTTPStatus, status).value
     except AttributeError:
@@ -58,12 +62,12 @@ def check_error_pattern(status: str) -> Enum:
 
     if http_status_not_found:
         try:
-            obj = getattr(ServerStatus, status)
+            getattr(ServerStatus, status)
         except AttributeError:
             raise AttributeError("Received a non-existent error status")
         else:
             obj = getattr(ServerStatus, status)
 
-    return Enum("Error", {"code": obj.value,
-                          "status": obj.phrase,
-                          "detail": obj.description})
+    return CatchError(obj.value,
+                      obj.phrase,
+                      obj.description)

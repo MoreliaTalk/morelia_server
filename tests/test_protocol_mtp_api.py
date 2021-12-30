@@ -25,6 +25,8 @@ from loguru import logger
 
 from pydantic.error_wrappers import ValidationError
 
+from mod.protocol.mtp import api
+
 # Add path to directory with code being checked
 # to variable 'PATH' to import modules from directory
 # above the directory with tests.
@@ -37,8 +39,6 @@ WRONG_RESPONSE = os.path.join(FIXTURES_PATH, 'wrong_response.json')
 WRONG_DATA_ERRORS = os.path.join(FIXTURES_PATH, 'wrong_data_errors.json')
 WRONG_FLOW_MESSAGE = os.path.join(FIXTURES_PATH, 'wrong_flow_message.json')
 sys.path.append(os.path.split(BASE_PATH)[0])
-
-from mod import api  # noqa
 
 
 class TestApiValidation(unittest.TestCase):

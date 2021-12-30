@@ -1,5 +1,5 @@
 """
-    Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+    Copyright (c) 2021 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
     Look at the file AUTHORS.md(located at the root of the project) to get the
     full list.
 
@@ -21,33 +21,16 @@
 import json
 
 from mod.db.dbhandler import DBHandler
-from mod.protocol.mtp.worker import MTProtocol
-from mod.protocol.matrix.worker import MatrixProtocol
 
 
-class MainHandler:
+class MatrixProtocol:
     def __init__(self,
                  request,
-                 database: DBHandler,
-                 protocol: str = 'mtp') -> None:
+                 database: DBHandler):
         self.request = request
-        self.database = database
-        self.protocol = protocol
+        self._db = database
 
-        if protocol == 'matrix':
-            self.response = self.matrix_handler()
-        else:
-            self.response = self.mtp_handler()
-
-    def get_response(self):
-        return self.response
-
-    def mtp_handler(self) -> json:
-        result = MTProtocol(self.request,
-                            self.database).get_response()
-        return result
-
-    def matrix_handler(self) -> json:
-        result = MatrixProtocol(self.request,
-                                self.database).get_response()
+    @staticmethod
+    def get_response() -> json:
+        result = "Method not worked"
         return result
