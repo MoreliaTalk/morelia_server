@@ -20,6 +20,7 @@
 """
 
 # ************** Standart module *********************
+import os
 from datetime import datetime
 from json import JSONDecodeError
 # ************** Standart module end *****************
@@ -68,15 +69,24 @@ logger.info("Start server")
 # Specifying where to load HTML page templates
 templates = Jinja2Templates(DIRECTORY.get("folder"))
 
+# Search and filtered static files path
+main_path = os.getcwd()
+base_path = os.path.split(main_path)
+if base_path[1] == 'tests':
+    file_static = os.path.join(base_path[0], 'static')
+else:
+    file_static = os.path.join(main_path, 'static')
+
 # Set database connection
-db = DBHandler(uri=DATABASE.get('uri'))
-db.create()
+db_connect = DBHandler(uri=DATABASE.get('uri'))
+db_connect.create_table()
+
 
 app.mount("/admin",
           admin.app)
 
 app.mount("/static",
-          StaticFiles(directory="static"),
+          StaticFiles(directory=file_static),
           name="static")
 
 
@@ -104,7 +114,7 @@ async def websocket_endpoint(websocket: WebSocket):
             # it as a parameter. The "get_response" method generates
             # a response in JSON-object format.
             client_request = MainHandler(request=data,
-                                         database=db,
+                                         database=db_connect,
                                          protocol='mtp')
             response = await websocket.send_json(client_request.get_response(),
                                                  mode="bytes")
