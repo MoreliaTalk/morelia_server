@@ -43,8 +43,8 @@ class TestCheckError(unittest.TestCase):
 
     def test_check_HTTPStatus_pattern(self):
         result = error.check_error_pattern(self.OK)
-        self.assertEqual(result.code.value, 200)
-        self.assertEqual(result.status.value, self.OK)
+        self.assertEqual(result.code, 200)
+        self.assertEqual(result.status, self.OK)
 
     def test_check_wrong_type_status(self):
         self.assertRaises(TypeError,
@@ -58,5 +58,5 @@ class TestCheckError(unittest.TestCase):
 
     def test_check_ServerStatus_pattern(self):
         result = error.check_error_pattern(self.UNKNOWN)
-        self.assertEqual(result.code.value, 520)
-        self.assertEqual(result.status.value, "Unknown Error")
+        self.assertEqual(result.code, 520)
+        self.assertEqual(result.status, "Unknown Error")

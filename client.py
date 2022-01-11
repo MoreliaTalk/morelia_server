@@ -42,7 +42,7 @@ add_logging(20)
 # URL and Port
 LOCALHOST = 'ws://localhost:8000/ws'
 
-# Registration infirmation from superuser
+# Registration information from superuser
 user_login = 'login'
 user_password = 'password'
 salt = b'salt'
@@ -121,7 +121,6 @@ ALL_FLOW = {
 # Chat websocket
 def send_message(message: Union[dict, str] = AUTH, 
                  uri: str = LOCALHOST) -> bytes:
-    result = b'None'
     """Sending a message via websockets, with a response
 
     Args:
@@ -131,6 +130,7 @@ def send_message(message: Union[dict, str] = AUTH,
     Returns:
         message [bytes]: Response as a byte object.
     """
+    result = b'None'
     ws = websocket.WebSocket()
     try:
         ws.connect(uri)

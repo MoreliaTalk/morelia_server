@@ -43,7 +43,7 @@ class Hash:
 
         key (Any, optional): Additional argument. Defaults to None.
             If value of 'key' parameter is 'None' then function
-            will generated it.
+            will generate it.
 
         hash_password (str, optional): password hash (previously calculated).
 

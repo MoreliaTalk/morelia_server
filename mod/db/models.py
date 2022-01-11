@@ -26,18 +26,18 @@ class UserConfig(orm.SQLObject):
     about user and his settings.
 
     Args:
-        uuid (str, required):
-        login (str, required):
-        password (str, required):
-        hash_password (str, optional)
-        username (str, optional):
+        uuid (str, required, unique)
+        login (str, required)
+        password (str, required)
+        hash_password (str, optional): default None
+        username (str, optional): default None
         is_bot (bool, optional): default False
-        auth_id (str, optional):
-        email (str, optional):
-        avatar (str, optional):
-        bio (str, optional):
-        salt (str, optional):
-        key (str, optional):
+        auth_id (str, optional): default None
+        email (str, optional): default None
+        avatar (str, optional): default None
+        bio (str, optional): default None
+        salt (str, optional): default None
+        key (str, optional): default None
 
     Returns:
         None
@@ -64,11 +64,11 @@ class Flow(orm.SQLObject):
     about threads and their types (chat, channel, group).
 
     Args:
-        uuid (str, required):
-        time_created (int, optional):
-        flow_type (str, optional):
-        title (str, optional):
-        info (str, optional):
+        uuid (str, required, unique)
+        time_created (int, optional): default None
+        flow_type (str, optional): default None
+        title (str, optional): default None
+        info (str, optional): default None
 
     Returns:
         None
@@ -89,16 +89,16 @@ class Message(orm.SQLObject):
     about user messages.
 
     Args:
-        uuid (str, required):
-        text (str, optional):
-        time (int, optional):
-        file_picture (byte, optional):
-        file_video (byte, optional):
-        file_audio (byte, optional):
-        file_document (byte, optional):
-        emoji (str, optional):
-        edited_time (int, optional):
-        edited_status (bool, optional):
+        uuid (str, required, unique):
+        text (str, optional): default None
+        time (int, optional): default None
+        file_picture (byte, optional): default None
+        file_video (byte, optional): default None
+        file_audio (byte, optional): default None
+        file_document (byte, optional): default None
+        emoji (str, optional): default None
+        edited_time (int, optional): default None
+        edited_status (bool, optional): default False
 
     Returns:
         None
@@ -119,5 +119,15 @@ class Message(orm.SQLObject):
 
 
 class Admin(orm.SQLObject):
+    """Generates a Admin table containing information
+        about users with administrators role.
+
+        Args:
+            username (str, required, unique)
+            hash_password (str, required)
+
+        Returns:
+            None
+        """
     username = orm.StringCol(notNone=True, unique=True)
     hash_password = orm.StringCol(notNone=True)

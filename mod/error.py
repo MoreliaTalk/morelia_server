@@ -24,7 +24,7 @@ from enum import IntEnum
 
 
 class ServerStatus(IntEnum):
-    """Server status code and reason phrases
+    """Additional server status code and reason phrases
     """
     def __new__(cls, value, phrase, description=''):
         obj = int.__new__(cls, value)

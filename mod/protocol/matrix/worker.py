@@ -31,6 +31,6 @@ class MatrixProtocol:
         self._db = database
 
     @staticmethod
-    def get_response() -> json:
+    def get_response() -> str:
         result = "Method not worked"
         return result

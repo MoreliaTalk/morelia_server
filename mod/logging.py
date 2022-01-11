@@ -47,13 +47,13 @@ def add_logging(debug_status: int) -> None:
 
     Args:
         debug_status (int, requires):
-        CRITICAL-50;
-        ERROR-40;
-        WARNING-30;
-        SUCCES-25;
-        INFO-20;
-        DEBUG-10;
-        TRACE-5.
+        50 - CRITICAL;
+        40 - ERROR;
+        30 - WARNING;
+        25 - SUCCESS;
+        20 - INFO;
+        10 - DEBUG;
+        5 - TRACE.
 
     Returns:
         None

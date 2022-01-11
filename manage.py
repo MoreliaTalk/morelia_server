@@ -43,7 +43,7 @@ def cli():
 def db_create():
     start_time = process_time()
     db = dbhandler.DBHandler(uri=DATABASE.get('uri'))
-    db.create()
+    db.create_table()
     click.echo(f'Table is created at: '
                f'{process_time() - start_time} sec.')
 
@@ -52,7 +52,7 @@ def db_create():
 def db_delete():
     start_time = process_time()
     db = dbhandler.DBHandler(uri=DATABASE.get('uri'))
-    db.delete()
+    db.delete_table()
     click.echo(f'Table is deleted at: '
                f'{process_time() - start_time} sec.')
 
@@ -66,7 +66,7 @@ def create_superuser():
         db.add_user(uuid=user_uuid,
                     login="login",
                     password="password",
-                    hashPassword=hash_password,
+                    hash_password=hash_password,
                     username="superuser",
                     salt=b"salt",
                     key=b"key")
@@ -82,6 +82,7 @@ def create_flow():
     try:
         new_user = db.get_user_by_uuid(uuid=user_uuid)
         new_flow = db.add_flow(uuid=str(uuid4().hex),
+                               users=[user_uuid],
                                time_created=int(time()),
                                flow_type="group",
                                title="Test",
