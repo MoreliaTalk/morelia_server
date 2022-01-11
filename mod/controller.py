@@ -54,35 +54,3 @@ class MainHandler:
         result = MatrixProtocol(self.request,
                                 self.database).get_response()
         return result
-
-
-class Clients:
-
-    def __init__(self,
-                 scope = None) -> None:
-        self._scope = scope
-        self.clients = []
-        self.picker()
-        self.time_to_live = 600 # second
-
-    def picker(self) -> None:
-        Client = namedtuple("Client", ["id",
-                                       "scope",
-                                       "add_time"])
-        new_id = secrets.token_hex(32)
-        new_client = Client(id=new_id,
-                            scope=self._scope,
-                            add_time=time())
-        self.clients.extend(new_client)
-
-    def get_silent_client(self) -> tuple:
-        _clients = []
-        for client in self.clients:
-            if client.add_time < time() + self.time_to_live:
-                client_index = self.clients.index(client)
-            _clients.extend(self.clients[client_index])
-        return tuple(_clients)
-
-    def delete_client(self,
-                      client):
-        pass

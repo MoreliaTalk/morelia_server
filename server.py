@@ -68,12 +68,7 @@ logger.info("Start server")
 # Specifying where to load HTML page templates
 templates = Jinja2Templates(DIRECTORY.get("folder"))
 
-
-# Save clients session
-# TODO: Нужно подумать как их компактно хранить
-CLIENTS = []
-
-# Set dtatabase connection
+# Set database connection
 db = DBHandler(uri=DATABASE.get('uri'))
 db.create()
 
@@ -95,7 +90,6 @@ def home_page(request: Request):
 async def websocket_endpoint(websocket: WebSocket):
     # Waiting for the client to connect via websockets
     await websocket.accept()
-    CLIENTS.append(websocket)
     logger.info("".join(("Clients information: ",
                          "host: ", str(websocket.client.host),
                          " port: ", str(websocket.client.port))))
@@ -121,21 +115,18 @@ async def websocket_endpoint(websocket: WebSocket):
         # will not be able to connect.
         except WebSocketDisconnect as STATUS:
             logger.debug(f"Disconnection status: {str(STATUS)}")
-            CLIENTS.remove(websocket)
             break
         except (RuntimeError, JSONDecodeError) as ERROR:
             CODE = 1002
             logger.exception(f"Runtime or Decode error: {str(ERROR)}")
             await websocket.close(CODE)
             logger.info(f"Close with code: {CODE}")
-            CLIENTS.remove(websocket)
             break
         else:
             if websocket.client_state.value == 0:
                 CODE = 1000
                 # "code=1000" - normal session termination
                 await websocket.close(CODE)
-                CLIENTS.remove(websocket)
                 logger.info(f"Close with code: {CODE}")
 
 
