@@ -29,6 +29,14 @@ from mod.protocol.matrix.worker import MatrixProtocol
 
 
 class MainHandler:
+    """
+    According to the selected protocol sends a request to the handler
+
+    Args:
+        request (object): JSON request from websocket client
+        database (DBHandler): object - database connection point
+        protocol (str): name of using protocol
+    """
     def __init__(self,
                  request,
                  database: DBHandler,
