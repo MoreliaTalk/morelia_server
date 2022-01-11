@@ -24,34 +24,46 @@ Language [EN](./README_ENG.md), [RU](./README.md)
 
 ## Repository description ##
 
-* /mod
-  * api.py - module is responsible for description of API, as well as validation of data.
-  * error.py - module is responsible for storing error codes.
-  * controller.py - module is responsible for implementing methods described in [Morelia Protocol](https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md).
-  * lib.py - module is responsible for hashing password, comparing password with its hash sum, and creating a hash for auth_id.
-  * models.py - module is responsible for describing database tables to work through ORM.
-  * logging.py - logging configuration module.
-* /templates - templates for displaying server statistics in browser.
-  * base.html - base template with basic elements of menu, it is implemented in every working template.
-  * index.html - working homepage template.
-  * status.thml - working page template with status of server.
-* server.py - basic server code.
-* manage.py - migration manager for database (creating and deleting database tables).
-* /tests
-  * fixtures/
-    * api.json - json-file with pre-prepared data, to conduct tests.
-  * test_api.py - validation tests.
-  * test_controller.py - tests to check class that is responsible for processing protocol methods.
-  * test_lib.py - hash function tests.
-* debug_server.py - A wrapper for server.py to debug through a utility `pdb`.
-* example_config.ini - file containing the example server settings, just rename it to `config.ini` before starting the server.
-* client.py - mini client to check the server operation.
+*admin
+  * /templates - templates of admin pages
+  * admin.py
+  * control.py
+  * login.py
+  * logs.py
+*mod
+  * /db
+    * dbhandler.py - module is designed to perform queries to the database
+    * models.py - module is responsible for the description of database tables to work through OPM.
+  *protocol
+    * /matrix
+      * api.py - module is responsible for the description of API, as well as the validation of data.
+      * worker.py - implementation of the protocol
+    *mtp
+      * api.py - module responsible for API description, as well as data validation.
+      * worker.py - module is responsible for implementing the methods described in [Morelia Protocol](https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md).
+    * error.py - module is responsible for checking and generating responses with error codes.
+    * controller.py - module is responsible for processing requests according to the protocol type.
+    * lib.py - module is responsible for password hashing, comparing password with its hash sum, creating hash for auth_id.
+    * logging.py - module configures logging.
+    * config.py - module reads settings from config.ini
+* /static - 
+* server.py - main server code
+* manage.py - database migration manager (creating and deleting database tables)
+*tests
+  * fixtures/ - json-files with preliminarily prepared data for tests
+  * config.ini - server config for the tests
+  * test_*.py - tests
+* debug_server.py - wrapper for server.py to debug through the `pdb` utility.
+* example_config.ini - file containing example server settings, just rename it to `config.ini` before running the server.
+* client.py - mini-customer to test the server.
+
+Translated with www.DeepL.com/Translator (free version)
 
 ## Installing ##
 
 Install [Python](https://www.python.org/downloads/) version 3.8 or higher.
 
-Download and install latest version [git](https://git-scm.com/downloads).
+Download and install the latest version [git](https://git-scm.com/downloads).
 
 If you need a GUI, install [GitHub Desktop](https://desktop.github.com/).
 
@@ -166,7 +178,7 @@ Additional parameters that can be sent to server:
 
 `--loop <str>` - Set the event loop implementation. The uvloop implementation provides greater performance, but is not compatible with Windows or PyPy. Options: 'auto', 'asyncio', 'uvloop'. Default: 'auto'.
 
-`--http <str>` - Set the HTTP protocol implementation. The httptools implementation provides greater performance, but it not compatible with PyPy, and requires compilation on Windows. Options: 'auto', 'h11', 'httptools'. Default: 'auto'.
+`--http <str>` - Set the HTTP protocol implementation. The httptools implementation provides greater performance, but it is not compatible with PyPy, and requires compilation on Windows. Options: 'auto', 'h11', 'httptools'. Default: 'auto'.
 
 `--ws <str>` - Set the WebSockets protocol implementation. Either of the websockets and wsproto packages are supported. Use 'none' to deny all websocket requests. Options: 'auto', 'none', 'websockets', 'wsproto'. Default: 'auto'.
 
@@ -222,7 +234,7 @@ If no arguments are passed to the function, the default is to send an AUTH messa
 
 ## Creating a pool-request to make changes to development branch Morelia Server ##
 
-Getting latest changes from development branch Morelia Server
+Getting the latest changes from development branch Morelia Server
 
 ```cmd
 git pull upstream develop
@@ -246,7 +258,7 @@ Library is used [loguru](https://github.com/Delgan/loguru)
 
 Logging levels you can use in your code:
 
-```py
+```
 Level name | Logger method
 
 DEBUG      | logger.debug()
