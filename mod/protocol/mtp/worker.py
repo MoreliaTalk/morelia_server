@@ -164,7 +164,7 @@ class MTProtocol:
             dbquery = self._db.get_user_by_uuid(uuid)
             logger.success("User was found in the database")
         except DatabaseReadError:
-            message = "User wasn't found in the database"
+            message = "User was not authenticated"
             logger.debug(message)
             return Result(False,
                           message)

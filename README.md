@@ -148,7 +148,7 @@ pipenv run pipenv run python ./manage.py --db delete
 Добавляем администратора в созданную БД:
 
 ```cmd
-python ./manage.py --table superuser
+python ./manage.py superuser-create
 ```
 
 Дополнительно можно создать `flow` с типом группа:

@@ -66,7 +66,7 @@ GET_UPDATE = {
     }
 
 AUTH = {
-    "type": "auth",
+    "type": "authentication",
     "data": {
         "user": [{
             "password": user_password,
@@ -84,6 +84,7 @@ ADD_FLOW = {
     "type": "add_flow",
     "data": {
         "flow": [{
+            "uuid": None,
             "type": "group",
             "title": "title",
             "info": "info",
