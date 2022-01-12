@@ -48,6 +48,7 @@ user_password = 'password'
 salt = b'salt'
 key = b'key'
 uuid = '123456789'
+auth_id = "6989f3f8d1b9c2fdf0bb858a5953d07c"
 
 GET_UPDATE = {
     "type": "get_update",
@@ -55,7 +56,7 @@ GET_UPDATE = {
         "time": 111,
         "user": [{
             "uuid": uuid,
-            "auth_id": "auth_id",
+            "auth_id": auth_id,
             }],
         "meta": None
         },
