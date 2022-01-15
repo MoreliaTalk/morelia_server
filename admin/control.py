@@ -26,11 +26,12 @@ from starlette.requests import Request
 from starlette.responses import HTMLResponse
 
 from mod.db.dbhandler import DBHandler
+from mod.config import DATABASE
 
 
 router = APIRouter()
 
-db = DBHandler()
+db_connect = DBHandler(DATABASE.get('URI'))
 
 
 @router.post("/manage/delete_user")
@@ -38,17 +39,17 @@ def delete_user(request: Request,
                 uuid: str = Form(...)):
     fake_uuid = str(uuid4().int)
 
-    db.update_user(uuid=uuid,
-                   login="User deleted",
-                   password=fake_uuid,
-                   hash_password=fake_uuid,
-                   username="User deleted",
-                   auth_id=fake_uuid,
-                   email="",
-                   avatar=b"",
-                   bio="deleted",
-                   key=b"deleted",
-                   salt=b"deleted")
+    db_connect.update_user(uuid=uuid,
+                           login="User deleted",
+                           password=fake_uuid,
+                           hash_password=fake_uuid,
+                           username="User deleted",
+                           auth_id=fake_uuid,
+                           email="",
+                           avatar=b"",
+                           bio="deleted",
+                           key=b"deleted",
+                           salt=b"deleted")
 
     response = HTMLResponse("""<script>
                             window.document.location.href = "./"

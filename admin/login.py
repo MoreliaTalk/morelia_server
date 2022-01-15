@@ -18,17 +18,20 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import Request
 from fastapi_login import LoginManager
 from fastapi.security import OAuth2PasswordRequestForm
-
 from starlette.responses import HTMLResponse
+
 from mod import lib
 from mod.db.dbhandler import DBHandler
+from mod.config import DATABASE
 from mod.config import ADMIN
 
 
-db = DBHandler()
+db_connect = DBHandler(DATABASE.get('URI'))
 
 router = APIRouter()
 
@@ -47,7 +50,7 @@ login_manager.not_authenticated_exception = NotAuthenticatedException
 
 @login_manager.user_loader()
 def get_admin_user_data(username: str):
-    data = db.get_admin_by_name(username=username)
+    data = db_connect.get_admin_by_name(username=username)
     if data.count():
         return data[0]
 

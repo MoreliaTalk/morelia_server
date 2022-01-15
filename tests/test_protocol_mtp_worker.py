@@ -63,7 +63,7 @@ class TestCheckAuthToken(unittest.TestCase):
         cls.db = DBHandler(uri="sqlite:/:memory:")
 
     def setUp(self):
-        self.db.create()
+        self.db.create_table()
         self.db.add_user(uuid="123456",
                          login="login",
                          password="password",
@@ -71,7 +71,7 @@ class TestCheckAuthToken(unittest.TestCase):
         self.test = api.Request.parse_file(SEND_MESSAGE)
 
     def tearDown(self):
-        self.db.delete()
+        self.db.delete_table()
         del self.test
 
     def test_check_auth(self):
@@ -109,7 +109,7 @@ class TestCheckLogin(unittest.TestCase):
         cls.db = DBHandler(uri="sqlite:/:memory:")
 
     def setUp(self):
-        self.db.create()
+        self.db.create_table()
         self.db.add_user(uuid="123456",
                          login="login",
                          password="password",
@@ -117,7 +117,7 @@ class TestCheckLogin(unittest.TestCase):
         self.test = api.Request.parse_file(REGISTER_USER)
 
     def tearDown(self):
-        self.db.delete()
+        self.db.delete_table()
         del self.test
 
     def test_check_found_login(self):
@@ -140,11 +140,11 @@ class TestRegisterUser(unittest.TestCase):
         cls.db = DBHandler(uri="sqlite:/:memory:")
 
     def setUp(self):
-        self.db.create()
+        self.db.create_table()
         self.test = api.Request.parse_file(REGISTER_USER)
 
     def tearDown(self):
-        self.db.delete()
+        self.db.delete_table()
         del self.test
 
     def test_user_created(self):
@@ -206,7 +206,7 @@ class TestGetUpdate(unittest.TestCase):
         cls.db = DBHandler(uri="sqlite:/:memory:")
 
     def setUp(self):
-        self.db.create()
+        self.db.create_table()
         self.db.add_user(uuid="123456",
                          login="login",
                          password="password",
@@ -264,7 +264,7 @@ class TestGetUpdate(unittest.TestCase):
         self.test = api.Request.parse_file(GET_UPDATE)
 
     def tearDown(self):
-        self.db.delete()
+        self.db.delete_table()
         del self.test
 
     def test_update(self):
@@ -312,7 +312,7 @@ class TestSendMessage(unittest.TestCase):
         cls.db = DBHandler(uri="sqlite:/:memory:")
 
     def setUp(self):
-        self.db.create()
+        self.db.create_table()
         self.db.add_user(uuid="123456",
                          login="login",
                          password="password",
@@ -325,7 +325,7 @@ class TestSendMessage(unittest.TestCase):
         self.test = api.Request.parse_file(SEND_MESSAGE)
 
     def tearDown(self):
-        self.db.delete()
+        self.db.delete_table()
         del self.test
 
     def test_send_message(self):
@@ -379,7 +379,7 @@ class TestAllMessages(unittest.TestCase):
         cls.db = DBHandler(uri="sqlite:/:memory:")
 
     def setUp(self):
-        self.db.create()
+        self.db.create_table()
         self.db.add_user(uuid="123456",
                          login="login",
                          password="password",
@@ -418,7 +418,7 @@ class TestAllMessages(unittest.TestCase):
         self.test = api.Request.parse_file(ALL_MESSAGES)
 
     def tearDown(self):
-        self.db.delete()
+        self.db.delete_table()
         del self.test
 
     def test_all_message_fields_filled(self):
@@ -494,7 +494,7 @@ class TestAddFlow(unittest.TestCase):
         cls.db = DBHandler(uri="sqlite:/:memory:")
 
     def setUp(self):
-        self.db.create()
+        self.db.create_table()
         self.db.add_user(uuid="123456",
                          login="login",
                          password="password",
@@ -505,7 +505,7 @@ class TestAddFlow(unittest.TestCase):
         self.test = api.Request.parse_file(ADD_FLOW)
 
     def tearDown(self):
-        self.db.delete()
+        self.db.delete_table()
         del self.test
 
     def test_add_flow_group(self):
@@ -564,7 +564,7 @@ class TestAllFlow(unittest.TestCase):
         cls.db = DBHandler(uri="sqlite:/:memory:")
 
     def setUp(self):
-        self.db.create()
+        self.db.create_table()
         self.db.add_user(uuid="123456",
                          login="login",
                          password="password",
@@ -572,7 +572,7 @@ class TestAllFlow(unittest.TestCase):
         self.test = api.Request.parse_file(ALL_FLOW)
 
     def tearDown(self):
-        self.db.delete()
+        self.db.delete_table()
         del self.test
 
     def test_all_flow(self):
@@ -603,7 +603,7 @@ class TestUserInfo(unittest.TestCase):
         cls.db = DBHandler(uri="sqlite:/:memory:")
 
     def setUp(self):
-        self.db.create()
+        self.db.create_table()
         for item in range(5):
             uuid = str(123456 + item)
             self.db.add_user(uuid=uuid,
@@ -617,7 +617,7 @@ class TestUserInfo(unittest.TestCase):
         self.test = api.Request.parse_file(USER_INFO)
 
     def tearDown(self):
-        self.db.delete()
+        self.db.delete_table()
         del self.test
 
     def test_user_info(self):
@@ -653,7 +653,7 @@ class TestAuthentication(unittest.TestCase):
         gen_hash = lib.Hash("password", 123456,
                             b"salt", b"key")
         self.hash_password = gen_hash.password_hash()
-        self.db.create()
+        self.db.create_table()
         self.db.add_user(uuid="123456",
                          login="login",
                          password="password",
@@ -663,7 +663,7 @@ class TestAuthentication(unittest.TestCase):
         self.test = api.Request.parse_file(AUTH)
 
     def tearDown(self):
-        self.db.delete()
+        self.db.delete_table()
         del self.test
 
     def test_authentication(self):
@@ -708,7 +708,7 @@ class TestDeleteUser(unittest.TestCase):
         cls.db = DBHandler(uri="sqlite:/:memory:")
 
     def setUp(self):
-        self.db.create()
+        self.db.create_table()
         self.db.add_user(uuid="123456",
                          login="login",
                          password="password",
@@ -716,7 +716,7 @@ class TestDeleteUser(unittest.TestCase):
         self.test = api.Request.parse_file(DELETE_USER)
 
     def tearDown(self):
-        self.db.delete()
+        self.db.delete_table()
         del self.test
 
     def test_delete_user(self):
@@ -750,7 +750,7 @@ class TestDeleteMessage(unittest.TestCase):
         cls.db = DBHandler(uri="sqlite:/:memory:")
 
     def setUp(self):
-        self.db.create()
+        self.db.create_table()
         self.db.add_user(uuid="123456",
                          login="login",
                          password="password",
@@ -770,7 +770,7 @@ class TestDeleteMessage(unittest.TestCase):
         logger.remove()
 
     def tearDown(self):
-        self.db.delete()
+        self.db.delete_table()
         del self.test
 
     def test_delete_message(self):
@@ -808,7 +808,7 @@ class TestEditedMessage(unittest.TestCase):
         cls.db = DBHandler(uri="sqlite:/:memory:")
 
     def setUp(self):
-        self.db.create()
+        self.db.create_table()
         self.db.add_user(uuid="123456",
                          login="login",
                          password="password",
@@ -827,7 +827,7 @@ class TestEditedMessage(unittest.TestCase):
         self.test = api.Request.parse_file(EDITED_MESSAGE)
 
     def tearDown(self):
-        self.db.delete()
+        self.db.delete_table()
         del self.test
 
     def test_edited_message(self):
@@ -859,7 +859,7 @@ class TestPingPong(unittest.TestCase):
         cls.db = DBHandler(uri="sqlite:/:memory:")
 
     def setUp(self):
-        self.db.create()
+        self.db.create_table()
         self.db.add_user(uuid="123456",
                          login="login",
                          password="password",
@@ -867,7 +867,7 @@ class TestPingPong(unittest.TestCase):
         self.test = api.Request.parse_file(PING_PONG)
 
     def tearDown(self):
-        self.db.delete()
+        self.db.delete_table()
         del self.test
 
     def test_ping_pong(self):
@@ -885,14 +885,14 @@ class TestErrors(unittest.TestCase):
         cls.db = DBHandler(uri="sqlite:/:memory:")
 
     def setUp(self):
-        self.db.create()
+        self.db.create_table()
         self.db.add_user(uuid="123456",
                          login="login",
                          password="password",
                          auth_id="auth_id")
 
     def tearDown(self):
-        self.db.delete()
+        self.db.delete_table()
 
     def test_wrong_type(self):
         self.test = api.Request.parse_file(ERRORS)

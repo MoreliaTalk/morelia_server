@@ -23,7 +23,7 @@ import unittest
 from loguru import logger
 
 from sqlobject.main import SQLObject
-from sqlobject.main import SelectResults
+from sqlobject.sresults import SelectResults
 
 from mod.db.dbhandler import DBHandler  # noqa
 from mod.db import models  # noqa
@@ -39,36 +39,36 @@ class TestDBHandlerMainMethods(unittest.TestCase):
         cls.db = DBHandler(uri="sqlite:/:memory:")
 
     def setUp(self):
-        self.db.create()
+        self.db.create_table()
 
     def tearDown(self):
-        self.db.delete()
+        self.db.delete_table()
 
     def test_create_database(self):
         dbquery = self.db.get_all_user()
         self.assertIsInstance(dbquery, SelectResults)
 
     def test_delete_database(self):
-        self.db.delete()
+        self.db.delete_table()
         self.assertRaises(DatabaseAccessError,
                           self.db.get_admin_by_name,
                           username="User")
 
     def test_search_db_in_models(self):
-        self.db.delete()
+        self.db.delete_table()
         dbquery = self.db._DBHandler__search_db_in_models()
         self.assertIsInstance(dbquery, tuple)
         self.assertEqual(dbquery[0], 'Admin')
 
     def test_create_db_not_set_debug(self):
-        self.db.delete()
+        self.db.delete_table()
         db = DBHandler(uri="sqlite:/:memory:")
         self.assertFalse(db.debug)
         self.assertEqual(db._uri,
                          "sqlite:/:memory:")
 
     def test_create_db_set_debug(self):
-        self.db.delete()
+        self.db.delete_table()
         db = DBHandler(uri="sqlite:/:memory:",
                        debug=True)
         self.assertFalse(db.debug)
@@ -76,7 +76,7 @@ class TestDBHandlerMainMethods(unittest.TestCase):
                          "sqlite:/:memory:")
 
     def test_create_db_set_debug_logger(self):
-        self.db.delete()
+        self.db.delete_table()
         db = DBHandler(uri="sqlite:/:memory:",
                        debug=True,
                        logger='Test')
@@ -109,7 +109,7 @@ class TestDBHandlerMethods(unittest.TestCase):
         cls.db = DBHandler(uri="sqlite:/:memory:")
 
     def setUp(self):
-        self.db.create()
+        self.db.create_table()
         self.db.add_user(uuid="123456",
                          login="User1",
                          password="password",
@@ -154,7 +154,7 @@ class TestDBHandlerMethods(unittest.TestCase):
                             text="Hello World!")
 
     def tearDown(self):
-        self.db.delete()
+        self.db.delete_table()
 
     def test_read_db(self):
         dbquery_one = self.db._DBHandler__read_db(table="UserConfig",
@@ -172,7 +172,7 @@ class TestDBHandlerMethods(unittest.TestCase):
                           table="UserConfig",
                           get_one=True,
                           uuid="123459")
-        self.db.delete()
+        self.db.delete_table()
         self.assertRaises(DatabaseAccessError,
                           self.db._DBHandler__read_db,
                           table="UserConfig",
@@ -451,7 +451,7 @@ class TestDBHandlerMethods(unittest.TestCase):
         self.assertEqual(new_query.owner, new_owner)
 
     def test_table_count(self):
-        dbquery = self.db.table_count()
+        dbquery = self.db.get_table_count()
         self.assertIsInstance(dbquery,
                               tuple)
         self.assertEqual(dbquery.user_count, 2)

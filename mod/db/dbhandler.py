@@ -18,17 +18,15 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
-from collections import namedtuple
-from typing import Type
-from typing import Tuple
-import inspect
 import sys
+import inspect
+from collections import namedtuple
 
 import sqlobject as orm
 from sqlobject.sqlbuilder import AND
 from sqlobject.main import SQLObjectIntegrityError
 from sqlobject.main import SQLObjectNotFound
-from sqlobject.main import SelectResults
+from sqlobject.sresults import SelectResults
 from sqlobject import SQLObject
 
 from mod.db import models
@@ -47,7 +45,20 @@ class DatabaseWriteError(SQLObjectNotFound):
 
 
 class DBHandler:
+    """
+    A layer for interaction with the database.
+    As a method prescribed frequently used actions with data from the database.
 
+    Args:
+        uri (str): like that [name of DB-API]:/:[directory or url or 'memory']:
+        debug (bool): enable or disable debug messages
+        logger (str): name of logger
+        loglevel (str): standard logging levels: info, debug, error.
+            Or stderr, stdout
+        path_to_models (str): path to the location of the file describing
+            database tables
+
+    """
     def __init__(self,
                  uri: str = 'sqlite:/:memory:',
                  debug: bool = False,
@@ -73,10 +84,10 @@ class DBHandler:
         orm.sqlhub.processConnection = self.connection
         self.path = path_to_models
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Connected to database: {self._uri}"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "".join((f"class {self.__class__.__name__}: ",
                         f"debug={self._debug} ",
                         f"logger={self._logger} ",
@@ -88,7 +99,7 @@ class DBHandler:
                    if inspect.isclass(cls_obj)]
         return tuple(classes)
 
-    def create(self) -> None:
+    def create_table(self) -> None:
         # looking for all Classes listed in models.py
         for item in self.__search_db_in_models():
             # Create tables in database for each class
@@ -98,7 +109,7 @@ class DBHandler:
                                connection=self.connection)
         return
 
-    def delete(self) -> None:
+    def delete_table(self) -> None:
         # looking for all Classes listed in models.py
         for item in self.__search_db_in_models():
             class_ = getattr(models, item)
@@ -154,8 +165,8 @@ class DBHandler:
             else:
                 return dbquery
 
-    def __write_db(self,
-                   table: str,
+    @staticmethod
+    def __write_db(table: str,
                    **kwargs) -> SQLObject:
         db = getattr(models, table)
         try:
@@ -289,16 +300,16 @@ class DBHandler:
                               get_one=False,
                               text=text)
 
-    def get_message_by_exact_time(self,
-                                  time: int) -> SelectResults:
+    @staticmethod
+    def get_message_by_exact_time(time: int) -> SelectResults:
         return models.Message.select(models.Message.q.time == time)
 
-    def get_message_by_less_time(self,
-                                 time: int) -> SelectResults:
+    @staticmethod
+    def get_message_by_less_time(time: int) -> SelectResults:
         return models.Message.select(models.Message.q.time <= time)
 
-    def get_message_by_more_time(self,
-                                 time: int) -> SelectResults:
+    @staticmethod
+    def get_message_by_more_time(time: int) -> SelectResults:
         return models.Message.select(models.Message.q.time >= time)
 
     def get_message_by_more_time_and_flow(self,
@@ -417,16 +428,16 @@ class DBHandler:
                               get_one=False,
                               title=title)
 
-    def get_flow_by_more_time(self,
-                              time: int) -> SelectResults:
+    @staticmethod
+    def get_flow_by_more_time(time: int) -> SelectResults:
         return models.Flow.select(models.Flow.q.time_created >= time)
 
-    def get_flow_by_less_time(self,
-                              time: int) -> SelectResults:
+    @staticmethod
+    def get_flow_by_less_time(time: int) -> SelectResults:
         return models.Flow.select(models.Flow.q.time_created <= time)
 
-    def get_flow_by_exact_time(self,
-                               time: int) -> SelectResults:
+    @staticmethod
+    def get_flow_by_exact_time(time: int) -> SelectResults:
         return models.Flow.select(models.Flow.q.time_created == time)
 
     def add_flow(self,
@@ -474,7 +485,7 @@ class DBHandler:
 
         return "Updated"
 
-    def table_count(self) -> Type[Tuple]:
+    def get_table_count(self) -> namedtuple:
         TableCount = namedtuple('TableCount', ["user_count",
                                                "flow_count",
                                                "message_count"])

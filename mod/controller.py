@@ -18,7 +18,10 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
+from time import time
 import json
+import secrets
+from collections import namedtuple
 
 from mod.db.dbhandler import DBHandler
 from mod.protocol.mtp.worker import MTProtocol
@@ -26,6 +29,14 @@ from mod.protocol.matrix.worker import MatrixProtocol
 
 
 class MainHandler:
+    """
+    According to the selected protocol sends a request to the handler
+
+    Args:
+        request (object): JSON request from websocket client
+        database (DBHandler): object - database connection point
+        protocol (str): name of using protocol
+    """
     def __init__(self,
                  request,
                  database: DBHandler,

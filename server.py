@@ -20,6 +20,7 @@
 """
 
 # ************** Standart module *********************
+import os
 from datetime import datetime
 from json import JSONDecodeError
 # ************** Standart module end *****************
@@ -68,20 +69,24 @@ logger.info("Start server")
 # Specifying where to load HTML page templates
 templates = Jinja2Templates(DIRECTORY.get("folder"))
 
+# Search and filtered static files path
+main_path = os.getcwd()
+base_path = os.path.split(main_path)
+if base_path[1] == 'tests':
+    file_static = os.path.join(base_path[0], 'static')
+else:
+    file_static = os.path.join(main_path, 'static')
 
-# Save clients session
-# TODO: Нужно подумать как их компактно хранить
-CLIENTS = []
+# Set database connection
+db_connect = DBHandler(uri=DATABASE.get('uri'))
+db_connect.create_table()
 
-# Set dtatabase connection
-db = DBHandler(uri=DATABASE.get('uri'))
-db.create()
 
 app.mount("/admin",
           admin.app)
 
 app.mount("/static",
-          StaticFiles(directory="static"),
+          StaticFiles(directory=file_static),
           name="static")
 
 
@@ -95,7 +100,6 @@ def home_page(request: Request):
 async def websocket_endpoint(websocket: WebSocket):
     # Waiting for the client to connect via websockets
     await websocket.accept()
-    CLIENTS.append(websocket)
     logger.info("".join(("Clients information: ",
                          "host: ", str(websocket.client.host),
                          " port: ", str(websocket.client.port))))
@@ -110,10 +114,9 @@ async def websocket_endpoint(websocket: WebSocket):
             # it as a parameter. The "get_response" method generates
             # a response in JSON-object format.
             client_request = MainHandler(request=data,
-                                         database=db,
+                                         database=db_connect,
                                          protocol='mtp')
-            response = await websocket.send_json(client_request.get_response(),
-                                                 mode="bytes")
+            response = await websocket.send_bytes(client_request.get_response())
             logger.info("Response sent to client")
             logger.debug(f"Result of processing: {response}")
         # After disconnecting the client (by the decision of the client,
@@ -121,21 +124,18 @@ async def websocket_endpoint(websocket: WebSocket):
         # will not be able to connect.
         except WebSocketDisconnect as STATUS:
             logger.debug(f"Disconnection status: {str(STATUS)}")
-            CLIENTS.remove(websocket)
             break
         except (RuntimeError, JSONDecodeError) as ERROR:
             CODE = 1002
             logger.exception(f"Runtime or Decode error: {str(ERROR)}")
             await websocket.close(CODE)
             logger.info(f"Close with code: {CODE}")
-            CLIENTS.remove(websocket)
             break
         else:
             if websocket.client_state.value == 0:
                 CODE = 1000
                 # "code=1000" - normal session termination
                 await websocket.close(CODE)
-                CLIENTS.remove(websocket)
                 logger.info(f"Close with code: {CODE}")
 
 

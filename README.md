@@ -4,13 +4,13 @@ Language [EN](./README_ENG.md), [RU](./README.md)
 
 ## В репозитории 2 бранча ##
 
-[master](https://github.com/MoreliaTalk/morelia_server/tree/master) - стабильная ветка.
+[Master](https://github.com/MoreliaTalk/morelia_server/tree/master) - стабильная ветка.
 
-[develop](https://github.com/MoreliaTalk/morelia_server/tree/develop) - ветка для добавления нового функционала.
+[Develop](https://github.com/MoreliaTalk/morelia_server/tree/develop) - ветка для добавления нового функционала.
 
 ## В разработке применяется ##
 
-* [Python 3.9](https://www.python.org/) - язык программирования
+* [Python 3.10](https://www.python.org/) - язык программирования
 
 * [FastAPI](https://fastapi.tiangolo.com) - основной фреймворк
 
@@ -18,38 +18,48 @@ Language [EN](./README_ENG.md), [RU](./README.md)
 
 * [Pydantic](https://pydantic-docs.helpmanual.io) - валидация данных
 
-* [Starlette](https://www.starlette.io) - лёгковесный ASGI фреймворк/тулкит
+* [Starlette](https://www.starlette.io) - легковесный ASGI фреймворк/тулкит
 
 * [websockets](https://pypi.org/project/websockets/) - реализация протокола Websockets в Python (RFC 6455 & 7692)
 
 ## Описание репозитория ##
 
+* /admin
+  * /templates - шаблоны страниц админки
+  * admin.py
+  * control.py
+  * login.py
+  * logs.py
 * /mod
-  * api.py - модуль отвечает за описание API, а так же валидацию данных.
-  * error.py - модуль отвечает за хранение кодов ошибок.
-  * controller.py - модуль отвечает за реализацию методов описанных в [Morelia Protocol](https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md).
-  * lib.py - модуль отвечает за хэширования пароля, сравнения пароля с его хэш-суммой, создание хэша для auth_id.
-  * models.py - модуль отвечает за описание таблиц БД для работы через ОРМ.
-  * logging.py - модуль настройки логирования.
-* /templates - шаблоны для вывода статистики сервера в браузере.
-  * base.html - базовый шаблон с основными элементами меню, он имплементируется в каждый рабочий шаблон.
-  * index.html - рабочий шаблон главной страницы.
-  * status.thml - рабочий шаблон страницы со статусом работы сервера.
+  * /db
+    * dbhandler.py - модуль предназначен для выполнения запросов к БД
+    * models.py - модуль отвечает за описание таблиц БД для работы через ОРМ.
+  * /protocol
+    * /matrix
+      * api.py - модуль отвечает за описание API, а так же валидацию данных.
+      * worker.py - реализация протокола
+    * /mtp
+      * api.py - модуль отвечает за описание API, а так же валидацию данных.
+      * worker.py - модуль отвечает за реализацию методов описанных в [Morelia Protocol](https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md).
+    * error.py - модуль отвечает за проверку и генерацию ответов с кодами ошибок.
+    * controller.py - модуль обрабатывает запрос в соответствии с типом протокола
+    * lib.py - модуль отвечает за хеширование пароля, сравнения пароля с его хэш-суммой, создание хеша для auth_id.
+    * logging.py - модуль настройки логирования.
+    * config.py - модуль читает настройки из config.ini
+* /static - 
 * server.py - основной код сервера
 * manage.py - менеджер миграции для БД (создание и удаление таблиц базы данных)
 * /tests
-  * fixtures/
-    * api.json - json-файл с заранее подготовленными данными, для провдедения тестов.
-  * test_api.py - тесты для проверки валидации.
-  * test_controller.py - тесты для проверки класса который отвечает за обработкуметодов протокола.
-  * test_lib.py - тесты хэш-функции.
+  * fixtures/ - json-файлы с заранее подготовленными данными, для проведения тестов.
+  * config.ini - конфиг сервера для проведения тестов
+  * test_*.py - тесты
 * debug_server.py - обёртка для server.py для дебага через утилиту `pdb`.
 * example_config.ini - файл содержащий пример настроек сервера, перед запуском сервера просто переименуйте в `config.ini`.
 * client.py - мини-клиент для проверки работы сервера.
 
 ## Установка ##
 
-Установить [Python](https://www.python.org/downloads/) версией 3.8 или выше.
+Установить [Python](https://www.python.org/downloads/) версией 3.10 или выше.
 
 Загрузить и установить последнюю версию [git](https://git-scm.com/downloads).
 
@@ -138,7 +148,7 @@ pipenv run pipenv run python ./manage.py --db delete
 Добавляем администратора в созданную БД:
 
 ```cmd
-python ./manage.py --table superuser
+python ./manage.py superuser-create
 ```
 
 Дополнительно можно создать `flow` с типом группа:
@@ -169,7 +179,7 @@ uvicorn server:app --host 0.0.0.0 --port 8000 --reload --use-colors --http h11 -
 
 `--loop <str>` - Set the event loop implementation. The uvloop implementation provides greater performance, but is not compatible with Windows or PyPy. Options: 'auto', 'asyncio', 'uvloop'. Default: 'auto'.
 
-`--http <str>` - Set the HTTP protocol implementation. The httptools implementation provides greater performance, but it not compatible with PyPy, and requires compilation on Windows. Options: 'auto', 'h11', 'httptools'. Default: 'auto'.
+`--http <str>` - Set the HTTP protocol implementation. The httptools implementation provides greater performance, but it is not compatible with PyPy, and requires compilation on Windows. Options: 'auto', 'h11', 'httptools'. Default: 'auto'.
 
 `--ws <str>` - Set the WebSockets protocol implementation. Either of the websockets and wsproto packages are supported. Use 'none' to deny all websocket requests. Options: 'auto', 'none', 'websockets', 'wsproto'. Default: 'auto'.
 
@@ -223,9 +233,9 @@ pipenv run python -i ./client.py
 
 Если в функцию не передать ни одного аргумента, по умолчанию будет отправлено сообщение AUTH на LOCALHOST.
 
-## Создание пулл-реквеста для внесенния изменений в develop-ветку Morelia Server ##
+## Создание пулл-реквеста для внесения изменений в develop-ветку Morelia Server ##
 
-Получение последних изменнений из develop-ветки Morelia Server
+Получение последних изменений из develop-ветки Morelia Server
 
 ```cmd
 git pull upstream develop
@@ -237,7 +247,7 @@ git pull upstream develop
 git push
 ```
 
-Для создания пулл-реквеста, необходимо перейти на [GitHub](https://www.github.com), выбрать свой форк и в правом меню нажать на `New pull request`, после чего выбрать бранч из которого будет производится перенос изменений в develop-ветку Morelia Server и нажать `Create pull request`.
+Для создания пулл-реквеста, необходимо перейти на [GitHub](https://www.github.com), выбрать свой форк и в правом меню нажать на `New pull request`, после чего выбрать бранч из которого будет производиться перенос изменений в develop-ветку Morelia Server и нажать `Create pull request`.
 
 ## Требования к стилю кода ##
 
@@ -249,7 +259,7 @@ git push
 
 Уровни логирования которыми можно пользоваться в коде:
 
-```py
+```
 Level name | Logger method
 
 DEBUG      | logger.debug()
@@ -271,9 +281,9 @@ CRITICAL   | logger.critical()
 pipenv run python -v ./tests/test_*.py
 ```
 
-## Запуск дебаггера ##
+## Запуск дебагера ##
 
-Для запуска дебаггера в полевых условиях, через консоль
+Для запуска дебагера в полевых условиях, через консоль
 
 ```cmd
 python -m pdb ./debug_server.py
@@ -288,8 +298,6 @@ python -m pdb ./debug_server.py
 ## Контакты ##
 
 [Telegram](https://t.me/joinchat/LImHShzAmIWvpMxDTr5Vxw) - группа где обсуждаются насущные вопросы.
-
-[Trello](https://trello.com/b/qXjJFTP3/develop) - kanban-доска для проекта.
 
 [Slack](www.moreliatalk.slack.com) - альтернативный вариант обсуждения проекта.
 

@@ -47,7 +47,7 @@ class MTPErrorResponse:
     Args:
         status (str): Error type
         add_info ([Exception] or [str], optional): Additional information
-        to be added. Defaults to None.
+            to be added. Defaults to None.
 
     Returns:
         ErrorResponse.result() returns class 'api.ErrorsResponse'
@@ -96,6 +96,13 @@ class MTProtocol:
     """Processing requests and forming answers according to "MTP" protocol.
     Protocol version and its actual description:
     https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md
+
+    Args:
+        request: JSON request from websocket client
+        database (DBHandler): object - database connection point
+        
+    Returns:
+        returns class api.Response
     """
     def __init__(self,
                  request,
@@ -157,7 +164,7 @@ class MTProtocol:
             dbquery = self._db.get_user_by_uuid(uuid)
             logger.success("User was found in the database")
         except DatabaseReadError:
-            message = "User wasn't found in the database"
+            message = "User was not authenticated"
             logger.debug(message)
             return Result(False,
                           message)
@@ -382,10 +389,10 @@ class MTProtocol:
 
         def get_messages(db,
                          end: int,
-                         start: int = 0) -> list:
-            message = []
+                         start: int = 0) -> list[api.MessageResponse]:
+            _list = []
             for element in db[start:end]:
-                message.append(api.MessageResponse(
+                _list.append(api.MessageResponse(
                                uuid=element.uuid,
                                client_id=None,
                                text=element.text,
@@ -399,12 +406,12 @@ class MTProtocol:
                                emoji=element.emoji,
                                edited_time=element.edited_time,
                                edited_status=element.edited_status))
-            return message
+            return _list
 
         try:
             dbquery = self._db.get_message_by_more_time_and_flow(flow_uuid,
                                                                  request.data.time)
-            MESSAGE_COUNT: int = dbquery.count()
+            MESSAGE_COUNT = dbquery.count()
             dbquery[0]
         except DatabaseReadError as flow_error:
             errors = MTPErrorResponse("NOT_FOUND",
@@ -531,6 +538,7 @@ class MTProtocol:
         user = []
 
         if users_volume <= LIMIT.getint("users"):
+            errors = MTPErrorResponse("OK")
             for element in request.data.user[1:]:
                 try:
                     dbquery = self._db.get_user_by_uuid(element.uuid)
@@ -545,7 +553,6 @@ class MTProtocol:
                                                  avatar=dbquery.avatar,
                                                  bio=dbquery.bio,
                                                  is_bot=dbquery.is_bot))
-                    errors = MTPErrorResponse("OK")
             logger.success("\'_user_info\' executed successfully")
         else:
             errors = MTPErrorResponse("FORBIDDEN",

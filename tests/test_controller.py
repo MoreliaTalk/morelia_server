@@ -41,7 +41,7 @@ class TestController(unittest.TestCase):
         cls.db = DBHandler(uri='sqlite:/:memory:')
 
     def setUp(self) -> None:
-        self.db.create()
+        self.db.create_table()
         self.db.add_user(uuid="123456",
                          login="login",
                          password="password",
@@ -71,7 +71,7 @@ class TestController(unittest.TestCase):
         self.test = api.Request.parse_file(GET_UPDATE)
 
     def tearDown(self) -> None:
-        self.db.delete()
+        self.db.delete_table()
 
     @classmethod
     def tearDownClass(cls) -> None:
