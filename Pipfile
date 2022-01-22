@@ -25,7 +25,8 @@ websocket-client = "==1.2.3"
 coverage = "==6.2"
 requests = "==2.27.1"
 win32-setctime = "*"
-sphinx = "*"
+sphinx = "==4.4.0"
+furo = "==2022.1.2"
 
 [requires]
 python_version = "3.10"
