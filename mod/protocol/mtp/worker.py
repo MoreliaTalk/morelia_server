@@ -47,18 +47,13 @@ class MTPErrorResponse:
     Args:
         status (str): Error type
         add_info ([Exception] or [str], optional): Additional information
-            to be added. Defaults to None.
+        to be added. Defaults to None.
 
     Returns:
         ErrorResponse.result() returns class 'api.ErrorsResponse'
         according to protocol, like:
-            {
-                'code': 200,
-                'status': 'Ok',
-                'time': 123456545,
-                'detail': 'successfully'
-                }
-        """
+        {'code': 200, 'status': 'Ok', 'time': 123456545, 'detail': 'successfully'}
+    """
 
     def __init__(self,
                  status: str,
@@ -93,7 +88,8 @@ class MTPErrorResponse:
 
 
 class MTProtocol:
-    """Processing requests and forming answers according to "MTP" protocol.
+    """
+    Processing requests and forming answers according to "MTP" protocol.
     Protocol version and its actual description:
     https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md
 
@@ -104,6 +100,7 @@ class MTProtocol:
     Returns:
         returns class api.Response
     """
+
     def __init__(self,
                  request,
                  database: DBHandler):
