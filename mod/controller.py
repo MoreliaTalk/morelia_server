@@ -18,10 +18,8 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
-from time import time
+
 import json
-import secrets
-from collections import namedtuple
 
 from mod.db.dbhandler import DBHandler
 from mod.protocol.mtp.worker import MTProtocol
