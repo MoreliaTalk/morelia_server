@@ -18,6 +18,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
+
 import sys
 import inspect
 from collections import namedtuple
@@ -59,6 +60,7 @@ class DBHandler:
             database tables
 
     """
+
     def __init__(self,
                  uri: str = 'sqlite:/:memory:',
                  debug: bool = False,
@@ -100,17 +102,28 @@ class DBHandler:
         return tuple(classes)
 
     def create_table(self) -> None:
-        # looking for all Classes listed in models.py
+        """
+        Looking for all Classes listed in models.py and create all
+
+        Returns: None
+
+        """
+
         for item in self.__search_db_in_models():
-            # Create tables in database for each class
-            # that is located in models module
             class_ = getattr(models, item)
             class_.createTable(ifNotExists=True,
                                connection=self.connection)
         return
 
     def delete_table(self) -> None:
-        # looking for all Classes listed in models.py
+        """
+        Looking for all Classes listed in models.py
+        and delete all
+
+        Returns: None
+
+        """
+
         for item in self.__search_db_in_models():
             class_ = getattr(models, item)
             class_.dropTable(ifExists=True,

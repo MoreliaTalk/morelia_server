@@ -23,11 +23,8 @@ import os
 
 
 config = configparser.ConfigParser()
-
 project_path = os.path.split(os.path.abspath(__file__))[0]
-
 config.read(os.path.join(project_path, "config.ini"))
-print("!!!!!!!!!!!!!!!", os.path.join(project_path, "config.ini"))
 
 LOGGING = config['LOGGING']
 DATABASE = config["DATABASE"]
