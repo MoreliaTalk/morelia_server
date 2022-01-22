@@ -1,0 +1,26 @@
+{
+    "type": "user_info",
+    "data": {
+        "user": [{
+            "uuid": "123456",
+            "auth_id": "auth_id"
+            },
+            {
+            "uuid": "123457"
+            },
+            {
+            "uuid": "123458"
+            },
+            {
+            "uuid": "123459"
+            },
+            {
+            "uuid": "123460"
+            }],
+        "meta": null
+        },
+    "jsonapi": {
+        "version": "1.0"
+        },
+    "meta": null
+    }

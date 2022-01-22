@@ -1,6 +1,7 @@
 """
     Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the full list.
+    Look at the file AUTHORS.md(located at the root of the project) to get the
+    full list.
 
     This file is part of Morelia Server.
 
@@ -17,86 +18,56 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
+from collections import namedtuple
+from http import HTTPStatus
+from enum import IntEnum
 
-DICT: dict = {
-            200: {
-                'status': 'OK',
-                'detail': 'successfully'
-                },
-            201: {
-                'status': 'Created',
-                'detail': 'Created'
-                },
-            202: {
-                'status': 'Accepted',
-                'detail': 'Accepted'
-                },
-            206: {
-                'status': "Partial Content",
-                'detail': "Partial Content"
-                },
-            400: {
-                'status': 'Bad Request',
-                'detail': 'Bad Request'
-                },
-            401: {
-                'status': 'Unauthorized',
-                'detail': 'Unauthorized'
-                },
-            403: {
-                'status': 'Forbidden',
-                'detail': 'Forbidden'
-                },
-            404: {
-                'status': 'Not Found',
-                'detail': 'Not Found'
-                },
-            405: {
-                'status': 'Method Not Allowed',
-                'detail': 'Method Not Allowed'
-                },
-            408: {
-                'status': 'Request Timeout',
-                'detail': 'Request Timeout'
-                },
-            409: {
-                'status': 'Conflict',
-                'detail': 'Such user (flow) is already on the server.'
-                },
-            415: {
-                'status': 'Unsupported Media Type',
-                'detail': 'Unsupported Media Type'
-                },
-            417: {
-                'status': 'Expectation Failed',
-                'detail': 'Expectation Failed'
-                },
-            426: {
-                'status': 'Upgrade Required',
-                'detail': 'Upgrade Required'
-                },
-            429: {
-                'status': 'Too Many Requests',
-                'detail': 'Too Many Requests'
-                },
-            499: {
-                'status': 'Client Closed Request',
-                'detail': 'Client Closed Request'
-                },
-            500: {
-                'status': 'Internal Server Error',
-                'detail': 'Internal Server Error'
-                },
-            503: {
-                'status': 'Service Unavailable',
-                'detail': 'Service Unavailable'
-                },
-            520: {
-                'status': 'Unknown Error',
-                'detail': 'Unknown Error'
-            },
-            526: {
-                'status': 'Invalid SSL Certificate',
-                'detail': 'Invalid SSL Certificate'
-                },
-            }
+
+class ServerStatus(IntEnum):
+    """Additional server status code and reason phrases
+    """
+    def __new__(cls, value, phrase, description=''):
+        obj = int.__new__(cls, value)
+        obj._value_ = value
+        obj.phrase = phrase
+        obj.description = description
+        return obj
+
+    CLIENT_CLOSED_REQUEST = (499,
+                             'Client Closed Request',
+                             'Full description: Client Closed Request')
+    UNKNOWN_ERROR = (520,
+                     'Unknown Error',
+                     'Full description: Unknown Error')
+    INVALID_SSL_CERTIFICATE = (526,
+                               'Invalid SSL Certificate',
+                               'Full description: Invalid SSL Certificate')
+
+
+def check_error_pattern(status: str) -> namedtuple:
+    CatchError = namedtuple('CatchError', ['code',
+                                           'status',
+                                           'detail'])
+    try:
+        getattr(HTTPStatus, status).value
+    except AttributeError:
+        http_status_not_found = True
+    except TypeError:
+        raise TypeError("".join(("Wrong status type passed",
+                                 f" it should be {type(str())}",
+                                 f" but it was passed {type(status)}")))
+    else:
+        obj = getattr(HTTPStatus, status)
+        http_status_not_found = False
+
+    if http_status_not_found:
+        try:
+            getattr(ServerStatus, status)
+        except AttributeError:
+            raise AttributeError("Received a non-existent error status")
+        else:
+            obj = getattr(ServerStatus, status)
+
+    return CatchError(obj.value,
+                      obj.phrase,
+                      obj.description)

@@ -30,4 +30,5 @@ if __name__ == "__main__":
                 ws="websockets",
                 log_level="debug",
                 use_colors=True,
-                debug=True)
+                debug=True,
+                reload=True)

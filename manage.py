@@ -1,6 +1,7 @@
 """
     Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the full list.
+    Look at the file AUTHORS.md(located at the root of the project) to get the
+    full list.
 
     This file is part of Morelia Server.
 
@@ -18,91 +19,97 @@
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import sys
-from time import time, process_time
-import inspect
+from time import time
+from time import process_time
 from uuid import uuid4
-import configparser
 
-import sqlobject as orm
 import click
 
-from mod import models
-
-# ************** Read "config.ini" ********************
-config = configparser.ConfigParser()
-config.read('config.ini')
-logging = config['LOGGING']
-database = config["DATABASE"]
-superuser = config["SUPERUSER"]
-# ************** END **********************************
+from mod import lib
+from mod.db import dbhandler
+from mod.db.dbhandler import DatabaseWriteError
+from mod.db.dbhandler import DatabaseReadError
+from mod.db.dbhandler import DatabaseAccessError
+from mod.config import DATABASE
+from mod.config import SUPERUSER
 
 
-@click.command()
-@click.option("--db",
-              type=click.Choice(["create", "delete"]),
-              help='Create or delete all table '
-              'with all data. Оperation, '
-              'by default, creates all tables')
-@click.option('--table',
-              type=click.Choice(["superuser", "flow"]),
-              help='Creating records in the database. '
-              'You can create a superuser or flow type "group".')
-def main(db, table):
-    # Connect to database
-    connection = orm.connectionForURI(database.get("uri"))
-    orm.sqlhub.processConnection = connection
+@click.group()
+def cli():
+    pass
 
-    # looking for all Classes listed in models.py
-    classes = [cls_name for cls_name, cls_obj
-               in inspect.getmembers(sys.modules['mod.models'])
-               if inspect.isclass(cls_obj)]
 
-    if db == "create":
-        start_time = process_time()
-        for item in classes:
-            # Create tables in database for each class
-            # that is located in models module
-            class_ = getattr(models, item)
-            class_.createTable(ifNotExists=True)
-        click.echo(f'Table is createt at: '
-                   f'{process_time() - start_time} sec.')
-    elif db == "delete":
-        start_time = process_time()
-        for item in classes:
-            class_ = getattr(models, item)
-            class_.dropTable(ifExists=True, dropJoinTables=True, cascade=True)
-        click.echo(f'Table is deleted at: '
-                   f'{process_time() - start_time} sec.')
+@cli.command("db-create", help="Create all table with all data")
+def db_create():
+    start_time = process_time()
+    db = dbhandler.DBHandler(uri=DATABASE.get('uri'))
+    db.create_table()
+    click.echo(f'Table is created at: '
+               f'{process_time() - start_time} sec.')
 
+
+@cli.command("db-delete", help="Delete all table with all data")
+def db_delete():
+    start_time = process_time()
+    db = dbhandler.DBHandler(uri=DATABASE.get('uri'))
+    db.delete_table()
+    click.echo(f'Table is deleted at: '
+               f'{process_time() - start_time} sec.')
+
+
+@cli.command("superuser-create", help="Create superuser in database")
+def create_superuser():
+    db = dbhandler.DBHandler(uri=DATABASE.get('uri'))
     user_uuid = str(123456789)
-    hash_password = superuser.get('hash_password')
-    if table == "superuser":
-        try:
-            models.UserConfig(uuid=user_uuid,
-                              login="login",
-                              password="password",
-                              hashPassword=hash_password,
-                              username="superuser",
-                              salt=b"salt",
-                              key=b"key")
-            click.echo("Superuser created")
-        except orm.dberrors.OperationalError as error:
-            click.echo(f'Failed to create a user. Error text: {error}')
-    elif table == "flow":
-        try:
-            new_user = models.UserConfig.selectBy(uuid=user_uuid).getOne()
-            new_flow = models.Flow(uuid=str(uuid4().hex),
-                                   timeCreated=int(time()),
-                                   flowType="group",
-                                   title="Test",
-                                   info="Test flow",
-                                   owner=user_uuid)
-            new_flow.addUserConfig(new_user)
-            click.echo("Flow created")
-        except orm.dberrors.OperationalError as error:
-            click.echo(f'Failed to create a flow. Error text: {error}')
+    hash_password = SUPERUSER.get('hash_password')
+    try:
+        db.add_user(uuid=user_uuid,
+                    login="login",
+                    password="password",
+                    hash_password=hash_password,
+                    username="superuser",
+                    salt=b"salt",
+                    key=b"key")
+        click.echo("Superuser created")
+    except DatabaseWriteError as error:
+        click.echo(f'Failed to create a user. Error text: {error}')
+
+
+@cli.command("flow-create", help="Create flow type group in database")
+def create_flow():
+    db = dbhandler.DBHandler(uri=DATABASE.get('uri'))
+    user_uuid = str(123456789)
+    try:
+        new_user = db.get_user_by_uuid(uuid=user_uuid)
+        new_flow = db.add_flow(uuid=str(uuid4().hex),
+                               users=[user_uuid],
+                               time_created=int(time()),
+                               flow_type="group",
+                               title="Test",
+                               info="Test flow",
+                               owner=user_uuid)
+        new_flow.addUserConfig(new_user)
+        click.echo("Flow created")
+    except (DatabaseReadError,
+            DatabaseAccessError,
+            DatabaseWriteError) as error:
+        click.echo(f'Failed to create a flow. Error text: {error}')
+
+
+@cli.command("admin-create", help="Create user in admin panel")
+@click.option("--username", help="username admin")
+@click.option("--password", help="password admin")
+def admin_create_user(username, password):
+    db = dbhandler.DBHandler(uri=DATABASE.get('uri'))
+
+    generator = lib.Hash(password,
+                         str(uuid4().hex),
+                         key=b"key",
+                         salt=b"salt")
+    db.add_admin(username=username,
+                 hash_password=generator.password_hash())
+    click.echo(f"Admin created\nusername: {username}\npassword: {password}")
 
 
 if __name__ == "__main__":
-    main()
+    cli()

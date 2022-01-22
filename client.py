@@ -1,6 +1,7 @@
 """
     Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the full list.
+    Look at the file AUTHORS.md(located at the root of the project) to get the
+    full list.
 
     This file is part of Morelia Server.
 
@@ -41,12 +42,13 @@ add_logging(20)
 # URL and Port
 LOCALHOST = 'ws://localhost:8000/ws'
 
-# Registration infirmation from superuser
+# Registration information from superuser
 user_login = 'login'
 user_password = 'password'
 salt = b'salt'
 key = b'key'
 uuid = '123456789'
+auth_id = "6989f3f8d1b9c2fdf0bb858a5953d07c"
 
 GET_UPDATE = {
     "type": "get_update",
@@ -54,7 +56,7 @@ GET_UPDATE = {
         "time": 111,
         "user": [{
             "uuid": uuid,
-            "auth_id": "auth_id",
+            "auth_id": auth_id,
             }],
         "meta": None
         },
@@ -65,7 +67,7 @@ GET_UPDATE = {
     }
 
 AUTH = {
-    "type": "auth",
+    "type": "authentication",
     "data": {
         "user": [{
             "password": user_password,
@@ -83,6 +85,7 @@ ADD_FLOW = {
     "type": "add_flow",
     "data": {
         "flow": [{
+            "uuid": None,
             "type": "group",
             "title": "title",
             "info": "info",
@@ -118,8 +121,8 @@ ALL_FLOW = {
 
 
 # Chat websocket
-def send_message(message: Union[dict, str] = AUTH, uri: str = LOCALHOST) -> bytes:
-    result = b'None'
+def send_message(message: Union[dict, str] = AUTH, 
+                 uri: str = LOCALHOST) -> bytes:
     """Sending a message via websockets, with a response
 
     Args:
@@ -129,6 +132,7 @@ def send_message(message: Union[dict, str] = AUTH, uri: str = LOCALHOST) -> byte
     Returns:
         message [bytes]: Response as a byte object.
     """
+    result = b'None'
     ws = websocket.WebSocket()
     try:
         ws.connect(uri)

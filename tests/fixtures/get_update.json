@@ -1,0 +1,15 @@
+{
+    "type": "get_update",
+    "data": {
+        "time": 111,
+        "user": [{
+            "uuid": "123456",
+            "auth_id": "auth_id"
+            }],
+        "meta": null
+        },
+    "jsonapi": {
+        "version": "1.0"
+        },
+    "meta": null
+    }

@@ -1,6 +1,7 @@
 """
     Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the full list.
+    Look at the file AUTHORS.md(located at the root of the project) to get the
+    full list.
 
     This file is part of Morelia Server.
 
@@ -22,14 +23,8 @@ import sys
 from hashlib import blake2b
 from hmac import compare_digest
 from os import urandom
-from typing import Union
-import configparser
 
-# ************** Read "config.ini" ********************
-config = configparser.ConfigParser()
-config.read('config.ini')
-hash_size = config['HASH_SIZE']
-# ************** END **********************************
+from mod.config import HASH_SIZE
 
 
 class Hash:
@@ -48,14 +43,17 @@ class Hash:
 
         key (Any, optional): Additional argument. Defaults to None.
             If value of 'key' parameter is 'None' then function
-            will generated it.
+            will generate it.
 
         hash_password (str, optional): password hash (previously calculated).
 
     """
-    def __init__(self, password: str, uuid: Union[int, str],
-                 salt: bytes = None, key: bytes = None,
-                 hash_password: str = None):
+    def __init__(self,
+                 password: str,
+                 uuid: int | str,
+                 salt: bytes = None,
+                 key: bytes = None,
+                 hash_password: str = None) -> None:
 
         if salt is None:
             self.salt = urandom(16)
@@ -74,12 +72,14 @@ class Hash:
 
         self.binary_password = password.encode('utf-8')
         self.hash_password = hash_password
-        self.size_password = hash_size.getint('password')
-        self.size_auth_id = hash_size.getint('auth_id')
+        self.size_password = HASH_SIZE.getint('password')
+        self.size_auth_id = HASH_SIZE.getint('auth_id')
 
+    @property
     def get_salt(self) -> bytes:
         return self.salt
 
+    @property
     def get_key(self) -> bytes:
         return self.key
 
@@ -91,7 +91,8 @@ class Hash:
         """
         hash_password = blake2b(self.binary_password,
                                 digest_size=self.size_password,
-                                key=self.key, salt=self.salt)
+                                key=self.key,
+                                salt=self.salt)
         return hash_password.hexdigest()
 
     def check_password(self) -> bool:

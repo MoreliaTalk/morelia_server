@@ -17,13 +17,8 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 -->
+{% extends "base_admin.html" %}
 
-{% extends "base.html" %}
+{% block title %}Main Page{% endblock %}
 
-{% block content %}
-    <ul class="list-group list-group-flush">
-    {% for key, value in stats.items() %}
-        <li class="list-group-item">{{key}}: {{value}}</li>
-    {% endfor %}
-    </ul>
-{% endblock content %}
+{% block content %}Добро Пожаловать в админку MoreliaTalkServer!{% endblock %}

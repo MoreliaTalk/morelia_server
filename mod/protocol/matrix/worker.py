@@ -1,5 +1,5 @@
 """
-    Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+    Copyright (c) 2021 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
     Look at the file AUTHORS.md(located at the root of the project) to get the
     full list.
 
@@ -18,3 +18,19 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
+import json
+
+from mod.db.dbhandler import DBHandler
+
+
+class MatrixProtocol:
+    def __init__(self,
+                 request,
+                 database: DBHandler):
+        self.request = request
+        self._db = database
+
+    @staticmethod
+    def get_response() -> str:
+        result = "Method not worked"
+        return result

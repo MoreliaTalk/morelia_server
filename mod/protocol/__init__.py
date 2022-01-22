@@ -1,6 +1,7 @@
-<!--
-    Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the full list.
+"""
+    Copyright (c) 2021 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+    Look at the file AUTHORS.md(located at the root of the project) to get the
+    full list.
 
     This file is part of Morelia Server.
 
@@ -16,10 +17,6 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
--->
+"""
 
-{% extends "base.html" %}
-
-{% block content %}
-    <p>MoreliaTalk - простой мессенджер который разрабатывает группа энтузиастов в своё свободное время.</p>
-{% endblock content %}
+__all__ = ["mtp"]

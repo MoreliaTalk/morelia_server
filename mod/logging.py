@@ -1,6 +1,7 @@
 """
     Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the full list.
+    Look at the file AUTHORS.md(located at the root of the project) to get the
+    full list.
 
     This file is part of Morelia Server.
 
@@ -17,19 +18,16 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
-
-import configparser
-
-from loguru import logger
 import sys
 
-# ************** Read "config.ini" ********************
-config = configparser.ConfigParser()
-config.read('config.ini')
-logging = config['LOGGING']
-expiration_date = logging.get('EXPIRATION_DATE')
-debug_expiration_date = logging.get('DEBUG_EXPIRATION_DATE')
-# ************** END **********************************
+from loguru import logger
+
+from admin import logs
+from mod.config import LOGGING
+
+
+expiration_date = LOGGING.get('EXPIRATION_DATE')
+debug_expiration_date = LOGGING.get('DEBUG_EXPIRATION_DATE')
 
 
 def add_logging(debug_status: int) -> None:
@@ -49,13 +47,13 @@ def add_logging(debug_status: int) -> None:
 
     Args:
         debug_status (int, requires):
-        CRITICAL-50;
-        ERROR-40;
-        WARNING-30;
-        SUCCES-25;
-        INFO-20;
-        DEBUG-10;
-        TRACE-5.
+        50 - CRITICAL;
+        40 - ERROR;
+        30 - WARNING;
+        25 - SUCCESS;
+        20 - INFO;
+        10 - DEBUG;
+        5 - TRACE.
 
     Returns:
         None
@@ -67,14 +65,14 @@ def add_logging(debug_status: int) -> None:
     if DEBUG:
         # We connect the output to TTY, level DEBUG
         logger.add(sys.stdout,
-                   format=logging.get("debug"),
+                   format=LOGGING.get("debug"),
                    level="DEBUG",
                    enqueue=True,
                    colorize=True)
 
         # Connect the output to a file, level DEBUG
         logger.add('log/debug.log',
-                   format=logging.get("debug"),
+                   format=LOGGING.get("debug"),
                    level="DEBUG",
                    enqueue=True,
                    colorize=True,
@@ -85,14 +83,14 @@ def add_logging(debug_status: int) -> None:
     else:
         # We connect the output to TTY, level INFO
         logger.add(sys.stdout,
-                   format=logging.get("info"),
+                   format=LOGGING.get("info"),
                    level="INFO",
                    enqueue=True,
                    colorize=True)
 
     # We connect the output to a file, level ERROR
     logger.add('log/error.log',
-               format=logging.get("error"),
+               format=LOGGING.get("error"),
                level="ERROR",
                backtrace=True,
                diagnose=True,
@@ -102,3 +100,9 @@ def add_logging(debug_status: int) -> None:
                retention=f"{expiration_date} days",
                rotation="10 MB",
                compression="zip")
+
+    logger.add(logs.loguru_handler,
+               format=LOGGING.get("info"),
+               level="DEBUG",
+               enqueue=True,
+               catch=True)
