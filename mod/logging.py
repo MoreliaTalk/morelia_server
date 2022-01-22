@@ -23,7 +23,7 @@ import sys
 from loguru import logger
 
 from admin import logs
-from mod.config import LOGGING
+from config import LOGGING
 
 
 expiration_date = LOGGING.get('EXPIRATION_DATE')

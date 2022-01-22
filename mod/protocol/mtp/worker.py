@@ -34,7 +34,7 @@ from mod.db.dbhandler import DBHandler
 from mod.db.dbhandler import DatabaseWriteError
 from mod.db.dbhandler import DatabaseReadError
 from mod.db.dbhandler import DatabaseAccessError
-from mod.config import SERVER_LIMIT as LIMIT
+from config import SERVER_LIMIT as LIMIT
 
 
 class MTPErrorResponse:

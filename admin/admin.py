@@ -26,7 +26,7 @@ from pathlib import Path
 from starlette.responses import RedirectResponse
 
 from mod.db.dbhandler import DBHandler
-from mod.config import DATABASE
+from config import DATABASE
 from . import login
 from . import logs
 from . import control as manage

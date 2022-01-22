@@ -27,8 +27,8 @@ from starlette.responses import HTMLResponse
 
 from mod import lib
 from mod.db.dbhandler import DBHandler
-from mod.config import DATABASE
-from mod.config import ADMIN
+from config import DATABASE
+from config import ADMIN
 
 
 db_connect = DBHandler(DATABASE.get('URI'))
