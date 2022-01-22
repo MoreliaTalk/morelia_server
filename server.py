@@ -41,9 +41,9 @@ from starlette.websockets import WebSocketDisconnect
 from mod.controller import MainHandler
 from mod.db.dbhandler import DBHandler
 from admin import admin
-from mod.config import LOGGING
-from mod.config import TEMPLATES as DIRECTORY
-from mod.config import DATABASE
+from config import LOGGING
+from config import TEMPLATES as DIRECTORY
+from config import DATABASE
 # ************** Morelia module end ******************
 
 

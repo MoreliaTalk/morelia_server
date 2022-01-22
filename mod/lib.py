@@ -24,7 +24,7 @@ from hashlib import blake2b
 from hmac import compare_digest
 from os import urandom
 
-from mod.config import HASH_SIZE
+from config import HASH_SIZE
 
 
 class Hash:
