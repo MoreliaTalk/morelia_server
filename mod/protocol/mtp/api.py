@@ -33,6 +33,11 @@ VERSION: str = '1.0'
 
 
 class BaseFlow(BaseModel):
+    """
+    A base class that describes the validation of the Flow object the same for
+    requests and responses.
+    """
+
     time: Optional[int] = None
     type: Optional[str] = None
     title: Optional[str] = None
@@ -44,6 +49,11 @@ class BaseFlow(BaseModel):
 
 
 class BaseUser(BaseModel):
+    """
+    A base class that describes the validation of the User object the same for
+    requests and responses.
+    """
+
     uuid: Optional[str] = None
     login: Optional[str] = None
     username: Optional[str] = None
@@ -56,6 +66,11 @@ class BaseUser(BaseModel):
 
 
 class BaseMessage(BaseModel):
+    """
+    A base class that describes the validation of the Message object the same
+    for requests and responses.
+    """
+
     uuid: str
     text: Optional[str] = None
     from_user: Optional[str] = None
@@ -71,20 +86,40 @@ class BaseMessage(BaseModel):
 
 
 class BaseData(BaseModel):
+    """
+    A base class that describes the validation of the Data object the same for
+    requests and responses.
+    """
+
     time: Optional[int] = None
     user: Optional[List[BaseUser]] = None
     meta: Optional[Any] = None
 
 
 class BaseErrors(BaseModel):
+    """
+    A base class that describes the validation of the Errors object the same
+    for requests and responses.
+    """
+
     detail: Optional[str] = None
 
 
 class BaseVersion(BaseModel):
+    """
+    A base class that describes the validation of the Jsonapi object the same
+    for requests and responses.
+    """
+
     version: str
 
 
 class BaseValidator(BaseModel):
+    """
+    A base class that describes the validation of the main object the same for
+    requests and responses.
+    """
+
     type: str
     jsonapi: BaseVersion
     meta: Optional[Any] = None
@@ -94,47 +129,105 @@ class BaseValidator(BaseModel):
 
 
 class FlowRequest(BaseFlow):
+    """
+    Validation settings for the Flow object
+    """
+
     class Config:
+        """
+        Additional configuration for Request
+        """
+
         title = 'List of flow with UUID is str or None'
     uuid: str = None
 
 
 class UserRequest(BaseUser):
+    """
+    Validation settings for the User object
+    """
+
     class Config:
+        """
+        Additional configuration for Request
+        """
+
         title = 'List of user information'
-    pass
 
 
 class MessageRequest(BaseMessage):
+    """
+    Validation settings for the Message object
+    """
+
     class Config:
+        """
+        Additional configuration for Request
+        """
+
         title = 'List of message information with client_id is int'
+
     client_id: int
 
 
 class DataRequest(BaseData):
+    """
+    Validation settings for the Data object
+    """
+
     class Config:
+        """
+        Additional configuration for Request
+        """
+
         title = 'Main data-object'
+
     flow: Optional[List[FlowRequest]] = None
     message: Optional[List[MessageRequest]] = None
 
 
 class ErrorsRequest(BaseErrors):
+    """
+    Validation settings for the Errors object
+    """
+
     class Config:
+        """
+        Additional configuration for Request
+        """
+
         title = 'Error information'
+
     code: int = None
     status: str = None
     time: int = None
 
 
 class VersionRequest(BaseVersion):
+    """
+    Validation settings for the Jsonapi object
+    """
+
     class Config:
+        """
+        Additional configuration for Request
+        """
+
         title = 'Protocol version'
-    pass
 
 
 class Request(BaseValidator):
+    """
+    Responsible for validation and generation of request in JSON-object.
+    """
+
     class Config:
+        """
+        Additional configuration for Request
+        """
+
         title = 'MoreliaTalk protocol (for request)'
+
     data: Optional[DataRequest] = None
     errors: ErrorsRequest = None
 
@@ -143,47 +236,106 @@ class Request(BaseValidator):
 
 
 class FlowResponse(BaseFlow):
+    """
+    Validation settings for the Flow object
+    """
+
     class Config:
+        """
+        Additional configuration for Response
+        """
+
         title = 'List of flow with required UUID and it is str'
+
     uuid: str
 
 
 class UserResponse(BaseUser):
+    """
+    Validation settings for the User object
+    """
+
     class Config:
+        """
+        Additional configuration for Response
+        """
+
         title = 'List of user information'
-    pass
 
 
 class MessageResponse(BaseMessage):
+    """
+    Validation settings for the Message object
+    """
+
     class Config:
+        """
+        Additional configuration for Response
+        """
+
         title = 'List of message information without client_id'
+
     client_id: int = None
 
 
 class DataResponse(BaseData):
+    """
+    Validation settings for the Data object
+    """
+
     class Config:
+        """
+        Additional configuration for Response
+        """
+
         title = 'Main data-object'
+
     flow: Optional[List[FlowResponse]] = None
     message: Optional[List[MessageResponse]] = None
 
 
 class ErrorsResponse(BaseErrors):
+    """
+    Validation settings for the Errors object
+    """
+
     class Config:
+        """
+        Additional configuration for Response
+        """
+
         title = 'Error information. Code, status. time is required'
+
     code: int
     status: str
     time: int
 
 
 class VersionResponse(BaseVersion):
+    """
+    Validation settings for the Jsonapi object
+    """
+
     class Config:
+        """
+        Additional configuration for Response
+        """
+
         title = 'Protocol version'
-    pass
 
 
 class Response(BaseValidator):
+    """
+    Responsible for validation and generation of response in JSON-object.
+    """
+
     class Config:
+        """
+        Additional configuration for Response
+        """
+
         title = 'MoreliaTalk protocol (for response)'
         use_enum_values = False
+
     data: Optional[DataResponse] = None
     errors: ErrorsResponse = None
