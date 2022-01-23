@@ -24,8 +24,18 @@ from enum import IntEnum
 
 
 class ServerStatus(IntEnum):
-    """Additional server status code and reason phrases
     """
+    Additional server status code and reason phrases
+
+    Notes:
+        CLIENT_CLOSED_REQUEST - 499
+
+        UNKNOWN_ERROR - 520
+
+        INVALID_SSL_CERTIFICATE - 526
+
+    """
+
     def __new__(cls, value, phrase, description=''):
         obj = int.__new__(cls, value)
         obj._value_ = value
@@ -45,6 +55,24 @@ class ServerStatus(IntEnum):
 
 
 def check_error_pattern(status: str) -> namedtuple:
+    """
+    Checks the error name against the existing error types supported by
+    the server. The error name is passed as a "status" parameter.
+
+    Args:
+        status (str): error name
+
+    Returns:
+        (namedtuple): named tuple with three value, where
+
+                        ``value`` - status code of error
+
+                        ``phrase`` - status name of error
+
+                        ``description`` - short description of the error
+
+    """
+
     CatchError = namedtuple('CatchError', ['code',
                                            'status',
                                            'detail'])
