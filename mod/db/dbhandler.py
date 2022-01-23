@@ -34,30 +34,38 @@ from mod.db import models
 
 
 class DatabaseReadError(SQLObjectNotFound):
-    pass
+    """
+    Occurs when there is no table in the database, there was a problem at
+    the stage of reading from database.
+    """
 
 
 class DatabaseAccessError(Exception):
-    pass
+    """
+    Occurs when there is an unknown problem when reading from database.
+    """
 
 
 class DatabaseWriteError(SQLObjectNotFound):
-    pass
+    """
+    Occurs when there is an unknown problem when writing to database.
+    """
 
 
 class DBHandler:
     """
-    A layer for interaction with the database.
-    As a method prescribed frequently used actions with data from the database.
+    A layer for interaction with the database ORM.
+    As a method prescribed frequently used actions with data from database.
 
     Args:
-        uri (str): like that [name of DB-API]:/:[directory or url or 'memory']:
+        uri (str): [name of DB-API]:/:[directory or url or 'memory'] like that
+                   sqlite:/:memory:
         debug (bool): enable or disable debug messages
         logger (str): name of logger
         loglevel (str): standard logging levels: info, debug, error.
-            Or stderr, stdout
+                        or stderr, stdout
         path_to_models (str): path to the location of the file describing
-            database tables
+                              database tables
 
     """
 
@@ -87,15 +95,37 @@ class DBHandler:
         self.path = path_to_models
 
     def __str__(self) -> str:
+        """
+        Returned string which contains URI for connected database.
+
+        Returns:
+            (str): Connected to database: URI
+        """
+
         return f"Connected to database: {self._uri}"
 
     def __repr__(self) -> str:
-        return "".join((f"class {self.__class__.__name__}: ",
+        """
+        Return string which contains name of created class and parameters send
+        to class object when is created.
+
+        Returns:
+            (str): Class __name__: debug=, logger=, loglevel=
+        """
+
+        return "".join((f"Class {self.__class__.__name__}: ",
                         f"debug={self._debug} ",
                         f"logger={self._logger} ",
                         f"loglevel={self._loglevel}"))
 
     def __search_db_in_models(self) -> tuple:
+        """
+        Search all class name which contains in models.py
+
+        Returns:
+            (tuple): name of table
+        """
+
         classes = [cls_name for cls_name, cls_obj
                    in inspect.getmembers(sys.modules[self.path])
                    if inspect.isclass(cls_obj)]
@@ -103,10 +133,10 @@ class DBHandler:
 
     def create_table(self) -> None:
         """
-        Looking for all Classes listed in models.py and create all
+        Create all table which contains in models.py
 
-        Returns: None
-
+        Returns:
+            (None):
         """
 
         for item in self.__search_db_in_models():
@@ -117,11 +147,10 @@ class DBHandler:
 
     def delete_table(self) -> None:
         """
-        Looking for all Classes listed in models.py
-        and delete all
+        Delete all table which contains in models.py
 
-        Returns: None
-
+        Returns:
+            (None):
         """
 
         for item in self.__search_db_in_models():
@@ -134,6 +163,13 @@ class DBHandler:
 
     @property
     def debug(self) -> bool | None:
+        """
+        Shows is flag set in property `debug`.
+
+        Returns:
+            (bool): True or False
+        """
+
         if self._debug == "0":
             return False
         else:
@@ -142,6 +178,16 @@ class DBHandler:
     @debug.setter
     def debug(self,
               value: bool = False) -> None:
+        """
+        Set `debug` property.
+
+        Args:
+            value (bool): True or False
+
+        Returns:
+            (None):
+        """
+
         if value is True:
             self._debug = "1"
         self._uri = "".join((self._uri,
@@ -153,6 +199,27 @@ class DBHandler:
                   table: str,
                   get_one: bool,
                   **kwargs) -> SelectResults | SQLObject:
+        """
+        Universal method for read data in database.
+
+        Args:
+            table (str): name of table
+            get_one (str): sets how many objects will be returned, True for one
+                           object or False for many object
+            **kwargs (str): dict contains name of column and data
+
+        Returns:
+            (SelectResult | SQLObject): ORM object contains one or many row
+                                        from database
+
+        Raises:
+            DatabaseReadError: occurs when there is no table in the database,
+                               there was a problem at the stage of reading from
+                               database
+            DatabaseAccessError: occurs when there is an unknown problem when
+                                 reading from database
+        """
+
         # The SelectResults object type when the result
         # is in the form of a list. SQLObject type when
         # the result is a single object.
@@ -181,6 +248,21 @@ class DBHandler:
     @staticmethod
     def __write_db(table: str,
                    **kwargs) -> SQLObject:
+        """
+        Universal method for write data in database.
+
+        Args:
+            table (str): name of table
+            **kwargs (str): dict contains name of column and data
+
+        Returns:
+            (SQLObject):
+
+        Raises:
+            DatabaseWriteError: occurs when there is an unknown problem when
+                                writing to database
+        """
+
         db = getattr(models, table)
         try:
             dbquery = db(**kwargs)
@@ -190,17 +272,43 @@ class DBHandler:
             return dbquery
 
     def get_all_user(self) -> SelectResults:
+        """
+        Gives out all user contains in UserConfig table.
+
+        Returns:
+            (SelectResult):
+        """
+
         return self.__read_db(table="UserConfig",
                               get_one=False)
 
     def get_user_by_uuid(self,
                          uuid: str) -> SQLObject:
+        """
+        Gives out user by uuid contains in UserConfig table.
+
+        Args:
+            uuid(str): unique user identify number
+
+        Returns:
+            (SQLObject):
+        """
+
         return self.__read_db(table="UserConfig",
                               get_one=True,
                               uuid=uuid)
 
     def get_user_by_login(self,
                           login: str) -> SQLObject:
+        """
+        Gives out user by login contains in UserConfig table.
+        Args:
+            login (str): user login
+
+        Returns:
+            (SQLObject):
+        """
+
         return self.__read_db(table="UserConfig",
                               get_one=True,
                               login=login)
@@ -208,6 +316,17 @@ class DBHandler:
     def get_user_by_login_and_password(self,
                                        login: str,
                                        password: str) -> SQLObject:
+        """
+        Gives out user by login and password contains in UserConfig table.
+
+        Args:
+            login (str): user login
+            password (str): user password
+
+        Returns:
+            (SQLObject):
+        """
+
         return self.__read_db(table="UserConfig",
                               get_one=True,
                               login=login,
@@ -226,6 +345,28 @@ class DBHandler:
                  bio: str = None,
                  salt: bytes = None,
                  key: bytes = None) -> SQLObject:
+        """
+        Added new user to the UserConfig table,
+        if salt or key is None then used blank string converted to bytes.
+
+        Args:
+            uuid (str): unique user identify number
+            login (str): user login
+            password (str): user password
+            hash_password (str): hash from password
+            username (str): public username
+            is_bot (bool): type of user
+            auth_id (str): authenticate token
+            email (str): user email
+            avatar (bytes): user image or photo
+            bio (str): text information about user
+            salt (bytes): secret bytes string
+            key (bytes): secrets bytes string
+
+        Returns:
+            (SQLObject):
+        """
+
         if salt is None:
             salt = b''
 
@@ -259,6 +400,27 @@ class DBHandler:
                     bio: str = None,
                     key: bytes = None,
                     salt: bytes = None) -> str:
+        """
+        Updating information in the table UserConfig
+
+        Args:
+            uuid (str): unique user identify number
+            login (str): user login
+            password (str): user password
+            hash_password (str): hash from password
+            username (str): public username
+            is_bot (bool): type of user
+            auth_id (str): authenticate token
+            email (str): user email
+            avatar (bytes): user image or photo
+            bio (str): text information about user
+            salt (bytes): secret bytes string
+            key (bytes): secrets bytes string
+
+        Returns:
+            (str): message "Updated"
+
+        """
         dbquery = self.__read_db(table="UserConfig",
                                  get_one=True,
                                  uuid=uuid)
@@ -298,36 +460,105 @@ class DBHandler:
         return "Updated"
 
     def get_all_message(self) -> SelectResults:
+        """
+        Gives out all message contains Message table.
+
+        Returns:
+            (SelectResults):
+        """
+
         return self.__read_db(table="Message",
                               get_one=False)
 
     def get_message_by_uuid(self,
                             uuid: str) -> SQLObject:
+        """
+        Gives out one message by uuid which contains in Message table.
+
+        Args:
+            uuid(str): unique user identify number
+
+        Returns:
+            (SQLObject):
+        """
+
         return self.__read_db(table="Message",
                               get_one=True,
                               uuid=uuid)
 
     def get_message_by_text(self,
                             text: str) -> SelectResults:
+        """
+        Gives out all message which contains in Message table and contain
+        desired text string.
+
+        Args:
+            text (str): text string to be found
+
+        Returns:
+            (SelectResults):
+        """
+
         return self.__read_db(table="Message",
                               get_one=False,
                               text=text)
 
     @staticmethod
     def get_message_by_exact_time(time: int) -> SelectResults:
+        """
+        Gives out message by time, full compliance for requested time.
+
+        Args:
+            time (str): Unix-like time
+
+        Returns:
+            (SelectResults):
+        """
+
         return models.Message.select(models.Message.q.time == time)
 
     @staticmethod
     def get_message_by_less_time(time: int) -> SelectResults:
+        """
+        Gives out message by time, <= requested time.
+
+        Args:
+            time (str): Unix-like time
+
+        Returns:
+            (SelectResults):
+        """
+
         return models.Message.select(models.Message.q.time <= time)
 
     @staticmethod
     def get_message_by_more_time(time: int) -> SelectResults:
+        """
+        Gives out message by time, >= requested time.
+
+        Args:
+            time (str): Unix-like time
+
+        Returns:
+            (SelectResults):
+        """
+
         return models.Message.select(models.Message.q.time >= time)
 
     def get_message_by_more_time_and_flow(self,
                                           flow_uuid: str,
                                           time: int) -> SelectResults:
+        """
+        Gives out message by flow and time >= than requested.
+
+        Args:
+            flow_uuid (str): unique identify number from flow
+            time (int): Unix-like time
+
+        Returns:
+            (SelectResults):
+        """
+
         flow = self.__read_db(table="Flow",
                               get_one=True,
                               uuid=flow_uuid)
@@ -338,6 +569,17 @@ class DBHandler:
     def get_message_by_less_time_and_flow(self,
                                           flow_uuid: str,
                                           time: int) -> SelectResults:
+        """
+        Gives out message by flow and time, <= requested time.
+
+        Args:
+            flow_uuid (str): unique identify number from flow
+            time (int): Unix-like time
+
+        Returns:
+            (SelectResults):
+        """
+
         flow = self.__read_db(table="Flow",
                               get_one=True,
                               uuid=flow_uuid)
@@ -348,6 +590,17 @@ class DBHandler:
     def get_message_by_exact_time_and_flow(self,
                                            flow_uuid: str,
                                            time: int) -> SelectResults:
+        """
+        Gives out message by flow and time, full compliance for requested time.
+
+        Args:
+            flow_uuid (str): unique identify number from flow
+            time (int): Unix-like time
+
+        Returns:
+            (SelectResults):
+        """
+
         flow = self.__read_db(table="Flow",
                               get_one=True,
                               uuid=flow_uuid)
@@ -366,6 +619,29 @@ class DBHandler:
                     audio: bytes = None,
                     document: bytes = None,
                     emoji: bytes = None) -> SQLObject:
+        """
+        Added new message to the Message table.
+
+        Notes:
+            Before adding a message to the "Message" table, the presence of
+            "flow" and "user" in the database is checked.
+
+        Args:
+            flow_uuid (str): unique identify number from flow
+            user_uuid (str): unique user identify number
+            message_uuid (str): unique identify number from message
+            time (int): Unix-like time
+            text (str): message text
+            picture (bytes): appending image
+            video (bytes): appending video
+            audio (bytes): appending audio
+            document (bytes): appending document
+            emoji (bytes): appending emoji image
+
+        Returns:
+            (SQLObject):
+        """
+
         flow = self.__read_db(table="Flow",
                               get_one=True,
                               uuid=flow_uuid)
@@ -396,6 +672,25 @@ class DBHandler:
                        emoji: bytes = None,
                        edited_time: int = None,
                        edited_status: bool = False) -> str:
+        """
+        Update message content which contains in Message table.
+
+        Args:
+            uuid (str): unique identify number from message
+            text (str): message text
+            picture (bytes): appending image
+            video (bytes): appending video
+            audio (bytes): appending audio
+            document (bytes): appending document
+            emoji (bytes): appending emoji image
+            edited_time (int): time when user last time is corrected his
+                               message
+            edited_status (bool): True if user corrected his message
+
+        Returns:
+            (str): message "Updated"
+        """
+
         dbquery = self.__read_db(table="Message",
                                  get_one=True,
                                  uuid=uuid)
@@ -426,31 +721,88 @@ class DBHandler:
         return "Updated"
 
     def get_all_flow(self) -> SelectResults:
+        """
+        Gives out all flow from Flow table.
+
+        Returns:
+            (SelectResults):
+        """
+
         return self.__read_db(table="Flow",
                               get_one=False)
 
     def get_flow_by_uuid(self,
                          uuid: str) -> SQLObject:
+        """
+        Gives out one flow by uuid from Flow table.
+
+        Args:
+            uuid (str): unique user identify number
+
+        Returns:
+            (SQLObject):
+        """
+
         return self.__read_db(table="Flow",
                               get_one=True,
                               uuid=uuid)
 
     def get_flow_by_title(self,
                           title: str) -> SelectResults:
+        """
+        Gives out flow by title which contains in Flow table.
+
+        Args:
+            title (str): name added in public information about flow
+
+        Returns:
+            (SelectResults):
+        """
+
         return self.__read_db(table="Flow",
                               get_one=False,
                               title=title)
 
     @staticmethod
     def get_flow_by_more_time(time: int) -> SelectResults:
+        """
+        Gives flow by time, full compliance requested time.
+
+        Args:
+            time (int): Unix-like time
+
+        Returns:
+            (SelectResults):
+        """
+
         return models.Flow.select(models.Flow.q.time_created >= time)
 
     @staticmethod
     def get_flow_by_less_time(time: int) -> SelectResults:
+        """
+        Gives out flow by time <= requested time.
+
+        Args:
+            time (int): Unix-like time
+
+        Returns:
+            (SelectResults):
+        """
+
         return models.Flow.select(models.Flow.q.time_created <= time)
 
     @staticmethod
     def get_flow_by_exact_time(time: int) -> SelectResults:
+        """
+        Gives out floe by time == requested time.
+
+        Args:
+            time (int): Unix-like time
+
+        Returns:
+            (SelectResults):
+        """
+
         return models.Flow.select(models.Flow.q.time_created == time)
 
     def add_flow(self,
@@ -461,6 +813,22 @@ class DBHandler:
                  title: str = None,
                  info: str = None,
                  owner: str = None) -> SQLObject:
+        """
+        Added new flow to the Flow table.
+
+        Args:
+            uuid (str): unique identify number from flow
+            users (list | tuple): uuid user which used that flow
+            time_created (int): time when created flow
+            flow_type (str): ``chat`` or ``group`` or ``channel``
+            title (str): name added in public information about flow
+            info (str): text added in public information about flow
+            owner (str): user uuid which created that flow
+
+        Returns:
+            (SQLObject):
+        """
+
         dbquery = self.__write_db(table="Flow",
                                   uuid=uuid,
                                   time_created=time_created,
@@ -480,6 +848,20 @@ class DBHandler:
                     title: str = None,
                     info: str = None,
                     owner: str = None) -> str:
+        """
+        Update information about flow which contains in Flow table.
+
+        Args:
+            uuid (str): unique identify number from flow
+            flow_type (str): ``chat`` or ``group`` or ``channel``
+            title (str): name added in public information about flow
+            info (str): text added in public information about flow
+            owner (str): user uuid which created that flow
+
+        Returns:
+            (str): message "Updated"
+        """
+
         dbquery = self.__read_db(table="Flow",
                                  get_one=True,
                                  uuid=uuid)
@@ -499,6 +881,19 @@ class DBHandler:
         return "Updated"
 
     def get_table_count(self) -> namedtuple:
+        """
+        Gives out quantity all row from Message, Flow or UserConfig table.
+
+        Returns:
+            (namedtuple): where
+
+                          ``user_count`` - quantity all UserConfig row
+
+                          ``flow_count`` - quantity all Flow row
+
+                          ``message_count`` - quantity all Message row
+        """
+
         TableCount = namedtuple('TableCount', ["user_count",
                                                "flow_count",
                                                "message_count"])
@@ -513,11 +908,28 @@ class DBHandler:
                           message.count())
 
     def get_all_admin(self) -> SelectResults:
+        """
+        Gives out all users from Admin table.
+
+        Returns:
+            (SelectResults):
+        """
+
         return self.__read_db(table="Admin",
                               get_one=False)
 
     def get_admin_by_name(self,
                           username: str) -> SQLObject:
+        """
+        Gives user by name from Admin table.
+
+        Args:
+            username (str): name user which granted administrator rights
+
+        Returns:
+            (SQLObject):
+        """
+
         return self.__read_db(table="Admin",
                               get_one=True,
                               username=username)
@@ -525,6 +937,18 @@ class DBHandler:
     def add_admin(self,
                   username: str,
                   hash_password: str) -> SQLObject:
+        """
+        Added new admin to the Admin table.
+
+        Args:
+            username (str): name user which granted administrator rights
+            hash_password (str): hash-function generated from administrator
+                                 password
+
+        Returns:
+            (SQLObject):
+        """
+
         return self.__write_db(table="Admin",
                                username=username,
                                hash_password=hash_password)
