@@ -23,6 +23,20 @@ from mod.db.dbhandler import DBHandler
 
 
 class MatrixProtocol:
+    """
+    Processing requests and forming response according to "Matrix" protocol.
+
+    Read actual description of protocol:
+    https://spec.matrix.org/v1.1/
+
+    Args:
+        request: JSON request from websocket client
+        database (DBHandler): object - database connection point
+
+    Returns:
+        returns class api.Response
+    """
+
     def __init__(self,
                  request,
                  database: DBHandler):
@@ -31,5 +45,13 @@ class MatrixProtocol:
 
     @staticmethod
     def get_response() -> str:
+        """
+        Generates a JSON-object containing result of an instance json
+
+        Returns:
+                (json): json-object which contains validated response
+
+        """
+
         result = "Method not worked"
         return result
