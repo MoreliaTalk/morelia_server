@@ -26,6 +26,7 @@ from collections import namedtuple
 
 from pydantic import ValidationError
 from loguru import logger
+from sqlobject.sresults import SelectResults
 
 from mod.protocol.mtp import api
 from mod import error
@@ -38,9 +39,12 @@ from config import SERVER_LIMIT as LIMIT
 
 
 class MTPErrorResponse:
-    """Catcher errors in "try...except" content.
-    Result is class 'api.ErrorsResponse' with information about code,
+    """
+    Catcher errors in "try...except" content.
+
+    Returned 'api.ErrorsResponse' with information about code,
     status, time and detailed description of error that has occurred.
+
     For errors like Exception and other unrecognized errors,
     code "520" and status "Unknown Error" are used.
 
@@ -48,11 +52,6 @@ class MTPErrorResponse:
         status (str): Error type
         add_info ([Exception] or [str], optional): Additional information
         to be added. Defaults to None.
-
-    Returns:
-        ErrorResponse.result() returns class 'api.ErrorsResponse'
-        according to protocol, like:
-        {'code': 200, 'status': 'Ok', 'time': 123456545, 'detail': 'successfully'}
     """
 
     def __init__(self,
@@ -62,6 +61,16 @@ class MTPErrorResponse:
         self.detail = add_info
 
     def result(self) -> api.ErrorsResponse:
+        """
+        Used for returned result which 'api.ErrorsResponse' type.
+
+        Returns:
+            object (api.ErrorResponse): object with information about code,
+            status, time and detailed description of error that has occurred.
+
+            {'code': 200,'status': 'Ok','time': 123456545,'detail': 'successfully'}
+        """
+
         try:
             catch_error = error.check_error_pattern(self.status)
         except Exception as ERROR:
@@ -89,9 +98,12 @@ class MTPErrorResponse:
 
 class MTProtocol:
     """
-    Processing requests and forming answers according to "MTP" protocol.
-    Protocol version and its actual description:
-    https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md
+    Processing requests and forming response according to "MTP" protocol.
+
+    See Also:
+        Read actual description of protocol:
+
+        https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md
 
     Args:
         request: JSON request from websocket client
@@ -155,6 +167,24 @@ class MTProtocol:
     def _check_auth(self,
                     uuid: str,
                     auth_id: str) -> namedtuple:
+        """
+        Checking user authentication every each request
+
+        Args:
+            uuid (str): user identification number which granted moreliatalk
+                        server
+            auth_id (str): authentication token which granted moreliatalk
+                            server
+
+        Returns:
+                object (namedtuple): object with two parameters, which contain:
+
+                                     ``result``: True or False
+
+                                     ``error_message``: text description of
+                                     the error
+        """
+
         Result = namedtuple('Result', ['result',
                                        'error_message'])
         try:
@@ -179,9 +209,14 @@ class MTProtocol:
 
     def get_response(self,
                      response: api.Response = None) -> json:
-        """Generates a JSON-object containing result
-        of an instance of ProtocolMethod class.
         """
+        Generates a JSON-object containing result of an instance json
+
+        Returns:
+            (json): json-object which contains validated response
+
+        """
+
         if response is None:
             result = self.response.json()
             return result
@@ -191,15 +226,17 @@ class MTProtocol:
 
     def _check_login(self,
                      login: str) -> bool:
-        """Checks database for a user with the same login
+        """
+        Checks database for a user with the same login and returns True
+        if there is such a user or False if no such user exists.
 
         Args:
             login (str): user login
 
         Returns:
-            True if there is such a user
-            False if no such user exists
+            (bool): True of False
         """
+
         try:
             self._db.get_user_by_login(login)
         except DatabaseReadError:
@@ -211,9 +248,20 @@ class MTProtocol:
 
     def _register_user(self,
                        request: api.Request) -> api.Response:
-        """Registers user who is not in the database.
-        Note: This version also authentication user, that exist in database
         """
+        Registers user who is not in the database.
+
+        See Also:
+            https://github.com/MoreliaTalk/morelia_protocol
+
+        Note:
+            This version also authentication user, that exist in database
+
+        Returns:
+            (api.Response): validated response
+
+        """
+
         uuid = str(uuid4().int)
         password = request.data.user[0].password
         login = request.data.user[0].login
@@ -254,8 +302,16 @@ class MTProtocol:
 
     def _get_update(self,
                     request: api.Request) -> api.Response:
-        """Provides updates of flows, messages and users in them from time
         """
+        Provides updates of flows, messages and users in them from time.
+
+        See Also:
+            https://github.com/MoreliaTalk/morelia_protocol
+
+        Returns:
+            (api.Response): validated response
+        """
+
         # select all fields of the user table
         # TODO внести изменения в протокол, добавить фильтр
         # по дате создания пользователя
@@ -318,8 +374,13 @@ class MTProtocol:
 
     def _send_message(self,
                       request: api.Request) -> api.Response:
-        """Saves user message in database.
         """
+        Saves user message in database.
+
+        See Also:
+            https://github.com/MoreliaTalk/morelia_protocol
+        """
+
         message_uuid = str(uuid4().int)
         flow_uuid = request.data.flow[0].uuid
         text = request.data.message[0].text
@@ -365,9 +426,14 @@ class MTProtocol:
 
     def _all_messages(self,
                       request: api.Request) -> api.Response:
-        """Displays all messages of a specific flow retrieves them
-        from database and issues them as an array consisting of JSON
         """
+        Displays all messages of a specific flow retrieves them
+        from database and issues them as an array consisting of JSON.
+
+        See Also:
+            https://github.com/MoreliaTalk/morelia_protocol
+        """
+
         flow_uuid = request.data.flow[0].uuid
         flow = []
         message = []
@@ -384,9 +450,22 @@ class MTProtocol:
 
         message_volume = message_end - message_start
 
-        def get_messages(db,
+        def get_messages(db: SelectResults,
                          end: int,
                          start: int = 0) -> list[api.MessageResponse]:
+            """
+            Converts the database object into a list of validated "Message"
+            objects.
+
+            Args:
+                db (SelectResults): database query result
+                end (int): last message number
+                start (int): first message number
+
+            Returns:
+                (list[api.MessageResponse]): list contains of validated object
+            """
+
             _list = []
             for element in db[start:end]:
                 _list.append(api.MessageResponse(
@@ -449,8 +528,13 @@ class MTProtocol:
 
     def _add_flow(self,
                   request: api.Request) -> api.Response:
-        """Allows to add a new flow to database
         """
+        Allows to add a new flow to database.
+
+        See Also:
+            https://github.com/MoreliaTalk/morelia_protocol
+        """
+
         flow_uuid = str(uuid4().int)
         owner = request.data.flow[0].owner
         users = request.data.flow[0].users
@@ -498,9 +582,14 @@ class MTProtocol:
 
     def _all_flow(self,
                   request: api.Request) -> api.Response:
-        """Allows to get a list of all flows and information about them
-        from database
         """
+        Allows to get a list of all flows and information about them
+        from database.
+
+        See Also:
+            https://github.com/MoreliaTalk/morelia_protocol
+        """
+
         flow = []
         dbquery = self._db.get_all_flow()
 
@@ -529,8 +618,13 @@ class MTProtocol:
 
     def _user_info(self,
                    request: api.Request) -> api.Response:
-        """Provides information about all personal settings of user.
         """
+        Provides information about all personal settings of user.
+
+        See Also:
+            https://github.com/MoreliaTalk/morelia_protocol
+        """
+
         users_volume = len(request.data.user)
         user = []
 
@@ -566,11 +660,16 @@ class MTProtocol:
 
     def _authentication(self,
                         request: api.Request) -> api.Response:
-        """Performs authentication of registered client,
+        """
+        Performs authentication of registered client,
         with issuance of a unique hash number of connection session.
         During authentication password transmitted by client
         and password contained in server database are verified.
+
+        See Also:
+            https://github.com/MoreliaTalk/morelia_protocol
         """
+
         login = request.data.user[0].login
         password = request.data.user[0].password
         user = []
@@ -607,8 +706,13 @@ class MTProtocol:
 
     def _delete_user(self,
                      request: api.Request) -> api.Response:
-        """Function irretrievably deletes the user from database.
         """
+        Function irretrievably deletes the user from database.
+
+        See Also:
+            https://github.com/MoreliaTalk/morelia_protocol
+        """
+
         uuid = str(uuid4().int)
         login = request.data.user[0].login
         password = request.data.user[0].password
@@ -641,9 +745,14 @@ class MTProtocol:
 
     def _delete_message(self,
                         request: api.Request) -> api.Response:
-        """Function deletes the message from database Message
-        table by its ID.
         """
+        Function deletes the message from database Message
+        table by its ID.
+
+        See Also:
+            https://github.com/MoreliaTalk/morelia_protocol
+        """
+
         message_uuid = request.data.message[0].uuid
 
         try:
@@ -671,9 +780,14 @@ class MTProtocol:
 
     def _edited_message(self,
                         request: api.Request) -> api.Response:
-        """Changes text and time in database Message table.
-        Value of edited_status column changes from None to True.
         """
+        Changes text and time in database Message table.
+        Value of edited_status column changes from None to True.
+
+        See Also:
+            https://github.com/MoreliaTalk/morelia_protocol
+        """
+
         message_uuid = request.data.message[0].uuid
 
         try:
@@ -696,9 +810,14 @@ class MTProtocol:
 
     def _ping_pong(self,
                    request: api.Request) -> api.Response:
-        """Generates a response to a client's request
-        for communication between server and client.
         """
+        Generates a response to a client's request
+        for communication between server and client.
+
+        See Also:
+            https://github.com/MoreliaTalk/morelia_protocol
+        """
+
         errors = MTPErrorResponse("OK")
         logger.success("\'_ping_pong\' executed successfully")
 
@@ -711,10 +830,15 @@ class MTProtocol:
                 status: str = None,
                 add_info: Exception | str = None,
                 request: api.Request = None) -> api.Response:
-        """Handles cases when a request to server is not recognized by it.
+        """
+        Handles cases when a request to server is not recognized by it.
         Get a standard answer type: error, which contains an object
         with a description of error.
+
+        See Also:
+            https://github.com/MoreliaTalk/morelia_protocol
         """
+
         if request is not None:
             response = request.type
         else:
