@@ -33,8 +33,9 @@ class MainHandler:
     Args:
         request (object): JSON request from websocket client
         database (DBHandler): object - database connection point
-        protocol (str): name of using protocol
+        protocol (str): name of using protocol, 'mtp' or 'matrix'.
     """
+
     def __init__(self,
                  request,
                  database: DBHandler,
@@ -49,14 +50,37 @@ class MainHandler:
             self.response = self.mtp_handler()
 
     def get_response(self):
+        """
+        Returns the result of the request processing depending on the protocol
+
+        Returns:
+                (json)
+        """
+
         return self.response
 
     def mtp_handler(self) -> json:
+        """
+        Returns the result of the get_response method of the class handling
+        the MTP protocol
+
+        Returns:
+            (json):
+        """
+
         result = MTProtocol(self.request,
                             self.database).get_response()
         return result
 
     def matrix_handler(self) -> json:
+        """
+        Returns the result of the get_response method of the class handling
+        the Matrix protocol
+
+        Returns:
+            (json):
+        """
+
         result = MatrixProtocol(self.request,
                                 self.database).get_response()
         return result
