@@ -139,5 +139,4 @@ dmypy.json
 ## Morelia stuff
 db_sqlite.db
 config.ini
-t.py
 ngrok.exe
