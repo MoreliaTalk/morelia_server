@@ -141,3 +141,4 @@ db_sqlite.db
 config.ini
 t.py
 ngrok.exe
+/docs/log/
