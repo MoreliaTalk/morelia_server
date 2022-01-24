@@ -8,8 +8,17 @@ MoreliaTalk server
 
 **MoreliaTalk server** - used to deploy the MoreliaTalk messenger infrastructure.
 
-The development uses
-====================
+
+Contacts
+========
+
+`Telegram <https://t.me/joinchat/LImHShzAmIWvpMxDTr5Vxw>`_ - a group where pressing issues are discussed.
+
+`Slack <www.moreliatalk.slack.com>`_ - an alternative way of discussing the project.
+
+
+For we development uses
+=======================
 
 * `Python 3.10 <https://www.python.org/>`_ - programming language
 
@@ -28,22 +37,16 @@ The development uses
    :maxdepth: 2
    :caption: Contents:
 
-.. note::
-
-   This project is under active development.
-
 Contents
---------
+========
 
 .. toctree::
 
    install
    doc
    development
+   licence
 
-
-Check out the :doc:`install` section for further information including how to
-:ref:`install <installation>` of project.
 
 Indices and tables
 ==================
