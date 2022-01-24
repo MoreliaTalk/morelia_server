@@ -57,8 +57,6 @@ Language [EN](./README_ENG.md), [RU](./README.md)
 * example_config.ini - file containing example server settings, just rename it to `config.ini` before running the server.
 * client.py - mini-customer to test the server.
 
-Translated with www.DeepL.com/Translator (free version)
-
 ## Installing ##
 
 Install [Python](https://www.python.org/downloads/) version 3.8 or higher.
