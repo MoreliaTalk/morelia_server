@@ -8,6 +8,7 @@ flake8 = "*"
 pyflakes = "*"
 pycodestyle = "*"
 mccabe = "*"
+bpython = "*"
 
 [packages]
 fastapi = "==0.71.0"
