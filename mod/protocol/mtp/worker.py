@@ -555,7 +555,7 @@ class MTProtocol:
                                                  is_bot=dbquery.is_bot))
             logger.success("\'_user_info\' executed successfully")
         else:
-            errors = MTPErrorResponse("FORBIDDEN",
+            errors = MTPErrorResponse("TOO_MANY_REQUESTS",
                                       f"Requested more {LIMIT.get('users')}"
                                       " users than server limit")
 
