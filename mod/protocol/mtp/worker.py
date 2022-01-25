@@ -260,8 +260,8 @@ class MTProtocol:
         """Provides updates of flows, messages and users in them from time
         """
         # select all fields of the user table
-        # TODO внести изменения в протокол, добавить фильтр
-        # по дате создания пользователя
+        # TODO внести изменения в протокол:
+        #   добавить фильтр по дате создания пользователя
         message = []
         flow = []
         user = []
