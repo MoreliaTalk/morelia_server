@@ -381,7 +381,7 @@ class MTProtocol:
             message_start = request.data.flow[0].message_start
 
         if request.data.flow[0].message_end is None:
-            message_end = 0
+            message_end = 100
         else:
             message_end = request.data.flow[0].message_end
 
@@ -418,9 +418,7 @@ class MTProtocol:
                                       str(flow_error))
         else:
             if MESSAGE_COUNT <= LIMIT.getint("messages"):
-                flow.append(api.FlowResponse(uuid=flow_uuid,
-                                             message_start=message_start,
-                                             message_end=message_end))
+                flow.append(api.FlowResponse(uuid=flow_uuid))
                 message = get_messages(dbquery,
                                        LIMIT.getint("messages"))
                 errors = MTPErrorResponse("OK")
