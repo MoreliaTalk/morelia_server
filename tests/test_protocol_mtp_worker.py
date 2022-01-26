@@ -55,12 +55,14 @@ ERRORS = os.path.join(FIXTURES_PATH, "errors.json")
 NON_VALID_ERRORS = os.path.join(FIXTURES_PATH, "non_valid_errors.json")
 ERRORS_ONLY_TYPE = os.path.join(FIXTURES_PATH, "errors_only_type.json")
 
+url_db = "sqlite:/:memory:?debug=1"
+
 
 class TestCheckAuthToken(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         logger.remove()
-        cls.db = DBHandler(uri="sqlite:/:memory:")
+        cls.db = DBHandler(uri=url_db)
 
     def setUp(self):
         self.db.create_table()
@@ -90,7 +92,7 @@ class TestCheckAuthToken(unittest.TestCase):
                                             'auth_id')
         self.assertFalse(check_auth.result)
         self.assertEqual(check_auth.error_message,
-                         "User wasn't found in the database")
+                         "User was not authenticated")
 
     def test_check_wrong_auth_id(self):
         run_method = MTProtocol('test',
@@ -106,7 +108,7 @@ class TestCheckLogin(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         logger.remove()
-        cls.db = DBHandler(uri="sqlite:/:memory:")
+        cls.db = DBHandler(uri=url_db)
 
     def setUp(self):
         self.db.create_table()
@@ -137,7 +139,7 @@ class TestRegisterUser(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         logger.remove()
-        cls.db = DBHandler(uri="sqlite:/:memory:")
+        cls.db = DBHandler(uri=url_db)
 
     def setUp(self):
         self.db.create_table()
@@ -203,7 +205,7 @@ class TestGetUpdate(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         logger.remove()
-        cls.db = DBHandler(uri="sqlite:/:memory:")
+        cls.db = DBHandler(uri=url_db)
 
     def setUp(self):
         self.db.create_table()
@@ -309,7 +311,7 @@ class TestSendMessage(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         logger.remove()
-        cls.db = DBHandler(uri="sqlite:/:memory:")
+        cls.db = DBHandler(uri=url_db)
 
     def setUp(self):
         self.db.create_table()
@@ -376,7 +378,7 @@ class TestAllMessages(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         logger.remove()
-        cls.db = DBHandler(uri="sqlite:/:memory:")
+        cls.db = DBHandler(uri=url_db)
 
     def setUp(self):
         self.db.create_table()
@@ -491,7 +493,7 @@ class TestAddFlow(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         logger.remove()
-        cls.db = DBHandler(uri="sqlite:/:memory:")
+        cls.db = DBHandler(uri=url_db)
 
     def setUp(self):
         self.db.create_table()
@@ -561,7 +563,7 @@ class TestAllFlow(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         logger.remove()
-        cls.db = DBHandler(uri="sqlite:/:memory:")
+        cls.db = DBHandler(uri=url_db)
 
     def setUp(self):
         self.db.create_table()
@@ -600,7 +602,7 @@ class TestUserInfo(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         logger.remove()
-        cls.db = DBHandler(uri="sqlite:/:memory:")
+        cls.db = DBHandler(uri=url_db)
 
     def setUp(self):
         self.db.create_table()
@@ -640,14 +642,14 @@ class TestUserInfo(unittest.TestCase):
                                 self.db)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
-                         "Forbidden")
+                         "Too Many Requests")
 
 
 class TestAuthentication(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         logger.remove()
-        cls.db = DBHandler(uri="sqlite:/:memory:")
+        cls.db = DBHandler(uri=url_db)
 
     def setUp(self):
         gen_hash = lib.Hash("password", 123456,
@@ -705,7 +707,7 @@ class TestDeleteUser(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         logger.remove()
-        cls.db = DBHandler(uri="sqlite:/:memory:")
+        cls.db = DBHandler(uri=url_db)
 
     def setUp(self):
         self.db.create_table()
@@ -747,7 +749,7 @@ class TestDeleteMessage(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         logger.remove()
-        cls.db = DBHandler(uri="sqlite:/:memory:")
+        cls.db = DBHandler(uri=url_db)
 
     def setUp(self):
         self.db.create_table()
@@ -805,7 +807,7 @@ class TestEditedMessage(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         logger.remove()
-        cls.db = DBHandler(uri="sqlite:/:memory:")
+        cls.db = DBHandler(uri=url_db)
 
     def setUp(self):
         self.db.create_table()
@@ -856,7 +858,7 @@ class TestPingPong(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         logger.remove()
-        cls.db = DBHandler(uri="sqlite:/:memory:")
+        cls.db = DBHandler(uri=url_db)
 
     def setUp(self):
         self.db.create_table()
@@ -882,7 +884,7 @@ class TestErrors(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         logger.remove()
-        cls.db = DBHandler(uri="sqlite:/:memory:")
+        cls.db = DBHandler(uri=url_db)
 
     def setUp(self):
         self.db.create_table()
