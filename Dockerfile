@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM python:3.10.2-bullseye
+FROM python:3.10.2-slim-bullseye
 
 WORKDIR /morelia-server
 
@@ -14,4 +14,11 @@ COPY example_config.ini config.ini
 
 COPY . .
 
-CMD [ "pipenv", "run", "python", "-m", "uvicorn server:app --host 0.0.0.0 --port 8000 --reload --use-colors --http h11 --ws websockets" ]
+CMD [ "pipenv", "run", \
+    "python", "-m", \
+    "uvicorn", "server:app", \
+    "--host", "0.0.0.0", \
+    "--port", "8000", \
+    "--reload", "--use-colors", \
+    "--http", "h11", "--ws", "websockets" \
+    ]
