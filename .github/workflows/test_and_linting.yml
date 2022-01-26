@@ -16,12 +16,11 @@ jobs:
     - name: Install dependencies
       run: |
         pip install pipenv
-        pipenv shell
         pipenv install --dev
     - name: Lint with flake8
       run: |
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        pipenv run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        pipenv run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with unittest
       run: |
-        python -m unittest discover tests
+        pipenv run python -m unittest discover tests
