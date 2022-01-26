@@ -24,7 +24,7 @@ jobs:
         
     - name: Create config for server
       run: |
-        rename example_config.ini config.ini
+        mv example_config.ini config.ini
                 
     - name: Testing
       run: |
