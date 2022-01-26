@@ -3,7 +3,7 @@ name: Test and Linting Server
 on: [push, pull_request]
 
 jobs:
-  build:
+  test-and-linting:
 
     runs-on: ubuntu-latest
 
