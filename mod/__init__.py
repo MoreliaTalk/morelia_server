@@ -19,4 +19,4 @@
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
-__all__ = ["controller", "error", "lib", "logging"]
+__all__ = ["controller", "error", "lib", "logging", "db", "protocol"]
