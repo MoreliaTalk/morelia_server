@@ -1,5 +1,8 @@
 # Morelia Server - мессенджер (сервер) для Morelia Network #
 
+
+![tests](https://github.com/MoreliaTalk/morelia_server/workflows/Test%20and%20Linting%20Server/badge.svg)
+
 Language [EN](./README_ENG.md), [RU](./README.md)
 
 ## В репозитории 2 бранча ##
