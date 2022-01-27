@@ -31,7 +31,7 @@ from mod import lib
 from mod.db.dbhandler import DBHandler
 from mod.protocol.mtp.worker import MTProtocol
 from mod.protocol.mtp.worker import MTPErrorResponse
-from mod.config import SERVER_LIMIT as LIMIT
+from config import SERVER_LIMIT as LIMIT
 
 # Add path to directory with code being checked
 # to variable 'PATH' to import modules from directory
@@ -90,7 +90,7 @@ class TestCheckAuthToken(unittest.TestCase):
                                             'auth_id')
         self.assertFalse(check_auth.result)
         self.assertEqual(check_auth.error_message,
-                         "User wasn't found in the database")
+                         "User was not authenticated")
 
     def test_check_wrong_auth_id(self):
         run_method = MTProtocol('test',
