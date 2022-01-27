@@ -9,10 +9,7 @@ Server
 Server.py contains two function: ``server.home_page()`` processing server information output, and ``server.websocket_endpoint()``
 responds connections for clients.
 
-.. autofunction:: server.home_page
-
-
-.. autofunction:: server.websocket_endpoint
+.. TODO: Should need to add description for server.py
 
 
 MTP protocol
@@ -82,7 +79,7 @@ validation and generate error code when response not corresponds protocol method
 Matrix protocol
 ===============
 
-Read fully description about latest version of **Matrix** protocol to this `link <https://spec.matrix.org/latest/>`_.
+Read fully description about latest version of **Matrix** protocol to `this <https://spec.matrix.org/latest/>`_ link.
 
 
 MatrixProtocol
