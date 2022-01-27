@@ -19,11 +19,12 @@
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 import configparser
+from pathlib import Path
 
 
 config = configparser.ConfigParser()
 
-config.read('config.ini')
+config.read(Path(__file__).parent.parent / 'config.ini')
 
 LOGGING = config['LOGGING']
 DATABASE = config["DATABASE"]
