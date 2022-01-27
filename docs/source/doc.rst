@@ -6,11 +6,11 @@ Documentation
 Server
 ======
 
-Description about ``server.home_page()``
+Server.py contains two function: ``server.home_page()`` processing server information output, and ``server.websocket_endpoint()``
+responds connections for clients.
 
 .. autofunction:: server.home_page
 
-Description about ``server.websocket_endpoint()``
 
 .. autofunction:: server.websocket_endpoint
 
@@ -18,7 +18,9 @@ Description about ``server.websocket_endpoint()``
 MTP protocol
 ============
 
-To work with MTP protocol used ``protocol.mtp`` module which included these classes:
+Read fully description about stable version of **MTP** protocol to this `link <https://github.com/MoreliaTalk/morelia_protocol>`_.
+
+To work with MTP protocol server used ``protocol.mtp`` module which included these classes:
 
 * MTPErrorResponse
 
@@ -32,7 +34,7 @@ To work with MTP protocol used ``protocol.mtp`` module which included these clas
 MTPErrorResponse
 ----------------
 
-General description of the class ``mod.protocol.mtp.worker.MTPErrorResponse``:
+Class ``mod.protocol.mtp.worker.MTPErrorResponse`` return response object with validation:
 
 .. autoclass:: mod.protocol.mtp.worker.MTPErrorResponse
    :members:
@@ -43,7 +45,7 @@ General description of the class ``mod.protocol.mtp.worker.MTPErrorResponse``:
 MTProtocol
 ----------
 
-General description of the class ``mod.protocol.mtp.worker.MTProtocol``:
+Class ``mod.protocol.mtp.worker.MTProtocol`` processing all methods contains MTP protocol description:
 
 .. autoclass:: mod.protocol.mtp.worker.MTProtocol
    :members:
@@ -54,7 +56,8 @@ General description of the class ``mod.protocol.mtp.worker.MTProtocol``:
 Validations Response
 --------------------
 
-General description of the class ``mod.protocol.mtp.api.Response``:
+Class ``mod.protocol.mtp.api.Response`` processing results of MTPProtocol methods with following validation and generate
+response in JSON format:
 
 .. autoclass:: mod.protocol.mtp.api.Response
    :members: data, errors, type, jsonapi, meta
@@ -66,7 +69,8 @@ General description of the class ``mod.protocol.mtp.api.Response``:
 Validations Request
 --------------------
 
-General description of the class ``mod.protocol.mtp.api.Request``:
+General description of the class ``mod.protocol.mtp.api.Request`` processing response received from clients with following
+validation and generate error code when response not corresponds protocol methods:
 
 .. autoclass:: mod.protocol.mtp.api.Request
    :members: data, errors, type, jsonapi, meta
@@ -78,13 +82,13 @@ General description of the class ``mod.protocol.mtp.api.Request``:
 Matrix protocol
 ===============
 
+Read fully description about latest version of **Matrix** protocol to this `link <https://spec.matrix.org/latest/>`_.
+
 
 MatrixProtocol
 --------------
 
-To work with the database, the **Models** class is designed, which implements methods of high-level interaction with the OPM.
-
-General description of the class ``mod.protocol.matrix.worker.MatrixProtocol``:
+Class ``mod.protocol.matrix.worker.MatrixProtocol`` processing half methods contains Matrix protocol description:
 
 .. autoclass:: mod.protocol.matrix.worker.MatrixProtocol
    :members:
@@ -95,14 +99,16 @@ General description of the class ``mod.protocol.matrix.worker.MatrixProtocol``:
 Validations Response
 --------------------
 
-General description of the class ``mod.protocol.matrix.api.Response``:
+General description of the class ``mod.protocol.matrix.api.Response`` processing results of MatrixProtocol methods with
+following validation and generate response in JSON format:
 
 
 
 Validations Request
 --------------------
 
-General description of the class ``mod.protocol.matrix.api.Request``:
+General description of the class ``mod.protocol.matrix.api.Request`` processing response received from clients with following
+validation and generate error code when response not corresponds protocol methods:
 
 
 
@@ -113,9 +119,7 @@ Database
 DBhandler
 ---------
 
-To work with the database, the **DBHandler** class is designed, which implements methods of high-level interaction with the OPM.
-
-General description of the class ``mod.db.dbhandler.DBHandler``:
+Class ``mod.db.dbhandler.DBHandler`` high layer class has to work with database without query in raw SQL:
 
 .. autoclass:: mod.db.dbhandler.DBHandler
    :members:
@@ -130,9 +134,7 @@ Models
 UserConfig
 ++++++++++
 
-To work with the database, the **Models** class is designed, which implements methods of high-level interaction with the OPM.
-
-General description of the class ``mod.db.models.UserConfig``:
+Description UserConfig table where saving user secure and personal information ``mod.db.models.UserConfig``:
 
 .. autoclass:: mod.db.models.UserConfig
 
@@ -140,9 +142,7 @@ General description of the class ``mod.db.models.UserConfig``:
 Flow
 ++++
 
-To work with the database, the **Models** class is designed, which implements methods of high-level interaction with the OPM.
-
-General description of the class ``mod.db.models.Flow``:
+Description Flow table where saving flow information ``mod.db.models.Flow``:
 
 .. autoclass:: mod.db.models.Flow
 
@@ -150,9 +150,7 @@ General description of the class ``mod.db.models.Flow``:
 Message
 +++++++
 
-To work with the database, the **Models** class is designed, which implements methods of high-level interaction with the OPM.
-
-General description of the class ``mod.db.models.Message``:
+Description Message table where saving message information ``mod.db.models.Message``:
 
 .. autoclass:: mod.db.models.Message
 
@@ -160,9 +158,7 @@ General description of the class ``mod.db.models.Message``:
 Admin
 +++++
 
-To work with the database, the **Models** class is designed, which implements methods of high-level interaction with the OPM.
-
-General description of the class ``mod.db.models.Admin``:
+Description Admin table where saving access rights for web administration panel ``mod.db.models.Admin``:
 
 .. autoclass:: mod.db.models.Admin
 
@@ -174,24 +170,25 @@ Controller
 MainHandler
 -----------
 
-To work with the database, the **Models** class is designed, which implements methods of high-level interaction with the OPM.
-
-General description of the class ``mod.controller.MainHandler``:
+Class identifies and redirects requests with accordance type of protocol ``mod.controller.MainHandler``:
 
 .. autoclass:: mod.controller.MainHandler
    :members:
    :private-members:
    :undoc-members:
 
+
 Error
 =====
 
-To work with the database, the **Models** class is designed, which implements methods of high-level interaction with the OPM.
+Contains several new error code which additional for standard HTTP error code.
 
 General description of the class ``mod.error.ServerStatus``:
 
 .. autoclass:: mod.error.ServerStatus
 
+
+Checking matching status code name and type of errors contains in class ``mod.error.ServerStatus`` or ``HTTPStatus``
 
 .. autofunction:: mod.error.check_error_pattern
 
@@ -202,9 +199,7 @@ Additional module
 Hash
 ----
 
-To work with the database, the **Models** class is designed, which implements methods of high-level interaction with the OPM.
-
-General description of the class ``mod.lib.Hash``:
+``mod.lib.Hash``:
 
 .. autoclass:: mod.lib.Hash
    :members:
@@ -215,9 +210,7 @@ General description of the class ``mod.lib.Hash``:
 Logging
 -------
 
-To work with the database, the **Models** class is designed, which implements methods of high-level interaction with the OPM.
-
-General description of the class ``mod.logging.add_logging()``:
+``mod.logging.add_logging()``:
 
 .. autofunction:: mod.logging.add_logging
 
