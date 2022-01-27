@@ -1,4 +1,4 @@
-name: Test and Linting Server
+name: Test and Linting
 
 on: [push, pull_request]
 
