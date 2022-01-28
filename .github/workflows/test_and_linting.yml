@@ -44,5 +44,7 @@ jobs:
         pipenv run coverage run -m unittest discover tests
 
     - name: Push report to coveralls.io
+      env: 
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         pipenv run coveralls
