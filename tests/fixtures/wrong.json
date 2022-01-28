@@ -65,7 +65,8 @@
         "detail": "successfully"
         },
     "jsonapi": {
-        "version": "1.0"
+        "version": "1.0",
+        "revision": "17"
         },
     "meta": null
     }
