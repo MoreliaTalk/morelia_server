@@ -49,6 +49,7 @@ class UserConfig(orm.SQLObject):
     username = orm.StringCol(default=None)
     is_bot = orm.BoolCol(default=False)
     auth_id = orm.StringCol(default=None)
+    token_ttl = orm.IntCol(default=None)
     email = orm.StringCol(default=None)
     avatar = orm.BLOBCol(default=None)
     bio = orm.StringCol(default=None)
