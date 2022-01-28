@@ -340,6 +340,7 @@ class DBHandler:
                  username: str = None,
                  is_bot: bool = False,
                  auth_id: str = None,
+                 token_ttl: int = None,
                  email: str = None,
                  avatar: bytes = None,
                  bio: str = None,
@@ -381,6 +382,7 @@ class DBHandler:
                                username=username,
                                is_bot=is_bot,
                                auth_id=auth_id,
+                               token_ttl=token_ttl,
                                email=email,
                                avatar=avatar,
                                bio=bio,
@@ -395,6 +397,7 @@ class DBHandler:
                     username: str = None,
                     is_bot: bool = False,
                     auth_id: str = None,
+                    token_ttl: int = None,
                     email: str = None,
                     avatar: bytes = None,
                     bio: str = None,
@@ -441,6 +444,9 @@ class DBHandler:
 
         if auth_id:
             dbquery.auth_id = auth_id
+
+        if token_ttl:
+            dbquery.token_ttl = token_ttl
 
         if email:
             dbquery.email = email
