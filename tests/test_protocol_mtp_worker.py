@@ -90,7 +90,7 @@ class TestCheckAuthToken(unittest.TestCase):
                                             'auth_id')
         self.assertFalse(check_auth.result)
         self.assertEqual(check_auth.error_message,
-                         "User wasn't found in the database")
+                         "User was not authenticated")
 
     def test_check_wrong_auth_id(self):
         run_method = MTProtocol('test',
