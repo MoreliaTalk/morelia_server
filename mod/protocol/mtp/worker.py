@@ -116,7 +116,8 @@ class MTProtocol:
     def __init__(self,
                  request,
                  database: DBHandler):
-        self.jsonapi = api.VersionResponse(version=api.VERSION)
+        self.jsonapi = api.VersionResponse(version=api.VERSION,
+                                           revision=api.REVISION)
         self.get_time = int(time())
         self._db = database
 
@@ -283,13 +284,15 @@ class MTProtocol:
                               username=username,
                               is_bot=False,
                               auth_id=auth_id,
+                              token_ttl=self.get_time,
                               email=email,
                               avatar=None,
                               bio=None,
                               salt=generated.get_salt,
                               key=generated.get_key)
             user.append(api.UserResponse(uuid=uuid,
-                                         auth_id=auth_id))
+                                         auth_id=auth_id,
+                                         token_ttl=self.get_time))
             data = api.DataResponse(time=self.get_time,
                                     user=user)
             errors = MTPErrorResponse("CREATED")
