@@ -36,6 +36,9 @@ class ServerStatus(IntEnum):
     CLIENT_CLOSED_REQUEST = (499,
                              'Client Closed Request',
                              'Full description: Client Closed Request')
+    VERSION_NOT_SUPPORTED = (505,
+                             'Version Not Supported',
+                             'Cannot fulfill request')
     UNKNOWN_ERROR = (520,
                      'Unknown Error',
                      'Full description: Unknown Error')
