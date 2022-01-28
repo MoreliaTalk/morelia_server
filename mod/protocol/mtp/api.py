@@ -27,7 +27,8 @@ from pydantic import BaseModel
 from pydantic import EmailStr
 
 # Version of MoreliaTalk Protocol
-VERSION: str = '1.0'
+VERSION = '1.0'
+REVISION = '17'
 
 # A description of the basic validation scheme for requests and responses.
 
@@ -52,6 +53,7 @@ class BaseUser(BaseModel):
     password: Optional[str] = None
     is_bot: Optional[bool] = None
     auth_id: Optional[str] = None
+    token_ttl: Optional[int] = None
     email: Optional[EmailStr] = None
 
 
@@ -82,6 +84,7 @@ class BaseErrors(BaseModel):
 
 class BaseVersion(BaseModel):
     version: str
+    revision: Optional[str] = None
 
 
 class BaseValidator(BaseModel):
