@@ -47,4 +47,4 @@ jobs:
       env: 
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        pipenv run coveralls
+        pipenv run coveralls --service=github
