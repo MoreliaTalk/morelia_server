@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: morelia-server-image
+  IMAGE_NAME: morelia-server
 
 jobs:
   build-and-push-image:
