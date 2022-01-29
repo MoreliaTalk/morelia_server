@@ -1,7 +1,7 @@
 name: Build and publish docker image
 on:
   push:
-    branches: [ develop, develop-nekrod ]
+    branches: [ develop ]
     tags: '*.*.*'
 
 env:
