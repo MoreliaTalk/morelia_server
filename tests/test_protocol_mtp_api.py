@@ -54,7 +54,14 @@ class TestApiValidation(unittest.TestCase):
         del self.valid
 
     def test_validation_valid_json(self):
-        self.assertIsInstance(self.valid.dict(), dict)
+        result = self.valid.dict()
+        self.assertIsInstance(result, dict)
+        self.assertEqual(result['data']['user'][0]['token_ttl'],
+                         123456123456)
+        self.assertEqual(result['data']['message'][0]['client_id'],
+                         123456)
+        self.assertEqual(result['jsonapi']['version'], '1.0')
+        self.assertEqual(result['jsonapi']['revision'], '17')
 
     def test_validation_wrong_json(self):
         try:
@@ -99,11 +106,6 @@ class TestApiValidation(unittest.TestCase):
                              "field required")
         else:
             self.assertIsNone(self.test)
-
-    def test_api_jsonapi(self):
-        result = self.valid.dict()
-        self.assertEqual(result['jsonapi']['version'], '1.0')
-        self.assertEqual(result['jsonapi']['revision'], '17')
 
     def test_api_wrong_data_and_errors_in_request(self):
         try:
