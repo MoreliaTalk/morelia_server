@@ -107,11 +107,6 @@ class TestApiValidation(unittest.TestCase):
         else:
             self.assertIsNone(self.test)
 
-    def test_api_jsonapi(self):
-        result = self.valid.dict()
-        self.assertEqual(result['jsonapi']['version'], '1.0')
-        self.assertEqual(result['jsonapi']['revision'], '17')
-
     def test_api_wrong_data_and_errors_in_request(self):
         try:
             api.Request.parse_file(WRONG_DATA_ERRORS)
