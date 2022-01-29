@@ -2,6 +2,7 @@
 
 
 ![tests](https://github.com/MoreliaTalk/morelia_server/workflows/Test%20and%20Linting/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/MoreliaTalk/morelia_server/badge.svg?branch=develop-nekrod)](https://coveralls.io/github/MoreliaTalk/morelia_server)
 
 Language [EN](./README_ENG.md), [RU](./README.md)
 
