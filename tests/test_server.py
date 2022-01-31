@@ -31,3 +31,12 @@ class TestWebsocket(unittest.TestCase):
         with self.ws_client.websocket_connect("/ws") as connection:
             connection.send_text("hello error!")
 
+
+class TestMainPage(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.test_client = TestClient(app)
+
+    def test_main_page(self):
+        response = self.test_client.get("/")
+        self.assertEqual(response.text, "<h1>MoreliaTalkServer</h1>")
