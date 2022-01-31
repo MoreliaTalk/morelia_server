@@ -24,30 +24,29 @@ from hashlib import blake2b
 from hmac import compare_digest
 from os import urandom
 
-from mod.config import HASH_SIZE
+from config import HASH_SIZE
 
 
 class Hash:
-    """Generates password hashes, hashes for sessions,
-    authenticator ID's, checks passwords hashes.
+    """
+    Generates password hashes, hashes for sessions, authenticator token,
+    checks password hashes.
 
     Args:
-        password (str, required): password.
-
-        uuid (int or str, [str convert to int], required): unique user
-              identity.
-
-        salt (Any, required): Salt. additional unique identifier
-             (there can be any line: mother's maiden name,
-             favorite writer, etc.).
-
-        key (Any, optional): Additional argument. Defaults to None.
-            If value of 'key' parameter is 'None' then function
-            will generate it.
-
-        hash_password (str, optional): password hash (previously calculated).
+        password (str, required): password
+        uuid (int or str, required): unique user identity number
+        salt (bytes | None, required): additional unique identifier which added
+                                       to the password when generating
+                                       hash_password, there can be any line:
+                                       mother's maiden name, favorite writer,
+                                       etc.
+        key (bytes | None, optional): additional argument, if value is None
+                                      then function will generate it
+                                      automatically
+        hash_password (str, optional): password hash (previously calculated)
 
     """
+
     def __init__(self,
                  password: str,
                  uuid: int | str,
@@ -77,18 +76,34 @@ class Hash:
 
     @property
     def get_salt(self) -> bytes:
+        """
+        Getting the value of salt.
+
+        Returns:
+            (bytes): salt
+        """
+
         return self.salt
 
     @property
     def get_key(self) -> bytes:
+        """
+        Getting the value of key.
+
+        Returns:
+            (bytes): key
+        """
+
         return self.key
 
     def password_hash(self) -> str:
-        """Generates a password hash.
+        """
+        Generates a password hash.
 
         Returns:
-            str: Returns hash password.
+            hash password (str): returns blake2b hash
         """
+
         hash_password = blake2b(self.binary_password,
                                 digest_size=self.size_password,
                                 key=self.key,
@@ -96,11 +111,13 @@ class Hash:
         return hash_password.hexdigest()
 
     def check_password(self) -> bool:
-        """Checks password hash and original password.
+        """
+        Comparison of calculated hash and original password.
 
         Returns:
-            bool: True or False
+            (bool): True or False
         """
+
         if self.hash_password is None:
             return False
         else:
@@ -109,12 +126,14 @@ class Hash:
                                   verified_hash_password)
 
     def auth_id(self) -> str:
-        """Generates an authenticator ID's for client session
+        """
+        Generates an authenticator token for client session
         connection to server.
 
         Returns:
-            str: Returns auth_id
+            (str): authenticate token
         """
+
         uuid = self.uuid.to_bytes(self.uuid.bit_length(),
                                   byteorder=sys.byteorder)
         result = blake2b(uuid,

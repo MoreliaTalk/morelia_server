@@ -26,7 +26,7 @@ from starlette.requests import Request
 from starlette.responses import HTMLResponse
 
 from mod.db.dbhandler import DBHandler
-from mod.config import DATABASE
+from config import DATABASE
 
 
 router = APIRouter()

@@ -31,7 +31,7 @@ from mod import lib
 from mod.db.dbhandler import DBHandler
 from mod.protocol.mtp.worker import MTProtocol
 from mod.protocol.mtp.worker import MTPErrorResponse
-from mod.config import SERVER_LIMIT as LIMIT
+from config import SERVER_LIMIT as LIMIT
 
 # Add path to directory with code being checked
 # to variable 'PATH' to import modules from directory
@@ -172,6 +172,14 @@ class TestRegisterUser(unittest.TestCase):
         dbquery = self.db.get_user_by_login(login="login")
         self.assertEqual(dbquery.login, "login")
 
+    def test_token_ttl_write_to_database(self):
+        run_method = MTProtocol(self.test,
+                                self.db)
+        result = json.loads(run_method.get_response())
+        dbquery = self.db.get_user_by_login(login="login")
+        self.assertEqual(dbquery.token_ttl,
+                         result['data']['user'][0]['token_ttl'])
+
     def test_uuid_write_in_database(self):
         run_method = MTProtocol(self.test,
                                 self.db)
@@ -282,6 +290,13 @@ class TestGetUpdate(unittest.TestCase):
         result = json.loads(run_method.get_response())
         self.assertEqual(result["data"]["message"][1]["uuid"],
                          "112")
+
+    def test_check_client_id_in_result(self):
+        run_method = MTProtocol(self.test,
+                                self.db)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["data"]["message"][1]["client_id"],
+                         None)
 
     def test_check_flow_in_result(self):
         run_method = MTProtocol(self.test,
@@ -467,10 +482,13 @@ class TestAllMessages(unittest.TestCase):
         self.assertEqual(result["data"]["flow"][0]["message_start"], 0)
 
     def test_check_message_in_database(self):
-        MTProtocol(self.test,
-                   self.db)
+        run_method = MTProtocol(self.test,
+                                self.db)
+        result = json.loads(run_method.get_response())
         dbquery = self.db.get_message_by_exact_time(666)
         self.assertEqual(dbquery[0].text, "Privet")
+        self.assertEqual(result['data']['message'][0]['client_id'],
+                         None)
 
     def test_wrong_message_volume(self):
         self.test.data.flow[0].message_end = 256
@@ -727,6 +745,9 @@ class TestDeleteUser(unittest.TestCase):
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
+        check_db = self.db.get_user_by_login(login='User deleted')
+        self.assertEqual(check_db.key, b'deleted')
+        self.assertEqual(check_db.salt, b'deleted')
 
     def test_wrong_login(self):
         self.test.data.user[0].login = "wrong_login"
@@ -935,6 +956,31 @@ class TestErrors(unittest.TestCase):
         self.assertEqual(result.status, "Bad Request")
         self.assertIsInstance(result.time, int)
         self.assertIsInstance(result.detail, str)
+
+
+class TestJsonapi(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        logger.remove()
+        cls.db = DBHandler(uri="sqlite:/:memory:")
+
+    def setUp(self):
+        self.db.create_table()
+        self.db.add_user(uuid="123456",
+                         login="login",
+                         password="password",
+                         auth_id="auth_id")
+        self.test = api.Request.parse_file(PING_PONG)
+
+    def tearDown(self):
+        self.db.delete_table()
+
+    def test_api_version_and_revision(self):
+        run_method = MTProtocol(self.test,
+                                self.db)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result['jsonapi']['version'], api.VERSION)
+        self.assertEqual(result['jsonapi']['revision'], api.REVISION)
 
 
 if __name__ == "__main__":

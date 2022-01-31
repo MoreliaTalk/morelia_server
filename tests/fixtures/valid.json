@@ -53,6 +53,7 @@
             "username": "Vasya",
             "is_bot": true,
             "auth_id": "4646hjgjhg64",
+            "token_ttl": 123456123456,
             "email": "querty@querty.com",
             "avatar": "fffdddddd",
             "bio": "My bio"
@@ -66,7 +67,8 @@
         "detail": "successfully"
         },
     "jsonapi": {
-        "version": "1.0"
+        "version": "1.0",
+        "revision": "17"
         },
     "meta": null
     }

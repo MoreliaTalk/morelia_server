@@ -22,26 +22,26 @@ import sqlobject as orm
 
 
 class UserConfig(orm.SQLObject):
-    """Generates a table containing data
-    about user and his settings.
+    """
+    Table containing data about user and his settings.
 
     Args:
-        uuid (str, required, unique)
-        login (str, required)
-        password (str, required)
-        hash_password (str, optional): default None
-        username (str, optional): default None
-        is_bot (bool, optional): default False
-        auth_id (str, optional): default None
-        email (str, optional): default None
-        avatar (str, optional): default None
-        bio (str, optional): default None
-        salt (str, optional): default None
-        key (str, optional): default None
-
-    Returns:
-        None
+        uuid (str, required, unique): unique user id which automated
+                                      generating server
+        login (str, required): name for authentication on server
+        password (str, required): password for authentication on server
+        hash_password (str, optional): hash-function generated from user
+                                       password
+        username (str, optional): name for added in information about user
+        is_bot (bool, optional): True if user not human
+        auth_id (str, optional): authentication token
+        email (str, optional): user email for added in information about user
+        avatar (str, optional): user image for added in information about user
+        bio (str, optional): text for added in information about user
+        salt (str, optional): added in password string for create hash_password
+        key (str, optional): added in password string for create hash_password
     """
+
     uuid = orm.StringCol(notNone=True, unique=True)
     login = orm.StringCol(notNone=True)
     password = orm.StringCol(notNone=True)
@@ -49,6 +49,7 @@ class UserConfig(orm.SQLObject):
     username = orm.StringCol(default=None)
     is_bot = orm.BoolCol(default=False)
     auth_id = orm.StringCol(default=None)
+    token_ttl = orm.IntCol(default=None)
     email = orm.StringCol(default=None)
     avatar = orm.BLOBCol(default=None)
     bio = orm.StringCol(default=None)
@@ -60,19 +61,19 @@ class UserConfig(orm.SQLObject):
 
 
 class Flow(orm.SQLObject):
-    """Generates a Flow table containing information
-    about threads and their types (chat, channel, group).
+    """
+    Flow table containing information about threads and their types
+    (chat, channel, group).
 
     Args:
-        uuid (str, required, unique)
-        time_created (int, optional): default None
-        flow_type (str, optional): default None
-        title (str, optional): default None
-        info (str, optional): default None
-
-    Returns:
-        None
+        uuid (str, required, unique): unique flow id which automated
+                                      generating server
+        time_created (int, optional): data and time when flow is created
+        flow_type (str, optional): which contains chat, channel, group
+        title (str, optional): name added in public information about flow
+        info (str, optional): text added in public information about flow
     """
+
     uuid = orm.StringCol(notNone=True, unique=True)
     time_created = orm.IntCol(default=None)
     flow_type = orm.StringCol(default=None)
@@ -85,24 +86,25 @@ class Flow(orm.SQLObject):
 
 
 class Message(orm.SQLObject):
-    """Generates a Message table containing information
+    """
+    Generates a Message table containing information
     about user messages.
 
     Args:
-        uuid (str, required, unique):
-        text (str, optional): default None
-        time (int, optional): default None
-        file_picture (byte, optional): default None
-        file_video (byte, optional): default None
-        file_audio (byte, optional): default None
-        file_document (byte, optional): default None
-        emoji (str, optional): default None
-        edited_time (int, optional): default None
-        edited_status (bool, optional): default False
-
-    Returns:
-        None
+        uuid (str, required, unique): unique flow id which automated
+                                      generating server
+        text (str, optional): contains message text
+        time (int, optional): time when message is created
+        file_picture (byte, optional): contains appended image
+        file_video (byte, optional): contains appended video
+        file_audio (byte, optional): contains appended audio
+        file_document (byte, optional): contains appended document
+        emoji (str, optional): contains appended image/emoji
+        edited_time (int, optional): time when user last time is corrected his
+                                     message
+        edited_status (bool, optional): True if user corrected his message
     """
+
     uuid = orm.StringCol(notNone=True, unique=True)
     text = orm.StringCol(default=None)
     time = orm.IntCol(default=None)
@@ -119,15 +121,16 @@ class Message(orm.SQLObject):
 
 
 class Admin(orm.SQLObject):
-    """Generates a Admin table containing information
-        about users with administrators role.
+    """
+    Generates Admin table containing information
+    about users with administrators role.
 
-        Args:
-            username (str, required, unique)
-            hash_password (str, required)
+    Args:
+        username (str, required, unique): name user which granted administrator
+                                          rights
+        hash_password (str, required): hash-function generated from
+                                       administrator password
+    """
 
-        Returns:
-            None
-        """
     username = orm.StringCol(notNone=True, unique=True)
     hash_password = orm.StringCol(notNone=True)

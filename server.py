@@ -41,9 +41,9 @@ from starlette.websockets import WebSocketDisconnect
 from mod.controller import MainHandler
 from mod.db.dbhandler import DBHandler
 from admin import admin
-from mod.config import LOGGING
-from mod.config import TEMPLATES as DIRECTORY
-from mod.config import DATABASE
+from config import LOGGING
+from config import TEMPLATES as DIRECTORY
+from config import DATABASE
 # ************** Morelia module end ******************
 
 
@@ -92,12 +92,48 @@ app.mount("/static",
 
 @app.get('/')
 def home_page(request: Request):
+    """
+    Rendered home page where presents information about current working server
+
+    Args:
+        request(Request): not used
+
+    Returns:
+        (text/html): rendered text to html
+
+    """
+
     return HTMLResponse("<h1>MoreliaTalkServer</h1>")
 
 
 # Chat websocket
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    """
+    Responsible for establishing a websocket connection between server and
+    client and exchanging requests/responses.
+
+    Notes:
+        Waiting for client to connect via websockets, after which receive a
+        request from client as a JSON-object create request object and pass
+        to class MainHandler.
+
+        After MTProtocol or MatrixProtocol processing request, "get_response"
+        method generates response in JSON-object format.
+
+        After disconnecting the client (by decision of client or error)
+        must interrupt cycle otherwise the next clients will not be able
+        to connect.
+
+        `code = 1000` - normal session termination
+
+    Args:
+        websocket(WebSocket):
+
+    Returns:
+        websocket(WebSocket):
+    """
+
     # Waiting for the client to connect via websockets
     await websocket.accept()
     logger.info("".join(("Clients information: ",

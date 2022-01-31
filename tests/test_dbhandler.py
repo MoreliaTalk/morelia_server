@@ -99,7 +99,7 @@ class TestDBHandlerMainMethods(unittest.TestCase):
 
     def test_repr(self):
         self.assertEqual(repr(self.db),
-                         "class DBHandler: debug=0 logger=None loglevel=None")
+                         "Class DBHandler: debug=0 logger=None loglevel=None")
 
 
 class TestDBHandlerMethods(unittest.TestCase):
