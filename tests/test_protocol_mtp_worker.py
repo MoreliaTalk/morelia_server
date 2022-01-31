@@ -962,7 +962,7 @@ class TestJsonapi(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         logger.remove()
-        cls.db = DBHandler(uri="sqlite:/:memory:")
+        cls.db = DBHandler(uri=url_db)
 
     def setUp(self):
         self.db.create_table()
