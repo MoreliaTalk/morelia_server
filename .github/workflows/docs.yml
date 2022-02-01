@@ -27,7 +27,8 @@ jobs:
           
       - name: Build docs
         run: |
-          cd docs
+          cd docs/source/
+          echo "html_baseurl = '${{ github.ref_name }}'" >> conf.py
           pipenv run make html
           cd ../
 
@@ -36,3 +37,4 @@ jobs:
         with:
           branch: docs
           folder: ./docs/build/html/
+          target-folder: ${{ github.ref_name }}
