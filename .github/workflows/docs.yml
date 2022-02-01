@@ -29,8 +29,8 @@ jobs:
         run: |
           cd docs/source/
           echo "html_baseurl = '${{ github.ref_name }}'" >> conf.py
-          pipenv run make html
           cd ../
+          pipenv run make html
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4.2.3
