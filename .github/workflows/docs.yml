@@ -24,11 +24,11 @@ jobs:
       - name: Build docs
         run: |
           cd docs
-          pipenv run make
+          pipenv run make html
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4.2.3
         with:
           branch: docs
-          folder: build
+          folder: docs/html
           target-folder: ${{ github.ref_name }}
