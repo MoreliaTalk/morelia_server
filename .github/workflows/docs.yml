@@ -24,7 +24,7 @@ jobs:
       - name: Build docs
         run: |
           cd docs
-          make
+          pipenv run make
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4.2.3
