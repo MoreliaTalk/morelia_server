@@ -21,6 +21,10 @@ jobs:
         run: |
           pipenv install --dev
           
+      - name: Create config for server
+        run: |
+          mv example_config.ini config.ini
+          
       - name: Build docs
         run: |
           cd docs
@@ -31,5 +35,5 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4.2.3
         with:
           branch: docs
-          folder: ./docs/html/
+          folder: ./docs/build/html/
           target-folder: ${{ github.ref_name }}
