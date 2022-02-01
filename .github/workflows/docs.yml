@@ -27,9 +27,7 @@ jobs:
           
       - name: Build docs
         run: |
-          cd docs/source/
-          echo "html_baseurl = '${{ github.ref_name }}'" >> conf.py
-          cd ../
+          cd docs
           pipenv run make html
 
       - name: Deploy
