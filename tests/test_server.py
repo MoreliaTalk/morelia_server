@@ -1,8 +1,10 @@
 import json
+import logging
 
 from starlette.testclient import TestClient, WebSocketTestSession
 from server import app
 import unittest
+import sys
 
 
 class TestWebsocket(unittest.TestCase):
@@ -39,3 +41,11 @@ class TestMainPage(unittest.TestCase):
     def test_main_page(self):
         response = self.test_client.get("/")
         self.assertEqual(response.text, "<h1>MoreliaTalkServer</h1>")
+
+
+class TestLogging(unittest.TestCase):
+    def test_normal_logging_off(self):
+        logging.info("not working")
+        logging.warning("not working")
+        logging.error("not working")
+        self.assertEqual(sys.stdout.read(), "")
