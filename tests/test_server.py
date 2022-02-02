@@ -45,7 +45,4 @@ class TestMainPage(unittest.TestCase):
 
 class TestLogging(unittest.TestCase):
     def test_normal_logging_off(self):
-        logging.info("not working")
-        logging.warning("not working")
-        logging.error("not working")
-        self.assertEqual(sys.stdout.read(), "")
+        self.assertEqual(logging.root.manager.disable, 50)
