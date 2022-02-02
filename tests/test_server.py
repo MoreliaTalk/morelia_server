@@ -41,8 +41,3 @@ class TestMainPage(unittest.TestCase):
     def test_main_page(self):
         response = self.test_client.get("/")
         self.assertEqual(response.text, "<h1>MoreliaTalkServer</h1>")
-
-
-class TestLogging(unittest.TestCase):
-    def test_normal_logging_off(self):
-        self.assertEqual(logging.root.manager.disable, 50)
