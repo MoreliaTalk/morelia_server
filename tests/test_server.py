@@ -1,5 +1,4 @@
 import json
-from json import JSONDecodeError
 
 from starlette.testclient import TestClient, WebSocketTestSession
 from server import app
