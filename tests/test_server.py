@@ -2,9 +2,13 @@ import json
 import logging
 
 from starlette.testclient import TestClient, WebSocketTestSession
+
+from config import LOGGING
 from server import app
 import unittest
-import sys
+
+if LOGGING.getboolean("UVICORN_LOGGING_DISABLE"):
+    logging.disable()
 
 
 class TestWebsocket(unittest.TestCase):
