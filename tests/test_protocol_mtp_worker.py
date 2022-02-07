@@ -468,6 +468,8 @@ class TestAllMessages(unittest.TestCase):
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
+        self.assertEqual(result["data"]["flow"][0]["message_start"], None)
+        self.assertEqual(result["data"]["flow"][0]["message_end"], None)
 
     def test_message_end_in_response(self):
         run_method = MTProtocol(self.test,
