@@ -39,6 +39,9 @@ router = APIRouter()
 
 
 class NotAuthenticatedException(Exception):
+    """
+        An exception occurs when the user's authorization data is missing or incorrect
+    """
     pass
 
 
@@ -52,6 +55,16 @@ login_manager.not_authenticated_exception = NotAuthenticatedException
 
 @login_manager.user_loader()
 def get_admin_user_data(username: str):
+    """
+    The function of requesting data from the database and checking it against the username, if there is valid data, it returns it
+
+    Args:
+        username(str): username admin user
+
+    Returns:
+        (SQLObject) - admin user data from db
+
+    """
     data = db_connect.get_admin_by_name(username=username)
     if data.count():
         return data[0]
