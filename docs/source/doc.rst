@@ -193,6 +193,29 @@ Checking matching status code name and type of errors contains in class ``mod.er
 Additional module
 =================
 
+Admin
+-------
+
+.. automodule:: admin.admin
+    :members:
+    :private-members:
+    :undoc-members:
+
+.. automodule:: admin.login
+    :members:
+    :private-members:
+    :undoc-members:
+
+.. automodule:: admin.control
+    :members:
+    :private-members:
+    :undoc-members:
+
+.. automodule:: admin.logs
+    :members:
+    :private-members:
+    :undoc-members:
+
 Hash
 ----
 
@@ -210,4 +233,3 @@ Logging
 ``mod.logging.add_logging()``:
 
 .. autofunction:: mod.logging.add_logging
-

@@ -12,10 +12,12 @@
 #
 import os
 import sys
+
+from sphinx.ext.autodoc import between
+
 source_path = os.path.split(os.path.abspath("."))
 doc_path = os.path.split(source_path[0])
 sys.path.insert(0, doc_path[0])
-
 
 # -- Project information -----------------------------------------------------
 
@@ -25,7 +27,6 @@ author = 'MoreliaTalk'
 
 # The full version, including alpha/beta/rc tags
 release = '0.1'
-
 
 # -- General configuration ---------------------------------------------------
 
@@ -64,7 +65,6 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
-
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -76,3 +76,8 @@ html_theme = 'furo'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+
+def setup(app):
+    app.connect('autodoc-process-docstring', between('^.*IGNORE_IN_DOCS.*$', exclude=True))
+    return app
