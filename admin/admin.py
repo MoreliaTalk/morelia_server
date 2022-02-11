@@ -49,9 +49,10 @@ def not_login_exception_handler(request: Request,
                                 exc: login.NotAuthenticatedException):
     """
     Catches exception login.NotAuthenticatedException and redirects the user to the login page("/admin/login/")
+
     Args:
-        request(Request):
-        exc:
+        request(Request): request to the server
+        exc(login.NotAuthenticatedException): catchable error
 
     Returns:
 
