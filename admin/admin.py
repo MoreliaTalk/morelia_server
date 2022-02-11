@@ -52,16 +52,27 @@ def not_login_exception_handler(request: Request,
 
     Args:
         request(Request): request to the server
-        exc(login.NotAuthenticatedException): catchable error
+        exc(login.NotAuthenticatedException): catchable user authentication error
 
     Returns:
-
+        (RedirectResponse): redirect response to /admin/login
     """
     return RedirectResponse(url="/admin/login")
 
 
 @app.get("/login")
 def login_admin(request: Request):
+    """
+    The function is triggered when a request is received for the /login address
+    and returns a response generated from login.html
+
+    Args:
+        request(Request): request to the server
+
+    Returns:
+        (templates.TemplateResponse): response generated from login.html template
+
+    """
     return templates.TemplateResponse("login.html", {
                                         "request": request
                                         })
@@ -70,6 +81,16 @@ def login_admin(request: Request):
 @app.get("/")
 def index_admin(request: Request,
                 user=Depends(login.login_manager)):
+    """
+    Returns a response with the main page of the admin panel
+
+    Args:
+        request(Request): request to the server
+        user: user authentication check
+
+    Returns:
+        (templates.TemplateResponse): response generated from index_admin.html template
+    """
     return templates.TemplateResponse("index_admin.html", {
                                         "request": request
                                         })
@@ -78,6 +99,16 @@ def index_admin(request: Request,
 @app.get("/status")
 def status_admin(request: Request,
                  user=Depends(login.login_manager)):
+    """
+        Returns a response with the status page of the admin panel
+
+        Args:
+            request(Request): request to the server
+            user: user authentication check
+
+        Returns:
+            (templates.TemplateResponse): response generated from status_admin.html template
+        """
     dbquery = db_connect.get_table_count()
     return templates.TemplateResponse("status_admin.html",
                                       {"request": request,
@@ -92,6 +123,16 @@ def status_admin(request: Request,
 @app.get("/manage")
 def manage_admin(request: Request,
                  user=Depends(login.login_manager)):
+    """
+        Returns a response with the mange page of the admin panel
+
+        Args:
+            request(Request): request to the server
+            user: user authentication check
+
+        Returns:
+            (templates.TemplateResponse): response generated from manage_admin.html template
+    """
     dbquery = db_connect.get_all_user()
     return templates.TemplateResponse("manage_admin.html", {
                                         "request": request,
@@ -102,6 +143,16 @@ def manage_admin(request: Request,
 @app.get("/logs")
 def manage_logs(request: Request,
                 user=Depends(login.login_manager)):
+    """
+        Returns a response with the logs view page of the admin panel
+
+        Args:
+            request(Request): request to the server
+            user: user authentication check
+
+        Returns:
+            (templates.TemplateResponse): response generated from logs_admin.html template
+    """
     return templates.TemplateResponse("logs_admin.html", {
                                         "request": request
                                         })
