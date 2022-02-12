@@ -63,7 +63,6 @@ def get_admin_user_data(username: str):
 
     Returns:
         (SQLObject) - admin user data from db
-
     """
     data = db_connect.get_admin_by_name(username=username)
     if data.count():
@@ -72,6 +71,18 @@ def get_admin_user_data(username: str):
 
 @router.post("/login/token")
 def login_token(data: OAuth2PasswordRequestForm = Depends()):
+    """
+    The function receives the data
+    and returns a response that contains the admin token for the user,
+    valid for 15 minutes
+
+    Args:
+        data(OAuth2PasswordRequestForm): login data
+
+    Returns:
+        (HTMLResponse): response with cookies embedded in it
+    """
+
     admin_user_data_db = get_admin_user_data(data.username)
     if not admin_user_data_db:
         return HTMLResponse("""<script>
@@ -102,6 +113,16 @@ def login_token(data: OAuth2PasswordRequestForm = Depends()):
 
 @router.post("/login/logout")
 def logout(request: Request):
+    """
+        The function receives the request
+        and returns a response that contains the invalid admin token
+
+        Args:
+            request(Request): request for server
+
+        Returns:
+            (HTMLResponse): response with cookies embedded in it
+    """
     incorrect_token = "MoreliaTalk"
 
     response = HTMLResponse("""<script>

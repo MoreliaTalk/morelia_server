@@ -39,6 +39,17 @@ db_connect = DBHandler(DATABASE.get('URI'))
 @router.post("/manage/delete_user")
 def delete_user(request: Request,
                 uuid: str = Form(...)):
+    """
+        The function receives the request and admin uuid, delete admin user,
+        and returns a response, redirecting to the main page of the admin panel
+
+        Args:
+            request(Request): request for server
+            uuid(str): uuid admin user
+
+        Returns:
+            (HTMLResponse): response redirecting to the main admin page
+    """
     fake_uuid = str(uuid4().int)
 
     db_connect.update_user(uuid=uuid,
