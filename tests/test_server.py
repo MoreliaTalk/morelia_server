@@ -35,9 +35,7 @@ class TestWebsocket(unittest.TestCase):
                 def callback():
                     raise self.DisconnectErr
 
-                connection.exit_stack.callback(
-                    callback
-                )
+                connection.exit_stack.callback(callback)
                 connection.close(1006)
 
     def test_send_normal_message(self):
