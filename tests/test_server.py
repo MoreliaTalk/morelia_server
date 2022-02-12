@@ -1,11 +1,14 @@
 import json
-import logging
 
 from starlette.testclient import TestClient, WebSocketTestSession
 from starlette.websockets import WebSocketDisconnect
 
-from server import app
 import unittest
+
+from loguru import logger
+logger.disable("")
+
+from server import app
 
 
 class TestWebsocket(unittest.TestCase):
