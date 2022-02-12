@@ -42,15 +42,13 @@ class TestWebsocket(unittest.TestCase):
 
     def test_send_normal_message(self):
         with self.ws_client.websocket_connect("/ws") as connection:
-            connection.send_json({
-                "type": "ping-pong",
-                "data": {"user": [{}]},
-                "jsonapi": {
-                    "version": "1.0",
-                    "revision": "17"
-                    },
-                "meta": None
-            })
+            connection.send_json(
+                {"type": "ping-pong",
+                 "data": {"user": [{}]},
+                 "jsonapi": {"version": "1.0",
+                             "revision": "17"},
+                 "meta": None}
+            )
             self.assertIsNotNone(json.loads(connection.receive_bytes()))
 
     def test_send_incorrect_message(self):
