@@ -48,8 +48,7 @@ class TestWebsocket(unittest.TestCase):
                  "data": {"user": [{}]},
                  "jsonapi": {"version": "1.0",
                              "revision": "17"},
-                 "meta": None}
-            )
+                 "meta": None})
             self.assertIsNotNone(json.loads(connection.receive_bytes()))
 
     def test_send_incorrect_message(self):
