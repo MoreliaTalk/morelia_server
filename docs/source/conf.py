@@ -13,8 +13,6 @@
 import os
 import sys
 
-from sphinx.ext.autodoc import between
-
 source_path = os.path.split(os.path.abspath("."))
 doc_path = os.path.split(source_path[0])
 sys.path.insert(0, doc_path[0])
