@@ -316,8 +316,8 @@ class MTProtocol:
         """
 
         # select all fields of the user table
-        # TODO внести изменения в протокол, добавить фильтр
-        # по дате создания пользователя
+        # TODO внести изменения в протокол:
+        #   добавить фильтр по дате создания пользователя
         message = []
         flow = []
         user = []
@@ -447,7 +447,7 @@ class MTProtocol:
             message_start = request.data.flow[0].message_start
 
         if request.data.flow[0].message_end is None:
-            message_end = 0
+            message_end = 100
         else:
             message_end = request.data.flow[0].message_end
 
@@ -497,9 +497,7 @@ class MTProtocol:
                                       str(flow_error))
         else:
             if MESSAGE_COUNT <= LIMIT.getint("messages"):
-                flow.append(api.FlowResponse(uuid=flow_uuid,
-                                             message_start=message_start,
-                                             message_end=message_end))
+                flow.append(api.FlowResponse(uuid=flow_uuid))
                 message = get_messages(dbquery,
                                        LIMIT.getint("messages"))
                 errors = MTPErrorResponse("OK")
@@ -649,7 +647,7 @@ class MTProtocol:
                                                  is_bot=dbquery.is_bot))
             logger.success("\'_user_info\' executed successfully")
         else:
-            errors = MTPErrorResponse("FORBIDDEN",
+            errors = MTPErrorResponse("TOO_MANY_REQUESTS",
                                       f"Requested more {LIMIT.get('users')}"
                                       " users than server limit")
 

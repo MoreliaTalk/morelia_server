@@ -32,9 +32,25 @@ log_string = str()
 @router.get("/logs/get")
 def get_logs(request: Request,
              user=Depends(login.login_manager)):
+    """
+        Returns a dict with server logs
+
+        Args:
+            request(Request): request to the server
+            user: user authentication check
+
+        Returns:
+            (dict)
+    """
     return {"logs": log_string}
 
 
-def loguru_handler(log):
+def loguru_handler(log: str):
+    """
+        Function collects server logs
+
+        Args:
+            log(str): new log string
+    """
     global log_string
     log_string += log

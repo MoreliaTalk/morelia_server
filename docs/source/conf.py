@@ -12,10 +12,10 @@
 #
 import os
 import sys
+
 source_path = os.path.split(os.path.abspath("."))
 doc_path = os.path.split(source_path[0])
 sys.path.insert(0, doc_path[0])
-
 
 # -- Project information -----------------------------------------------------
 
@@ -25,7 +25,6 @@ author = 'MoreliaTalk'
 
 # The full version, including alpha/beta/rc tags
 release = '0.1'
-
 
 # -- General configuration ---------------------------------------------------
 
@@ -63,7 +62,6 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
-
 
 # -- Options for HTML output -------------------------------------------------
 

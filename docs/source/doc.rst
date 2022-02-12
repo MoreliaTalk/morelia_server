@@ -193,6 +193,25 @@ Checking matching status code name and type of errors contains in class ``mod.er
 Additional module
 =================
 
+Admin
+-------
+
+``admin``
+
+.. autofunction:: admin.admin.index_admin
+.. autofunction:: admin.admin.login_admin
+.. autofunction:: admin.admin.manage_admin
+.. autofunction:: admin.admin.manage_logs
+.. autofunction:: admin.admin.status_admin
+.. autoexception:: admin.login.NotAuthenticatedException
+.. autofunction:: admin.admin.not_login_exception_handler
+.. autofunction:: admin.login.get_admin_user_data
+.. autofunction:: admin.login.login_token
+.. autofunction:: admin.login.logout
+.. autofunction:: admin.control.delete_user
+.. autofunction:: admin.logs.get_logs
+.. autofunction:: admin.logs.loguru_handler
+
 Hash
 ----
 
@@ -210,4 +229,3 @@ Logging
 ``mod.logging.add_logging()``:
 
 .. autofunction:: mod.logging.add_logging
-
