@@ -18,15 +18,23 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
-import configparser
+from configparser import ConfigParser
+from configparser import DuplicateSectionError
+from configparser import DuplicateOptionError
+from configparser import NoOptionError
+from configparser import MissingSectionHeaderError
+from configparser import ParsingError
 import os
-from pathlib import Path, PurePosixPath, PureWindowsPath
+from pathlib import Path
+from pathlib import PurePosixPath
+from pathlib import PureWindowsPath
 from typing import Any
-
-from loguru import logger
 from collections import namedtuple
 
-from mod.config.validator import DatabaseSection, HashSection
+from loguru import logger
+
+
+from mod.config.validator import ConfigModel
 
 
 class ConfigNameError(Exception):
@@ -40,11 +48,12 @@ def search_config(file_name: str) -> str:
     elif sys_name == 'posix':
         PurePath = PurePosixPath
     else:
-        raise "Unknown operation system"
+        raise Exception("Unknown operation system")
 
     full_path = Path(__file__)
     for number in range(len(full_path.parents)):
-        test_path = PurePath(full_path.parents[number], file_name)
+        test_path = PurePath(full_path.parents[number],
+                             file_name)
         if Path(test_path).is_file():
             logger.debug(f"Config file found: {test_path}")
             return str(test_path)
@@ -55,49 +64,60 @@ def search_config(file_name: str) -> str:
 
 
 class ConfigHandler:
-    def __init__(self, file_name) -> None:
+    def __init__(self,
+                 file_name: str) -> None:
         self.file_path = search_config(file_name)
-        self.config = configparser.ConfigParser()
+        self.config = ConfigParser(interpolation=None)
+        self.config.read(self.file_path)
 
-    @staticmethod
-    def __validate_database(uri: Any) -> namedtuple:
-        result = DatabaseSection(uri=uri)
-        Database = namedtuple("Database", ["uri"])
-        valid_uri = result.dict()['uri']
-        return Database(uri=valid_uri)
+    def _validate(self) -> ConfigModel:
+        sections = self.config.sections()
+        items = [self.config.items(section) for section in sections]
+        all_item = []
+        for item in items:
+            for i in item:
+                all_item.append(i)
+        kwargs = dict(all_item)
+        return ConfigModel(**kwargs)
 
-    @staticmethod
-    def __validate_hash_size(password: Any,
-                             auth_id: Any) -> namedtuple:
-        result = HashSection(password=password,
-                             auth_id=auth_id)
-        HashSize = namedtuple("Hash_size", ["password",
-                                            "auth_id"])
-        valid_password = result.dict()['password']
-        valid_auth_id = result.dict()['auth_id']
-        return HashSize(password=valid_password,
-                        auth_id=valid_auth_id)
+    def read(self) -> namedtuple:
+        valid = self._validate().dict()
+        valid_dict = valid.copy()
+        namedtuple_key = []
+        while len(valid) > 0:
+            key, _ = valid.popitem()
+            namedtuple_key.append(key)
+        Config = namedtuple("Config", namedtuple_key)
+        return Config(**valid_dict)
 
-    def read(self) -> namedtuple[namedtuple]:
-        Config = namedtuple("Config", ["database",
-                                       "hash_size",
-                                       "logging",
-                                       "templates",
-                                       "server_limit",
-                                       "superuser",
-                                       "admin"])
-        Database(self.config["DATABASE"].get("uri"))
-        HashSize(password=self.config["HASH_SIZE"].get())
-        Loself.config['LOGGING']
-        TEMPLATES = config["TEMPLATES"]
-
-        SERVER_LIMIT = config["SERVER_LIMIT"]
-        SUPERUSER = config["SUPERUSER"]
-        ADMIN = config["ADMIN"]
-        return Config(database=Database)
-
-
-
-
-if __name__ == "__main__":
-    print(search_config("config.ini"))
+    def write(self,
+              section: str,
+              key: str,
+              value: Any):
+        if self.config.has_section(section):
+            self.config.set(section=section,
+                            option=key,
+                            value=value)
+        else:
+            self.config.add_section(section)
+            self.config.set(section=section,
+                            option=key,
+                            value=value)
+        try:
+            with open(self.file_path, 'w+') as config_file:
+                self.config.write(config_file)
+        except DuplicateSectionError as err:
+            pass
+        except DuplicateOptionError as err:
+            pass
+        except NoOptionError as err:
+            pass
+        except MissingSectionHeaderError as err:
+            pass
+        except ParsingError as err:
+            pass
+        except OSError as err:
+            pass
+        else:
+            logger.success('Completed')
+            return 'Completed'
