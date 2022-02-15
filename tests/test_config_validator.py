@@ -19,13 +19,7 @@
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 import unittest
-from mod.config.validator import DatabaseSection
-from mod.config.validator import HashSection
-from mod.config.validator import LoggingSection
-from mod.config.validator import TemplatesSection
-from mod.config.validator import ServerLimitSection
-from mod.config.validator import SuperuserSection
-from mod.config.validator import AdminSection
+from mod.config.validator import ConfigModel
 from pydantic.error_wrappers import ValidationError
 
 
@@ -37,23 +31,23 @@ class TestConfigValidator(unittest.TestCase):
         pass
 
     def test_valid_database_section(self) -> None:
-        test = DatabaseSection(uri=123156)
+        test = ConfigModel(uri=123156,
+                           password="1",
+                           auth_id=12345,
+                           level="10",
+                           expiration_date=3,
+                           debug_expiration_date=0,
+                           uvicorn_logging_disable=1,
+                           debug="test_string",
+                           error=0,
+                           info="",
+                           folder=123156,
+                           message="1",
+                           users=12345,
+                           secret_key=123156)
         self.assertEqual(test.dict()["uri"], "123156")
-
-    def test_valid_hash_section(self) -> None:
-        test = HashSection(password="1",
-                           auth_id=12345)
         self.assertEqual(test.dict()["password"], 1)
         self.assertEqual(test.dict()["auth_id"], 12345)
-
-    def test_valid_logging_section(self) -> None:
-        test = LoggingSection(level="10",
-                              expiration_date=3,
-                              debug_expiration_date=0,
-                              uvicorn_logging_disable=1,
-                              debug="test_string",
-                              error=0,
-                              info="")
         self.assertEqual(test.dict()["level"], 10)
         self.assertEqual(test.dict()["expiration_date"], 3)
         self.assertEqual(test.dict()["debug_expiration_date"], 0)
@@ -61,44 +55,25 @@ class TestConfigValidator(unittest.TestCase):
         self.assertEqual(test.dict()["debug"], "test_string")
         self.assertEqual(test.dict()["error"], "0")
         self.assertEqual(test.dict()["info"], "")
+        self.assertEqual(test.dict()["folder"], "123156")
+        self.assertEqual(test.dict()["message"], 1)
+        self.assertEqual(test.dict()["users"], 12345)
+        self.assertEqual(test.dict()["secret_key"], "123156")
 
     def test_not_valid_logging_section(self) -> None:
         self.assertRaises(ValidationError,
-                          LoggingSection,
+                          ConfigModel,
+                          uri=123156,
+                          password="1",
+                          auth_id=12345,
                           level="10",
                           expiration_date=3,
                           debug_expiration_date="",
                           uvicorn_logging_disable=1,
                           debug="test_string",
                           error=0,
-                          info="")
-
-    def test_valid_templates_section(self) -> None:
-        test = TemplatesSection(folder=123156)
-        self.assertEqual(test.dict()["folder"], "123156")
-
-    def test_valid_server_limit_section(self) -> None:
-        test = ServerLimitSection(message="1",
-                                  users=12345)
-        self.assertEqual(test.dict()["message"], 1)
-        self.assertEqual(test.dict()["users"], 12345)
-
-    def test_valid_superuser_section(self) -> None:
-        test = SuperuserSection(uuid=10,
-                                username=33333,
-                                login=0,
-                                password="test_string",
-                                salt="salt",
-                                key=0,
-                                hash_password=5555)
-        self.assertEqual(test.dict()["uuid"], "10")
-        self.assertEqual(test.dict()["username"], "33333")
-        self.assertEqual(test.dict()["login"], "0")
-        self.assertEqual(test.dict()["password"], "test_string")
-        self.assertEqual(test.dict()["salt"], "salt")
-        self.assertEqual(test.dict()["key"], "0")
-        self.assertEqual(test.dict()["hash_password"], "5555")
-
-    def test_valid_admin_section(self) -> None:
-        test = AdminSection(secret_key=123156)
-        self.assertEqual(test.dict()["secret_key"], "123156")
+                          info="",
+                          folder=123156,
+                          message="1",
+                          users=12345,
+                          secret_key=123156)

@@ -18,25 +18,19 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
-from pydantic import BaseModel as PydanticBaseModel
+from pydantic import BaseModel
 
 
-class BaseModel(PydanticBaseModel):
+class ConfigModel(BaseModel):
     class Config:
         anystr_strip_whitespace = True
         validate_all = True
-
-
-class DatabaseSection(BaseModel):
+    # Database section
     uri: str
-
-
-class HashSection(BaseModel):
+    # Hash size section
     password: int
     auth_id: int
-
-
-class LoggingSection(BaseModel):
+    # Logging section
     level: int
     expiration_date: int
     debug_expiration_date: int
@@ -44,26 +38,10 @@ class LoggingSection(BaseModel):
     debug: str
     error: str
     info: str
-
-
-class TemplatesSection(BaseModel):
+    # Templates section
     folder: str
-
-
-class ServerLimitSection(BaseModel):
-    message: int
+    # Server limit section
+    messages: int
     users: int
-
-
-class SuperuserSection(BaseModel):
-    uuid: str
-    username: str
-    login: str
-    password: str
-    salt: str
-    key: str
-    hash_password: str
-
-
-class AdminSection(BaseModel):
+    # Admin section
     secret_key: str
