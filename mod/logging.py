@@ -18,12 +18,13 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
+
 import sys
 
 from loguru import logger
 
 from admin import logs
-from mod.config import LOGGING
+from config import LOGGING
 
 
 expiration_date = LOGGING.get('EXPIRATION_DATE')
@@ -31,32 +32,47 @@ debug_expiration_date = LOGGING.get('DEBUG_EXPIRATION_DATE')
 
 
 def add_logging(debug_status: int) -> None:
-    """Enables logging depending on start parameter uvicorn
+    """
+    Enable logging depending on start parameter uvicorn and choice their level.
+    Logging information written in .log file which contains in /log folder and
+    also duplicated in the console.
 
-    Instead of print we use:                       #
-               logger.debug('debug message')       #
-               logger.info('info message')         #
-               logger.warning('warn message')      #
-               logger.error('error message')       #
-               logger.critical('critical message') #
+    Note:
+        application creates two log file contains in /log folder:
 
-    The application creates two log/ file:
-               1 - error level
-               2 - debug level
-    The information is also duplicated in the console
+        one for error level - `error.log`
+
+        one for debug level - `debug.log`
+
+    Examples:
+        Instead of print we use:
+
+        ``logger.debug('debug message')``
+
+        ``logger.info('info message')``
+
+        ``logger.warning('warn message')``
+
+        ``logger.error('error message')``
+
+        ``logger.critical('critical message')``
 
     Args:
-        debug_status (int, requires):
-        50 - CRITICAL;
-        40 - ERROR;
-        30 - WARNING;
-        25 - SUCCESS;
-        20 - INFO;
-        10 - DEBUG;
-        5 - TRACE.
+        debug_status (int, requires): where number corresponds its level
 
-    Returns:
-        None
+            `50 - CRITICAL`
+
+            `40 - ERROR`
+
+            `30 - WARNING`
+
+            `25 - SUCCESS`
+
+            `20 - INFO`
+
+            `10 - DEBUG`
+
+            `5 - TRACE`
     """
 
     logger.remove()

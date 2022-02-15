@@ -27,8 +27,8 @@ from starlette.responses import HTMLResponse
 
 from mod import lib
 from mod.db.dbhandler import DBHandler
-from mod.config import DATABASE
-from mod.config import ADMIN
+from config import DATABASE
+from config import ADMIN
 
 
 db_connect = DBHandler(DATABASE.get('URI'))
@@ -37,6 +37,9 @@ router = APIRouter()
 
 
 class NotAuthenticatedException(Exception):
+    """
+        An exception occurs when the user's authorization data is missing or incorrect
+    """
     pass
 
 
@@ -50,6 +53,15 @@ login_manager.not_authenticated_exception = NotAuthenticatedException
 
 @login_manager.user_loader()
 def get_admin_user_data(username: str):
+    """
+    The function of requesting data from the database and checking it against the username, if there is valid data, it returns it
+
+    Args:
+        username(str): username admin user
+
+    Returns:
+        (SQLObject) - admin user data from db
+    """
     data = db_connect.get_admin_by_name(username=username)
     if data.count():
         return data[0]
@@ -57,6 +69,18 @@ def get_admin_user_data(username: str):
 
 @router.post("/login/token")
 def login_token(data: OAuth2PasswordRequestForm = Depends()):
+    """
+    The function receives the data
+    and returns a response that contains the admin token for the user,
+    valid for 15 minutes
+
+    Args:
+        data(OAuth2PasswordRequestForm): login data
+
+    Returns:
+        (HTMLResponse): response with cookies embedded in it
+    """
+
     admin_user_data_db = get_admin_user_data(data.username)
     if not admin_user_data_db:
         return HTMLResponse("""<script>
@@ -87,6 +111,16 @@ def login_token(data: OAuth2PasswordRequestForm = Depends()):
 
 @router.post("/login/logout")
 def logout(request: Request):
+    """
+        The function receives the request
+        and returns a response that contains the invalid admin token
+
+        Args:
+            request(Request): request for server
+
+        Returns:
+            (HTMLResponse): response with cookies embedded in it
+    """
     incorrect_token = "MoreliaTalk"
 
     response = HTMLResponse("""<script>

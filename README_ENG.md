@@ -1,5 +1,8 @@
 # Morelia Server - messenger server for Morelia Network #
 
+![tests](https://github.com/MoreliaTalk/morelia_server/workflows/Test%20and%20Linting/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/MoreliaTalk/morelia_server/badge.svg?branch=develop-nekrod)](https://coveralls.io/github/MoreliaTalk/morelia_server)
+
 Language [EN](./README_ENG.md), [RU](./README.md)
 
 ## There are two brunches in repository ##
@@ -56,8 +59,6 @@ Language [EN](./README_ENG.md), [RU](./README.md)
 * debug_server.py - wrapper for server.py to debug through the `pdb` utility.
 * example_config.ini - file containing example server settings, just rename it to `config.ini` before running the server.
 * client.py - mini-customer to test the server.
-
-Translated with www.DeepL.com/Translator (free version)
 
 ## Installing ##
 

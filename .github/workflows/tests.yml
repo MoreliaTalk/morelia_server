@@ -1,0 +1,36 @@
+name: Test and Push coverage to Coveralls
+
+on: [push, pull_request]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.10"
+        
+    - name: Install pipenv
+      run: |
+        pip install pipenv
+      
+    - name: Install dependencies
+      run: |
+        pipenv install --dev
+        
+    - name: Create config for server
+      run: |
+        mv example_config.ini config.ini
+                
+    - name: Run tests
+      run: |
+        pipenv run coverage run -m unittest discover tests
+
+    - name: Push report to coveralls.io
+      env: 
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        pipenv run coveralls --service=github
