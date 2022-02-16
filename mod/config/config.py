@@ -41,34 +41,94 @@ class ConfigNameError(Exception):
     pass
 
 
-def search_config(file_name: str) -> str:
-    sys_name = os.name
-    if sys_name == 'nt':
-        PurePath = PureWindowsPath
-    elif sys_name == 'posix':
-        PurePath = PurePosixPath
-    else:
-        raise Exception("Unknown operation system")
+class BackupConfigError(OSError):
+    pass
 
-    full_path = Path(__file__)
-    for number in range(len(full_path.parents)):
-        test_path = PurePath(full_path.parents[number],
-                             file_name)
-        if Path(test_path).is_file():
-            logger.debug(f"Config file found: {test_path}")
-            return str(test_path)
-    message = """Config file not found,
-    please rename example_config.ini to config.ini"""
-    logger.error(message)
-    raise ConfigNameError(message)
+
+class ConfigOperationError(Exception):
+    pass
+
+
+class ConfigAccessError(OSError):
+    pass
 
 
 class ConfigHandler:
     def __init__(self,
-                 file_name: str) -> None:
-        self.file_path = search_config(file_name)
+                 name: str = 'config.ini') -> None:
+        self._name = str(name)
+        self._directory = None
+        self._set_configparser(self._name,
+                               self._directory)
+
+    def _search_config(self,
+                       name: str,
+                       directory: Any) -> str:
+        sys_name = os.name
+        if sys_name == 'nt':
+            PurePath = PureWindowsPath
+        elif sys_name == 'posix':
+            PurePath = PurePosixPath
+        else:
+            message = "Unknown operation system"
+            logger.exception(message)
+            raise Exception(message)
+        full_path = Path(__file__)
+        for number in range(len(full_path.parents)):
+            if directory is not None:
+                test_path = PurePath(full_path.parents[number],
+                                     directory,
+                                     name)
+            else:
+                test_path = PurePath(full_path.parents[number],
+                                     name)
+            if Path(test_path).is_file():
+                logger.debug(f"Config file found: {test_path}")
+                return str(test_path)
+        message = """Config file not found,
+        please rename example_config.ini to config.ini"""
+        logger.error(message)
+        raise ConfigNameError(message)
+
+    def _set_configparser(self,
+                          name: str,
+                          directory: Any) -> None:
+        self.file_path = self._search_config(name=name,
+                                             directory=directory)
         self.config = ConfigParser(interpolation=None)
         self.config.read(self.file_path)
+
+    def __str__(self) -> str:
+        return f"Config: {self.file_path}"
+
+    def __repr__(self) -> str:
+        return "".join((f"Class {self.__class__.__name__} with ",
+                        f"config_name: {self._name}, ",
+                        f"root_directory: {self._directory}"))
+
+    @property
+    def root_directory(self) -> str:
+        return self._directory
+
+    @root_directory.setter
+    def root_directory(self,
+                       name: str) -> None:
+        if name:
+            self._directory = str(name)
+            self._set_configparser(name=self._name,
+                                   directory=self._directory)
+
+    @property
+    def config_name(self) -> str:
+        return self._name
+
+    @config_name.setter
+    def config_name(self,
+                    name: str) -> None:
+        if name:
+            self._name = str(name)
+            self._set_configparser(name=self._name,
+                                   directory=self._directory)
 
     def _validate(self) -> ConfigModel:
         sections = self.config.sections()
@@ -90,34 +150,45 @@ class ConfigHandler:
         Config = namedtuple("Config", namedtuple_key)
         return Config(**valid_dict)
 
+    def _backup_file(self) -> str:
+        try:
+            filename = None
+            message = f"Backup config file to: {filename}"
+            logger.debug(message)
+            return message
+        except OSError as err:
+            message = f"{err}"
+            logger.exception(message)
+            raise BackupConfigError(message)
+
     def write(self,
               section: str,
               key: str,
               value: Any):
+
+        self._backup_file()
         if self.config.has_section(section):
-            self.config.set(section=section,
-                            option=key,
+            self.config.set(section=section.capitalize(),
+                            option=key.capitalize(),
                             value=value)
         else:
             self.config.add_section(section)
-            self.config.set(section=section,
-                            option=key,
+            self.config.set(section=section.capitalize(),
+                            option=key.capitalize(),
                             value=value)
         try:
             with open(self.file_path, 'w+') as config_file:
                 self.config.write(config_file)
-        except DuplicateSectionError as err:
-            pass
-        except DuplicateOptionError as err:
-            pass
-        except NoOptionError as err:
-            pass
-        except MissingSectionHeaderError as err:
-            pass
-        except ParsingError as err:
-            pass
+        except (DuplicateSectionError,
+                DuplicateOptionError,
+                NoOptionError,
+                MissingSectionHeaderError,
+                ParsingError) as err:
+            logger.debug(err)
+            raise ConfigOperationError(err)
         except OSError as err:
-            pass
+            logger.debug(err)
+            raise ConfigAccessError(err)
         else:
             logger.success('Completed')
             return 'Completed'

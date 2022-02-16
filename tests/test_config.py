@@ -23,7 +23,6 @@ from pathlib import PurePath
 from loguru import logger
 
 from mod.config.config import ConfigHandler
-from mod.config.config import search_config
 from mod.config.config import ConfigModel
 
 
@@ -34,16 +33,53 @@ class TestConfigHandler(unittest.TestCase):
 
     def setUp(self) -> None:
         self.config_name = 'config.ini'
-        self.test = ConfigHandler(file_name=self.config_name)
+        self.test = ConfigHandler()
 
     def tearDown(self) -> None:
         del self.config_name
         del self.test
 
+    def test__str__(self):
+        self.assertEqual(str(self.test).split(" "),
+                         'Config:')
+
+    def test__repr__(self):
+        result = repr(self.test)
+        self.assertEqual(result.split(" ")[1],
+                         "ConfigHandler")
+        # checking file name config.ini with comma ==> config.ini,
+        self.assertEqual(result.split(" ")[4],
+                         "".join((self.config_name, ",")))
+
     def test_search_file(self):
-        full_path = search_config(self.config_name)
+        full_path = self.test._search_config(self.config_name)
         result = PurePath(full_path)
         self.assertEqual(result.parts[-1], 'config.ini')
+
+    def test_set_configparser(self):
+        self.test._set_configparser(self.config_name,
+                                    __file__)
+        result = self.test.config.sections()
+        self.assertEqual(result[0], "DATABASE")
+
+    def test_get_root_directory(self):
+        directory = self.test.root_directory
+        self.assertEqual(directory, None)
+
+    def test_set_root_directory(self):
+        new_root_directory = 'tests'
+        self.test.root_directory = new_root_directory
+        result = PurePath(self.test.file_path)
+        self.assertEqual(result.parts[-1], "config.ini")
+        self.assertEqual(result.parts[-2], new_root_directory)
+
+    def test_get_config_name(self):
+        result = self.test.config_name
+        self.assertEqual(result, self.config_name)
+
+    def test_set_config_name(self):
+        result = self.test.config_name = 'setup.cfg'
+        self.assertEqual(result, 'setup.cfg')
 
     def test_validate(self):
         valid = self.test._validate()
@@ -62,6 +98,7 @@ class TestConfigHandler(unittest.TestCase):
         self.assertEqual(result.folder, 'templates')
 
     def test_write(self):
+        self.test.root_directory = './tests'
         result = self.test.write(section='DATABASE',
                                  key="URL",
                                  value="URL")
