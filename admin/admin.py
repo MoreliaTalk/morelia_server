@@ -26,12 +26,15 @@ from pathlib import Path
 from starlette.responses import RedirectResponse
 
 from mod.db.dbhandler import DBHandler
-from config import DATABASE
+from mod.config.config import ConfigHandler
 from . import login
 from . import logs
 from . import control as manage
 
 app = FastAPI()
+
+config = ConfigHandler()
+config_option = config.read()
 
 templates = Jinja2Templates(Path(__file__).parent / "templates")
 
@@ -39,7 +42,7 @@ app.include_router(login.router)
 app.include_router(logs.router)
 app.include_router(manage.router)
 
-db_connect = DBHandler(DATABASE.get('URI'))
+db_connect = DBHandler(config_option.uri)
 
 
 @app.exception_handler(login.NotAuthenticatedException)

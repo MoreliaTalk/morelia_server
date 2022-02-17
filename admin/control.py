@@ -26,12 +26,15 @@ from starlette.requests import Request
 from starlette.responses import HTMLResponse
 
 from mod.db.dbhandler import DBHandler
-from config import DATABASE
+from mod.config.config import ConfigHandler
+
+config = ConfigHandler()
+config_option = config.read()
 
 
 router = APIRouter()
 
-db_connect = DBHandler(DATABASE.get('URI'))
+db_connect = DBHandler(config_option.uri)
 
 
 @router.post("/manage/delete_user")

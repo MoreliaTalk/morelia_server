@@ -41,9 +41,7 @@ from starlette.websockets import WebSocketDisconnect
 from mod.controller import MainHandler
 from mod.db.dbhandler import DBHandler
 from admin import admin
-from config import LOGGING
-from config import TEMPLATES as DIRECTORY
-from config import DATABASE
+from mod.config.config import ConfigHandler
 # ************** Morelia module end ******************
 
 
@@ -52,12 +50,15 @@ from loguru import logger
 from mod.logging import add_logging
 import logging as standart_logging
 # ************** Unicorn logger off ******************
-if LOGGING.getboolean("UVICORN_LOGGING_DISABLE"):
+# Get parameters contains in config.ini
+config = ConfigHandler()
+config_option = config.read()
+if config_option.uvicorn_logging_disable:
     standart_logging.disable()
 # ************** Logging end *************************
 
 # loguru logger on
-add_logging(LOGGING.getint("level"))
+add_logging(config_option.level)
 
 # Record server start time (UTC)
 server_started = datetime.now()
@@ -67,7 +68,7 @@ app = FastAPI()
 logger.info("Start server")
 
 # Specifying where to load HTML page templates
-templates = Jinja2Templates(DIRECTORY.get("folder"))
+templates = Jinja2Templates(config_option.folder)
 
 # Search and filtered static files path
 main_path = os.getcwd()
@@ -78,7 +79,7 @@ else:
     file_static = os.path.join(main_path, 'static')
 
 # Set database connection
-db_connect = DBHandler(uri=DATABASE.get('uri'))
+db_connect = DBHandler(uri=config_option.uri)
 db_connect.create_table()
 
 

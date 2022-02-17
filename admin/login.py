@@ -27,11 +27,13 @@ from starlette.responses import HTMLResponse
 
 from mod import lib
 from mod.db.dbhandler import DBHandler
-from config import DATABASE
-from config import ADMIN
+from mod.config.config import ConfigHandler
 
 
-db_connect = DBHandler(DATABASE.get('URI'))
+config = ConfigHandler()
+config_option = config.read()
+
+db_connect = DBHandler(config_option.uri)
 
 router = APIRouter()
 
@@ -43,7 +45,7 @@ class NotAuthenticatedException(Exception):
     pass
 
 
-login_manager = LoginManager(ADMIN.get("SECRET_KEY"),
+login_manager = LoginManager(config_option.secret_key,
                              token_url="/login/token",
                              use_cookie=True,
                              use_header=False)
