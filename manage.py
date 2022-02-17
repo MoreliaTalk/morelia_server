@@ -30,9 +30,11 @@ from mod.db import dbhandler
 from mod.db.dbhandler import DatabaseWriteError
 from mod.db.dbhandler import DatabaseReadError
 from mod.db.dbhandler import DatabaseAccessError
-from mod.config import DATABASE
-from mod.config import SUPERUSER
+from mod.config.config import ConfigHandler
 
+
+config = ConfigHandler()
+config_option = config.read()
 
 @click.group()
 def cli():
@@ -42,7 +44,7 @@ def cli():
 @cli.command("db-create", help="Create all table with all data")
 def db_create():
     start_time = process_time()
-    db = dbhandler.DBHandler(uri=DATABASE.get('uri'))
+    db = dbhandler.DBHandler(uri=config_option.uri)
     db.create_table()
     click.echo(f'Table is created at: '
                f'{process_time() - start_time} sec.')
@@ -51,7 +53,7 @@ def db_create():
 @cli.command("db-delete", help="Delete all table with all data")
 def db_delete():
     start_time = process_time()
-    db = dbhandler.DBHandler(uri=DATABASE.get('uri'))
+    db = dbhandler.DBHandler(uri=config_option.uri)
     db.delete_table()
     click.echo(f'Table is deleted at: '
                f'{process_time() - start_time} sec.')
@@ -59,7 +61,7 @@ def db_delete():
 
 @cli.command("superuser-create", help="Create superuser in database")
 def create_superuser():
-    db = dbhandler.DBHandler(uri=DATABASE.get('uri'))
+    db = dbhandler.DBHandler(uri=config_option.uri)
     user_uuid = str(123456789)
     hash_password = SUPERUSER.get('hash_password')
     try:
@@ -77,7 +79,7 @@ def create_superuser():
 
 @cli.command("flow-create", help="Create flow type group in database")
 def create_flow():
-    db = dbhandler.DBHandler(uri=DATABASE.get('uri'))
+    db = dbhandler.DBHandler(uri=config_option.uri)
     user_uuid = str(123456789)
     try:
         new_user = db.get_user_by_uuid(uuid=user_uuid)
@@ -100,7 +102,7 @@ def create_flow():
 @click.option("--username", help="username admin")
 @click.option("--password", help="password admin")
 def admin_create_user(username, password):
-    db = dbhandler.DBHandler(uri=DATABASE.get('uri'))
+    db = dbhandler.DBHandler(uri=config_option.uri)
 
     generator = lib.Hash(password,
                          str(uuid4().hex),

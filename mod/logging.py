@@ -24,11 +24,13 @@ import sys
 from loguru import logger
 
 from admin import logs
-from config import LOGGING
+from mod.config.config import ConfigHandler
 
+config = ConfigHandler()
+config_option = config.read()
 
-expiration_date = LOGGING.get('EXPIRATION_DATE')
-debug_expiration_date = LOGGING.get('DEBUG_EXPIRATION_DATE')
+expiration_date = config_option.expiration_date
+debug_expiration_date = config_option.debug_expiration_date
 
 
 def add_logging(debug_status: int) -> None:
@@ -81,14 +83,14 @@ def add_logging(debug_status: int) -> None:
     if DEBUG:
         # We connect the output to TTY, level DEBUG
         logger.add(sys.stdout,
-                   format=LOGGING.get("debug"),
+                   format=config_option.debug,
                    level="DEBUG",
                    enqueue=True,
                    colorize=True)
 
         # Connect the output to a file, level DEBUG
         logger.add('log/debug.log',
-                   format=LOGGING.get("debug"),
+                   format=config_option.debug,
                    level="DEBUG",
                    enqueue=True,
                    colorize=True,
@@ -99,14 +101,14 @@ def add_logging(debug_status: int) -> None:
     else:
         # We connect the output to TTY, level INFO
         logger.add(sys.stdout,
-                   format=LOGGING.get("info"),
+                   format=config_option.info,
                    level="INFO",
                    enqueue=True,
                    colorize=True)
 
     # We connect the output to a file, level ERROR
     logger.add('log/error.log',
-               format=LOGGING.get("error"),
+               format=config_option.error,
                level="ERROR",
                backtrace=True,
                diagnose=True,
@@ -118,7 +120,7 @@ def add_logging(debug_status: int) -> None:
                compression="zip")
 
     logger.add(logs.loguru_handler,
-               format=LOGGING.get("info"),
+               format=config_option.info,
                level="DEBUG",
                enqueue=True,
                catch=True)
