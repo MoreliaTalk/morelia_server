@@ -18,12 +18,14 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
+import os
 import unittest
 from pathlib import PurePath
 from loguru import logger
 
 from mod.config.config import ConfigHandler
 from mod.config.config import ConfigModel
+from mod.lib import rebuild_config
 
 
 class TestConfigHandler(unittest.TestCase):
@@ -40,27 +42,45 @@ class TestConfigHandler(unittest.TestCase):
         del self.test
 
     def test__str__(self):
-        self.assertEqual(str(self.test).split(" "),
+        self.assertRegex(str(self.test),
                          'Config:')
 
     def test__repr__(self):
         result = repr(self.test)
-        self.assertEqual(result.split(" ")[1],
+        self.assertRegex(result,
                          "ConfigHandler")
-        # checking file name config.ini with comma ==> config.ini,
-        self.assertEqual(result.split(" ")[4],
-                         "".join((self.config_name, ",")))
-
-    def test_search_file(self):
-        full_path = self.test._search_config(self.config_name)
-        result = PurePath(full_path)
-        self.assertEqual(result.parts[-1], 'config.ini')
+        self.assertRegex(result,
+                         self.config_name)
 
     def test_set_configparser(self):
         self.test._set_configparser(self.config_name,
-                                    __file__)
+                                    None)
         result = self.test.config.sections()
         self.assertEqual(result[0], "DATABASE")
+
+    def test_search_file(self):
+        full_path = self.test._search_config(self.config_name,
+                                             None)
+        result = PurePath(full_path)
+        self.assertEqual(result.parts[-1], 'config.ini')
+
+    def test_backup_file(self):
+        result = self.test._backup_config_file()
+        self.assertIsInstance(result, tuple)
+        self.assertIsInstance(result[0], str)
+        self.assertIsInstance(result[1], PurePath)
+        self.assertRegex(result[0], "Backup config.ini to:")
+        # delete created backup file
+        os.remove(result[1])
+
+    def test_validate(self):
+        valid = self.test._validate()
+        result = valid.dict()
+        self.assertIsInstance(valid, ConfigModel)
+        self.assertEqual(result['password'], 32)
+        self.assertTrue(result['uvicorn_logging_disable'])
+        self.assertEqual(result['uri'], 'sqlite:db_sqlite.db')
+        self.assertEqual(result['folder'], 'templates')
 
     def test_get_root_directory(self):
         directory = self.test.root_directory
@@ -81,15 +101,6 @@ class TestConfigHandler(unittest.TestCase):
         result = self.test.config_name = 'setup.cfg'
         self.assertEqual(result, 'setup.cfg')
 
-    def test_validate(self):
-        valid = self.test._validate()
-        result = valid.dict()
-        self.assertIsInstance(valid, ConfigModel)
-        self.assertEqual(result['password'], 32)
-        self.assertTrue(result['uvicorn_logging_disable'])
-        self.assertEqual(result['uri'], 'sqlite:db_sqlite.db')
-        self.assertEqual(result['folder'], 'templates')
-
     def test_read(self):
         result = self.test.read()
         self.assertEqual(result.password, 32)
@@ -99,7 +110,10 @@ class TestConfigHandler(unittest.TestCase):
 
     def test_write(self):
         self.test.root_directory = './tests'
-        result = self.test.write(section='DATABASE',
-                                 key="URL",
-                                 value="URL")
+        result = self.test.write(section='database',
+                                 key="url",
+                                 value="www.test.ru",
+                                 backup=False)
         self.assertEqual(result, 'Completed')
+        # rebuild config.ini to tests
+        rebuild_config()
