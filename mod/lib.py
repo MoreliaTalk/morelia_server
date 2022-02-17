@@ -24,7 +24,12 @@ from hashlib import blake2b
 from hmac import compare_digest
 from os import urandom
 
-from config import HASH_SIZE
+from mod.config.config import ConfigHandler
+from mod.logging import logger
+
+
+class RebuildConfigError(Exception):
+    pass
 
 
 class Hash:
@@ -53,6 +58,8 @@ class Hash:
                  salt: bytes = None,
                  key: bytes = None,
                  hash_password: str = None) -> None:
+        self.config = ConfigHandler()
+        self.config_option = self.config.read()
 
         if salt is None:
             self.salt = urandom(16)
@@ -71,8 +78,8 @@ class Hash:
 
         self.binary_password = password.encode('utf-8')
         self.hash_password = hash_password
-        self.size_password = HASH_SIZE.getint('password')
-        self.size_auth_id = HASH_SIZE.getint('auth_id')
+        self.size_password = self.config_option.password
+        self.size_auth_id = self.config_option.auth_id
 
     @property
     def get_salt(self) -> bytes:
@@ -140,3 +147,24 @@ class Hash:
                          digest_size=self.size_auth_id,
                          salt=self.salt)
         return result.hexdigest()
+
+
+def rebuild_config(orig_config: str = 'example_config.ini',
+                   new_config: str = 'config.ini',
+                   directory: str = 'tests') -> str:
+    orig = ConfigHandler()
+    new = ConfigHandler()
+    try:
+        with open(new._search_config(name=new_config,
+                                     directory=directory),
+                  'w+') as tests_config:
+            orig_config = open(orig._search_config(name=orig_config,
+                                                   directory=None),
+                               'r')
+            tests_config.write(orig_config.read())
+            orig_config.close()
+    except OSError as err:
+        logger.exception(err)
+        raise RebuildConfigError(err)
+    else:
+        return 'Ok'
