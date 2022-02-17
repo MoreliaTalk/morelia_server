@@ -24,7 +24,7 @@ import unittest
 
 from loguru import logger
 
-from mod import lib  # noqa
+from mod import lib
 
 # Add path to directory with code being checked
 # to variable 'PATH' to import modules from directory
@@ -120,6 +120,22 @@ class TestHash(unittest.TestCase):
         self.assertEqual(self.generator.get_key, self.key)
         self.assertIsInstance(self.generator.get_salt, bytes)
         self.assertIsInstance(self.generator.get_key, bytes)
+
+
+class TestOtherLib(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        logger.remove()
+
+    def setUp(self) -> None:
+        pass
+
+    def tearDown(self) -> None:
+        pass
+
+    def test_rebuild_config(self):
+        result = lib.rebuild_config()
+        self.assertEqual(result, 'Ok')
 
 
 if __name__ == "__main__":
