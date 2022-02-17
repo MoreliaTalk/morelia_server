@@ -42,7 +42,7 @@ class TestConfigValidator(unittest.TestCase):
                            error=0,
                            info="",
                            folder=123156,
-                           message="1",
+                           messages="1",
                            users=12345,
                            secret_key=123156)
         self.assertEqual(test.dict()["uri"], "123156")
@@ -56,7 +56,7 @@ class TestConfigValidator(unittest.TestCase):
         self.assertEqual(test.dict()["error"], "0")
         self.assertEqual(test.dict()["info"], "")
         self.assertEqual(test.dict()["folder"], "123156")
-        self.assertEqual(test.dict()["message"], 1)
+        self.assertEqual(test.dict()["messages"], 1)
         self.assertEqual(test.dict()["users"], 12345)
         self.assertEqual(test.dict()["secret_key"], "123156")
 
@@ -74,6 +74,6 @@ class TestConfigValidator(unittest.TestCase):
                           error=0,
                           info="",
                           folder=123156,
-                          message="1",
+                          messages="1",
                           users=12345,
                           secret_key=123156)
