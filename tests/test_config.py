@@ -28,7 +28,7 @@ from pydantic import ValidationError
 
 from mod.config.config import ConfigHandler
 from mod.config.config import AccessConfigError
-from mod.config.config import BackUpConfigError
+from mod.config.config import BackupConfigError
 from mod.config.config import RebuildConfigError
 from mod.config.config import ConfigModel
 from mod.config.config import NameConfigError
@@ -118,7 +118,7 @@ class TestConfigHandler(unittest.TestCase):
                                                directory=self.fixtures)
         # Change mode to not read, not write, not execute to all users
         os.chmod(destination, stat.S_ENFMT)
-        self.assertRaises(BackUpConfigError,
+        self.assertRaises(BackupConfigError,
                           self.test._backup_config_file)
         # Change mode to read, write, execute to all users
         os.chmod(destination, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
