@@ -22,10 +22,7 @@
 import os
 
 from configparser import ConfigParser
-from configparser import DuplicateSectionError
 from configparser import DuplicateOptionError
-from configparser import NoOptionError
-from configparser import MissingSectionHeaderError
 from configparser import ParsingError
 from configparser import Interpolation
 from pathlib import Path
@@ -211,6 +208,7 @@ class ConfigHandler:
             backup_info = (None, None)
 
         section = section.upper()
+        value = str(value)
 
         if self._config.has_section(section):
             self._config.set(section=section,
@@ -224,10 +222,7 @@ class ConfigHandler:
         try:
             with open(self.file_path, 'w+') as config_file:
                 self._config.write(config_file)
-        except (DuplicateSectionError,
-                DuplicateOptionError,
-                NoOptionError,
-                MissingSectionHeaderError,
+        except (DuplicateOptionError,
                 ParsingError) as err:
             logger.debug(err)
             raise OperationConfigError(err)
