@@ -43,13 +43,11 @@ class TestConfigHandler(unittest.TestCase):
     def setUp(self) -> None:
         self.example_config = 'example_config.ini'
         self.config_name = 'config.ini'
-        self.non_write_config = 'non_write_config.ini'
         self.fixtures = 'tests/fixtures'
         self.test = ConfigHandler()
 
     def tearDown(self) -> None:
         del self.example_config
-        del self.non_write_config
         del self.config_name
         del self.fixtures
         del self.test
@@ -83,12 +81,15 @@ class TestConfigHandler(unittest.TestCase):
     def test_wrong_copy_string(self):
         source = self.test._search_config(name=self.example_config,
                                           directory=None)
-        destination = self.test._search_config(name=self.non_write_config,
+        destination = self.test._search_config(name=self.config_name,
                                                directory=self.fixtures)
+        # Change mode to not read, not write, not execute to all users
+        os.chmod(destination, stat.S_ENFMT)
         self.assertRaises(CopyConfigError,
                           self.test._copy_string,
                           src=source,
                           dst=destination)
+        os.chmod(destination, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
 
     def test_search_config(self):
         full_path = self.test._search_config(self.config_name,
@@ -205,12 +206,18 @@ class TestConfigHandler(unittest.TestCase):
 
     def test_write_with_access_error(self):
         self.test.root_directory = self.fixtures
-        self.test.config_name = self.non_write_config
+        self.test.config_name = self.config_name
+        destination = self.test._search_config(name=self.config_name,
+                                               directory=self.fixtures)
+        # Change mode to not read, not write, not execute to all users
+        os.chmod(destination, stat.S_ENFMT)
         self.assertRaises(AccessConfigError,
                           self.test.write,
                           section='database',
                           key="url",
                           value="www.test.ru",
                           backup=False)
+        # Change mode to read, write, execute to all users
+        os.chmod(destination, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
         # rebuild config.ini to tests
         self.test._rebuild_config()
