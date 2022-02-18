@@ -18,7 +18,9 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
+
 import os
+
 from configparser import ConfigParser
 from configparser import DuplicateSectionError
 from configparser import DuplicateOptionError
@@ -37,7 +39,7 @@ from loguru import logger
 from mod.config.validator import ConfigModel
 
 
-class ConfigNameError(Exception):
+class NameConfigError(Exception):
     pass
 
 
@@ -45,11 +47,19 @@ class BackupConfigError(OSError):
     pass
 
 
-class ConfigOperationError(Exception):
+class OperationConfigError(Exception):
     pass
 
 
-class ConfigAccessError(OSError):
+class AccessConfigError(OSError):
+    pass
+
+
+class RebuildConfigError(Exception):
+    pass
+
+
+class CopyConfigError(Exception):
     pass
 
 
@@ -68,8 +78,21 @@ class ConfigHandler:
                           directory: Any) -> None:
         self.file_path = self._search_config(name=name,
                                              directory=directory)
-        self.config = ConfigParser(interpolation=self._interpolation)
-        self.config.read(self.file_path)
+        self._config = ConfigParser(interpolation=self._interpolation)
+        self._config.read(self.file_path)
+
+    @staticmethod
+    def _copy_string(src: str | PurePath,
+                     dst: str | PurePath) -> str:
+        try:
+            with open(dst, "w+") as new_file:
+                old_file = open(src, 'r')
+                new_file.write(old_file.read())
+                old_file.close()
+        except OSError as err:
+            raise CopyConfigError(err)
+        else:
+            return "Copied string success"
 
     def __str__(self) -> str:
         return f"Config: {self.file_path}"
@@ -95,9 +118,9 @@ class ConfigHandler:
             if Path(test_path).is_file():
                 logger.debug(f"Config file found: [{test_path}]")
                 return str(test_path)
-        message = f"{name} not found"
+        message = f"{name} in {test_path} not found"
         logger.error(message)
-        raise ConfigNameError(message)
+        raise NameConfigError(message)
 
     def _backup_config_file(self) -> tuple[str, PurePath]:
         backup_config_name = "".join((self._name,
@@ -106,23 +129,42 @@ class ConfigHandler:
         file_path = PurePath(self.file_path).parents[0]
         new_config = PurePath(file_path,
                               backup_config_name)
-        with open(new_config, "w+") as _file:
-            old_config = open(self.file_path, 'r')
-            _file.write(old_config.read())
-            old_config.close()
+        try:
+            self._copy_string(src=self.file_path,
+                              dst=new_config)
+        except CopyConfigError as err:
+            os.remove(new_config)
+            logger.exception(err)
+            raise BackupConfigError(err)
+        else:
             message = f"Backup config.ini to: {new_config}"
-        logger.debug(message)
-        return message, new_config
+            logger.debug(message)
+            return message, new_config
 
     def _validate(self) -> ConfigModel:
-        sections = self.config.sections()
-        items = [self.config.items(section) for section in sections]
+        sections = self._config.sections()
+        items = [self._config.items(section) for section in sections]
         all_item = []
         for item in items:
             for i in item:
                 all_item.append(i)
         kwargs = dict(all_item)
         return ConfigModel(**kwargs)
+
+    def _rebuild_config(self,
+                        orig_config: str = 'example_config.ini',
+                        new_config: str = 'config.ini',
+                        directory: str = 'tests/fixtures') -> str:
+        try:
+            self._copy_string(self._search_config(name=orig_config,
+                                                  directory=None),
+                              self._search_config(name=new_config,
+                                                  directory=directory))
+        except CopyConfigError as err:
+            logger.exception(err)
+            raise RebuildConfigError(err)
+        else:
+            return 'Config rebuild success'
 
     @property
     def root_directory(self) -> str:
@@ -162,37 +204,37 @@ class ConfigHandler:
               section: str,
               key: str,
               value: Any,
-              backup: bool = True) -> str:
+              backup: bool = True) -> tuple[str, PurePath]:
         if backup:
-            try:
-                self._backup_config_file()
-            except OSError as err:
-                raise BackupConfigError(err)
+            backup_info = self._backup_config_file()
+        else:
+            backup_info = (None, None)
 
         section = section.upper()
 
-        if self.config.has_section(section):
-            self.config.set(section=section,
-                            option=key,
-                            value=value)
+        if self._config.has_section(section):
+            self._config.set(section=section,
+                             option=key,
+                             value=value)
         else:
-            self.config.add_section(section)
-            self.config.set(section=section,
-                            option=key,
-                            value=value)
+            self._config.add_section(section)
+            self._config.set(section=section,
+                             option=key,
+                             value=value)
         try:
             with open(self.file_path, 'w+') as config_file:
-                self.config.write(config_file)
+                self._config.write(config_file)
         except (DuplicateSectionError,
                 DuplicateOptionError,
                 NoOptionError,
                 MissingSectionHeaderError,
                 ParsingError) as err:
             logger.debug(err)
-            raise ConfigOperationError(err)
+            raise OperationConfigError(err)
         except OSError as err:
             logger.debug(err)
-            raise ConfigAccessError(err)
+            raise AccessConfigError(err)
         else:
             logger.success(f'Write to [{self.file_path}] completed')
-            return 'Completed'
+            backup_file = backup_info[1]
+            return 'Completed', backup_file
