@@ -122,21 +122,5 @@ class TestHash(unittest.TestCase):
         self.assertIsInstance(self.generator.get_key, bytes)
 
 
-class TestOtherLib(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls) -> None:
-        logger.remove()
-
-    def setUp(self) -> None:
-        pass
-
-    def tearDown(self) -> None:
-        pass
-
-    def test_rebuild_config(self):
-        result = lib.rebuild_config()
-        self.assertEqual(result, 'Ok')
-
-
 if __name__ == "__main__":
     unittest.main()
