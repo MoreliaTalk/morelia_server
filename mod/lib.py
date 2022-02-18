@@ -25,11 +25,6 @@ from hmac import compare_digest
 from os import urandom
 
 from mod.config.config import ConfigHandler
-from mod.logging import logger
-
-
-class RebuildConfigError(Exception):
-    pass
 
 
 class Hash:
@@ -147,24 +142,3 @@ class Hash:
                          digest_size=self.size_auth_id,
                          salt=self.salt)
         return result.hexdigest()
-
-
-def rebuild_config(orig_config: str = 'example_config.ini',
-                   new_config: str = 'config.ini',
-                   directory: str = 'tests') -> str:
-    orig = ConfigHandler()
-    new = ConfigHandler()
-    try:
-        with open(new._search_config(name=new_config,
-                                     directory=directory),
-                  'w+') as tests_config:
-            orig_config = open(orig._search_config(name=orig_config,
-                                                   directory=None),
-                               'r')
-            tests_config.write(orig_config.read())
-            orig_config.close()
-    except OSError as err:
-        logger.exception(err)
-        raise RebuildConfigError(err)
-    else:
-        return 'Ok'
