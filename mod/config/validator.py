@@ -18,11 +18,24 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
+
 from pydantic import BaseModel
 
 
 class ConfigModel(BaseModel):
+    """
+    Describe the validation scheme for config.ini file which contain all
+    server settings.
+    """
     class Config:
+        """
+        Additional configuration for validation scheme.
+
+        Args:
+            anystr_strip_whitespace (bool): whether to strip leading and
+                trailing whitespace for str & byte types
+            validate_all (bool): whether to validate field defaults
+        """
         anystr_strip_whitespace = True
         validate_all = True
     # Database section
