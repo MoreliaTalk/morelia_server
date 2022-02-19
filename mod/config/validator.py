@@ -20,6 +20,7 @@
 """
 
 from pydantic import BaseModel
+from typing import Any
 
 
 class ConfigModel(BaseModel):
@@ -42,7 +43,7 @@ class ConfigModel(BaseModel):
     # Database section
     uri: str
     # Hash size section
-    password: str
+    password: Any
     auth_id: int
     # Logging section
     level: int
