@@ -37,30 +37,64 @@ from mod.config.validator import ConfigModel
 
 
 class NameConfigError(Exception):
-    pass
+    """
+    Occurs when there is an error in the name of the file with the settings
+    or there is no such file at all.
+    """
 
 
 class BackupConfigError(OSError):
-    pass
+    """
+    Occurs when a backup of a file is impossible, for example, you can't read
+    the original settings file, or you don't have written access to
+    the directory.
+    """
 
 
 class OperationConfigError(Exception):
-    pass
+    """
+    Occurs when an option written to a configuration file is duplicated or
+    when a configuration file parsing error has occurred.
+    """
 
 
 class AccessConfigError(OSError):
-    pass
+    """
+    Occurs when writing to the configuration file failed because of the lack
+    of write permissions to the file or the lack of the file itself.
+    """
 
 
 class RebuildConfigError(Exception):
-    pass
+    """
+    Occurs when the configuration file could not be restored because of the
+    lack of permissions to write to the file or the absence of the file itself.
+    """
 
 
 class CopyConfigError(Exception):
-    pass
+    """
+    Occurs when it was not possible to copy the old configuration file to
+    the new one line by line because there are no write permissions to
+    the file or because the file itself is missing.
+    """
 
 
 class ConfigHandler:
+    """
+    Main module for work with settings contains in configuration file,
+    by default it is config.ini
+
+    Args:
+        name (str): name of configuration file.
+        interpolation: Interpolation behaviour may be customized by providing
+            a custom handler through the interpolation argument,
+            by default it is BasicInterpolation. None can be used to turn off
+            interpolation completely, ExtendedInterpolation provides a more
+            advanced variant inspired by zc.buildout. More on the subject in
+            the dedicated documentation section for build-ins configparser modules.
+    """
+
     def __init__(self,
                  name: str = 'config.ini',
                  interpolation: Interpolation = None) -> None:
@@ -73,6 +107,19 @@ class ConfigHandler:
     def _set_configparser(self,
                           name: str,
                           directory: Any) -> None:
+        """
+        Starts the process of finding a configuration file and configures
+        the configparser module to work with it.
+
+        Args:
+            name (str): name of configuration file
+            directory (Any): directory name which contain configuration file,
+                e.g.: tests/fixtures
+
+        Returns:
+            None
+        """
+
         self.file_path = self._search_config(name=name,
                                              directory=directory)
         self._config = ConfigParser(interpolation=self._interpolation)
@@ -81,6 +128,21 @@ class ConfigHandler:
     @staticmethod
     def _copy_string(src: str | PurePath,
                      dst: str | PurePath) -> str:
+        """
+        Copies data line by line from one file to another.
+
+        Args:
+            src (str, PurePath): source file path
+            dst (str, PurePath): destination file path
+
+        Returns:
+            (str): Copied string success
+
+        Raises:
+            CopyConfigError: no write permissions to the file or because
+                the file itself is missing.
+        """
+
         try:
             with open(dst, "w+") as new_file:
                 old_file = open(src, 'r')
@@ -92,17 +154,48 @@ class ConfigHandler:
             return "Copied string success"
 
     def __str__(self) -> str:
+        """
+        Returned string which contains file path for opened config file.
+
+        Returns:
+            (str): Config: /path/to/the/file/config.ini
+        """
+
         return f"Config: {self.file_path}"
 
     def __repr__(self) -> str:
+        """
+        Return string which contains name of created class and parameters send
+        to class object when is created.
+
+        Returns:
+            (str): Class __name__ with: config_name=config.ini,
+            root_directory=None, preprocessed value=None.
+        """
+
         return "".join((f"Class {self.__class__.__name__} with ",
-                        f"config_name: {self._name}, ",
-                        f"root_directory: {self._directory}, ",
-                        f"preprocessed value: {self._interpolation}"))
+                        f"config_name= {self._name}, ",
+                        f"root_directory= {self._directory}, ",
+                        f"preprocessed value= {self._interpolation}"))
 
     @staticmethod
     def _search_config(name: str,
                        directory: Any) -> str:
+        """
+        Searching config file and create full path to it.
+
+        Args:
+            name (str): name of configuration file
+            directory (Any): directory name which contain configuration file,
+                e.g.: tests/fixtures
+
+        Returns:
+            (str): /path/to/config/file/config.ini
+
+        Raises:
+            NameConfigError: no such a file.
+        """
+
         full_path = Path(__file__)
         for number in range(len(full_path.parents)):
             if directory is None:
@@ -120,6 +213,19 @@ class ConfigHandler:
         raise NameConfigError(message)
 
     def _backup_config_file(self) -> tuple[str, PurePath]:
+        """
+        Creating a copy of the configuration file with the addition
+        at the end of the name: BAK + time in seconds.
+
+        Returns:
+            tuple(str, PurePath): Tuple contains string 'Backup config.ini
+            to: /path/to/config/file' and path-like file object.
+
+        Raises:
+            BackupConfigError: can't read the original settings file,
+            or you don't have written access to the directory.
+        """
+
         backup_config_name = "".join((self._name,
                                       ".BAK+",
                                       str(int(time()))))
@@ -139,6 +245,13 @@ class ConfigHandler:
             return message, new_config
 
     def _validate(self) -> ConfigModel:
+        """
+        Read and validate the parameters contained in the configuration file.
+
+        Returns:
+            ConfigMode: pydantic model which contains all validated parameters
+        """
+
         sections = self._config.sections()
         items = [self._config.items(section) for section in sections]
         all_item = []
@@ -152,6 +265,23 @@ class ConfigHandler:
                         orig_config: str = 'example_config.ini',
                         new_config: str = 'config.ini',
                         directory: str = 'tests/fixtures') -> str:
+        """
+        Restoring the configuration file.  Copying lines from
+        example_config.ini to config.ini
+
+        Args:
+            orig_config (str): default 'example_config.ini'
+            new_config (str): default 'config.ini'
+            directory (str): default 'tests/fixtures'
+
+        Returns:
+            (str): Config rebuild success
+
+        Raises:
+            RebuildConfigError: the lack of permissions to write to file
+                or the absence of file itself
+        """
+
         try:
             self._copy_string(self._search_config(name=orig_config,
                                                   directory=None),
@@ -164,12 +294,31 @@ class ConfigHandler:
             return 'Config rebuild success'
 
     @property
-    def root_directory(self) -> str:
+    def root_directory(self) -> str | None:
+        """
+        Parameter that reports name of the root directory that is set for
+        initial search of the configuration file.
+
+        Returns:
+            (str, None): name of directory, if None that mean root directory
+            corresponds to the main (uppermost) project directory
+        """
+
         return self._directory
 
     @root_directory.setter
     def root_directory(self,
                        name: str) -> None:
+        """
+        Sets a new name for the root directory.
+
+        Args:
+            name(str): new name root directory
+
+        Returns:
+            None
+        """
+
         if name:
             self._directory = str(name)
             self._set_configparser(name=self._name,
@@ -177,17 +326,42 @@ class ConfigHandler:
 
     @property
     def config_name(self) -> str:
+        """
+        Parameter that reports name of configuration file.
+
+        Returns:
+            (str): name of configuration file
+        """
+
         return self._name
 
     @config_name.setter
     def config_name(self,
                     name: str) -> None:
+        """
+        Sets of new name for configuration file.
+
+        Args:
+            name(str): new name for configuration file
+
+        Returns:
+            None
+        """
+
         if name:
             self._name = str(name)
             self._set_configparser(name=self._name,
                                    directory=self._directory)
 
     def read(self) -> namedtuple:
+        """
+        Read settings from a configuration file, validate them,
+        and generate a named tuple with key=value parameters.
+
+        Returns:
+            Config (namedtuple): with key=value
+        """
+
         valid = self._validate().dict()
         valid_dict = valid.copy()
         namedtuple_key = []
@@ -201,7 +375,30 @@ class ConfigHandler:
               section: str,
               key: str,
               value: Any,
-              backup: bool = True) -> tuple[str, PurePath]:
+              backup: bool = True) -> tuple[str, PurePath | None]:
+        """
+        Writing new settings to the server configuration file.
+        The backup option is used to select whether to save the previous
+        settings to a special file or not.
+
+        Args:
+            section (str):  each led by a [section] header
+            key (str): name of parameters
+            value (Any): value of parameters, auto converted to string object
+            backup (bool): save or not previous settings, default True
+
+        Returns:
+            tuple (str, PurePath | None): Tuple which contain string
+            'Completed' and path-like object with backup file link or None
+            if set backup is False
+
+        Raises:
+            OperationConfigError: an option written to a configuration file
+                is duplicated or when a configuration file parsing error
+            AccessConfigError: lack of write permissions to the file
+                or the lack of the file itself
+        """
+
         if backup:
             backup_info = self._backup_config_file()
         else:
