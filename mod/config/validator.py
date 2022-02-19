@@ -42,7 +42,7 @@ class ConfigModel(BaseModel):
     # Database section
     uri: str
     # Hash size section
-    password: int
+    password: str
     auth_id: int
     # Logging section
     level: int
