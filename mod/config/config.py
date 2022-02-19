@@ -22,8 +22,6 @@
 import os
 
 from configparser import ConfigParser
-from configparser import DuplicateOptionError
-from configparser import ParsingError
 from configparser import Interpolation
 from pathlib import Path
 from pathlib import PurePath
@@ -319,10 +317,9 @@ class ConfigHandler:
             None
         """
 
-        if name:
-            self._directory = str(name)
-            self._set_configparser(name=self._name,
-                                   directory=self._directory)
+        self._directory = str(name)
+        self._set_configparser(name=self._name,
+                               directory=self._directory)
 
     @property
     def config_name(self) -> str:
@@ -348,10 +345,9 @@ class ConfigHandler:
             None
         """
 
-        if name:
-            self._name = str(name)
-            self._set_configparser(name=self._name,
-                                   directory=self._directory)
+        self._name = str(name)
+        self._set_configparser(name=self._name,
+                               directory=self._directory)
 
     def read(self) -> namedtuple:
         """
@@ -393,8 +389,6 @@ class ConfigHandler:
             if set backup is False
 
         Raises:
-            OperationConfigError: an option written to a configuration file
-                is duplicated or when a configuration file parsing error
             AccessConfigError: lack of write permissions to the file
                 or the lack of the file itself
         """
@@ -419,10 +413,6 @@ class ConfigHandler:
         try:
             with open(self.file_path, 'w+') as config_file:
                 self._config.write(config_file)
-        except (DuplicateOptionError,
-                ParsingError) as err:
-            logger.debug(err)
-            raise OperationConfigError(err)
         except OSError as err:
             logger.debug(err)
             raise AccessConfigError(err)
