@@ -55,7 +55,7 @@ ERRORS = os.path.join(FIXTURES_PATH, "errors.json")
 NON_VALID_ERRORS = os.path.join(FIXTURES_PATH, "non_valid_errors.json")
 ERRORS_ONLY_TYPE = os.path.join(FIXTURES_PATH, "errors_only_type.json")
 
-DATABASE = "sqlite:/:memory:?debug=1"
+DATABASE = "sqlite:/:memory:"
 
 
 class TestCheckAuthToken(unittest.TestCase):
