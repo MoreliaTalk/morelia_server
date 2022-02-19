@@ -72,23 +72,25 @@ class DBHandler:
     def __init__(self,
                  uri: str = 'sqlite:/:memory:',
                  debug: bool = False,
-                 logger: str = None,
-                 loglevel: str = None,
+                 logger: str = 'stderr',
+                 loglevel: str = 'critical',
                  path_to_models: str = "mod.db.models") -> None:
+        self.uri = uri
 
-        if debug and logger and loglevel:
+        if debug:
             self._debug = "1"
             self._logger = logger
             self._loglevel = loglevel
             self._uri = "".join((uri,
                                  f"?debug={self._debug}",
-                                 f"?logger={self._logger}",
-                                 f"?loglevel={self._loglevel}"))
+                                 f"&logger={self._logger}",
+                                 f"&loglevel={self._loglevel}"))
         else:
-            self._uri = uri
             self._debug = "0"
             self._logger = None
             self._loglevel = None
+            self._uri = "".join((uri,
+                                 f"?debug={self._debug}"))
 
         self.connection = orm.connectionForURI(self._uri)
         orm.sqlhub.processConnection = self.connection
@@ -188,10 +190,14 @@ class DBHandler:
             (None):
         """
 
-        if value is True:
+        if value:
             self._debug = "1"
-        self._uri = "".join((self._uri,
-                             f"?debug={self._debug}"))
+            self._uri = "".join((self.uri,
+                                 f"?debug={self._debug}"))
+        else:
+            self._debug = "0"
+            self._uri = "".join((self.uri,
+                                 f"?debug={self._debug}"))
         self.connection = orm.connectionForURI(self._uri)
         orm.sqlhub.processConnection = self.connection
 
