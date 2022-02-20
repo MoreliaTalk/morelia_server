@@ -586,7 +586,7 @@ validation and generate error code when response not corresponds protocol method
 <p>Class <code class="docutils literal notranslate"><span class="pre">mod.db.dbhandler.DBHandler</span></code> high layer class has to work with database without query in raw SQL:</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="mod.db.dbhandler.DBHandler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mod.db.dbhandler.</span></span><span class="sig-name descname"><span class="pre">DBHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'sqlite:/:memory:'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loglevel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_to_models</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mod.db.models'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mod.db.dbhandler.DBHandler" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mod.db.dbhandler.</span></span><span class="sig-name descname"><span class="pre">DBHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'sqlite:/:memory:'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'stderr'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loglevel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'critical'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_to_models</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mod.db.models'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mod.db.dbhandler.DBHandler" title="Permalink to this definition">¶</a></dt>
 <dd><p>A layer for interaction with the database ORM.
 As a method prescribed frequently used actions with data from database.</p>
 <dl class="field-list simple">
@@ -1605,6 +1605,377 @@ and returns a response, redirecting to the main page of the admin panel</p>
 </dl>
 </dd></dl>
 </section>
+<section id="config">
+<h3>Config<a class="headerlink" href="#config" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">mod.config.config.ConfigHandler</span></code>:</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mod.config.config.ConfigHandler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mod.config.config.</span></span><span class="sig-name descname"><span class="pre">ConfigHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'config.ini'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">configparser.Interpolation</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mod.config.config.ConfigHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main module for work with settings contains in configuration file,
+by default it is config.ini</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – name of configuration file.</p></li>
+<li><p><strong>interpolation</strong> – Interpolation behaviour may be customized by providing
+a custom handler through the interpolation argument,
+by default it is BasicInterpolation. None can be used to turn off
+interpolation completely, ExtendedInterpolation provides a more
+advanced variant inspired by zc.buildout. More on the subject in
+the dedicated documentation section for build-ins configparser modules.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mod.config.config.ConfigHandler.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#mod.config.config.ConfigHandler.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return string which contains name of created class and parameters send
+to class object when is created.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Class __name__ with: config_name=config.ini,
+root_directory=None, preprocessed value=None.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>(str)</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mod.config.config.ConfigHandler.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#mod.config.config.ConfigHandler.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returned string which contains file path for opened config file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Config: /path/to/the/file/config.ini</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>(str)</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mod.config.config.ConfigHandler._backup_config_file">
+<span class="sig-name descname"><span class="pre">_backup_config_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">pathlib.PurePath</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mod.config.config.ConfigHandler._backup_config_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creating a copy of the configuration file with the addition
+at the end of the name: BAK + time in seconds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Tuple contains string ‘Backup config.ini
+to: /path/to/config/file’ and path-like file object.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>tuple(str, PurePath)</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#mod.config.config.BackupConfigError" title="mod.config.config.BackupConfigError"><strong>BackupConfigError</strong></a> – can’t read the original settings file,</p></li>
+<li><p><strong>or you don't have written access to the directory.</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mod.config.config.ConfigHandler._copy_string">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_copy_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.PurePath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.PurePath</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#mod.config.config.ConfigHandler._copy_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copies data line by line from one file to another.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>src</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str,</span> <span class="pre">PurePath</span></code>) – source file path</p></li>
+<li><p><strong>dst</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str,</span> <span class="pre">PurePath</span></code>) – destination file path</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Copied string success</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(str)</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#mod.config.config.CopyConfigError" title="mod.config.config.CopyConfigError"><strong>CopyConfigError</strong></a> – no write permissions to the file or because
+    the file itself is missing.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mod.config.config.ConfigHandler._rebuild_config">
+<span class="sig-name descname"><span class="pre">_rebuild_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">orig_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'example_config.ini'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'config.ini'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'tests/fixtures'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#mod.config.config.ConfigHandler._rebuild_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restoring the configuration file.  Copying lines from
+example_config.ini to config.ini</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>orig_config</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – default ‘example_config.ini’</p></li>
+<li><p><strong>new_config</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – default ‘config.ini’</p></li>
+<li><p><strong>directory</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – default ‘tests/fixtures’</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Config rebuild success</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(str)</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#mod.config.config.RebuildConfigError" title="mod.config.config.RebuildConfigError"><strong>RebuildConfigError</strong></a> – the lack of permissions to write to file
+    or the absence of file itself</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mod.config.config.ConfigHandler._search_config">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_search_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#mod.config.config.ConfigHandler._search_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Searching config file and create full path to it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – name of configuration file</p></li>
+<li><p><strong>directory</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Any</span></code>) – directory name which contain configuration file,
+e.g.: tests/fixtures</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>/path/to/config/file/config.ini</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(str)</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#mod.config.config.NameConfigError" title="mod.config.config.NameConfigError"><strong>NameConfigError</strong></a> – no such a file.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mod.config.config.ConfigHandler._set_configparser">
+<span class="sig-name descname"><span class="pre">_set_configparser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mod.config.config.ConfigHandler._set_configparser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Starts the process of finding a configuration file and configures
+the configparser module to work with it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – name of configuration file</p></li>
+<li><p><strong>directory</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Any</span></code>) – directory name which contain configuration file,
+e.g.: tests/fixtures</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mod.config.config.ConfigHandler._validate">
+<span class="sig-name descname"><span class="pre">_validate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><a class="reference internal" href="#mod.config.validator.ConfigModel" title="mod.config.validator.ConfigModel"><span class="pre">mod.config.validator.ConfigModel</span></a></span></span><a class="headerlink" href="#mod.config.config.ConfigHandler._validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read and validate the parameters contained in the configuration file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>pydantic model which contains all validated parameters</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>ConfigMode</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="mod.config.config.ConfigHandler.config_name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">config_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#mod.config.config.ConfigHandler.config_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parameter that reports name of configuration file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>name of configuration file</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>(str)</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mod.config.config.ConfigHandler.read">
+<span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">collections.namedtuple</span></span></span><a class="headerlink" href="#mod.config.config.ConfigHandler.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read settings from a configuration file, validate them,
+and generate a named tuple with key=value parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>with key=value</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#mod.config.validator.ConfigModel.Config" title="mod.config.validator.ConfigModel.Config">Config</a> (namedtuple)</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="mod.config.config.ConfigHandler.root_directory">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">root_directory</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#mod.config.config.ConfigHandler.root_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parameter that reports name of the root directory that is set for
+initial search of the configuration file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>name of directory, if None that mean root directory
+corresponds to the main (uppermost) project directory</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>(str, None)</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mod.config.config.ConfigHandler.write">
+<span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">section</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">pathlib.PurePath</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mod.config.config.ConfigHandler.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writing new settings to the server configuration file.
+The backup option is used to select whether to save the previous
+settings to a special file or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>section</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – each led by a [section] header</p></li>
+<li><p><strong>key</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – name of parameters</p></li>
+<li><p><strong>value</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Any</span></code>) – value of parameters, auto converted to string object</p></li>
+<li><p><strong>backup</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – save or not previous settings, default True</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Tuple which contain string
+‘Completed’ and path-like object with backup file link or None
+if set backup is False</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple (str, PurePath | None)</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#mod.config.config.AccessConfigError" title="mod.config.config.AccessConfigError"><strong>AccessConfigError</strong></a> – lack of write permissions to the file
+    or the lack of the file itself</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<p><code class="docutils literal notranslate"><span class="pre">mod.config.config.NameConfigError</span></code>:</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mod.config.config.NameConfigError">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mod.config.config.</span></span><span class="sig-name descname"><span class="pre">NameConfigError</span></span><a class="headerlink" href="#mod.config.config.NameConfigError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Occurs when there is an error in the name of the file with the settings
+or there is no such file at all.</p>
+</dd></dl>
+<p><code class="docutils literal notranslate"><span class="pre">mod.config.config.BackupConfigError</span></code>:</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mod.config.config.BackupConfigError">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mod.config.config.</span></span><span class="sig-name descname"><span class="pre">BackupConfigError</span></span><a class="headerlink" href="#mod.config.config.BackupConfigError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Occurs when a backup of a file is impossible, for example, you can’t read
+the original settings file, or you don’t have written access to
+the directory.</p>
+</dd></dl>
+<p><code class="docutils literal notranslate"><span class="pre">mod.config.config.OperationConfigError</span></code>:</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mod.config.config.OperationConfigError">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mod.config.config.</span></span><span class="sig-name descname"><span class="pre">OperationConfigError</span></span><a class="headerlink" href="#mod.config.config.OperationConfigError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Occurs when an option written to a configuration file is duplicated or
+when a configuration file parsing error has occurred.</p>
+</dd></dl>
+<p><code class="docutils literal notranslate"><span class="pre">mod.config.config.AccessConfigError</span></code>:</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mod.config.config.AccessConfigError">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mod.config.config.</span></span><span class="sig-name descname"><span class="pre">AccessConfigError</span></span><a class="headerlink" href="#mod.config.config.AccessConfigError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Occurs when writing to the configuration file failed because of the lack
+of write permissions to the file or the lack of the file itself.</p>
+</dd></dl>
+<p><code class="docutils literal notranslate"><span class="pre">mod.config.config.RebuildConfigError</span></code>:</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mod.config.config.RebuildConfigError">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mod.config.config.</span></span><span class="sig-name descname"><span class="pre">RebuildConfigError</span></span><a class="headerlink" href="#mod.config.config.RebuildConfigError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Occurs when the configuration file could not be restored because of the
+lack of permissions to write to the file or the absence of the file itself.</p>
+</dd></dl>
+<p><code class="docutils literal notranslate"><span class="pre">mod.config.config.CopyConfigError</span></code>:</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mod.config.config.CopyConfigError">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mod.config.config.</span></span><span class="sig-name descname"><span class="pre">CopyConfigError</span></span><a class="headerlink" href="#mod.config.config.CopyConfigError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Occurs when it was not possible to copy the old configuration file to
+the new one line by line because there are no write permissions to
+the file or because the file itself is missing.</p>
+</dd></dl>
+<p><code class="docutils literal notranslate"><span class="pre">mod.config.config.validator</span></code>:</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mod.config.validator.ConfigModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mod.config.validator.</span></span><span class="sig-name descname"><span class="pre">ConfigModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uri</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_password</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_auth_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expiration_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug_expiration_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uvicorn_logging_disable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">messages</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">users</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">secret_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mod.config.validator.ConfigModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Describe the validation scheme for config.ini file which contain all
+server settings.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mod.config.validator.ConfigModel.Config">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Config</span></span><a class="headerlink" href="#mod.config.validator.ConfigModel.Config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Additional configuration for validation scheme.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>anystr_strip_whitespace</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to strip leading and
+trailing whitespace for str &amp; byte types</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mod.config.validator.ConfigModel.Config.anystr_strip_whitespace">
+<span class="sig-name descname"><span class="pre">anystr_strip_whitespace</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#mod.config.validator.ConfigModel.Config.anystr_strip_whitespace" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+</dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mod.config.validator.ConfigModel._abc_impl">
+<span class="sig-name descname"><span class="pre">_abc_impl</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;_abc._abc_data</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#mod.config.validator.ConfigModel._abc_impl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mod.config.validator.ConfigModel.debug">
+<span class="sig-name descname"><span class="pre">debug</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#mod.config.validator.ConfigModel.debug" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mod.config.validator.ConfigModel.debug_expiration_date">
+<span class="sig-name descname"><span class="pre">debug_expiration_date</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#mod.config.validator.ConfigModel.debug_expiration_date" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mod.config.validator.ConfigModel.error">
+<span class="sig-name descname"><span class="pre">error</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#mod.config.validator.ConfigModel.error" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mod.config.validator.ConfigModel.expiration_date">
+<span class="sig-name descname"><span class="pre">expiration_date</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#mod.config.validator.ConfigModel.expiration_date" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mod.config.validator.ConfigModel.folder">
+<span class="sig-name descname"><span class="pre">folder</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#mod.config.validator.ConfigModel.folder" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mod.config.validator.ConfigModel.info">
+<span class="sig-name descname"><span class="pre">info</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#mod.config.validator.ConfigModel.info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mod.config.validator.ConfigModel.level">
+<span class="sig-name descname"><span class="pre">level</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#mod.config.validator.ConfigModel.level" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mod.config.validator.ConfigModel.messages">
+<span class="sig-name descname"><span class="pre">messages</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#mod.config.validator.ConfigModel.messages" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mod.config.validator.ConfigModel.secret_key">
+<span class="sig-name descname"><span class="pre">secret_key</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#mod.config.validator.ConfigModel.secret_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mod.config.validator.ConfigModel.size_auth_id">
+<span class="sig-name descname"><span class="pre">size_auth_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#mod.config.validator.ConfigModel.size_auth_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mod.config.validator.ConfigModel.size_password">
+<span class="sig-name descname"><span class="pre">size_password</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#mod.config.validator.ConfigModel.size_password" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mod.config.validator.ConfigModel.uri">
+<span class="sig-name descname"><span class="pre">uri</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#mod.config.validator.ConfigModel.uri" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mod.config.validator.ConfigModel.users">
+<span class="sig-name descname"><span class="pre">users</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#mod.config.validator.ConfigModel.users" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mod.config.validator.ConfigModel.uvicorn_logging_disable">
+<span class="sig-name descname"><span class="pre">uvicorn_logging_disable</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#mod.config.validator.ConfigModel.uvicorn_logging_disable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+</dd></dl>
+</section>
 <section id="hash">
 <h3>Hash<a class="headerlink" href="#hash" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">mod.lib.Hash</span></code>:</p>
@@ -1822,6 +2193,7 @@ also duplicated in the console.</p>
 <li><a class="reference internal" href="#error">Error</a></li>
 <li><a class="reference internal" href="#additional-module">Additional module</a><ul>
 <li><a class="reference internal" href="#id3">Admin</a></li>
+<li><a class="reference internal" href="#config">Config</a></li>
 <li><a class="reference internal" href="#hash">Hash</a></li>
 <li><a class="reference internal" href="#logging">Logging</a></li>
 </ul>
