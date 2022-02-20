@@ -43,8 +43,8 @@ class ConfigModel(BaseModel):
     # Database section
     uri: str
     # Hash size section
-    password: Any
-    auth_id: int
+    size_password: int
+    size_auth_id: int
     # Logging section
     level: int
     expiration_date: int

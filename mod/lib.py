@@ -73,8 +73,8 @@ class Hash:
 
         self.binary_password = password.encode('utf-8')
         self.hash_password = hash_password
-        self.size_password = self.config_option.password
-        self.size_auth_id = self.config_option.auth_id
+        self.size_password = self.config_option.size_password
+        self.size_auth_id = self.config_option.size_auth_id
 
     @property
     def get_salt(self) -> bytes:
