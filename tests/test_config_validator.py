@@ -32,8 +32,8 @@ class TestConfigValidator(unittest.TestCase):
 
     def test_valid_database_section(self) -> None:
         test = ConfigModel(uri=123156,
-                           password="1",
-                           auth_id=12345,
+                           size_password="1",
+                           size_auth_id=12345,
                            level="10",
                            expiration_date=3,
                            debug_expiration_date=0,
@@ -46,8 +46,8 @@ class TestConfigValidator(unittest.TestCase):
                            users=12345,
                            secret_key=123156)
         self.assertEqual(test.dict()["uri"], "123156")
-        self.assertEqual(test.dict()["password"], 1)
-        self.assertEqual(test.dict()["auth_id"], 12345)
+        self.assertEqual(test.dict()["size_password"], 1)
+        self.assertEqual(test.dict()["size_auth_id"], 12345)
         self.assertEqual(test.dict()["level"], 10)
         self.assertEqual(test.dict()["expiration_date"], 3)
         self.assertEqual(test.dict()["debug_expiration_date"], 0)
@@ -64,8 +64,8 @@ class TestConfigValidator(unittest.TestCase):
         self.assertRaises(ValidationError,
                           ConfigModel,
                           uri=123156,
-                          password="1",
-                          auth_id=12345,
+                          size_password="1",
+                          size_auth_id=12345,
                           level="10",
                           expiration_date=3,
                           debug_expiration_date="",

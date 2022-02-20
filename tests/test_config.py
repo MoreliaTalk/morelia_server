@@ -128,7 +128,7 @@ class TestConfigHandler(unittest.TestCase):
         valid = self.test._validate()
         result = valid.dict()
         self.assertIsInstance(valid, ConfigModel)
-        self.assertEqual(result['password'], 32)
+        self.assertEqual(result['size_password'], 32)
         self.assertTrue(result['uvicorn_logging_disable'])
         self.assertEqual(result['uri'], 'sqlite:db_sqlite.db')
         self.assertEqual(result['folder'], 'templates')
@@ -168,7 +168,7 @@ class TestConfigHandler(unittest.TestCase):
 
     def test_read(self):
         result = self.test.read()
-        self.assertEqual(result.password, 32)
+        self.assertEqual(result.size_password, 32)
         self.assertTrue(result.uvicorn_logging_disable)
         self.assertEqual(result.uri, 'sqlite:db_sqlite.db')
         self.assertEqual(result.folder, 'templates')
