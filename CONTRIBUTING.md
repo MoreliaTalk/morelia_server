@@ -96,3 +96,5 @@ for which use the following keywords in the docstrings:
 `Note`, `Notes`, `Other Parameters`, `Parameters`, `Return (alias of Returns)`, `Returns`, `Raise (alias of Raises)`,
 `Raises`, `References`, `See Also`, `Tip`, `Todo`, `Warning`, `Warnings (alias of Warning)`, `Warn (alias of Warns)`,
 `Warns`, `Yield (alias of Yields)`, `Yields`.
+- All new class (also class methods) and function MUST BE contained a docstring
+- All code MUST BE documenting in sphinx-format *.rst files which contains in ./docs
