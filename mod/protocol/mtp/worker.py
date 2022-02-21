@@ -38,7 +38,6 @@ from mod.db.dbhandler import DatabaseAccessError
 from mod.config.config import ConfigHandler
 
 
-
 class MTPErrorResponse:
     """
     Catcher errors in "try...except" content.
@@ -134,7 +133,8 @@ class MTProtocol:
         else:
             auth = self._check_auth(self.request.data.user[0].uuid,
                                     self.request.data.user[0].auth_id)
-            if auth.result:
+            version = self._check_protocol_version(self.request)
+            if version and auth.result:
                 match self.request.type:
                     case "get_update":
                         self.response = self._get_update(self.request)
@@ -158,7 +158,7 @@ class MTProtocol:
                         self.response = self._ping_pong(self.request)
                     case _:
                         self.response = self._errors("METHOD_NOT_ALLOWED")
-            else:
+            elif version and auth.result is False:
                 match self.request.type:
                     case 'register_user':
                         self.response = self._register_user(self.request)
@@ -167,6 +167,8 @@ class MTProtocol:
                     case _:
                         self.response = self._errors("UNAUTHORIZED",
                                                      auth.error_message)
+            else:
+                self.response = self._errors("VERSION_NOT_SUPPORTED")
 
     def _check_auth(self,
                     uuid: str,
@@ -844,6 +846,12 @@ class MTProtocol:
 
         See Also:
             https://github.com/MoreliaTalk/morelia_protocol
+
+        Args:
+            status (str | None): error status name in UPPERCASE
+            add_info (Exception | str | None): additional information which
+                added to error message
+            request: (api.Request): request from client in dict format
         """
 
         if request is not None:
@@ -862,3 +870,13 @@ class MTProtocol:
                             data=None,
                             errors=errors.result(),
                             jsonapi=self.jsonapi)
+
+    def _check_protocol_version(self,
+                                request: api.Request) -> bool:
+        MIN = self.config_option.min_version
+        MAX = self.config_option.max_version
+        version = request.jsonapi.version
+        if MIN <= version <= MAX:
+            return True
+        else:
+            return False

@@ -58,5 +58,8 @@ class ConfigModel(BaseModel):
     # Server limit section
     messages: int
     users: int
+    # API version section
+    max_version: str
+    min_version: str
     # Admin section
     secret_key: str

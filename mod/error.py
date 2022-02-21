@@ -30,6 +30,8 @@ class ServerStatus(IntEnum):
     Notes:
         CLIENT_CLOSED_REQUEST - 499
 
+        VERSION_NOT_SUPPORTED - 505
+
         UNKNOWN_ERROR - 520
 
         INVALID_SSL_CERTIFICATE - 526
