@@ -1,27 +1,27 @@
 """
-    Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the
-    full list.
+Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+Look at the file AUTHORS.md(located at the root of the project) to get the
+full list.
 
-    This file is part of Morelia Server.
+This file is part of Morelia Server.
 
-    Morelia Server is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Morelia Server is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    Morelia Server is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+Morelia Server is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Lesser General Public License
+along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
 from typing import Any
-from typing import Optional
 from typing import List
+from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import EmailStr
@@ -35,12 +35,11 @@ REVISION = '17'
 
 class BaseFlow(BaseModel):
     """
-    A base class that describes the validation of the Flow object the same for
-    requests and responses.
+    Base class describes validation of the Flow object.
     """
 
     time: Optional[int] = None
-    type: Optional[str] = None
+    type: Optional[str] = None  # noqa
     title: Optional[str] = None
     info: Optional[str] = None
     owner: Optional[str] = None
@@ -51,8 +50,7 @@ class BaseFlow(BaseModel):
 
 class BaseUser(BaseModel):
     """
-    A base class that describes the validation of the User object the same for
-    requests and responses.
+    Base class describes validation of the User object.
     """
 
     uuid: Optional[str] = None
@@ -69,8 +67,7 @@ class BaseUser(BaseModel):
 
 class BaseMessage(BaseModel):
     """
-    A base class that describes the validation of the Message object the same
-    for requests and responses.
+    Base class describes validation Message object.
     """
 
     uuid: str
@@ -89,8 +86,7 @@ class BaseMessage(BaseModel):
 
 class BaseData(BaseModel):
     """
-    A base class that describes the validation of the Data object the same for
-    requests and responses.
+    Base class describes validation of the Data object.
     """
 
     time: Optional[int] = None
@@ -100,8 +96,7 @@ class BaseData(BaseModel):
 
 class BaseErrors(BaseModel):
     """
-    A base class that describes the validation of the Errors object the same
-    for requests and responses.
+    Base class describes validation of the Errors object.
     """
 
     detail: Optional[str] = None
@@ -109,8 +104,7 @@ class BaseErrors(BaseModel):
 
 class BaseVersion(BaseModel):
     """
-    A base class that describes the validation of the Jsonapi object the same
-    for requests and responses.
+    Base class describes validation of the Jsonapi object.
     """
 
     version: str
@@ -119,11 +113,10 @@ class BaseVersion(BaseModel):
 
 class BaseValidator(BaseModel):
     """
-    A base class that describes the validation of the main object the same for
-    requests and responses.
+    Base class describes validation of the Main object.
     """
 
-    type: str
+    type: str  # noqa
     jsonapi: BaseVersion
     meta: Optional[Any] = None
 
@@ -133,12 +126,12 @@ class BaseValidator(BaseModel):
 
 class FlowRequest(BaseFlow):
     """
-    Validation settings for the Flow object
+    Validation settings for the Flow object.
     """
 
     class Config:
         """
-        Additional configuration for Request
+        Additional configuration for Request.
         """
 
         title = 'List of flow with UUID is str or None'
@@ -147,12 +140,12 @@ class FlowRequest(BaseFlow):
 
 class UserRequest(BaseUser):
     """
-    Validation settings for the User object
+    Validation settings for the User object.
     """
 
     class Config:
         """
-        Additional configuration for Request
+        Additional configuration for Request.
         """
 
         title = 'List of user information'
@@ -160,12 +153,12 @@ class UserRequest(BaseUser):
 
 class MessageRequest(BaseMessage):
     """
-    Validation settings for the Message object
+    Validation settings for the Message object.
     """
 
     class Config:
         """
-        Additional configuration for Request
+        Additional configuration for Request.
         """
 
         title = 'List of message information with client_id is int'
@@ -175,12 +168,12 @@ class MessageRequest(BaseMessage):
 
 class DataRequest(BaseData):
     """
-    Validation settings for the Data object
+    Validation settings for the Data object.
     """
 
     class Config:
         """
-        Additional configuration for Request
+        Additional configuration for Request.
         """
 
         title = 'Main data-object'
@@ -191,12 +184,12 @@ class DataRequest(BaseData):
 
 class ErrorsRequest(BaseErrors):
     """
-    Validation settings for the Errors object
+    Validation settings for the Errors object.
     """
 
     class Config:
         """
-        Additional configuration for Request
+        Additional configuration for Request.
         """
 
         title = 'Error information'
@@ -208,12 +201,12 @@ class ErrorsRequest(BaseErrors):
 
 class VersionRequest(BaseVersion):
     """
-    Validation settings for the Jsonapi object
+    Validation settings for the Jsonapi object.
     """
 
     class Config:
         """
-        Additional configuration for Request
+        Additional configuration for Request.
         """
 
         title = 'Protocol version'
@@ -226,7 +219,7 @@ class Request(BaseValidator):
 
     class Config:
         """
-        Additional configuration for Request
+        Additional configuration for Request.
         """
 
         title = 'MoreliaTalk protocol (for request)'
@@ -240,12 +233,12 @@ class Request(BaseValidator):
 
 class FlowResponse(BaseFlow):
     """
-    Validation settings for the Flow object
+    Validation settings for the Flow object.
     """
 
     class Config:
         """
-        Additional configuration for Response
+        Additional configuration for Response.
         """
 
         title = 'List of flow with required UUID and it is str'
@@ -255,12 +248,12 @@ class FlowResponse(BaseFlow):
 
 class UserResponse(BaseUser):
     """
-    Validation settings for the User object
+    Validation settings for the User object.
     """
 
     class Config:
         """
-        Additional configuration for Response
+        Additional configuration for Response.
         """
 
         title = 'List of user information'
@@ -268,12 +261,12 @@ class UserResponse(BaseUser):
 
 class MessageResponse(BaseMessage):
     """
-    Validation settings for the Message object
+    Validation settings for the Message object.
     """
 
     class Config:
         """
-        Additional configuration for Response
+        Additional configuration for Response.
         """
 
         title = 'List of message information without client_id'
@@ -283,12 +276,12 @@ class MessageResponse(BaseMessage):
 
 class DataResponse(BaseData):
     """
-    Validation settings for the Data object
+    Validation settings for the Data object.
     """
 
     class Config:
         """
-        Additional configuration for Response
+        Additional configuration for Response.
         """
 
         title = 'Main data-object'
@@ -299,12 +292,12 @@ class DataResponse(BaseData):
 
 class ErrorsResponse(BaseErrors):
     """
-    Validation settings for the Errors object
+    Validation settings for the Errors object.
     """
 
     class Config:
         """
-        Additional configuration for Response
+        Additional configuration for Response.
         """
 
         title = 'Error information. Code, status. time is required'
@@ -316,12 +309,12 @@ class ErrorsResponse(BaseErrors):
 
 class VersionResponse(BaseVersion):
     """
-    Validation settings for the Jsonapi object
+    Validation settings for the Jsonapi object.
     """
 
     class Config:
         """
-        Additional configuration for Response
+        Additional configuration for Response.
         """
 
         title = 'Protocol version'
@@ -334,7 +327,7 @@ class Response(BaseValidator):
 
     class Config:
         """
-        Additional configuration for Response
+        Additional configuration for Response.
         """
 
         title = 'MoreliaTalk protocol (for response)'

@@ -1,41 +1,41 @@
 """
-    Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the
-    full list.
+Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+Look at the file AUTHORS.md(located at the root of the project) to get the
+full list.
 
-    This file is part of Morelia Server.
+This file is part of Morelia Server.
 
-    Morelia Server is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Morelia Server is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    Morelia Server is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+Morelia Server is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Lesser General Public License
+along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from collections import namedtuple
 import json
 from time import time
 from uuid import uuid4
-from collections import namedtuple
 
-from pydantic import ValidationError
 from loguru import logger
+from pydantic import ValidationError
 from sqlobject.sresults import SelectResults
 
-from mod.protocol.mtp import api
 from mod import error
 from mod import lib
-from mod.db.dbhandler import DBHandler
-from mod.db.dbhandler import DatabaseWriteError
-from mod.db.dbhandler import DatabaseReadError
-from mod.db.dbhandler import DatabaseAccessError
 from mod.config.config import ConfigHandler
+from mod.db.dbhandler import DatabaseAccessError
+from mod.db.dbhandler import DatabaseReadError
+from mod.db.dbhandler import DatabaseWriteError
+from mod.db.dbhandler import DBHandler
+from mod.protocol.mtp import api
 
 
 class MTPErrorResponse:
@@ -68,7 +68,6 @@ class MTPErrorResponse:
             object (api.ErrorResponse): object with information about code,
             status, time and detailed description of error that has occurred.
 
-            {'code': 200,'status': 'Ok','time': 123456545,'detail': 'successfully'}
         """
 
         try:
@@ -174,7 +173,7 @@ class MTProtocol:
                     uuid: str,
                     auth_id: str) -> namedtuple:
         """
-        Checking user authentication every each request
+        Checking user authentication every each request.
 
         Args:
             uuid (str): user identification number which granted moreliatalk
@@ -216,7 +215,7 @@ class MTProtocol:
     def get_response(self,
                      response: api.Response = None) -> json:
         """
-        Generates a JSON-object containing result of an instance json
+        Generates a JSON-object containing result of an instance json.
 
         Returns:
             (json): json-object which contains validated response
@@ -233,14 +232,14 @@ class MTProtocol:
     def _check_login(self,
                      login: str) -> bool:
         """
-        Checks database for a user with the same login and returns True
-        if there is such a user or False if no such user exists.
+        Checks database for a user with the same login.
 
         Args:
             login (str): user login
 
         Returns:
-            (bool): True of False
+            (bool): True if there is such a user or False if no such user
+                exists.
         """
 
         try:
@@ -435,8 +434,8 @@ class MTProtocol:
     def _all_messages(self,
                       request: api.Request) -> api.Response:
         """
-        Displays all messages of a specific flow retrieves them
-        from database and issues them as an array consisting of JSON.
+        Displays all messages of a specific flow.
+        Retrieves from database and issues them as an array consisting of JSON.
 
         See Also:
             https://github.com/MoreliaTalk/morelia_protocol
@@ -463,8 +462,8 @@ class MTProtocol:
                          end: int,
                          start: int = 0) -> list[api.MessageResponse]:
             """
-            Converts the database object into a list of validated "Message"
-            objects.
+            Converts the database object into a list.
+            List contains validation Message object.
 
             Args:
                 db (SelectResults): database query result
@@ -479,24 +478,24 @@ class MTProtocol:
 
             for element in db[start:end]:
                 _list.append(api.MessageResponse(
-                               uuid=element.uuid,
-                               client_id=None,
-                               text=element.text,
-                               from_user=element.user.uuid,
-                               time=element.time,
-                               from_flow=element.flow.uuid,
-                               file_picture=element.file_picture,
-                               file_video=element.file_video,
-                               file_audio=element.file_audio,
-                               file_document=element.file_document,
-                               emoji=element.emoji,
-                               edited_time=element.edited_time,
-                               edited_status=element.edited_status))
+                             uuid=element.uuid,
+                             client_id=None,
+                             text=element.text,
+                             from_user=element.user.uuid,
+                             time=element.time,
+                             from_flow=element.flow.uuid,
+                             file_picture=element.file_picture,
+                             file_video=element.file_video,
+                             file_audio=element.file_audio,
+                             file_document=element.file_document,
+                             emoji=element.emoji,
+                             edited_time=element.edited_time,
+                             edited_status=element.edited_status))
             return _list
 
         try:
             dbquery = self._db.get_message_by_more_time_and_flow(flow_uuid,
-                                                                 request.data.time)
+                                                                 request.data.time)  # noqa
             MESSAGE_COUNT = dbquery.count()
             dbquery[0]
         except DatabaseReadError as flow_error:
@@ -591,8 +590,7 @@ class MTProtocol:
     def _all_flow(self,
                   request: api.Request) -> api.Response:
         """
-        Allows to get a list of all flows and information about them
-        from database.
+        Get a list of all flows and information about them.
 
         See Also:
             https://github.com/MoreliaTalk/morelia_protocol
@@ -670,8 +668,8 @@ class MTProtocol:
     def _authentication(self,
                         request: api.Request) -> api.Response:
         """
-        Performs authentication of registered client,
-        with issuance of a unique hash number of connection session.
+        Performs authentication of registered client.
+        With issuance of a unique hash number of connection session.
         During authentication password transmitted by client
         and password contained in server database are verified.
 
@@ -755,8 +753,7 @@ class MTProtocol:
     def _delete_message(self,
                         request: api.Request) -> api.Response:
         """
-        Function deletes the message from database Message
-        table by its ID.
+        Deletes the message from database Message table by its ID.
 
         See Also:
             https://github.com/MoreliaTalk/morelia_protocol
@@ -820,8 +817,7 @@ class MTProtocol:
     def _ping_pong(self,
                    request: api.Request) -> api.Response:
         """
-        Generates a response to a client's request
-        for communication between server and client.
+        Simple response/request communication between server and client.
 
         See Also:
             https://github.com/MoreliaTalk/morelia_protocol

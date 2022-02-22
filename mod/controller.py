@@ -1,34 +1,34 @@
 """
-    Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the
-    full list.
+Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+Look at the file AUTHORS.md(located at the root of the project) to get the
+full list.
 
-    This file is part of Morelia Server.
+This file is part of Morelia Server.
 
-    Morelia Server is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Morelia Server is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    Morelia Server is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+Morelia Server is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Lesser General Public License
+along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import json
 
 from mod.db.dbhandler import DBHandler
-from mod.protocol.mtp.worker import MTProtocol
 from mod.protocol.matrix.worker import MatrixProtocol
+from mod.protocol.mtp.worker import MTProtocol
 
 
 class MainHandler:
     """
-    According to the selected protocol sends a request to the handler
+    According to the selected protocol sends a request to the handler.
 
     Args:
         request (object): JSON request from websocket client
@@ -51,18 +51,17 @@ class MainHandler:
 
     def get_response(self):
         """
-        Returns the result of the request processing depending on the protocol
+        Returns result of request processing depending on the protocol.
 
         Returns:
-                (json)
+            (json)
         """
 
         return self.response
 
     def _mtp_handler(self) -> json:
         """
-        Returns the result of the get_response method of the class handling
-        the MTP protocol
+        Returns result get_response method of the class handling MTP protocol.
 
         Returns:
             (json):
@@ -74,8 +73,7 @@ class MainHandler:
 
     def _matrix_handler(self) -> json:
         """
-        Returns the result of the get_response method of the class handling
-        the Matrix protocol
+        Returns result get_response method of class handling Matrix protocol.
 
         Returns:
             (json):

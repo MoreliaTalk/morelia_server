@@ -1,31 +1,32 @@
 """
-    Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the
-    full list.
+Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+Look at the file AUTHORS.md(located at the root of the project) to get the
+full list.
 
-    This file is part of Morelia Server.
+This file is part of Morelia Server.
 
-    Morelia Server is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Morelia Server is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    Morelia Server is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+Morelia Server is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Lesser General Public License
+along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
+
 from collections import namedtuple
-from http import HTTPStatus
 from enum import IntEnum
+from http import HTTPStatus
 
 
 class ServerStatus(IntEnum):
     """
-    Additional server status code and reason phrases
+    Additional server status code and reason phrases.
 
     Notes:
         CLIENT_CLOSED_REQUEST - 499
@@ -38,7 +39,14 @@ class ServerStatus(IntEnum):
 
     """
 
-    def __new__(cls, value, phrase, description=''):
+    def __new__(cls,
+                value,
+                phrase,
+                description=''):
+        """
+        Optional class constructor.
+        """
+
         obj = int.__new__(cls, value)
         obj._value_ = value
         obj.phrase = phrase
@@ -61,8 +69,8 @@ class ServerStatus(IntEnum):
 
 def check_error_pattern(status: str) -> namedtuple:
     """
-    Checks the error name against the existing error types supported by
-    the server. The error name is passed as a "status" parameter.
+    Checks error name against existing error types supported by server.
+    The error name is passed as a "status" parameter.
 
     Args:
         status (str): error name

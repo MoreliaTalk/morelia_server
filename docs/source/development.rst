@@ -58,6 +58,32 @@ Cloning a repository
 5. If using GitHub Desktop, select ``Clone repository...`` from ``File`` menu and follow instructions.
 
 
+Running before create pool-request
+__________________________________
+
+Before create pool-request you must be perform two step:
+
+1. Running ``flake8`` for checking code:
+
+::
+
+ pipenv run flake8 --config ./setup.cfg --show-source --statistics --output-file ./log/flake8.log
+
+``--config ./setup.cfg`` - path to flake8 settings
+
+``--show-source`` - show the source generate each error or warning
+
+``--statistics`` - count errors and warnings
+
+``--output-file ./log/flake8.log`` - path to file where flake8 saved all information about occurrences errors and warnings
+
+2. Running unittest for testing code (``tests`` it's a directory contains all test for project):
+
+::
+
+ pipenv run coverage run -m unittest discover tests
+
+
 Creating a pool-request
 -----------------------
 
