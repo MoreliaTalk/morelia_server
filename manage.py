@@ -2,7 +2,9 @@ import asyncio
 import json
 import os
 import pathlib
+import traceback
 from ast import literal_eval
+from collections import namedtuple
 from functools import wraps
 from time import process_time, time
 from uuid import uuid4
@@ -39,8 +41,15 @@ def db_cli():
 
 
 @cli.group("testclient", help="mini-client for server")
-def client_cli():
-    pass
+@click.option("-a", "--address", default="ws://localhost:8080/ws")
+@click.option("--uuid")
+@click.option("--auth_id")
+@click.pass_context
+def client_cli(ctx: click.Context, address: str, uuid: str, auth_id: str):
+    ctx.ensure_object(dict)
+    ctx.obj["uuid"] = uuid
+    ctx.obj["auth_id"] = auth_id
+    ctx.obj["address"] = address
 
 
 @cli.command("runserver", help="run app using the dev server")
@@ -139,34 +148,46 @@ def admin_create_user(username, password):
     click.echo(f"Admin created\nusername: {username}\npassword: {password}")
 
 
-@client_cli.command("send", help="send message to server",
-                    context_settings=dict(
-                        ignore_unknown_options=True,
-                        allow_extra_args=True,
-                    ))
-@click.option("-a", "--address", default="ws://localhost:8080/ws")
-@click.option("-t", "--type_mes", default="send_message")
-@click.option("--uuid")
-@click.option("--auth_id")
-@click_async
-async def send(address, type_mes, uuid, auth_id):
-    message: Request = mtp_api.Request.parse_file(
-        pathlib.Path(__file__).parent /
-        "tests" /
-        "fixtures" /
-        "".join((type_mes, ".json"))
-    )
-
-    if uuid:
-        message.data.user[0].uuid = uuid
-    if auth_id:
-        message.data.user[0].auth_id = auth_id
-
+async def connect_ws_and_send(message, address: str):
     async with websockets.connect(address) as ws:
         await ws.send(message.json())
         response = await ws.recv()
         click.echo(response)
 
+
+@client_cli.command("register_user", help="send method 'register_user' to server")
+@click.option("--login", default="user")
+@click.option("--password", default="password")
+@click.pass_context
+@click_async
+async def register_user(ctx, login, password):
+    message: Request = mtp_api.Request(type="register_user", jsonapi={"version": "1.0"})
+    message.data = mtp_api.DataRequest()
+    message.data.user = []
+    message.data.user.append(mtp_api.UserRequest())
+    message.data.user[0].login = login
+    message.data.user[0].password = password
+
+    await connect_ws_and_send(message, ctx.obj["address"])
+
+
+
+
+"""@client_cli.command("send_message", help="send method 'send_message' to server")
+@click.pass_context
+@click_async
+async def send_message(ctx):
+    message: Request = mtp_api.Request.parse_file(pathlib.Path(__file__).parent /
+                                                  "tests" /
+                                                  "fixtures" /
+                                                  "send_message.json")
+
+    message.data.user[0].uuid = ctx.obj["uuid"]
+    message.data.user[0].auth_id = ctx.obj["auth_id"]
+    print(message)
+
+    await connect_ws_and_send(message, ctx.obj["address"])
+"""
 
 if __name__ == "__main__":
     cli()
