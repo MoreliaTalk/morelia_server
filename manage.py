@@ -1,6 +1,8 @@
 import asyncio
+import json
 import os
 import pathlib
+from ast import literal_eval
 from functools import wraps
 from time import process_time, time
 from uuid import uuid4
@@ -14,6 +16,8 @@ from config import DATABASE, SUPERUSER
 from mod import lib
 from mod.db import dbhandler
 from mod.db.dbhandler import DatabaseWriteError, DatabaseReadError, DatabaseAccessError
+from mod.protocol.mtp import api as mtp_api
+from mod.protocol.mtp.api import Request
 
 
 def click_async(f):
@@ -135,18 +139,33 @@ def admin_create_user(username, password):
     click.echo(f"Admin created\nusername: {username}\npassword: {password}")
 
 
-@client_cli.command("send", help="send message to server")
+@client_cli.command("send", help="send message to server",
+                    context_settings=dict(
+                        ignore_unknown_options=True,
+                        allow_extra_args=True,
+                    ))
 @click.option("-a", "--address", default="ws://localhost:8080/ws")
 @click.option("-t", "--type_mes", default="send_message")
-@click.option("-click")
+@click.option("--uuid")
+@click.option("--auth_id")
 @click_async
-async def send(address, type_mes):
+async def send(address, type_mes, uuid, auth_id):
+    message: Request = mtp_api.Request.parse_file(
+        pathlib.Path(__file__).parent /
+        "tests" /
+        "fixtures" /
+        "".join((type_mes, ".json"))
+    )
+
+    if uuid:
+        message.data.user[0].uuid = uuid
+    if auth_id:
+        message.data.user[0].auth_id = auth_id
+
     async with websockets.connect(address) as ws:
-        with (pathlib.Path(__file__).parent / "tests" / "fixtures" / (type_mes+".json")).open() as file:
-            message = file.read()
-            await ws.send(message)
-            response = await ws.recv()
-            click.echo(response)
+        await ws.send(message.json())
+        response = await ws.recv()
+        click.echo(response)
 
 
 if __name__ == "__main__":
