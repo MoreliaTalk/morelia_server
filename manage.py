@@ -208,8 +208,27 @@ async def send_message(ctx, text, client_id, message_uuid, flow_uuid):
     message.data.user[0].uuid = ctx.obj["uuid"]
     message.data.user[0].auth_id = ctx.obj["auth_id"]
     message.data.message = []
-    message.data.message.append(mtp_api.MessageRequest(client_id=123))
+    message.data.message.append(mtp_api.MessageRequest(uuid=message_uuid, client_id=123))
     message.data.message[0].text = text
+    message.data.flow = []
+    message.data.flow.append(mtp_api.FlowRequest())
+    message.data.flow[0].uuid = flow_uuid
+
+    await connect_ws_and_send(message, ctx.obj["address"])
+
+
+@client_cli.command("all_messages", help="send method 'all_message' to server")
+@click.option("--flow_uuid", default="123")
+@click.pass_context
+@click_async
+async def all_messages(ctx, flow_uuid):
+    message: Request = mtp_api.Request(type="all_messages", jsonapi={"version": "1.0"})
+    message.data = mtp_api.DataRequest()
+    message.data.user = []
+    message.data.user.append(mtp_api.UserRequest())
+    message.data.user[0].uuid = ctx.obj["uuid"]
+    message.data.user[0].auth_id = ctx.obj["auth_id"]
+    message.data.time = 0
     message.data.flow = []
     message.data.flow.append(mtp_api.FlowRequest())
     message.data.flow[0].uuid = flow_uuid
