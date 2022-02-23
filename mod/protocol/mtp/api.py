@@ -170,6 +170,7 @@ class MessageRequest(BaseMessage):
 
         title = 'List of message information with client_id is int'
 
+    uuid: Optional[str] = None
     client_id: int
 
 
