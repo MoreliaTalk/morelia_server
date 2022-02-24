@@ -1,4 +1,5 @@
 import asyncio
+import pathlib
 from functools import wraps
 from time import process_time, time
 from uuid import uuid4
@@ -34,15 +35,8 @@ def db_cli():
 
 
 @cli.group("testclient", help="mini-client for server")
-@click.option("-a", "--address", default="ws://localhost:8080/ws")
-@click.option("--uuid")
-@click.option("--auth_id")
-@click.pass_context
-def client_cli(ctx: click.Context, address: str, uuid: str, auth_id: str):
-    ctx.ensure_object(dict)
-    ctx.obj["uuid"] = uuid
-    ctx.obj["auth_id"] = auth_id
-    ctx.obj["address"] = address
+def client_cli():
+    pass
 
 
 @cli.command("runserver", help="run app using the dev server")
@@ -157,83 +151,40 @@ async def connect_ws_and_send(message, address: str):
             await ws.close()
 
 
-@client_cli.command("register_user", help="send method 'register_user' to server")
-@click.option("--login", default="user")
-@click.option("--password", default="password")
+@client_cli.command("send", help="send message to server",
+                    context_settings=dict(
+                        ignore_unknown_options=True,
+                        allow_extra_args=True,
+                    ))
+@click.option("-t", "--type-message", default="send_message")
+@click.option("-a", "--address", default="ws://127.0.0.1:8080/ws")
 @click.pass_context
 @click_async
-async def register_user(ctx, login, password):
-    message: Request = mtp_api.Request(type="register_user", jsonapi={"version": "1.0"})
-    message.data = mtp_api.DataRequest()
-    message.data.user = []
-    message.data.user.append(mtp_api.UserRequest())
-    message.data.user[0].login = login
-    message.data.user[0].password = password
+async def all_messages(ctx, type_message, address):
+    kwargs = dict([item.strip('--').split('=') for item in ctx.args])
+    message: Request = mtp_api.Request.parse_file(pathlib.Path(__file__).parent /
+                                                  "tests" /
+                                                  "fixtures" /
+                                                  (type_message+".json"))
+    message.data.user.append(mtp_api.BaseUser())
 
-    await connect_ws_and_send(message, ctx.obj["address"])
+    mes_dict = message.dict()
+    for kw in kwargs:
+        kw_request = "mes_dict"
+        for kw_sub in kw.split("."):
+            try:
+                kw_sub = int(kw_sub)
+            except ValueError:
+                kw_request += f'["{kw_sub}"]'
+            else:
+                kw_request += f'[{kw_sub}]'
 
+        data = exec(kw_request+f" = '{kwargs[kw]}'", {
+            "__builtins__": {},
+            "mes_dict": mes_dict
+        })
 
-@client_cli.command("get_update", help="send method 'get_update' to server")
-@click.option("-t", "--set_time")
-@click.pass_context
-@click_async
-async def get_update(ctx, set_time):
-    message: Request = mtp_api.Request(type="get_update", jsonapi={"version": "1.0"})
-    message.data = mtp_api.DataRequest()
-    message.data.user = []
-    message.data.user.append(mtp_api.UserRequest())
-    message.data.user[0].uuid = ctx.obj["uuid"]
-    message.data.user[0].auth_id = ctx.obj["auth_id"]
-
-    if not set_time:
-        set_time = time()
-
-    message.data.time = set_time
-
-    await connect_ws_and_send(message, ctx.obj["address"])
-
-
-@client_cli.command("send_message", help="send method 'send_message' to server")
-@click.option("--text", default="Hello World!")
-@click.option("--client_id", default=1234)
-@click.option("--message_uuid", default="1234")
-@click.option("--flow_uuid", default="1234")
-@click.pass_context
-@click_async
-async def send_message(ctx, text, client_id, message_uuid, flow_uuid):
-    message: Request = mtp_api.Request(type="send_message", jsonapi={"version": "1.0"})
-    message.data = mtp_api.DataRequest()
-    message.data.user = []
-    message.data.user.append(mtp_api.UserRequest())
-    message.data.user[0].uuid = ctx.obj["uuid"]
-    message.data.user[0].auth_id = ctx.obj["auth_id"]
-    message.data.message = []
-    message.data.message.append(mtp_api.MessageRequest(uuid=message_uuid, client_id=123))
-    message.data.message[0].text = text
-    message.data.flow = []
-    message.data.flow.append(mtp_api.FlowRequest())
-    message.data.flow[0].uuid = flow_uuid
-
-    await connect_ws_and_send(message, ctx.obj["address"])
-
-
-@client_cli.command("all_messages", help="send method 'all_message' to server")
-@click.option("--flow_uuid", default="123")
-@click.pass_context
-@click_async
-async def all_messages(ctx, flow_uuid):
-    message: Request = mtp_api.Request(type="all_messages", jsonapi={"version": "1.0"})
-    message.data = mtp_api.DataRequest()
-    message.data.user = []
-    message.data.user.append(mtp_api.UserRequest())
-    message.data.user[0].uuid = ctx.obj["uuid"]
-    message.data.user[0].auth_id = ctx.obj["auth_id"]
-    message.data.time = 0
-    message.data.flow = []
-    message.data.flow.append(mtp_api.FlowRequest())
-    message.data.flow[0].uuid = flow_uuid
-
-    await connect_ws_and_send(message, ctx.obj["address"])
+    await connect_ws_and_send(message, address)
 
 if __name__ == "__main__":
     cli()
