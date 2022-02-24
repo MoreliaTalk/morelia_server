@@ -35,7 +35,8 @@ from mod.db.dbhandler import DBHandler
 from mod.db.dbhandler import DatabaseWriteError
 from mod.db.dbhandler import DatabaseReadError
 from mod.db.dbhandler import DatabaseAccessError
-from config import SERVER_LIMIT as LIMIT
+from mod.config.config import ConfigHandler
+
 
 
 class MTPErrorResponse:
@@ -120,6 +121,8 @@ class MTProtocol:
                                            revision=api.REVISION)
         self.get_time = int(time())
         self._db = database
+        self.config = ConfigHandler()
+        self.config_option = self.config.read()
 
         try:
             self.request = api.Request.parse_obj(request)
@@ -440,6 +443,7 @@ class MTProtocol:
         flow_uuid = request.data.flow[0].uuid
         flow = []
         message = []
+        LIMIT_MESSAGES = self.config_option.messages
 
         if request.data.flow[0].message_start is None:
             message_start = 0
@@ -470,6 +474,7 @@ class MTProtocol:
             """
 
             _list = []
+
             for element in db[start:end]:
                 _list.append(api.MessageResponse(
                                uuid=element.uuid,
@@ -496,17 +501,17 @@ class MTProtocol:
             errors = MTPErrorResponse("NOT_FOUND",
                                       str(flow_error))
         else:
-            if MESSAGE_COUNT <= LIMIT.getint("messages"):
+            if MESSAGE_COUNT <= LIMIT_MESSAGES:
                 flow.append(api.FlowResponse(uuid=flow_uuid))
                 message = get_messages(dbquery,
-                                       LIMIT.getint("messages"))
+                                       LIMIT_MESSAGES)
                 errors = MTPErrorResponse("OK")
                 logger.success("\'_all_messages\' executed successfully")
             else:
                 flow.append(api.FlowResponse(uuid=flow_uuid,
                                              message_start=message_start,
                                              message_end=MESSAGE_COUNT))
-                if message_volume <= LIMIT.getint("messages"):
+                if message_volume <= LIMIT_MESSAGES:
                     message = get_messages(dbquery,
                                            request.data.flow[0].message_end,
                                            request.data.flow[0].message_start)
@@ -516,7 +521,7 @@ class MTProtocol:
                     errors = MTPErrorResponse("FORBIDDEN",
                                               "Requested more messages"
                                               f" than server limit"
-                                              f" ({LIMIT.getint('messages')})")
+                                              f" ({LIMIT_MESSAGES})")
 
         data = api.DataResponse(time=self.get_time,
                                 flow=flow,
@@ -628,8 +633,9 @@ class MTProtocol:
 
         users_volume = len(request.data.user)
         user = []
+        LIMIT_USERS = self.config_option.users
 
-        if users_volume <= LIMIT.getint("users"):
+        if users_volume <= LIMIT_USERS:
             errors = MTPErrorResponse("OK")
             for element in request.data.user[1:]:
                 try:
@@ -648,7 +654,7 @@ class MTProtocol:
             logger.success("\'_user_info\' executed successfully")
         else:
             errors = MTPErrorResponse("TOO_MANY_REQUESTS",
-                                      f"Requested more {LIMIT.get('users')}"
+                                      f"Requested more {LIMIT_USERS}"
                                       " users than server limit")
 
         data = api.DataResponse(time=self.get_time,

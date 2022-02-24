@@ -31,7 +31,7 @@ from mod import lib
 from mod.db.dbhandler import DBHandler
 from mod.protocol.mtp.worker import MTProtocol
 from mod.protocol.mtp.worker import MTPErrorResponse
-from config import SERVER_LIMIT as LIMIT
+from mod.config.config import ConfigHandler
 
 # Add path to directory with code being checked
 # to variable 'PATH' to import modules from directory
@@ -55,7 +55,7 @@ ERRORS = os.path.join(FIXTURES_PATH, "errors.json")
 NON_VALID_ERRORS = os.path.join(FIXTURES_PATH, "non_valid_errors.json")
 ERRORS_ONLY_TYPE = os.path.join(FIXTURES_PATH, "errors_only_type.json")
 
-DATABASE = "sqlite:/:memory:?debug=1"
+DATABASE = "sqlite:/:memory:"
 
 
 class TestCheckAuthToken(unittest.TestCase):
@@ -396,6 +396,8 @@ class TestAllMessages(unittest.TestCase):
         cls.db = DBHandler(uri=DATABASE)
 
     def setUp(self):
+        self.config_option = ConfigHandler().read()
+        self.limit_message = self.config_option.messages
         self.db.create_table()
         self.db.add_user(uuid="123456",
                          login="login",
@@ -415,13 +417,13 @@ class TestAllMessages(unittest.TestCase):
                                 "654321"],
                          flow_type="chat",
                          owner="654321")
-        for item in range(LIMIT.getint("messages") + 10):
+        for item in range(self.limit_message + 10):
             self.db.add_message(flow_uuid="07d949",
                                 user_uuid="123456",
                                 message_uuid=str(uuid4().int),
                                 text=f"Hello{item}",
                                 time=item)
-        for item in range(LIMIT.getint("messages") - 10):
+        for item in range(self.limit_message - 10):
             self.db.add_message(flow_uuid="07d950",
                                 user_uuid="654321",
                                 message_uuid=str(uuid4().int),

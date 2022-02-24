@@ -8,12 +8,17 @@ import click
 import uvicorn
 import websockets
 
-from config import DATABASE, SUPERUSER
 from mod import lib
 from mod.db import dbhandler
-from mod.db.dbhandler import DatabaseWriteError, DatabaseReadError, DatabaseAccessError
+from mod.db.dbhandler import DatabaseWriteError
+from mod.db.dbhandler import DatabaseReadError
+from mod.db.dbhandler import DatabaseAccessError
+from mod.config.config import ConfigHandler
 from mod.protocol.mtp import api as mtp_api
 from mod.protocol.mtp.api import Request
+
+config = ConfigHandler()
+config_option = config.read()
 
 
 def click_async(f):
@@ -66,7 +71,7 @@ def run(host: str,
 @db_cli.command("create", help="Create all table with all data")
 def db_create():
     start_time = process_time()
-    db = dbhandler.DBHandler(uri=DATABASE.get('uri'))
+    db = dbhandler.DBHandler(uri=config_option.uri)
     db.create_table()
     click.echo(f'Table is created at: '
                f'{process_time() - start_time} sec.')
@@ -75,7 +80,7 @@ def db_create():
 @db_cli.command("delete", help="Delete all table with all data")
 def db_delete():
     start_time = process_time()
-    db = dbhandler.DBHandler(uri=DATABASE.get('uri'))
+    db = dbhandler.DBHandler(uri=config_option.uri)
     db.delete_table()
     click.echo(f'Table is deleted at: '
                f'{process_time() - start_time} sec.')
@@ -83,9 +88,9 @@ def db_delete():
 
 @db_cli.command("superuser-create", help="Create superuser in database")
 def create_superuser():
-    db = dbhandler.DBHandler(uri=DATABASE.get('uri'))
+    db = dbhandler.DBHandler(uri=config_option.uri)
     user_uuid = str(123456789)
-    hash_password = SUPERUSER.get('hash_password')
+    hash_password = config.SUPERUSER.get('hash_password')
     try:
         db.add_user(uuid=user_uuid,
                     login="login",
@@ -101,7 +106,7 @@ def create_superuser():
 
 @db_cli.command("flow-create", help="Create flow type group in database")
 def create_flow():
-    db = dbhandler.DBHandler(uri=DATABASE.get('uri'))
+    db = dbhandler.DBHandler(uri=config_option.uri)
     user_uuid = str(123456789)
     try:
         new_user = db.get_user_by_uuid(uuid=user_uuid)
@@ -124,7 +129,7 @@ def create_flow():
 @click.option("--username", help="username admin")
 @click.option("--password", help="password admin")
 def admin_create_user(username, password):
-    db = dbhandler.DBHandler(uri=DATABASE.get('uri'))
+    db = dbhandler.DBHandler(uri=config_option.uri)
 
     generator = lib.Hash(password,
                          str(uuid4().hex),
@@ -165,7 +170,7 @@ async def all_messages(ctx, t, address):
     message: Request = mtp_api.Request.parse_file(pathlib.Path(__file__).parent /
                                                   "tests" /
                                                   "fixtures" /
-                                                  (t+".json"))
+                                                  (t + ".json"))
     message.data.user.append(mtp_api.BaseUser())
 
     mes_dict = message.dict()
@@ -179,12 +184,13 @@ async def all_messages(ctx, t, address):
             else:
                 kw_request += f'[{kw_sub}]'
 
-        data = exec(kw_request+f" = '{kwargs[kw]}'", {
+        data = exec(kw_request + f" = '{kwargs[kw]}'", {
             "__builtins__": {},
             "mes_dict": mes_dict
         })
 
     await connect_ws_and_send(message, address)
+
 
 if __name__ == "__main__":
     cli()

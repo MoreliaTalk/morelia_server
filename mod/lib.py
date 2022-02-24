@@ -24,7 +24,7 @@ from hashlib import blake2b
 from hmac import compare_digest
 from os import urandom
 
-from config import HASH_SIZE
+from mod.config.config import ConfigHandler
 
 
 class Hash:
@@ -53,6 +53,8 @@ class Hash:
                  salt: bytes = None,
                  key: bytes = None,
                  hash_password: str = None) -> None:
+        self.config = ConfigHandler()
+        self.config_option = self.config.read()
 
         if salt is None:
             self.salt = urandom(16)
@@ -71,8 +73,8 @@ class Hash:
 
         self.binary_password = password.encode('utf-8')
         self.hash_password = hash_password
-        self.size_password = HASH_SIZE.getint('password')
-        self.size_auth_id = HASH_SIZE.getint('auth_id')
+        self.size_password = self.config_option.size_password
+        self.size_auth_id = self.config_option.size_auth_id
 
     @property
     def get_salt(self) -> bytes:

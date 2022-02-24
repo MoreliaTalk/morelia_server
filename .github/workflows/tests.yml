@@ -23,7 +23,7 @@ jobs:
         
     - name: Create config for server
       run: |
-        mv example_config.ini config.ini
+        cp example_config.ini config.ini
                 
     - name: Run tests
       run: |
