@@ -156,16 +156,16 @@ async def connect_ws_and_send(message, address: str):
                         ignore_unknown_options=True,
                         allow_extra_args=True,
                     ))
-@click.option("-t", "--type-message", default="send_message")
+@click.option("-t", default="send_message")
 @click.option("-a", "--address", default="ws://127.0.0.1:8080/ws")
 @click.pass_context
 @click_async
-async def all_messages(ctx, type_message, address):
+async def all_messages(ctx, t, address):
     kwargs = dict([item.strip('--').split('=') for item in ctx.args])
     message: Request = mtp_api.Request.parse_file(pathlib.Path(__file__).parent /
                                                   "tests" /
                                                   "fixtures" /
-                                                  (type_message+".json"))
+                                                  (t+".json"))
     message.data.user.append(mtp_api.BaseUser())
 
     mes_dict = message.dict()
