@@ -54,6 +54,7 @@ PING_PONG = os.path.join(FIXTURES_PATH, "ping_pong.json")
 ERRORS = os.path.join(FIXTURES_PATH, "errors.json")
 NON_VALID_ERRORS = os.path.join(FIXTURES_PATH, "non_valid_errors.json")
 ERRORS_ONLY_TYPE = os.path.join(FIXTURES_PATH, "errors_only_type.json")
+VALID_API_VERSION = os.path.join(FIXTURES_PATH, "valid_api_version.json")
 
 DATABASE = "sqlite:/:memory:"
 
@@ -985,6 +986,51 @@ class TestJsonapi(unittest.TestCase):
         result = json.loads(run_method.get_response())
         self.assertEqual(result['jsonapi']['version'], api.VERSION)
         self.assertEqual(result['jsonapi']['revision'], api.REVISION)
+
+
+class TestCheckProtocolVersion(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        logger.remove()
+        cls.db = DBHandler(uri=DATABASE)
+
+    def setUp(self):
+        self.db.create_table()
+        self.db.add_user(uuid="123456",
+                         login="login",
+                         password="password",
+                         auth_id="auth_id")
+        self.test = api.Request.parse_file(VALID_API_VERSION)
+
+    def tearDown(self):
+        self.db.delete_table()
+        del self.test
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        del cls.db
+
+    def test_check_protocol_version(self):
+        self.test.jsonapi.version = "1.0"
+        run_method = MTProtocol(self.test,
+                                self.db)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["type"], "error")
+
+    def test_wrong_protocol_version(self):
+        self.test.jsonapi.version = "0.1"
+        run_method = MTProtocol(self.test,
+                                self.db)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["errors"]["code"], 505)
+        self.assertEqual(result["errors"]["status"], "Version Not Supported")
+        self.test.jsonapi.version = "2.0"
+        run_method = MTProtocol(self.test,
+                                self.db)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["errors"]["code"], 505)
+        self.assertEqual(result["errors"]["status"], "Version Not Supported")
 
 
 if __name__ == "__main__":

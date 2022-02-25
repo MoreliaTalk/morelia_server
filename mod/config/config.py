@@ -1,33 +1,32 @@
 """
-    Copyright (c) 2021 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the
-    full list.
+Copyright (c) 2021 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+Look at the file AUTHORS.md(located at the root of the project) to get the
+full list.
 
-    This file is part of Morelia Server.
+This file is part of Morelia Server.
 
-    Morelia Server is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Morelia Server is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    Morelia Server is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+Morelia Server is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Lesser General Public License
+along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import os
-
+from collections import namedtuple
 from configparser import ConfigParser
 from configparser import Interpolation
+import os
 from pathlib import Path
 from pathlib import PurePath
 from time import time
 from typing import Any
-from collections import namedtuple
 
 from loguru import logger
 
@@ -36,52 +35,54 @@ from mod.config.validator import ConfigModel
 
 class NameConfigError(Exception):
     """
-    Occurs when there is an error in the name of the file with the settings
-    or there is no such file at all.
+    Occurs when there is an error in the name of the file.
+    For example there is no such file at all.
     """
 
 
 class BackupConfigError(OSError):
     """
-    Occurs when a backup of a file is impossible, for example, you can't read
-    the original settings file, or you don't have written access to
-    the directory.
+    Occurs when a backup of a file is impossible.
+    For example, you can't read the original settings file,
+    or you don't have written access to the directory.
     """
 
 
 class OperationConfigError(Exception):
     """
-    Occurs when an option written to a configuration file is duplicated or
-    when a configuration file parsing error has occurred.
+    Occurs when an option written to a configuration file is duplicated.
+    Or when a configuration file parsing error has occurred.
     """
 
 
 class AccessConfigError(OSError):
     """
-    Occurs when writing to the configuration file failed because of the lack
-    of write permissions to the file or the lack of the file itself.
+    Occurs when writing to the configuration file failed.
+    Because of the lack of write permissions to the file
+    or the lack of the file itself.
     """
 
 
 class RebuildConfigError(Exception):
     """
-    Occurs when the configuration file could not be restored because of the
-    lack of permissions to write to the file or the absence of the file itself.
+    Occurs when the configuration file could not be restored.
+    Because of the lack of permissions to write to the file
+    or the absence of the file itself.
     """
 
 
 class CopyConfigError(Exception):
     """
-    Occurs when it was not possible to copy the old configuration file to
-    the new one line by line because there are no write permissions to
-    the file or because the file itself is missing.
+    Occurs when it was not possible to copy old configuration file to new one.
+    Because there are no write permissions to the file or because the file
+    itself is missing.
     """
 
 
 class ConfigHandler:
     """
-    Main module for work with settings contains in configuration file,
-    by default it is config.ini
+    Main module for work with settings contains in configuration file.
+    By default, it is config.ini
 
     Args:
         name (str): name of configuration file.
@@ -90,7 +91,8 @@ class ConfigHandler:
             by default it is BasicInterpolation. None can be used to turn off
             interpolation completely, ExtendedInterpolation provides a more
             advanced variant inspired by zc.buildout. More on the subject in
-            the dedicated documentation section for build-ins configparser modules.
+            the dedicated documentation section for build-ins configparser
+            modules.
     """
 
     def __init__(self,
@@ -106,8 +108,8 @@ class ConfigHandler:
                           name: str,
                           directory: Any) -> None:
         """
-        Starts the process of finding a configuration file and configures
-        the configparser module to work with it.
+        Starts the process of finding a configuration file.
+        Configures configparser module to work with it.
 
         Args:
             name (str): name of configuration file
@@ -163,8 +165,7 @@ class ConfigHandler:
 
     def __repr__(self) -> str:
         """
-        Return string which contains name of created class and parameters send
-        to class object when is created.
+        Return name of created class and parameters send to class object.
 
         Returns:
             (str): Class __name__ with: config_name=config.ini,
@@ -212,8 +213,8 @@ class ConfigHandler:
 
     def _backup_config_file(self) -> tuple[str, PurePath]:
         """
-        Creating a copy of the configuration file with the addition
-        at the end of the name: BAK + time in seconds.
+        Creating a backup copy of the configuration file.
+        Also, addition at the end of the name this string: BAK + Unix time.
 
         Returns:
             tuple(str, PurePath): Tuple contains string 'Backup config.ini
@@ -264,8 +265,8 @@ class ConfigHandler:
                         new_config: str = 'config.ini',
                         directory: str = 'tests/fixtures') -> str:
         """
-        Restoring the configuration file.  Copying lines from
-        example_config.ini to config.ini
+        Restoring the configuration file.
+        Copying lines from example_config.ini to config.ini file.
 
         Args:
             orig_config (str): default 'example_config.ini'
@@ -294,8 +295,7 @@ class ConfigHandler:
     @property
     def root_directory(self) -> str | None:
         """
-        Parameter that reports name of the root directory that is set for
-        initial search of the configuration file.
+        Reports name of directory that is set for initial search config file.
 
         Returns:
             (str, None): name of directory, if None that mean root directory
@@ -351,8 +351,9 @@ class ConfigHandler:
 
     def read(self) -> namedtuple:
         """
-        Read settings from a configuration file, validate them,
-        and generate a named tuple with key=value parameters.
+        Read settings from a configuration file.
+        Also, validate settings and generate a named tuple with key=value
+        parameters.
 
         Returns:
             Config (namedtuple): with key=value

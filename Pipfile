@@ -5,6 +5,9 @@ verify_ssl = true
 
 [dev-packages]
 flake8 = "*"
+flake8-import-order = "*"
+flake8-docstrings = "*"
+flake8-builtins = "*"
 pyflakes = "*"
 pycodestyle = "*"
 mccabe = "*"

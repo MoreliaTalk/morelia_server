@@ -18,6 +18,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
+
 import unittest
 from mod.config.validator import ConfigModel
 from pydantic.error_wrappers import ValidationError
@@ -44,6 +45,8 @@ class TestConfigValidator(unittest.TestCase):
                            folder=123156,
                            messages="1",
                            users=12345,
+                           max_version="1.9",
+                           min_version="0.9",
                            secret_key=123156)
         self.assertEqual(test.dict()["uri"], "123156")
         self.assertEqual(test.dict()["size_password"], 1)
@@ -58,6 +61,8 @@ class TestConfigValidator(unittest.TestCase):
         self.assertEqual(test.dict()["folder"], "123156")
         self.assertEqual(test.dict()["messages"], 1)
         self.assertEqual(test.dict()["users"], 12345)
+        self.assertEqual(test.dict()["max_version"], "1.9")
+        self.assertEqual(test.dict()["min_version"], "0.9")
         self.assertEqual(test.dict()["secret_key"], "123156")
 
     def test_not_valid_logging_section(self) -> None:
@@ -76,4 +81,6 @@ class TestConfigValidator(unittest.TestCase):
                           folder=123156,
                           messages="1",
                           users=12345,
+                          max_version="1.9",
+                          min_version="0.9",
                           secret_key=123156)

@@ -1,40 +1,31 @@
 """
-    Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the
-    full list.
+Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+Look at the file AUTHORS.md(located at the root of the project) to get the
+full list.
 
-    This file is part of Morelia Server.
+This file is part of Morelia Server.
 
-    Morelia Server is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Morelia Server is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    Morelia Server is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+Morelia Server is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Lesser General Public License
+along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
-# ************** Standart module *********************
 import json
 from typing import Union
-# ************** Standart module end *****************
 
-
-# ************** External module *********************
-import websocket
-# ************** External module end *****************
-
-
-# ************** Logging beginning *******************
 from loguru import logger
-from mod.logging import add_logging
-# ************** Logging end *************************
+import websocket
 
+from mod.logging import add_logging
 
 # logger on INFO
 add_logging(20)
@@ -52,78 +43,53 @@ auth_id = "6989f3f8d1b9c2fdf0bb858a5953d07c"
 
 GET_UPDATE = {
     "type": "get_update",
-    "data": {
-        "time": 111,
-        "user": [{
-            "uuid": uuid,
-            "auth_id": auth_id,
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
+    "data": {"time": 111,
+             "user": [{"uuid": uuid,
+                       "auth_id": auth_id}],
+             "meta": None},
+    "jsonapi": {"version": "1.0"},
     "meta": None
-    }
+}
 
 AUTH = {
     "type": "authentication",
-    "data": {
-        "user": [{
-            "password": user_password,
-            "login": user_login
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
+    "data": {"user": [{"password": user_password,
+                       "login": user_login}],
+             "meta": None},
+    "jsonapi": {"version": "1.0"},
     "meta": None
-    }
+}
 
 ADD_FLOW = {
     "type": "add_flow",
-    "data": {
-        "flow": [{
-            "uuid": None,
-            "type": "group",
-            "title": "title",
-            "info": "info",
-            "owner": uuid,
-            "users": [uuid]
-            }],
-        "user": [{
-            "uuid": uuid,
-            "auth_id": "auth_id",
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
+    "data": {"flow": [{"uuid": None,
+                       "type": "group",
+                       "title": "title",
+                       "info": "info",
+                       "owner": uuid,
+                       "users": [uuid]}],
+             "user": [{"uuid": uuid,
+                       "auth_id": "auth_id"}],
+             "meta": None},
+    "jsonapi": {"version": "1.0"},
     "meta": None
-    }
+}
 
 ALL_FLOW = {
     "type": "all_flow",
-    "data": {
-        "user": [{
-            "uuid": uuid,
-            "auth_id": "auth_id"
-            }],
-        "meta": None
-        },
-    "jsonapi": {
-        "version": "1.0"
-        },
+    "data": {"user": [{"uuid": uuid,
+                       "auth_id": "auth_id"}],
+             "meta": None},
+    "jsonapi": {"version": "1.0"},
     "meta": None
-    }
+}
 
 
 # Chat websocket
-def send_message(message: Union[dict, str] = AUTH, 
+def send_message(message: Union[dict, str] = AUTH,
                  uri: str = LOCALHOST) -> bytes:
-    """Sending a message via websockets, with a response
+    """
+    Sending a message via websockets, with a response.
 
     Args:
         message ([dict], required): message.
