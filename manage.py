@@ -123,9 +123,15 @@ def db_delete():
 
 
 @db_cli.command("user-create", help="Create user in database")
-@click.option("-l", "--login", default="".join(random.sample("abcdefghijklmnopqrstuvwxyz", 6)))
+@click.option("-l",
+              "--login",
+              default="".join(random.sample("abcdefghijklmnopqrstuvwxyz", 6)))
 @click.option("--username", default="User")
-@click.option("-p", "--password", default="".join(random.sample("abcdefghijklmnopqrstuvwxyz1234567890", 20)))
+@click.option("-p",
+              "--password",
+              default="".join(random.sample(
+                  "abcdefghijklmnopqrstuvwxyz1234567890", 20
+              )))
 def create_user(login: str, username: str, password: str):
     db = dbhandler.DBHandler(uri=config_option.uri)
     user_uuid = str(uuid4().int)
@@ -219,10 +225,10 @@ async def connect_ws_and_send(message, address: str):
 @click_async
 async def all_messages(ctx, t, address):
     kwargs = dict([item.strip('--').split('=') for item in ctx.args])
-    message: Request = mtp_api.Request.parse_file(pathlib.Path(__file__).parent /
-                                                  "tests" /
-                                                  "fixtures" /
-                                                  (t + ".json"))
+    message: Request = mtp_api.Request.parse_file(
+        pathlib.Path(__file__).parent / "tests" / "fixtures" / (t + ".json")
+    )
+
     message.data.user.append(mtp_api.BaseUser())
 
     mes_dict = message.dict()
@@ -236,7 +242,7 @@ async def all_messages(ctx, t, address):
             else:
                 kw_request += f'[{kw_sub}]'
 
-        data = exec(kw_request + f" = '{kwargs[kw]}'", {
+        exec(kw_request + f" = '{kwargs[kw]}'", {
             "__builtins__": {},
             "mes_dict": mes_dict
         })
