@@ -20,23 +20,23 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import asyncio
+from functools import wraps
 import pathlib
 import random
+from time import process_time
+from time import time
+from uuid import uuid4
+
 import click
 import uvicorn
 import websockets
 
-from functools import wraps
-from time import process_time
-from time import time
-from uuid import uuid4
 from mod import lib
 from mod.config.config import ConfigHandler
-from mod.db import dbhandler
-from mod.db.dbhandler import DBHandler
 from mod.db.dbhandler import DatabaseAccessError
 from mod.db.dbhandler import DatabaseReadError
 from mod.db.dbhandler import DatabaseWriteError
+from mod.db.dbhandler import DBHandler
 from mod.protocol.mtp import api as mtp_api
 from mod.protocol.mtp.api import Request
 
@@ -45,6 +45,15 @@ config_option = config.read()
 
 
 def click_async(f):
+    """
+    Wrapper to call the click function asynchronously.
+
+    Args:
+        f: function
+
+    Returns:
+        (wrapper)
+    """
     @wraps(f)
     def wrapper(*args, **kwargs):
         return asyncio.run(f(*args, **kwargs))
@@ -55,18 +64,24 @@ def click_async(f):
 @click.group()
 def cli():
     """
-    Group all command.
+    Group for all command.
     """
     pass
 
 
 @cli.group("db", help="manage database")
 def db_cli():
+    """
+    Group for db manipulation command.
+    """
     pass
 
 
 @cli.group("testclient", help="mini-client for server")
 def client_cli():
+    """
+    Group for client command.
+    """
     pass
 
 
@@ -81,6 +96,16 @@ def run(host: str,
         log_level: str,
         use_colors: bool,
         reload: bool):
+    """
+    Run server.
+
+    Args:
+        host(str): host for run
+        port(str):port for run
+        log_level(str): level logs
+        use_colors(bool): enable use colors in terminal
+        reload(bool): enable hot reload
+    """
     uvicorn.run(
         "server:app",
         host=host,
@@ -132,7 +157,15 @@ def db_delete():
                   "abcdefghijklmnopqrstuvwxyz1234567890", 20
               )))
 def create_user(login: str, username: str, password: str):
-    db = dbhandler.DBHandler(uri=config_option.uri)
+    """
+    Create user in database.
+
+    Args:
+        login(str): user login
+        username(str): username
+        password(str): user password
+    """
+    db = DBHandler(uri=config_option.uri)
     user_uuid = str(uuid4().int)
     try:
         db.add_user(uuid=user_uuid,
@@ -198,6 +231,13 @@ def admin_create_user(username,
 
 
 async def connect_ws_and_send(message, address: str):
+    """
+    Connect and send message to address.
+
+    Args:
+        message: message for send
+        address(str): server address
+    """
     try:
         ws = await websockets.connect(address)
     except ConnectionRefusedError:
@@ -222,7 +262,15 @@ async def connect_ws_and_send(message, address: str):
 @click.option("-a", "--address", default="ws://127.0.0.1:8080/ws")
 @click.pass_context
 @click_async
-async def all_messages(ctx, t, address):
+async def send(ctx, t, address):
+    """
+    Connect and send message protocol method.
+
+    Args:
+        ctx(click.context): click run context
+        t(str): type message protocol
+        address(str): server address
+    """
     kwargs = dict([item.strip('--').split('=') for item in ctx.args])
     message: Request = mtp_api.Request.parse_file(
         pathlib.Path(__file__).parent / "tests" / "fixtures" / (t + ".json")
