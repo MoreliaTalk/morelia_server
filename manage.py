@@ -22,15 +22,14 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 import asyncio
 import pathlib
 import random
-from functools import wraps
-from time import process_time
-from time import time
-from uuid import uuid4
-
 import click
 import uvicorn
 import websockets
 
+from functools import wraps
+from time import process_time
+from time import time
+from uuid import uuid4
 from mod import lib
 from mod.config.config import ConfigHandler
 from mod.db import dbhandler
