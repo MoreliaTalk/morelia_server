@@ -1,20 +1,43 @@
+"""
+Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+Look at the file AUTHORS.md(located at the root of the project) to get the
+full list.
+
+This file is part of Morelia Server.
+
+Morelia Server is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Morelia Server is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
+"""
+
 import asyncio
 import pathlib
 import random
 from functools import wraps
-from time import process_time, time
-from uuid import uuid4, UUID
+from time import process_time
+from time import time
+from uuid import uuid4
 
 import click
 import uvicorn
 import websockets
 
 from mod import lib
-from mod.db import dbhandler
-from mod.db.dbhandler import DatabaseWriteError
-from mod.db.dbhandler import DatabaseReadError
-from mod.db.dbhandler import DatabaseAccessError
 from mod.config.config import ConfigHandler
+from mod.db import dbhandler
+from mod.db.dbhandler import DBHandler
+from mod.db.dbhandler import DatabaseAccessError
+from mod.db.dbhandler import DatabaseReadError
+from mod.db.dbhandler import DatabaseWriteError
 from mod.protocol.mtp import api as mtp_api
 from mod.protocol.mtp.api import Request
 
@@ -32,6 +55,9 @@ def click_async(f):
 
 @click.group()
 def cli():
+    """
+    Group all command.
+    """
     pass
 
 
@@ -71,8 +97,12 @@ def run(host: str,
 
 @db_cli.command("create", help="Create all table with all data")
 def db_create():
+    """
+    Create database, and create all table which contain in models.
+    """
+
     start_time = process_time()
-    db = dbhandler.DBHandler(uri=config_option.uri)
+    db = DBHandler(uri=config_option.uri)
     db.create_table()
     click.echo(f'Table is created at: '
                f'{process_time() - start_time} sec.')
@@ -80,8 +110,13 @@ def db_create():
 
 @db_cli.command("delete", help="Delete all table with all data")
 def db_delete():
+    """
+    Delete all tables which contains data.
+    This function not delete database file.
+    """
+
     start_time = process_time()
-    db = dbhandler.DBHandler(uri=config_option.uri)
+    db = DBHandler(uri=config_option.uri)
     db.delete_table()
     click.echo(f'Table is deleted at: '
                f'{process_time() - start_time} sec.')
@@ -110,7 +145,11 @@ def create_user(login: str, username: str, password: str):
 
 @db_cli.command("flow-create", help="Create flow type group in database")
 def create_flow():
-    db = dbhandler.DBHandler(uri=config_option.uri)
+    """
+    Creating and adding test flow (group) in database.
+    """
+
+    db = DBHandler(uri=config_option.uri)
     user_uuid = str(123456789)
     try:
         new_user = db.get_user_by_uuid(uuid=user_uuid)
@@ -132,8 +171,17 @@ def create_flow():
 @db_cli.command("admin-create", help="Create user in admin panel")
 @click.option("--username", help="username admin")
 @click.option("--password", help="password admin")
-def admin_create_user(username, password):
-    db = dbhandler.DBHandler(uri=config_option.uri)
+def admin_create_user(username,
+                      password):
+    """
+    Create Admin user to management server with admin panel.
+
+    Args:
+        username: name of admin user
+        password: password of admin user
+    """
+
+    db = DBHandler(uri=config_option.uri)
 
     generator = lib.Hash(password,
                          str(uuid4().hex),

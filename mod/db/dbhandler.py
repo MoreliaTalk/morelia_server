@@ -1,42 +1,42 @@
 """
-    Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the
-    full list.
+Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+Look at the file AUTHORS.md(located at the root of the project) to get the
+full list.
 
-    This file is part of Morelia Server.
+This file is part of Morelia Server.
 
-    Morelia Server is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Morelia Server is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    Morelia Server is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+Morelia Server is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Lesser General Public License
+along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import sys
-import inspect
 from collections import namedtuple
+import inspect
+import sys
 
 import sqlobject as orm
-from sqlobject.sqlbuilder import AND
+from sqlobject import SQLObject
 from sqlobject.main import SQLObjectIntegrityError
 from sqlobject.main import SQLObjectNotFound
+from sqlobject.sqlbuilder import AND
 from sqlobject.sresults import SelectResults
-from sqlobject import SQLObject
 
 from mod.db import models
 
 
 class DatabaseReadError(SQLObjectNotFound):
     """
-    Occurs when there is no table in the database, there was a problem at
-    the stage of reading from database.
+    Occurs when there is no table in the database.
+    There was a problem at the stage of reading from database.
     """
 
 
@@ -108,8 +108,7 @@ class DBHandler:
 
     def __repr__(self) -> str:
         """
-        Return string which contains name of created class and parameters send
-        to class object when is created.
+        Return name class name and parameters send to class when is created.
 
         Returns:
             (str): Class __name__: debug=, logger=, loglevel=
@@ -122,7 +121,7 @@ class DBHandler:
 
     def __search_db_in_models(self) -> tuple:
         """
-        Search all class name which contains in models.py
+        Search all class name which contains in models.
 
         Returns:
             (tuple): name of table
@@ -135,7 +134,7 @@ class DBHandler:
 
     def create_table(self) -> None:
         """
-        Create all table which contains in models.py
+        Create all table which contains in models.
 
         Returns:
             (None):
@@ -149,7 +148,7 @@ class DBHandler:
 
     def delete_table(self) -> None:
         """
-        Delete all table which contains in models.py
+        Delete all table which contains in models.
 
         Returns:
             (None):
@@ -353,8 +352,8 @@ class DBHandler:
                  salt: bytes = None,
                  key: bytes = None) -> SQLObject:
         """
-        Added new user to the UserConfig table,
-        if salt or key is None then used blank string converted to bytes.
+        Added new user to the UserConfig table.
+        If salt or key is None then used blank string converted to bytes.
 
         Args:
             uuid (str): unique user identify number
@@ -364,6 +363,7 @@ class DBHandler:
             username (str): public username
             is_bot (bool): type of user
             auth_id (str): authenticate token
+            token_ttl (int): time to live auth_id token
             email (str): user email
             avatar (bytes): user image or photo
             bio (str): text information about user
@@ -410,7 +410,7 @@ class DBHandler:
                     key: bytes = None,
                     salt: bytes = None) -> str:
         """
-        Updating information in the table UserConfig
+        Updating information in the table UserConfig.
 
         Args:
             uuid (str): unique user identify number
@@ -420,6 +420,7 @@ class DBHandler:
             username (str): public username
             is_bot (bool): type of user
             auth_id (str): authenticate token
+            token_ttl (int): time to live auth_id token
             email (str): user email
             avatar (bytes): user image or photo
             bio (str): text information about user
@@ -430,6 +431,7 @@ class DBHandler:
             (str): message "Updated"
 
         """
+
         dbquery = self.__read_db(table="UserConfig",
                                  get_one=True,
                                  uuid=uuid)
@@ -501,8 +503,7 @@ class DBHandler:
     def get_message_by_text(self,
                             text: str) -> SelectResults:
         """
-        Gives out all message which contains in Message table and contain
-        desired text string.
+        Gives out all message which contains desired text string.
 
         Args:
             text (str): text string to be found

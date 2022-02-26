@@ -89,7 +89,7 @@ class TestController(unittest.TestCase):
         run_handler = MainHandler(self.test,
                                   self.db,
                                   protocol='mtp')
-        result = json.loads(run_handler.mtp_handler())
+        result = json.loads(run_handler._mtp_handler())
         self.assertEqual(result['errors']['status'], 'OK')
         self.assertEqual(result['type'], 'get_update')
 

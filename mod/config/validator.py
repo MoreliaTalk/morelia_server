@@ -1,32 +1,30 @@
 """
-    Copyright (c) 2022 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the
-    full list.
+Copyright (c) 2022 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+Look at the file AUTHORS.md(located at the root of the project) to get the
+full list.
 
-    This file is part of Morelia Server.
+This file is part of Morelia Server.
 
-    Morelia Server is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Morelia Server is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    Morelia Server is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+Morelia Server is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Lesser General Public License
+along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
 from pydantic import BaseModel
-from typing import Any
 
 
 class ConfigModel(BaseModel):
     """
-    Describe the validation scheme for config.ini file which contain all
-    server settings.
+    Validation scheme for configuration file.
     """
 
     class Config:
@@ -58,5 +56,8 @@ class ConfigModel(BaseModel):
     # Server limit section
     messages: int
     users: int
+    # API version section
+    max_version: str
+    min_version: str
     # Admin section
     secret_key: str
