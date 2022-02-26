@@ -1,8 +1,9 @@
 import asyncio
 import pathlib
+import random
 from functools import wraps
 from time import process_time, time
-from uuid import uuid4
+from uuid import uuid4, UUID
 
 import click
 import uvicorn
@@ -86,22 +87,25 @@ def db_delete():
                f'{process_time() - start_time} sec.')
 
 
-@db_cli.command("superuser-create", help="Create superuser in database")
-def create_superuser():
+@db_cli.command("user-create", help="Create user in database")
+@click.option("-l", "--login", default="".join(random.sample("abcdefghijklmnopqrstuvwxyz", 6)))
+@click.option("--username", default="User")
+@click.option("-p", "--password", default="".join(random.sample("abcdefghijklmnopqrstuvwxyz1234567890", 20)))
+def create_user(login: str, username: str, password: str):
     db = dbhandler.DBHandler(uri=config_option.uri)
-    user_uuid = str(123456789)
-    hash_password = config.SUPERUSER.get('hash_password')
+    user_uuid = str(uuid4().int)
     try:
         db.add_user(uuid=user_uuid,
-                    login="login",
-                    password="password",
-                    hash_password=hash_password,
-                    username="superuser",
+                    login=login,
+                    password=password,
+                    hash_password=lib.Hash(password, user_uuid).hash_password,
+                    username=username,
                     salt=b"salt",
                     key=b"key")
-        click.echo("Superuser created")
     except DatabaseWriteError as error:
-        click.echo(f'Failed to create a user. Error text: {error}')
+        click.echo(f"Failed to create a user. Error text: {error}")
+    else:
+        click.echo(f"User created, login: {login}, password: {password}")
 
 
 @db_cli.command("flow-create", help="Create flow type group in database")
