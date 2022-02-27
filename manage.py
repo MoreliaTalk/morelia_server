@@ -301,21 +301,23 @@ async def send(ctx, t, address):
 
     message.data.user.append(mtp_api.BaseUser())
 
-    mes_dict = message.dict()
+    message_dict = message.dict()
     for kw in kwargs:
-        kw_request = "mes_dict"
-        for kw_sub in kw.split("."):
+        request_to_message_dict = "request_to_message_dict"
+        for element in kw.split("."):
             try:
-                kw_sub = int(kw_sub)
+                element = int(element)
             except ValueError:
-                kw_request += f'["{kw_sub}"]'
+                request_to_message_dict += f'["{element}"]'
             else:
-                kw_request += f'[{kw_sub}]'
+                request_to_message_dict += f'[{element}]'
 
-        exec(kw_request + f" = '{kwargs[kw]}'", {
+        exec(request_to_message_dict + f" = '{kwargs[kw]}'", {
             "__builtins__": {},
-            "mes_dict": mes_dict
+            "request_to_message_dict": request_to_message_dict
         })
+
+    message = mtp_api.Request.parse_obj(message_dict)
 
     await connect_ws_and_send(message, address)
 
