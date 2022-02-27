@@ -105,6 +105,7 @@ def run(host: str,
         log_level(str): level logs
         use_colors(bool): enable use colors in terminal
         reload(bool): enable hot reload
+
     """
     uvicorn.run(
         "server:app",
