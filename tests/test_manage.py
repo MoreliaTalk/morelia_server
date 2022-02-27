@@ -24,16 +24,5 @@ class CreateUser(unittest.TestCase):
         self.assertEqual(result.output, f"{username} created, login: {login}, password: {password}\n")
 
 
-class CreateFlow(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.runner = CliRunner()
-
-    def test_create_flow(self):
-        result = self.runner.invoke(manage.create_flow)
-        self.assertEqual(result.exit_code, 0)
-        self.assertEqual(result.output, "Flow created")
-
-
 if __name__ == "__main__":
     unittest.main()
