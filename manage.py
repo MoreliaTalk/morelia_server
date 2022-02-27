@@ -105,8 +105,8 @@ def run(host: str,
         log_level(str): level logs
         use_colors(bool): enable use colors in terminal
         reload(bool): enable hot reload
-
     """
+
     uvicorn.run("server:app",
                 host=host,
                 port=port,
@@ -164,6 +164,7 @@ def create_user(login: str, username: str, password: str):
         username(str): username
         password(str): user password
     """
+
     db = DBHandler(uri=config_option.uri)
     user_uuid = str(uuid4().int)
     try:
@@ -270,6 +271,7 @@ async def send(ctx, t, address):
         t(str): type message protocol
         address(str): server address
     """
+
     kwargs = dict([item.strip('--').split('=') for item in ctx.args])
     message: Request = mtp_api.Request.parse_file(
         pathlib.Path(__file__).parent / "tests" / "fixtures" / (t + ".json")
