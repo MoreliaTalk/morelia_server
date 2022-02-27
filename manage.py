@@ -145,7 +145,9 @@ def db_delete():
                f'{process_time() - start_time} sec.')
 
 
-@db_cli.command("user-create", help="Create user in database")
+@db_cli.command("user-create", help="Creates a user in the database, \
+                                     if login and password are empty, \
+                                     then generates them randomly")
 @click.option("-l",
               "--login",
               default="".join(random.sample("abcdefghijklmnopqrstuvwxyz", 6)))
