@@ -48,6 +48,29 @@ SYMBOLS_FOR_RANDOM = "abcdefghijklmnopqrstuvwxyz \
                       1234567890"
 
 
+async def connect_ws_and_send(message, address: str):
+    """
+    Connect and send message to address.
+
+    Args:
+        message: message for send
+        address(str): server address
+    """
+    try:
+        ws = await websockets.connect(address)
+    except ConnectionRefusedError:
+        click.echo("Unable to connect to the server, please check the server")
+    else:
+        await ws.send(message.json())
+        try:
+            response = await ws.recv()
+        except websockets.ConnectionClosedError as error:
+            click.echo(f"Server disconnected not normal, error: {error}")
+        else:
+            click.echo(response)
+            await ws.close()
+
+
 def click_async(func):
     """
     Wrapper to call the click function asynchronously.
@@ -58,6 +81,7 @@ def click_async(func):
     Returns:
         (wrapper)
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         return asyncio.run(func(*args, **kwargs))
@@ -234,29 +258,6 @@ def admin_create_user(username,
     db.add_admin(username=username,
                  hash_password=generator.password_hash())
     click.echo(f"Admin created\nusername: {username}\npassword: {password}")
-
-
-async def connect_ws_and_send(message, address: str):
-    """
-    Connect and send message to address.
-
-    Args:
-        message: message for send
-        address(str): server address
-    """
-    try:
-        ws = await websockets.connect(address)
-    except ConnectionRefusedError:
-        click.echo("Unable to connect to the server, please check the server")
-    else:
-        await ws.send(message.json())
-        try:
-            response = await ws.recv()
-        except websockets.ConnectionClosedError as error:
-            click.echo(f"Server disconnected not normal, error: {error}")
-        else:
-            click.echo(response)
-            await ws.close()
 
 
 @client_cli.command("send", help="send message to server",
