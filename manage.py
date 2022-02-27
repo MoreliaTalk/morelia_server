@@ -278,7 +278,6 @@ def admin_create_user(username,
                                  "edited_message",
                                  "ping_pong",
                                  "error")),
-              case_sensitive=False,
               help="type message mtp protocol",
               default="send_message")
 @click.option("-a", "--address", default="ws://127.0.0.1:8080/ws")
