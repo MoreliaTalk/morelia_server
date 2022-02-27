@@ -107,17 +107,15 @@ def run(host: str,
         reload(bool): enable hot reload
 
     """
-    uvicorn.run(
-        "server:app",
-        host=host,
-        port=port,
-        http="h11",
-        ws="websockets",
-        log_level=log_level,
-        use_colors=use_colors,
-        debug=True,
-        reload=reload
-    )
+    uvicorn.run("server:app",
+                host=host,
+                port=port,
+                http="h11",
+                ws="websockets",
+                log_level=log_level,
+                use_colors=use_colors,
+                debug=True,
+                reload=reload)
 
 
 @db_cli.command("create", help="Create all table with all data")
