@@ -13,7 +13,7 @@ class CreateUser(unittest.TestCase):
     def test_create_user(self):
         username = "UserHello"
         login = "login123"
-        password = "password123"
+        password = "password1233"
         result = self.runner.invoke(manage.create_user, ["--username",
                                                          f"{username}",
                                                          "--login",
