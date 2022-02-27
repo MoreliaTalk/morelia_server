@@ -260,11 +260,10 @@ def admin_create_user(username,
     click.echo(f"Admin created\nusername: {username}\npassword: {password}")
 
 
-@client_cli.command("send", help="send message to server",
-                    context_settings=dict(
-                        ignore_unknown_options=True,
-                        allow_extra_args=True,
-                    ))
+@client_cli.command("send",
+                    help="send message to server",
+                    context_settings=dict(ignore_unknown_options=True,
+                                          allow_extra_args=True))
 @click.option("-t", help="type message mtp protocol", default="send_message")
 @click.option("-a", "--address", default="ws://127.0.0.1:8080/ws")
 @click.pass_context
