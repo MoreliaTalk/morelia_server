@@ -68,7 +68,7 @@ async def connect_ws_and_send(message, address: str):
             click.echo(f"Server disconnected not normal, error: {error}")
         else:
             click.echo(response)
-            await ws.close()
+            await ws.close(1000)
 
 
 def click_async(func):
