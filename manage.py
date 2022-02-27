@@ -273,7 +273,7 @@ async def send(ctx, t, address):
     Connect and send message protocol method.
 
     Args:
-        ctx(click.context): click run context
+        ctx(click.context): click call context
         t(str): type message protocol
         address(str): server address
     """
