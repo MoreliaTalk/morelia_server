@@ -280,7 +280,7 @@ async def send(ctx, t, address):
     """
 
     kwargs = dict([item.strip('--').split('=') for item in ctx.args])
-    message: Request = mtp_api.Request.parse_file(
+    message = mtp_api.Request.parse_file(
         Path(Path(__file__).parent, "tests", "fixtures", join(t, ".json"))
     )
 
