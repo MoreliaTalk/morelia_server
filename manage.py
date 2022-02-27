@@ -39,7 +39,6 @@ from mod.db.dbhandler import DatabaseReadError
 from mod.db.dbhandler import DatabaseWriteError
 from mod.db.dbhandler import DBHandler
 from mod.protocol.mtp import api as mtp_api
-from mod.protocol.mtp.api import Request
 
 config = ConfigHandler()
 config_option = config.read()
