@@ -43,6 +43,10 @@ from mod.protocol.mtp.api import Request
 config = ConfigHandler()
 config_option = config.read()
 
+SYMBOLS_FOR_RANDOM = "abcdefghijklmnopqrstuvwxyz \
+                      ABCDEFGHIJKLMNOPQRSTUVWXYZ \
+                      1234567890"
+
 
 def click_async(func):
     """
@@ -150,12 +154,12 @@ def db_delete():
                                      then generates them randomly")
 @click.option("-l",
               "--login",
-              default="".join(random.sample("abcdefghijklmnopqrstuvwxyz", 6)))
+              default="".join(random.sample(SYMBOLS_FOR_RANDOM, 6)))
 @click.option("--username", default="User")
 @click.option("-p",
               "--password",
               default="".join(random.sample(
-                  "abcdefghijklmnopqrstuvwxyz1234567890", 20
+                  SYMBOLS_FOR_RANDOM, 20
               )))
 def create_user(login: str, username: str, password: str):
     """
@@ -180,7 +184,7 @@ def create_user(login: str, username: str, password: str):
     except DatabaseWriteError as error:
         click.echo(f"Failed to create a user. Error text: {error}")
     else:
-        click.echo(f"User created, login: {login}, password: {password}")
+        click.echo(f"{username} created, login: {login}, password: {password}")
 
 
 @db_cli.command("flow-create", help="Create flow type group in database")
