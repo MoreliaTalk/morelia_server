@@ -19,11 +19,18 @@ You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
+import asyncio
+from functools import wraps
+from os.path import join
+from pathlib import Path
+import random
 from time import process_time
 from time import time
 from uuid import uuid4
 
 import click
+import uvicorn
+import websockets
 
 from mod import lib
 from mod.config.config import ConfigHandler
@@ -31,21 +38,115 @@ from mod.db.dbhandler import DatabaseAccessError
 from mod.db.dbhandler import DatabaseReadError
 from mod.db.dbhandler import DatabaseWriteError
 from mod.db.dbhandler import DBHandler
-
+from mod.protocol.mtp import api as mtp_api
 
 config = ConfigHandler()
 config_option = config.read()
+
+SYMBOLS_FOR_RANDOM = "abcdefghijklmnopqrstuvwxyz \
+                      ABCDEFGHIJKLMNOPQRSTUVWXYZ \
+                      1234567890"
+
+
+async def connect_ws_and_send(message, address: str):
+    """
+    Connect and send message to address.
+
+    Args:
+        message: message for send
+        address(str): server address
+    """
+    try:
+        ws = await websockets.connect(address)
+    except ConnectionRefusedError:
+        click.echo("Unable to connect to the server, please check the server")
+    else:
+        await ws.send(message.json())
+        try:
+            response = await ws.recv()
+        except websockets.ConnectionClosedError as error:
+            click.echo(f"Server disconnected not normal, error: {error}")
+        else:
+            click.echo(response)
+            await ws.close(1000)
+
+
+def click_async(func):
+    """
+    Wrapper to call the click function asynchronously.
+
+    Args:
+        func: function
+
+    Returns:
+        (wrapper)
+    """
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        return asyncio.run(func(*args, **kwargs))
+
+    return wrapper
 
 
 @click.group()
 def cli():
     """
-    Group all command.
+    Group for all command.
     """
     pass
 
 
-@cli.command("db-create", help="Create all table with all data")
+@cli.group("db", help="manage database")
+def db_cli():
+    """
+    Group for db manipulation command.
+    """
+    pass
+
+
+@cli.group("testclient", help="mini-client for server")
+def client_cli():
+    """
+    Group for client command.
+    """
+    pass
+
+
+@cli.command("runserver", help="run app using the dev server")
+@click.option("-h", "--host", default="localhost")
+@click.option("-p", "--port", default=8080)
+@click.option("--log-level", default="debug")
+@click.option("--use-colors", default=True)
+@click.option("-r", "--reload", default=True)
+def run(host: str,
+        port: int,
+        log_level: str,
+        use_colors: bool,
+        reload: bool):
+    """
+    Run server.
+
+    Args:
+        host(str): host for run
+        port(str):port for run
+        log_level(str): level logs
+        use_colors(bool): enable use colors in terminal
+        reload(bool): enable hot reload
+    """
+
+    uvicorn.run("server:app",
+                host=host,
+                port=port,
+                http="h11",
+                ws="websockets",
+                log_level=log_level,
+                use_colors=use_colors,
+                debug=True,
+                reload=reload)
+
+
+@db_cli.command("create", help="Create all table with all data")
 def db_create():
     """
     Create database, and create all table which contain in models.
@@ -58,7 +159,7 @@ def db_create():
                f'{process_time() - start_time} sec.')
 
 
-@cli.command("db-delete", help="Delete all table with all data")
+@db_cli.command("delete", help="Delete all table with all data")
 def db_delete():
     """
     Delete all tables which contains data.
@@ -72,29 +173,45 @@ def db_delete():
                f'{process_time() - start_time} sec.')
 
 
-@cli.command("superuser-create", help="Create superuser in database")
-def create_superuser():
+@db_cli.command("user-create", help="Creates a user in the database, \
+                                     if login and password are empty, \
+                                     then generates them randomly")
+@click.option("-l",
+              "--login",
+              default="".join(random.sample(SYMBOLS_FOR_RANDOM, 6)))
+@click.option("--username", default="User")
+@click.option("-p",
+              "--password",
+              default="".join(random.sample(
+                  SYMBOLS_FOR_RANDOM, 20
+              )))
+def create_user(login: str, username: str, password: str):
     """
-    Creating user who has all rights of management server with admin panel.
+    Create user in database.
+
+    Args:
+        login(str): user login
+        username(str): username
+        password(str): user password
     """
 
     db = DBHandler(uri=config_option.uri)
-    user_uuid = str(123456789)
-    hash_password = 'hash_password'
+    user_uuid = str(uuid4().int)
     try:
         db.add_user(uuid=user_uuid,
-                    login="login",
-                    password="password",
-                    hash_password=hash_password,
-                    username="superuser",
+                    login=login,
+                    password=password,
+                    hash_password=lib.Hash(password, user_uuid).hash_password,
+                    username=username,
                     salt=b"salt",
                     key=b"key")
-        click.echo("Superuser created")
     except DatabaseWriteError as error:
-        click.echo(f'Failed to create a user. Error text: {error}')
+        click.echo(f"Failed to create a user. Error text: {error}")
+    else:
+        click.echo(f"{username} created, login: {login}, password: {password}")
 
 
-@cli.command("flow-create", help="Create flow type group in database")
+@db_cli.command("flow-create", help="Create flow type group in database")
 def create_flow():
     """
     Creating and adding test flow (group) in database.
@@ -119,7 +236,7 @@ def create_flow():
         click.echo(f'Failed to create a flow. Error text: {error}')
 
 
-@cli.command("admin-create", help="Create user in admin panel")
+@db_cli.command("admin-create", help="Create user in admin panel")
 @click.option("--username", help="username admin")
 @click.option("--password", help="password admin")
 def admin_create_user(username,
@@ -141,6 +258,67 @@ def admin_create_user(username,
     db.add_admin(username=username,
                  hash_password=generator.password_hash())
     click.echo(f"Admin created\nusername: {username}\npassword: {password}")
+
+
+@client_cli.command("send",
+                    help="send message to server",
+                    context_settings=dict(ignore_unknown_options=True,
+                                          allow_extra_args=True))
+@click.option("-t",
+              type=click.Choice(("register_user",
+                                 "get_update",
+                                 "send_message",
+                                 "all_messages",
+                                 "add_flow",
+                                 "all_flow",
+                                 "user_info",
+                                 "authentication",
+                                 "delete_user",
+                                 "delete_message",
+                                 "edited_message",
+                                 "ping_pong",
+                                 "error")),
+              help="type message mtp protocol",
+              default="send_message")
+@click.option("-a", "--address", default="ws://127.0.0.1:8080/ws")
+@click.pass_context
+@click_async
+async def send(ctx, t, address):
+    """
+    Connect and send message protocol method.
+
+    Args:
+        ctx(click.context): click call context
+        t(str): type message protocol
+        address(str): server address
+    """
+
+    kwargs = dict([item.strip('--').split('=') for item in ctx.args])
+    message = mtp_api.Request.parse_file(
+        Path(Path(__file__).parent, "tests", "fixtures", join(t, ".json"))
+    )
+
+    message.data.user.append(mtp_api.BaseUser())
+
+    message_dict = message.dict()
+    for kw in kwargs:
+        request_to_message_dict = "request_to_message_dict"
+        for element in kw.split("."):
+            try:
+                element = int(element)
+            except ValueError:
+                request_to_message_dict += f'["{element}"]'
+            else:
+                request_to_message_dict += f'[{element}]'
+
+        exec(request_to_message_dict + f" = '{kwargs[kw]}'", {
+            "__builtins__": {},
+            "request_to_message_dict": request_to_message_dict
+        })
+
+    message = mtp_api.Request.parse_obj(message_dict)
+
+    await connect_ws_and_send(message, address)
 
 
 if __name__ == "__main__":
