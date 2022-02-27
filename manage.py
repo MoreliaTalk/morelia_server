@@ -265,7 +265,7 @@ def admin_create_user(username,
                         ignore_unknown_options=True,
                         allow_extra_args=True,
                     ))
-@click.option("-t", default="send_message")
+@click.option("-t", help="type message mtp protocol", default="send_message")
 @click.option("-a", "--address", default="ws://127.0.0.1:8080/ws")
 @click.pass_context
 @click_async
