@@ -44,19 +44,19 @@ config = ConfigHandler()
 config_option = config.read()
 
 
-def click_async(f):
+def click_async(func):
     """
     Wrapper to call the click function asynchronously.
 
     Args:
-        f: function
+        func: function
 
     Returns:
         (wrapper)
     """
-    @wraps(f)
+    @wraps(func)
     def wrapper(*args, **kwargs):
-        return asyncio.run(f(*args, **kwargs))
+        return asyncio.run(func(*args, **kwargs))
 
     return wrapper
 
