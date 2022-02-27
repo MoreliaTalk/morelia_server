@@ -264,7 +264,23 @@ def admin_create_user(username,
                     help="send message to server",
                     context_settings=dict(ignore_unknown_options=True,
                                           allow_extra_args=True))
-@click.option("-t", help="type message mtp protocol", default="send_message")
+@click.option("-t",
+              type=click.Choice(("register_user",
+                                 "get_update",
+                                 "send_message",
+                                 "all_messages",
+                                 "add_flow",
+                                 "all_flow",
+                                 "user_info",
+                                 "authentication",
+                                 "delete_user",
+                                 "delete_message",
+                                 "edited_message",
+                                 "ping_pong",
+                                 "error")),
+              case_sensitive=False,
+              help="type message mtp protocol",
+              default="send_message")
 @click.option("-a", "--address", default="ws://127.0.0.1:8080/ws")
 @click.pass_context
 @click_async
