@@ -301,6 +301,8 @@ python -m pdb ./debug_server.py
 
 ## Контакты ##
 
+[Telegram](https://t.me/joinchat/LImHShzAmIWvpMxDTr5Vxw) - группа где обсуждаются насущные вопросы.
+
 [Slack](moreliatalk.slack.com) - обсуждение проекта.
 
 ## Лицензия ##
