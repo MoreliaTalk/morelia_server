@@ -25,14 +25,13 @@ from fastapi import Depends
 from fastapi.applications import FastAPI
 from fastapi.requests import Request
 from fastapi.templating import Jinja2Templates
-from starlette.responses import RedirectResponse
+from fastapi.responses import RedirectResponse
 
 from mod.config.config import ConfigHandler
 from mod.db.dbhandler import DBHandler
-from . import control as manage
-from . import login
-from . import logs
-
+import control as manage
+import login
+import logs
 
 app = FastAPI()
 
