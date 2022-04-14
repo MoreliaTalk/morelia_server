@@ -29,9 +29,9 @@ from fastapi.responses import RedirectResponse
 
 from mod.config.config import ConfigHandler
 from mod.db.dbhandler import DBHandler
-import control as manage
-import login
-import logs
+from admin import control as manage
+from admin import login
+from admin import logs
 
 app = FastAPI()
 

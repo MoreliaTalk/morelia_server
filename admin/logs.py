@@ -23,7 +23,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi.requests import Request
 
-import login
+from admin import login
 
 router = APIRouter()
 
