@@ -30,6 +30,7 @@ from pydantic import EmailStr
 VERSION = '1.0'
 REVISION = '17'
 
+
 # A description of the basic validation scheme for requests and responses.
 
 
@@ -135,7 +136,8 @@ class FlowRequest(BaseFlow):
         """
 
         title = 'List of flow with UUID is str or None'
-    uuid: Optional[str] = None
+
+    uuid: str = None
 
 
 class UserRequest(BaseUser):
@@ -194,9 +196,9 @@ class ErrorsRequest(BaseErrors):
 
         title = 'Error information'
 
-    code: Optional[int] = None
-    status: Optional[str] = None
-    time: Optional[int] = None
+    code: int = None
+    status: str = None
+    time: int = None
 
 
 class VersionRequest(BaseVersion):
@@ -225,7 +227,7 @@ class Request(BaseValidator):
         title = 'MoreliaTalk protocol (for request)'
 
     data: Optional[DataRequest] = None
-    errors: Optional[ErrorsRequest] = None
+    errors: ErrorsRequest = None
 
 
 # Description of the response validation scheme
@@ -271,7 +273,7 @@ class MessageResponse(BaseMessage):
 
         title = 'List of message information without client_id'
 
-    client_id: Optional[int] = None
+    client_id: int = None
 
 
 class DataResponse(BaseData):
@@ -334,4 +336,4 @@ class Response(BaseValidator):
         use_enum_values = False
 
     data: Optional[DataResponse] = None
-    errors: Optional[ErrorsResponse] = None
+    errors: ErrorsResponse = None

@@ -22,6 +22,7 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 from collections import namedtuple
 import json
 from time import time
+from typing import Optional, Union
 from uuid import uuid4
 
 from loguru import logger
@@ -56,7 +57,7 @@ class MTPErrorResponse:
 
     def __init__(self,
                  status: str,
-                 add_info: Exception | str = None) -> None:
+                 add_info: Optional[Exception | str] = None) -> None:
         self.status = status
         self.detail = add_info
 
@@ -84,6 +85,7 @@ class MTPErrorResponse:
             code = catch_error.code
             status = catch_error.status
             time_ = int(time())
+            detail: Union[Exception, str]
             if self.detail is None:
                 detail = catch_error.detail
             else:

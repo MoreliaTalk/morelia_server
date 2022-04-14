@@ -22,7 +22,7 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 from collections import namedtuple
 from enum import IntEnum
 from http import HTTPStatus
-from typing import NamedTuple
+from typing import NamedTuple, Any
 
 
 class ServerStatus(IntEnum):
@@ -68,7 +68,7 @@ class ServerStatus(IntEnum):
                                'Full description: Invalid SSL Certificate')
 
 
-def check_error_pattern(status: str) -> NamedTuple:
+def check_error_pattern(status: str) -> Any:
     """
     Checks error name against existing error types supported by server.
     The error name is passed as a "status" parameter.
