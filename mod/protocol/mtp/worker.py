@@ -22,7 +22,7 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 from collections import namedtuple
 import json
 from time import time
-from typing import Optional, Union
+from typing import Optional, Union, List, Any
 from uuid import uuid4
 
 from loguru import logger
@@ -173,7 +173,7 @@ class MTProtocol:
 
     def _check_auth(self,
                     uuid: str,
-                    auth_id: str) -> namedtuple:
+                    auth_id: str) -> Any:
         """
         Checking user authentication every each request.
 
