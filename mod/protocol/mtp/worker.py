@@ -835,7 +835,7 @@ class MTProtocol:
 
     def _errors(self,
                 status: str = None,
-                add_info: Exception | str = None,
+                add_info: Union[Exception, str, None] = None,
                 request: api.Request = None) -> api.Response:
         """
         Handles cases when a request to server is not recognized by it.

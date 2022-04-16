@@ -39,14 +39,14 @@ class BaseFlow(BaseModel):
     Base class describes validation of the Flow object.
     """
 
-    time: Optional[int] = None
-    type: Optional[str] = None  # noqa
-    title: Optional[str] = None
-    info: Optional[str] = None
-    owner: Optional[str] = None
-    users: Optional[List] = None
-    message_start: Optional[int] = None
-    message_end: Optional[int] = None
+    time: Optional[int]
+    type: Optional[str]  # noqa
+    title: Optional[str]
+    info: Optional[str]
+    owner: Optional[str]
+    users: Optional[List]
+    message_start: Optional[int]
+    message_end: Optional[int]
 
 
 class BaseUser(BaseModel):
@@ -54,16 +54,16 @@ class BaseUser(BaseModel):
     Base class describes validation of the User object.
     """
 
-    uuid: Optional[str] = None
-    login: Optional[str] = None
-    username: Optional[str] = None
-    bio: Optional[str] = None
-    avatar: Optional[bytes] = None
-    password: Optional[str] = None
-    is_bot: Optional[bool] = None
-    auth_id: Optional[str] = None
-    token_ttl: Optional[int] = None
-    email: Optional[EmailStr] = None
+    uuid: Optional[str]
+    login: Optional[str]
+    username: Optional[str]
+    bio: Optional[str]
+    avatar: Optional[bytes]
+    password: Optional[str]
+    is_bot: Optional[bool]
+    auth_id: Optional[str]
+    token_ttl: Optional[int]
+    email: Optional[EmailStr]
 
 
 class BaseMessage(BaseModel):
@@ -72,17 +72,17 @@ class BaseMessage(BaseModel):
     """
 
     uuid: str
-    text: Optional[str] = None
-    from_user: Optional[str] = None
-    time: Optional[int] = None
-    from_flow: Optional[str] = None
-    file_picture: Optional[bytes] = None
-    file_video: Optional[bytes] = None
-    file_audio: Optional[bytes] = None
-    file_document: Optional[bytes] = None
-    emoji: Optional[bytes] = None
-    edited_time: Optional[int] = None
-    edited_status: Optional[bool] = None
+    text: Optional[str]
+    from_user: Optional[str]
+    time: Optional[int]
+    from_flow: Optional[str]
+    file_picture: Optional[bytes]
+    file_video: Optional[bytes]
+    file_audio: Optional[bytes]
+    file_document: Optional[bytes]
+    emoji: Optional[bytes]
+    edited_time: Optional[int]
+    edited_status: Optional[bool]
 
 
 class BaseData(BaseModel):
@@ -90,9 +90,9 @@ class BaseData(BaseModel):
     Base class describes validation of the Data object.
     """
 
-    time: Optional[int] = None
-    user: Optional[List[BaseUser]] = None
-    meta: Optional[Any] = None
+    time: Optional[int]
+    user: Optional[List[BaseUser]]
+    meta: Optional[Any]
 
 
 class BaseErrors(BaseModel):
@@ -100,7 +100,7 @@ class BaseErrors(BaseModel):
     Base class describes validation of the Errors object.
     """
 
-    detail: Optional[str] = None
+    detail: Optional[str]
 
 
 class BaseVersion(BaseModel):
@@ -109,7 +109,7 @@ class BaseVersion(BaseModel):
     """
 
     version: str
-    revision: Optional[str] = None
+    revision: Optional[str]
 
 
 class BaseValidator(BaseModel):
@@ -119,7 +119,7 @@ class BaseValidator(BaseModel):
 
     type: str  # noqa
     jsonapi: BaseVersion
-    meta: Optional[Any] = None
+    meta: Optional[Any]
 
 
 # Description of the request validation scheme
@@ -137,7 +137,7 @@ class FlowRequest(BaseFlow):
 
         title = 'List of flow with UUID is str or None'
 
-    uuid: Optional[str] = None
+    uuid: Optional[str]
 
 
 class UserRequest(BaseUser):
@@ -180,8 +180,8 @@ class DataRequest(BaseData):
 
         title = 'Main data-object'
 
-    flow: Optional[List[FlowRequest]] = None
-    message: Optional[List[MessageRequest]] = None
+    flow: Optional[List[FlowRequest]]
+    message: Optional[List[MessageRequest]]
 
 
 class ErrorsRequest(BaseErrors):
@@ -196,9 +196,9 @@ class ErrorsRequest(BaseErrors):
 
         title = 'Error information'
 
-    code: Optional[int] = None
-    status: Optional[str] = None
-    time: Optional[int] = None
+    code: Optional[int]
+    status: Optional[str]
+    time: Optional[int]
 
 
 class VersionRequest(BaseVersion):
@@ -226,8 +226,8 @@ class Request(BaseValidator):
 
         title = 'MoreliaTalk protocol (for request)'
 
-    data: Optional[DataRequest] = None
-    errors: Optional[ErrorsRequest] = None
+    data: Optional[DataRequest]
+    errors: Optional[ErrorsRequest]
 
 
 # Description of the response validation scheme
@@ -273,7 +273,7 @@ class MessageResponse(BaseMessage):
 
         title = 'List of message information without client_id'
 
-    client_id: Optional[int] = None
+    client_id: Optional[int]
 
 
 class DataResponse(BaseData):
@@ -288,8 +288,8 @@ class DataResponse(BaseData):
 
         title = 'Main data-object'
 
-    flow: Optional[List[FlowResponse]] = None
-    message: Optional[List[MessageResponse]] = None
+    flow: Optional[List[FlowResponse]]
+    message: Optional[List[MessageResponse]]
 
 
 class ErrorsResponse(BaseErrors):
@@ -335,5 +335,5 @@ class Response(BaseValidator):
         title = 'MoreliaTalk protocol (for response)'
         use_enum_values = False
 
-    data: Optional[DataResponse] = None
-    errors: Optional[ErrorsResponse] = None
+    data: Optional[DataResponse]
+    errors: Optional[ErrorsResponse]
