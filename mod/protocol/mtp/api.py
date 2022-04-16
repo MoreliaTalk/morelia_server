@@ -137,7 +137,7 @@ class FlowRequest(BaseFlow):
 
         title = 'List of flow with UUID is str or None'
 
-    uuid: str = None
+    uuid: Optional[str] = None
 
 
 class UserRequest(BaseUser):
@@ -196,9 +196,9 @@ class ErrorsRequest(BaseErrors):
 
         title = 'Error information'
 
-    code: int = None
-    status: str = None
-    time: int = None
+    code: Optional[int] = None
+    status: Optional[str] = None
+    time: Optional[int] = None
 
 
 class VersionRequest(BaseVersion):
@@ -227,7 +227,7 @@ class Request(BaseValidator):
         title = 'MoreliaTalk protocol (for request)'
 
     data: Optional[DataRequest] = None
-    errors: ErrorsRequest = None
+    errors: Optional[ErrorsRequest] = None
 
 
 # Description of the response validation scheme
@@ -273,7 +273,7 @@ class MessageResponse(BaseMessage):
 
         title = 'List of message information without client_id'
 
-    client_id: int = None
+    client_id: Optional[int] = None
 
 
 class DataResponse(BaseData):
@@ -336,4 +336,4 @@ class Response(BaseValidator):
         use_enum_values = False
 
     data: Optional[DataResponse] = None
-    errors: ErrorsResponse = None
+    errors: Optional[ErrorsResponse] = None
