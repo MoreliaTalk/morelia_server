@@ -20,9 +20,8 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
 from collections import namedtuple
-import json
 from time import time
-from typing import Optional, Union, List, Any
+from typing import Any, Optional, Union
 from uuid import uuid4
 
 from loguru import logger
@@ -220,7 +219,7 @@ class MTProtocol:
         Generates a JSON-object containing result of an instance json.
 
         Returns:
-            (json): json-object which contains validated response
+            (str): json-object which contains validated response
 
         """
 

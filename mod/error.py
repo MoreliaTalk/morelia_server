@@ -22,7 +22,7 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 from collections import namedtuple
 from enum import IntEnum
 from http import HTTPStatus
-from typing import NamedTuple, Any
+from typing import Any
 
 
 class ServerStatus(IntEnum):

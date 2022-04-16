@@ -22,7 +22,7 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 from collections import namedtuple
 import inspect
 import sys
-from typing import Optional, NamedTuple, Any
+from typing import Any, Optional
 
 import sqlobject as orm
 from sqlobject import SQLObject

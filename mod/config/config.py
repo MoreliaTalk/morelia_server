@@ -26,7 +26,7 @@ import os
 from pathlib import Path
 from pathlib import PurePath
 from time import time
-from typing import Any, Optional, NamedTuple, List, Tuple
+from typing import Any, Optional, Tuple
 
 from loguru import logger
 
