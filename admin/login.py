@@ -53,7 +53,7 @@ login_manager = LoginManager(config_option.secret_key,
 login_manager.not_authenticated_exception = NotAuthenticatedException
 
 
-@login_manager.user_loader()
+@login_manager.user_loader()  # type: ignore
 def get_admin_user_data(username: str):
     """
     Requesting data from the database and checking it against the username.

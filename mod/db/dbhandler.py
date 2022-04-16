@@ -22,7 +22,7 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 from collections import namedtuple
 import inspect
 import sys
-from typing import Optional, NamedTuple
+from typing import Optional, NamedTuple, Any
 
 import sqlobject as orm
 from sqlobject import SQLObject
@@ -896,7 +896,7 @@ class DBHandler:
 
         return "Updated"
 
-    def get_table_count(self) -> NamedTuple:
+    def get_table_count(self) -> Any:
         """
         Gives out quantity all row from Message, Flow or UserConfig table.
 

@@ -59,7 +59,7 @@ class MainHandler:
 
         return self.response
 
-    def _mtp_handler(self) -> json:
+    def _mtp_handler(self) -> str:
         """
         Returns result get_response method of the class handling MTP protocol.
 
@@ -71,7 +71,7 @@ class MainHandler:
                             self.database).get_response()
         return result
 
-    def _matrix_handler(self) -> json:
+    def _matrix_handler(self) -> str:
         """
         Returns result get_response method of class handling Matrix protocol.
 

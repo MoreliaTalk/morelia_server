@@ -78,14 +78,14 @@ class MTPErrorResponse:
             code = 520
             status = "Unknown Error"
             time_ = int(time())
-            detail = str(ERROR)
+            detail: Union[Exception, str] = str(ERROR)
         else:
             logger.debug(f"Status code({catch_error.code}):",
                          f" {catch_error.status}")
             code = catch_error.code
             status = catch_error.status
             time_ = int(time())
-            detail: Union[Exception, str]
+
             if self.detail is None:
                 detail = catch_error.detail
             else:
@@ -215,7 +215,7 @@ class MTProtocol:
                               message)
 
     def get_response(self,
-                     response: api.Response = None) -> json:
+                     response: api.Response = None) -> str:
         """
         Generates a JSON-object containing result of an instance json.
 

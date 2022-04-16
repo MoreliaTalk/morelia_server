@@ -989,6 +989,7 @@ class TestJsonapi(unittest.TestCase):
 
 
 class TestCheckProtocolVersion(unittest.TestCase):
+    db: DBHandler
 
     @classmethod
     def setUpClass(cls):
