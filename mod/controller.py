@@ -46,7 +46,7 @@ class MainHandler:
         else:
             self.response = self._mtp_handler()
 
-    def get_response(self) -> str:
+    def get_response(self):
         """
         Returns result of request processing depending on the protocol.
 
