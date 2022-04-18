@@ -12,6 +12,7 @@ pyflakes = "*"
 pycodestyle = "*"
 mccabe = "*"
 coveralls = "==3.3.1"
+mypy = "==0.942"
 
 [packages]
 fastapi = "==0.71.0"
@@ -31,7 +32,6 @@ requests = "==2.27.1"
 win32-setctime = "*"
 sphinx = "==4.4.0"
 furo = "==2022.1.2"
-mypy = "*"
 
 [scripts]
 manage = "python manage.py"
