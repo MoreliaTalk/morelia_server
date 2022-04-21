@@ -61,7 +61,7 @@ class MainHandler:
         Returns result get_response method of the class handling MTP protocol.
 
         Returns:
-            (str):
+            (str)
         """
 
         result = MTProtocol(self.request,
@@ -73,7 +73,7 @@ class MainHandler:
         Returns result get_response method of class handling Matrix protocol.
 
         Returns:
-            (str):
+            (str)
         """
 
         result = MatrixProtocol(self.request,
