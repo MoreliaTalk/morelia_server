@@ -21,7 +21,9 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 
 from collections import namedtuple
 from time import time
-from typing import Any, Optional, Union
+from typing import Any
+from typing import Optional
+from typing import Union
 from uuid import uuid4
 
 from loguru import logger
