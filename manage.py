@@ -30,7 +30,8 @@ from uuid import uuid4
 
 import click
 import uvicorn
-from websockets import client as ws_client, exceptions as ws_exceptions
+from websockets import client as ws_client
+from websockets import exceptions as ws_exceptions
 
 from mod import lib
 from mod.config.config import ConfigHandler
