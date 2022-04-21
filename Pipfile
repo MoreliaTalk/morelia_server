@@ -12,6 +12,7 @@ pyflakes = "*"
 pycodestyle = "*"
 mccabe = "*"
 coveralls = "==3.3.1"
+mypy = "==0.942"
 
 [packages]
 fastapi = "==0.71.0"

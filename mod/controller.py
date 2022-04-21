@@ -18,9 +18,6 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
-
-import json
-
 from mod.db.dbhandler import DBHandler
 from mod.protocol.matrix.worker import MatrixProtocol
 from mod.protocol.mtp.worker import MTProtocol
@@ -54,29 +51,29 @@ class MainHandler:
         Returns result of request processing depending on the protocol.
 
         Returns:
-            (json)
+            (str)
         """
 
         return self.response
 
-    def _mtp_handler(self) -> json:
+    def _mtp_handler(self) -> str:
         """
         Returns result get_response method of the class handling MTP protocol.
 
         Returns:
-            (json):
+            (str)
         """
 
         result = MTProtocol(self.request,
                             self.database).get_response()
         return result
 
-    def _matrix_handler(self) -> json:
+    def _matrix_handler(self) -> str:
         """
         Returns result get_response method of class handling Matrix protocol.
 
         Returns:
-            (json):
+            (str)
         """
 
         result = MatrixProtocol(self.request,

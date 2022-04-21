@@ -32,6 +32,10 @@ jobs:
     - name: Linting code
       run: |
         pipenv run flake8 --config ./setup.cfg --show-source --statistics
+        
+    - name: Type checking
+      run: |
+        pipenv run mypy --config=./setup.cfg .
 
     - name: Push report to coveralls.io
       env: 

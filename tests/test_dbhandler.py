@@ -33,6 +33,8 @@ from mod.db.dbhandler import DatabaseReadError  # noqa
 
 
 class TestDBHandlerMainMethods(unittest.TestCase):
+    db: DBHandler
+
     @classmethod
     def setUpClass(cls) -> None:
         logger.remove()

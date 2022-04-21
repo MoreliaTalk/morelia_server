@@ -20,8 +20,10 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
 from collections import namedtuple
-import json
 from time import time
+from typing import Any
+from typing import Optional
+from typing import Union
 from uuid import uuid4
 
 from loguru import logger
@@ -56,7 +58,7 @@ class MTPErrorResponse:
 
     def __init__(self,
                  status: str,
-                 add_info: Exception | str = None) -> None:
+                 add_info: Optional[Exception | str] = None) -> None:
         self.status = status
         self.detail = add_info
 
@@ -77,13 +79,14 @@ class MTPErrorResponse:
             code = 520
             status = "Unknown Error"
             time_ = int(time())
-            detail = str(ERROR)
+            detail: Union[Exception, str] = str(ERROR)
         else:
             logger.debug(f"Status code({catch_error.code}):",
                          f" {catch_error.status}")
             code = catch_error.code
             status = catch_error.status
             time_ = int(time())
+
             if self.detail is None:
                 detail = catch_error.detail
             else:
@@ -171,7 +174,7 @@ class MTProtocol:
 
     def _check_auth(self,
                     uuid: str,
-                    auth_id: str) -> namedtuple:
+                    auth_id: str) -> Any:
         """
         Checking user authentication every each request.
 
@@ -213,12 +216,12 @@ class MTProtocol:
                               message)
 
     def get_response(self,
-                     response: api.Response = None) -> json:
+                     response: api.Response = None) -> str:
         """
         Generates a JSON-object containing result of an instance json.
 
         Returns:
-            (json): json-object which contains validated response
+            (str): json-object which contains validated response
 
         """
 
@@ -833,7 +836,7 @@ class MTProtocol:
 
     def _errors(self,
                 status: str = None,
-                add_info: Exception | str = None,
+                add_info: Union[Exception, str, None] = None,
                 request: api.Request = None) -> api.Response:
         """
         Handles cases when a request to server is not recognized by it.

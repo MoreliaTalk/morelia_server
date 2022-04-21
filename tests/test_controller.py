@@ -35,6 +35,8 @@ GET_UPDATE = os.path.join(FIXTURES_PATH, "get_update.json")
 
 
 class TestController(unittest.TestCase):
+    db: DBHandler
+
     @classmethod
     def setUpClass(cls):
         logger.remove()

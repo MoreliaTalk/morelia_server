@@ -24,15 +24,14 @@ from pathlib import Path
 from fastapi import Depends
 from fastapi.applications import FastAPI
 from fastapi.requests import Request
+from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
-from starlette.responses import RedirectResponse
 
+from admin import control as manage
+from admin import login
+from admin import logs
 from mod.config.config import ConfigHandler
 from mod.db.dbhandler import DBHandler
-from . import control as manage
-from . import login
-from . import logs
-
 
 app = FastAPI()
 

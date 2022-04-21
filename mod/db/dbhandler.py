@@ -22,6 +22,7 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 from collections import namedtuple
 import inspect
 import sys
+from typing import Any, Optional
 
 import sqlobject as orm
 from sqlobject import SQLObject
@@ -68,6 +69,8 @@ class DBHandler:
                               database tables
 
     """
+    _logger: Optional[str]
+    _loglevel: Optional[str]
 
     def __init__(self,
                  uri: str = 'sqlite:/:memory:',
@@ -893,7 +896,7 @@ class DBHandler:
 
         return "Updated"
 
-    def get_table_count(self) -> namedtuple:
+    def get_table_count(self) -> Any:
         """
         Gives out quantity all row from Message, Flow or UserConfig table.
 

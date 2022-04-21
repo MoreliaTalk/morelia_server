@@ -21,9 +21,9 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 
 from fastapi import APIRouter
 from fastapi import Depends
-from starlette.requests import Request
+from fastapi.requests import Request
 
-from . import login
+from admin import login
 
 router = APIRouter()
 

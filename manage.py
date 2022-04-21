@@ -30,7 +30,8 @@ from uuid import uuid4
 
 import click
 import uvicorn
-import websockets
+from websockets import client as ws_client
+from websockets import exceptions as ws_exceptions
 
 from mod import lib
 from mod.config.config import ConfigHandler
@@ -57,14 +58,14 @@ async def connect_ws_and_send(message, address: str):
         address(str): server address
     """
     try:
-        ws = await websockets.connect(address)
+        ws = await ws_client.connect(address)
     except ConnectionRefusedError:
         click.echo("Unable to connect to the server, please check the server")
     else:
         await ws.send(message.json())
         try:
             response = await ws.recv()
-        except websockets.ConnectionClosedError as error:
+        except ws_exceptions.ConnectionClosedError as error:
             click.echo(f"Server disconnected not normal, error: {error}")
         else:
             click.echo(response)

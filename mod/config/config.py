@@ -27,6 +27,8 @@ from pathlib import Path
 from pathlib import PurePath
 from time import time
 from typing import Any
+from typing import Optional
+from typing import Tuple
 
 from loguru import logger
 
@@ -94,6 +96,7 @@ class ConfigHandler:
             the dedicated documentation section for build-ins configparser
             modules.
     """
+    _directory: Optional[str]
 
     def __init__(self,
                  name: str = 'config.ini',
@@ -349,7 +352,7 @@ class ConfigHandler:
         self._set_configparser(name=self._name,
                                directory=self._directory)
 
-    def read(self) -> namedtuple:
+    def read(self) -> Any:
         """
         Read settings from a configuration file.
         Also, validate settings and generate a named tuple with key=value
@@ -365,8 +368,9 @@ class ConfigHandler:
         while len(valid) > 0:
             key, _ = valid.popitem()
             namedtuple_key.append(key)
-        Config = namedtuple("Config", namedtuple_key)
-        return Config(**valid_dict)
+
+        Config = namedtuple("Config", namedtuple_key)  # type: ignore
+        return Config(**valid_dict)  # type: ignore
 
     def write(self,
               section: str,
@@ -393,6 +397,7 @@ class ConfigHandler:
             AccessConfigError: lack of write permissions to the file
                 or the lack of the file itself
         """
+        backup_info: Tuple[Optional[str], Optional[PurePath]]
 
         if backup:
             backup_info = self._backup_config_file()

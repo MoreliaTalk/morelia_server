@@ -33,7 +33,7 @@ from starlette.responses import HTMLResponse
 from starlette.templating import Jinja2Templates
 from starlette.websockets import WebSocketDisconnect
 
-from admin import admin
+from admin import general
 from mod.config.config import ConfigHandler
 from mod.controller import MainHandler
 from mod.db.dbhandler import DBHandler
@@ -75,7 +75,7 @@ db_connect.create_table()
 
 
 app.mount("/admin",
-          admin.app)
+          general.app)
 
 app.mount("/static",
           StaticFiles(directory=file_static),
