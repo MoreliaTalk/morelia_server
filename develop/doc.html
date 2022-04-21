@@ -303,7 +303,7 @@ and password contained in server database are verified.</p>
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="mod.protocol.mtp.worker.MTProtocol._check_auth">
-<span class="sig-name descname"><span class="pre">_check_auth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uuid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auth_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">collections.namedtuple</span></span></span><a class="headerlink" href="#mod.protocol.mtp.worker.MTProtocol._check_auth" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_check_auth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uuid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auth_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#mod.protocol.mtp.worker.MTProtocol._check_auth" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checking user authentication every each request.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -468,14 +468,14 @@ added to error message</p></li>
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="mod.protocol.mtp.worker.MTProtocol.get_response">
-<span class="sig-name descname"><span class="pre">get_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#mod.protocol.mtp.api.Response" title="mod.protocol.mtp.api.Response"><span class="pre">mod.protocol.mtp.api.Response</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">&lt;module</span> <span class="pre">'json'</span> <span class="pre">from</span> <span class="pre">'/opt/hostedtoolcache/Python/3.10.2/x64/lib/python3.10/json/__init__.py'&gt;</span></span></span><a class="headerlink" href="#mod.protocol.mtp.worker.MTProtocol.get_response" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#mod.protocol.mtp.api.Response" title="mod.protocol.mtp.api.Response"><span class="pre">mod.protocol.mtp.api.Response</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#mod.protocol.mtp.worker.MTProtocol.get_response" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates a JSON-object containing result of an instance json.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>json-object which contains validated response</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>(json)</p>
+<dd class="field-even"><p>(str)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -495,7 +495,7 @@ response in JSON format:</p>
 <dd></dd></dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mod.protocol.mtp.api.Response.errors">
-<span class="sig-name descname"><span class="pre">errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">mod.protocol.mtp.api.ErrorsResponse</span></em><a class="headerlink" href="#mod.protocol.mtp.api.Response.errors" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">mod.protocol.mtp.api.ErrorsResponse</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mod.protocol.mtp.api.Response.errors" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mod.protocol.mtp.api.Response.jsonapi">
@@ -525,7 +525,7 @@ validation and generate error code when response not corresponds protocol method
 <dd></dd></dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mod.protocol.mtp.api.Request.errors">
-<span class="sig-name descname"><span class="pre">errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">mod.protocol.mtp.api.ErrorsRequest</span></em><a class="headerlink" href="#mod.protocol.mtp.api.Request.errors" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">mod.protocol.mtp.api.ErrorsRequest</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mod.protocol.mtp.api.Request.errors" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mod.protocol.mtp.api.Request.jsonapi">
@@ -708,6 +708,14 @@ object or False for many object</p></li>
 </dd>
 </dl>
 </dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mod.db.dbhandler.DBHandler._logger">
+<span class="sig-name descname"><span class="pre">_logger</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mod.db.dbhandler.DBHandler._logger" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mod.db.dbhandler.DBHandler._loglevel">
+<span class="sig-name descname"><span class="pre">_loglevel</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mod.db.dbhandler.DBHandler._loglevel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="mod.db.dbhandler.DBHandler.add_admin">
 <span class="sig-name descname"><span class="pre">add_admin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hash_password</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">sqlobject.main.SQLObject</span></span></span><a class="headerlink" href="#mod.db.dbhandler.DBHandler.add_admin" title="Permalink to this definition">¶</a></dt>
@@ -1067,7 +1075,7 @@ If salt or key is None then used blank string converted to bytes.</p>
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="mod.db.dbhandler.DBHandler.get_table_count">
-<span class="sig-name descname"><span class="pre">get_table_count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">collections.namedtuple</span></span></span><a class="headerlink" href="#mod.db.dbhandler.DBHandler.get_table_count" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_table_count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#mod.db.dbhandler.DBHandler.get_table_count" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gives out quantity all row from Message, Flow or UserConfig table.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1326,21 +1334,21 @@ administrator password</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="mod.controller.MainHandler._matrix_handler">
-<span class="sig-name descname"><span class="pre">_matrix_handler</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">&lt;module</span> <span class="pre">'json'</span> <span class="pre">from</span> <span class="pre">'/opt/hostedtoolcache/Python/3.10.2/x64/lib/python3.10/json/__init__.py'&gt;</span></span></span><a class="headerlink" href="#mod.controller.MainHandler._matrix_handler" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_matrix_handler</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#mod.controller.MainHandler._matrix_handler" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns result get_response method of class handling Matrix protocol.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>(json)</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(str)</p>
 </dd>
 </dl>
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="mod.controller.MainHandler._mtp_handler">
-<span class="sig-name descname"><span class="pre">_mtp_handler</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">&lt;module</span> <span class="pre">'json'</span> <span class="pre">from</span> <span class="pre">'/opt/hostedtoolcache/Python/3.10.2/x64/lib/python3.10/json/__init__.py'&gt;</span></span></span><a class="headerlink" href="#mod.controller.MainHandler._mtp_handler" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_mtp_handler</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#mod.controller.MainHandler._mtp_handler" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns result get_response method of the class handling MTP protocol.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>(json)</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(str)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1350,7 +1358,7 @@ administrator password</p></li>
 <dd><p>Returns result of request processing depending on the protocol.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>(json)</p>
+<dd class="field-odd"><p>(str)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1374,7 +1382,7 @@ administrator password</p></li>
 <p>Checking matching status code name and type of errors contains in class <code class="docutils literal notranslate"><span class="pre">mod.error.ServerStatus</span></code> or <code class="docutils literal notranslate"><span class="pre">HTTPStatus</span></code></p>
 <dl class="py function">
 <dt class="sig sig-object py" id="mod.error.check_error_pattern">
-<span class="sig-prename descclassname"><span class="pre">mod.error.</span></span><span class="sig-name descname"><span class="pre">check_error_pattern</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">collections.namedtuple</span></span></span><a class="headerlink" href="#mod.error.check_error_pattern" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">mod.error.</span></span><span class="sig-name descname"><span class="pre">check_error_pattern</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#mod.error.check_error_pattern" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks error name against existing error types supported by server.
 The error name is passed as a “status” parameter.</p>
 <dl class="field-list simple">
@@ -1401,140 +1409,10 @@ The error name is passed as a “status” parameter.</p>
 <section id="id3">
 <h3>Admin<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">admin</span></code></p>
-<dl class="py function">
-<dt class="sig sig-object py" id="admin.admin.index_admin">
-<span class="sig-prename descclassname"><span class="pre">admin.admin.</span></span><span class="sig-name descname"><span class="pre">index_admin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">starlette.requests.Request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Depends(LoginManager)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#admin.admin.index_admin" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a response with the main page of the admin panel.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>request</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code>) – request to the server</p></li>
-<li><p><strong>user</strong> – user authentication check</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>response generated from index_admin.html
-qtemplate</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>(templates.TemplateResponse)</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="admin.admin.login_admin">
-<span class="sig-prename descclassname"><span class="pre">admin.admin.</span></span><span class="sig-name descname"><span class="pre">login_admin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">starlette.requests.Request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#admin.admin.login_admin" title="Permalink to this definition">¶</a></dt>
-<dd><p>Triggered when a request is received for the /login address.
-Return a response generated from login.html</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>request</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code>) – request to the server</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>response generated from login.html</dt><dd><p>template</p>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>(templates.TemplateResponse)</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="admin.admin.manage_admin">
-<span class="sig-prename descclassname"><span class="pre">admin.admin.</span></span><span class="sig-name descname"><span class="pre">manage_admin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">starlette.requests.Request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Depends(LoginManager)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#admin.admin.manage_admin" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a response with the mange page of the admin panel.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>request</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code>) – request to the server</p></li>
-<li><p><strong>user</strong> – user authentication check</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>response generated from</dt><dd><p>manage_admin.html template</p>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>(templates.TemplateResponse)</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="admin.admin.manage_logs">
-<span class="sig-prename descclassname"><span class="pre">admin.admin.</span></span><span class="sig-name descname"><span class="pre">manage_logs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">starlette.requests.Request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Depends(LoginManager)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#admin.admin.manage_logs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a response with the logs view page of the admin panel.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>request</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code>) – request to the server</p></li>
-<li><p><strong>user</strong> – user authentication check</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>response generated from logs_admin.html</dt><dd><p>template</p>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>(templates.TemplateResponse)</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="admin.admin.status_admin">
-<span class="sig-prename descclassname"><span class="pre">admin.admin.</span></span><span class="sig-name descname"><span class="pre">status_admin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">starlette.requests.Request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Depends(LoginManager)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#admin.admin.status_admin" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a response with the status page of the admin panel.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>request</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code>) – request to the server</p></li>
-<li><p><strong>user</strong> – user authentication check</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>response generated from</dt><dd><p>status_admin.html template</p>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>(templates.TemplateResponse)</p>
-</dd>
-</dl>
-</dd></dl>
 <dl class="py exception">
 <dt class="sig sig-object py" id="admin.login.NotAuthenticatedException">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">admin.login.</span></span><span class="sig-name descname"><span class="pre">NotAuthenticatedException</span></span><a class="headerlink" href="#admin.login.NotAuthenticatedException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Occurs when the user’s authorization data is missing or incorrect.</p>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="admin.admin.not_login_exception_handler">
-<span class="sig-prename descclassname"><span class="pre">admin.admin.</span></span><span class="sig-name descname"><span class="pre">not_login_exception_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">starlette.requests.Request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#admin.login.NotAuthenticatedException" title="admin.login.NotAuthenticatedException"><span class="pre">admin.login.NotAuthenticatedException</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#admin.admin.not_login_exception_handler" title="Permalink to this definition">¶</a></dt>
-<dd><p>Catches exception NotAuthenticatedException and redirects to login page.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>request</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code>) – request to the server</p></li>
-<li><p><strong>exc</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">login.NotAuthenticatedException</span></code>) – catchable user authentication
-error</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>redirect response to /admin/login</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>(RedirectResponse)</p>
-</dd>
-</dl>
 </dd></dl>
 <dl class="py function">
 <dt class="sig sig-object py" id="admin.login.get_admin_user_data">
@@ -1724,6 +1602,10 @@ to: /path/to/config/file’ and path-like file object.</p>
 </dd>
 </dl>
 </dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mod.config.config.ConfigHandler._directory">
+<span class="sig-name descname"><span class="pre">_directory</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mod.config.config.ConfigHandler._directory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="mod.config.config.ConfigHandler._rebuild_config">
 <span class="sig-name descname"><span class="pre">_rebuild_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">orig_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'example_config.ini'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'config.ini'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'tests/fixtures'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#mod.config.config.ConfigHandler._rebuild_config" title="Permalink to this definition">¶</a></dt>
@@ -1818,7 +1700,7 @@ e.g.: tests/fixtures</p></li>
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="mod.config.config.ConfigHandler.read">
-<span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">collections.namedtuple</span></span></span><a class="headerlink" href="#mod.config.config.ConfigHandler.read" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#mod.config.config.ConfigHandler.read" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read settings from a configuration file.
 Also, validate settings and generate a named tuple with key=value
 parameters.</p>
