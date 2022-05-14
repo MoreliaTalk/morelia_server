@@ -77,7 +77,7 @@ class ServerStatus(IntEnum):
                                'Full description: Invalid SSL Certificate')
 
 
-def check_error_pattern(status: str) -> CatchError | Exception:
+def check_error_pattern(status: str) -> CatchError:
     """
     Checks error name against existing error types supported by server.
     The error name is passed as a "status" parameter.
