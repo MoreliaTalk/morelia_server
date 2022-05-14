@@ -275,7 +275,7 @@ class DBHandler:
         try:
             dbquery = db(**kwargs)
         except (Exception, SQLObjectIntegrityError) as err:
-            raise DatabaseWriteError from err
+            raise DatabaseWriteError(err)
         else:
             return dbquery
 
