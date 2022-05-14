@@ -25,7 +25,9 @@ from typing import NamedTuple
 
 
 class CatchError(NamedTuple):
-    """Contains information about error that occurred"""
+    """
+    Contains information about error that occurred.
+    """
     
     code: int
     status: str
