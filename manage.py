@@ -229,7 +229,7 @@ def create_flow(login: str):
             DatabaseWriteError) as error:
         click.echo(f'Failed to create a flow. Error text: {error}')
     else:
-        new_flow = db.add_flow(uuid=str(uuid4().hex),
+        new_flow = db.add_flow(uuid=str(uuid4().int),
                                users=[user.uuid],
                                time_created=int(time()),
                                flow_type="group",
@@ -256,12 +256,18 @@ def admin_create_user(username,
     db = DBHandler(uri=config_option.uri)
 
     generator = lib.Hash(password,
-                         str(uuid4().hex),
+                         str(uuid4().int),
                          key=b"key",
                          salt=b"salt")
-    db.add_admin(username=username,
-                 hash_password=generator.password_hash())
-    click.echo(f"Admin created\nusername: {username}\npassword: {password}")
+    try:
+        db.add_admin(username=username,
+                     hash_password=generator.password_hash())
+    except (DatabaseReadError,
+            DatabaseAccessError,
+            DatabaseWriteError) as error:
+        click.echo(f'Failed to create a flow. Error text: {error}')
+    else:
+        click.echo(f"Admin created\nusername: {username}\npassword: {password}")
 
 
 @client_cli.command("send",
