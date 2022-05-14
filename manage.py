@@ -213,28 +213,31 @@ def create_user(login: str, username: str, password: str):
 
 
 @db_cli.command("flow-create", help="Create flow type group in database")
-def create_flow():
+@click.option("-l",
+              "--login",
+              help="Use login which you specified when run user-create")
+def create_flow(login: str):
     """
     Creating and adding test flow (group) in database.
     """
 
     db = DBHandler(uri=config_option.uri)
-    user_uuid = str(123456789)
     try:
-        new_user = db.get_user_by_uuid(uuid=user_uuid)
-        new_flow = db.add_flow(uuid=str(uuid4().hex),
-                               users=[user_uuid],
-                               time_created=int(time()),
-                               flow_type="group",
-                               title="Test",
-                               info="Test flow",
-                               owner=user_uuid)
-        new_flow.addUserConfig(new_user)
-        click.echo("Flow created")
+        user = db.get_user_by_login(login=login)
     except (DatabaseReadError,
             DatabaseAccessError,
             DatabaseWriteError) as error:
         click.echo(f'Failed to create a flow. Error text: {error}')
+    else:
+        new_flow = db.add_flow(uuid=str(uuid4().hex),
+                               users=[user.uuid],
+                               time_created=int(time()),
+                               flow_type="group",
+                               title="Test",
+                               info="Test flow",
+                               owner=user.uuid)
+        new_flow.addUserConfig(user)
+        click.echo("Flow created")
 
 
 @db_cli.command("admin-create", help="Create user in admin panel")
