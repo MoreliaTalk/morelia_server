@@ -22,7 +22,11 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 from collections import namedtuple
 from enum import IntEnum
 from http import HTTPStatus
-from typing import Any
+
+
+CatchError = namedtuple('CatchError', ['code',
+                                       'status',
+                                       'detail'])
 
 
 class ServerStatus(IntEnum):
@@ -68,7 +72,7 @@ class ServerStatus(IntEnum):
                                'Full description: Invalid SSL Certificate')
 
 
-def check_error_pattern(status: str) -> Any:
+def check_error_pattern(status: str) -> CatchError | Exception:
     """
     Checks error name against existing error types supported by server.
     The error name is passed as a "status" parameter.
@@ -85,31 +89,31 @@ def check_error_pattern(status: str) -> Any:
 
                         ``description`` - short description of the error
 
+    Raise:
+        (AttributeError): raised when an error name is not found among
+                          the registered names (in classes ServerStatus and
+                          HTTPStatus)
+        (TypeError):      raised when Args `status` does not match String type
     """
 
-    CatchError = namedtuple('CatchError', ['code',
-                                           'status',
-                                           'detail'])
     try:
         getattr(HTTPStatus, status).value
     except AttributeError:
-        http_status_not_found = True
-    except TypeError:
-        raise TypeError("".join(("Wrong status type passed",
-                                 f" it should be {type(str())}",
-                                 f" but it was passed {type(status)}")))
-    else:
-        obj = getattr(HTTPStatus, status)
-        http_status_not_found = False
-
-    if http_status_not_found:
         try:
             getattr(ServerStatus, status)
         except AttributeError:
             raise AttributeError("Received a non-existent error status")
         else:
             obj = getattr(ServerStatus, status)
-
-    return CatchError(obj.value,
-                      obj.phrase,
-                      obj.description)
+            return CatchError(obj.value,
+                              obj.phrase,
+                              obj.description)
+    except TypeError:
+        raise TypeError("".join(("Wrong status type passed",
+                                 f" it should be {type(str())}",
+                                 f" but it was passed {type(status)}")))
+    else:
+        obj = getattr(HTTPStatus, status)
+        return CatchError(obj.value,
+                          obj.phrase,
+                          obj.description)
