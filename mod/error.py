@@ -19,14 +19,17 @@ You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from collections import namedtuple
 from enum import IntEnum
 from http import HTTPStatus
+from typing import NamedTuple
 
 
-CatchError = namedtuple('CatchError', ['code',
-                                       'status',
-                                       'detail'])
+class CatchError(NamedTuple):
+    """Contains information about error that occurred"""
+    
+    code: int
+    status: str
+    detail: str
 
 
 class ServerStatus(IntEnum):
@@ -81,7 +84,7 @@ def check_error_pattern(status: str) -> CatchError | Exception:
         status (str): error name
 
     Returns:
-        (namedtuple): named tuple with three value, where
+        (CatchError): named tuple with three value, where
 
                         ``value`` - status code of error
 
