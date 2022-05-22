@@ -19,36 +19,47 @@ You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import os
-import stat
 from pathlib import Path, PurePath
-import time
 import unittest
 
 from click.testing import CliRunner
-import manage
+from loguru import logger
+from manage import admin_create_user
+from manage import create_flow
+from manage import create_user
+from manage import db_create
+from manage import db_delete
+
 from mod.config.config import ConfigHandler
 from mod.db.dbhandler import DBHandler
 
 
 class TestCreateUserAndFlowAndAdmin(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        logger.remove()
+        cls.config = ConfigHandler()
+        cls.config_option = cls.config.read()
+        cls.db = DBHandler(uri=cls.config_option.uri)
+        cls.db.create_table()
+        cls.path = PurePath(Path.cwd(), "db_sqlite.db")
+
     def setUp(self) -> None:
         self.username = "UserHello"
         self.login = "login123"
         self.password = "password123"
         self.runner = CliRunner()
-        self.path = PurePath(Path.cwd(), "db_sqlite.db")
-        self.config = ConfigHandler()
-        self.config_option = self.config.read()
-        self.db = DBHandler(uri=self.config_option.uri)
-        self.db.create_table()
 
     def tearDown(self) -> None:
-        os.remove(self.path)
         del self.runner
 
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.db.delete_table()
+        del cls.db
+
     def test_create_user(self):
-        result = self.runner.invoke(manage.create_user,
+        result = self.runner.invoke(create_user,
                                     ["--username",
                                      f"{self.username}",
                                      "--login",
@@ -56,13 +67,13 @@ class TestCreateUserAndFlowAndAdmin(unittest.TestCase):
                                      "--password",
                                      f"{self.password}"])
         self.assertEqual(result.exit_code, 0)
-        self.assertEqual(result.output,
+        self.assertRegex(result.output,
                          f"{self.username} created, login: {self.login}, "
-                         f"password: {self.password}\n")
+                         f"password: {self.password}")
 
     def test_wrong_create_user(self):
         self.db.delete_table()
-        result = self.runner.invoke(manage.create_user,
+        result = self.runner.invoke(create_user,
                                     ["--username",
                                      f"{self.username}",
                                      "--login",
@@ -71,29 +82,27 @@ class TestCreateUserAndFlowAndAdmin(unittest.TestCase):
                                      f"{self.password}"])
         self.assertRegex(result.stdout,
                          "Failed to create a user. Error text:")
-        os.chmod(path=self.path,
-                 mode=stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
 
     def test_create_flow(self):
-        self.runner.invoke(manage.create_user,
+        self.runner.invoke(create_user,
                            ["--username",
                             f"{self.username}",
                             "--login",
                             f"{self.login}",
                             "--password",
                             f"{self.password}"])
-        result = self.runner.invoke(manage.create_flow,
+        result = self.runner.invoke(create_flow,
                                     ["--login", f"{self.login}"])
         self.assertEqual(result.stdout, "Flow created\n")
 
     def test_wrong_create_flow(self):
-        result = self.runner.invoke(manage.create_flow,
+        result = self.runner.invoke(create_flow,
                                     ["--login", f"{self.login}"])
         self.assertRegex(result.stdout,
                          "Failed to create a flow. Error text: ")
 
     def test_create_admin_user(self):
-        result = self.runner.invoke(manage.admin_create_user,
+        result = self.runner.invoke(admin_create_user,
                                     ["--username",
                                      f"{self.username}",
                                      "--password",
@@ -102,7 +111,7 @@ class TestCreateUserAndFlowAndAdmin(unittest.TestCase):
 
     def test_wrong_create_admin_user(self):
         self.db.delete_table()
-        result = self.runner.invoke(manage.admin_create_user,
+        result = self.runner.invoke(admin_create_user,
                                     ["--username",
                                      f"{self.username}",
                                      "--password",
@@ -112,23 +121,24 @@ class TestCreateUserAndFlowAndAdmin(unittest.TestCase):
 
 
 class TestDBCli(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        logger.remove()
+
     def setUp(self) -> None:
         self.runner = CliRunner()
-        self.path = PurePath(Path.cwd(), "db_sqlite.db")
 
     def tearDown(self) -> None:
-        os.remove(self.path)
-        del self.runner, self.path
+        del self.runner
 
     def test_db_create(self):
-        result = self.runner.invoke(manage.db_create)
+        result = self.runner.invoke(db_create, ["--uri", "test"])
         self.assertRegex(result.stdout, "Table is created at: ")
 
     def test_db_delete(self):
-        self.runner.invoke(manage.db_create)
-        result = self.runner.invoke(manage.db_delete)
+        self.runner.invoke(db_create, ["--uri", "test"])
+        result = self.runner.invoke(db_delete, ["--uri", "test"])
         self.assertRegex(result.stdout, "Table is deleted at: ")
-
 
 
 if __name__ == "__main__":

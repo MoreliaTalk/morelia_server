@@ -148,30 +148,52 @@ def run(host: str,
 
 
 @db_cli.command("create", help="Create all table with all data")
-def db_create():
+@click.option("--uri",
+              default=None)
+def db_create(uri: str):
     """
     Create database, and create all table which contain in models.
     """
 
+    if uri is None:
+        database = config_option.uri
+    elif uri == "test":
+        database = 'sqlite:/:memory:'
+
     start_time = process_time()
-    db = DBHandler(uri=config_option.uri)
-    db.create_table()
-    click.echo(f'Table is created at: '
-               f'{process_time() - start_time} sec.')
+    db = DBHandler(uri=database)
+    try:
+        db.create_table()
+    except Exception as err:
+        raise f"ERROR={err}"
+    else:
+        click.echo(f"Table is created at: "
+                   f"{process_time() - start_time} sec.")
 
 
 @db_cli.command("delete", help="Delete all table with all data")
-def db_delete():
+@click.option("--uri",
+              default=None)
+def db_delete(uri: str):
     """
     Delete all tables which contains data.
     This function not delete database file.
     """
 
+    if uri is None:
+        database = config_option.uri
+    elif uri == "test":
+        database = 'sqlite:/:memory:'
+
     start_time = process_time()
-    db = DBHandler(uri=config_option.uri)
-    db.delete_table()
-    click.echo(f'Table is deleted at: '
-               f'{process_time() - start_time} sec.')
+    db = DBHandler(uri=database)
+    try:
+        db.delete_table()
+    except Exception as err:
+        raise f"ERROR={err}"
+    else:
+        click.echo(f"Table is deleted at: "
+                   f"{process_time() - start_time} sec.")
 
 
 @db_cli.command("user-create", help="Creates a user in the database, \
@@ -186,7 +208,9 @@ def db_delete():
               default="".join(random.sample(
                   SYMBOLS_FOR_RANDOM, 20
               )))
-def create_user(login: str, username: str, password: str):
+def create_user(login: str,
+                username: str,
+                password: str):
     """
     Create user in database.
 
@@ -267,7 +291,8 @@ def admin_create_user(username,
             DatabaseWriteError) as error:
         click.echo(f'Failed to create a flow. Error text: {error}')
     else:
-        click.echo(f"Admin created\nusername: {username}\npassword: {password}")
+        click.echo(f"Admin created\nusername: "
+                   f"{username}\npassword: {password}")
 
 
 @client_cli.command("send",
