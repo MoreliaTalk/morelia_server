@@ -20,16 +20,10 @@
 
 import unittest
 
-from loguru import logger
-
 from mod import error
 
 
 class TestCheckError(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        logger.remove()
-
     def setUp(self):
         self.OK = "OK"
         self.WRONG_TYPE_STATUS = 201

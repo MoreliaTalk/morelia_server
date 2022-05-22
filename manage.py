@@ -148,30 +148,52 @@ def run(host: str,
 
 
 @db_cli.command("create", help="Create all table with all data")
-def db_create():
+@click.option("--uri",
+              default=None)
+def db_create(uri: str):
     """
     Create database, and create all table which contain in models.
     """
 
+    if uri is None:
+        database = config_option.uri
+    elif uri == "test":
+        database = 'sqlite:/:memory:'
+
     start_time = process_time()
-    db = DBHandler(uri=config_option.uri)
-    db.create_table()
-    click.echo(f'Table is created at: '
-               f'{process_time() - start_time} sec.')
+    db = DBHandler(uri=database)
+    try:
+        db.create_table()
+    except Exception as err:
+        click.echo(f"table not created. Error={err}")
+    else:
+        click.echo(f"Table is created at: "
+                   f"{process_time() - start_time} sec.")
 
 
 @db_cli.command("delete", help="Delete all table with all data")
-def db_delete():
+@click.option("--uri",
+              default=None)
+def db_delete(uri: str):
     """
     Delete all tables which contains data.
     This function not delete database file.
     """
 
+    if uri is None:
+        database = config_option.uri
+    elif uri == "test":
+        database = 'sqlite:/:memory:'
+
     start_time = process_time()
-    db = DBHandler(uri=config_option.uri)
-    db.delete_table()
-    click.echo(f'Table is deleted at: '
-               f'{process_time() - start_time} sec.')
+    db = DBHandler(uri=database)
+    try:
+        db.delete_table()
+    except Exception as err:
+        click.echo(f"table not created. Error={err}")
+    else:
+        click.echo(f"Table is deleted at: "
+                   f"{process_time() - start_time} sec.")
 
 
 @db_cli.command("user-create", help="Creates a user in the database, \
@@ -186,7 +208,9 @@ def db_delete():
               default="".join(random.sample(
                   SYMBOLS_FOR_RANDOM, 20
               )))
-def create_user(login: str, username: str, password: str):
+def create_user(login: str,
+                username: str,
+                password: str):
     """
     Create user in database.
 
@@ -213,28 +237,31 @@ def create_user(login: str, username: str, password: str):
 
 
 @db_cli.command("flow-create", help="Create flow type group in database")
-def create_flow():
+@click.option("-l",
+              "--login",
+              help="Use login which you specified when run user-create")
+def create_flow(login: str):
     """
     Creating and adding test flow (group) in database.
     """
 
     db = DBHandler(uri=config_option.uri)
-    user_uuid = str(123456789)
     try:
-        new_user = db.get_user_by_uuid(uuid=user_uuid)
-        new_flow = db.add_flow(uuid=str(uuid4().hex),
-                               users=[user_uuid],
-                               time_created=int(time()),
-                               flow_type="group",
-                               title="Test",
-                               info="Test flow",
-                               owner=user_uuid)
-        new_flow.addUserConfig(new_user)
-        click.echo("Flow created")
+        user = db.get_user_by_login(login=login)
     except (DatabaseReadError,
             DatabaseAccessError,
             DatabaseWriteError) as error:
         click.echo(f'Failed to create a flow. Error text: {error}')
+    else:
+        new_flow = db.add_flow(uuid=str(uuid4().int),
+                               users=[user.uuid],
+                               time_created=int(time()),
+                               flow_type="group",
+                               title="Test",
+                               info="Test flow",
+                               owner=user.uuid)
+        new_flow.addUserConfig(user)
+        click.echo("Flow created")
 
 
 @db_cli.command("admin-create", help="Create user in admin panel")
@@ -253,12 +280,19 @@ def admin_create_user(username,
     db = DBHandler(uri=config_option.uri)
 
     generator = lib.Hash(password,
-                         str(uuid4().hex),
+                         str(uuid4().int),
                          key=b"key",
                          salt=b"salt")
-    db.add_admin(username=username,
-                 hash_password=generator.password_hash())
-    click.echo(f"Admin created\nusername: {username}\npassword: {password}")
+    try:
+        db.add_admin(username=username,
+                     hash_password=generator.password_hash())
+    except (DatabaseReadError,
+            DatabaseAccessError,
+            DatabaseWriteError) as error:
+        click.echo(f'Failed to create a flow. Error text: {error}')
+    else:
+        click.echo(f"Admin created\nusername: "
+                   f"{username}\npassword: {password}")
 
 
 @client_cli.command("send",

@@ -236,20 +236,20 @@ class DBHandler:
             try:
                 dbquery = db.selectBy(self.connection,
                                       **kwargs).getOne()
-            except (SQLObjectNotFound, SQLObjectIntegrityError):
-                raise DatabaseReadError
+            except (SQLObjectNotFound, SQLObjectIntegrityError) as err:
+                raise DatabaseReadError(err)
             except Exception as err:
-                raise DatabaseAccessError from err
+                raise DatabaseAccessError(err)
             else:
                 return dbquery
         else:
             try:
                 dbquery = db.selectBy(self.connection,
                                       **kwargs)
-            except SQLObjectNotFound:
-                raise DatabaseReadError
+            except SQLObjectNotFound as err:
+                raise DatabaseReadError(err)
             except Exception as err:
-                raise DatabaseAccessError from err
+                raise DatabaseAccessError(err)
             else:
                 return dbquery
 
@@ -275,7 +275,7 @@ class DBHandler:
         try:
             dbquery = db(**kwargs)
         except (Exception, SQLObjectIntegrityError) as err:
-            raise DatabaseWriteError from err
+            raise DatabaseWriteError(err)
         else:
             return dbquery
 
