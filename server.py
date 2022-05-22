@@ -37,7 +37,7 @@ from admin import general
 from mod.config.config import ConfigHandler
 from mod.controller import MainHandler
 from mod.db.dbhandler import DBHandler
-from mod.logging import add_logging
+from mod.logging_handler import add_logging
 
 
 # Get parameters contains in config.ini
