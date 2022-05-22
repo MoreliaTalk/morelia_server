@@ -165,7 +165,7 @@ def db_create(uri: str):
     try:
         db.create_table()
     except Exception as err:
-        raise f"ERROR={err}"
+        click.echo(f"table not created. Error={err}")
     else:
         click.echo(f"Table is created at: "
                    f"{process_time() - start_time} sec.")
@@ -190,7 +190,7 @@ def db_delete(uri: str):
     try:
         db.delete_table()
     except Exception as err:
-        raise f"ERROR={err}"
+        click.echo(f"table not created. Error={err}")
     else:
         click.echo(f"Table is deleted at: "
                    f"{process_time() - start_time} sec.")

@@ -20,6 +20,7 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
 from pathlib import Path, PurePath
+from typing import Any
 import unittest
 
 from click.testing import CliRunner
@@ -35,6 +36,11 @@ from mod.db.dbhandler import DBHandler
 
 
 class TestCreateUserAndFlowAndAdmin(unittest.TestCase):
+    config: ConfigHandler
+    config_option: Any
+    db: DBHandler
+    path: PurePath
+
     @classmethod
     def setUpClass(cls) -> None:
         logger.remove()
