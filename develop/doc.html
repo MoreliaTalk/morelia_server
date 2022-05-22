@@ -1382,7 +1382,7 @@ administrator password</p></li>
 <p>Checking matching status code name and type of errors contains in class <code class="docutils literal notranslate"><span class="pre">mod.error.ServerStatus</span></code> or <code class="docutils literal notranslate"><span class="pre">HTTPStatus</span></code></p>
 <dl class="py function">
 <dt class="sig sig-object py" id="mod.error.check_error_pattern">
-<span class="sig-prename descclassname"><span class="pre">mod.error.</span></span><span class="sig-name descname"><span class="pre">check_error_pattern</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#mod.error.check_error_pattern" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">mod.error.</span></span><span class="sig-name descname"><span class="pre">check_error_pattern</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">mod.error.CatchError</span></span></span><a class="headerlink" href="#mod.error.check_error_pattern" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks error name against existing error types supported by server.
 The error name is passed as a “status” parameter.</p>
 <dl class="field-list simple">
@@ -1399,7 +1399,15 @@ The error name is passed as a “status” parameter.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>(namedtuple)</p>
+<dd class="field-odd"><p>(CatchError)</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>(</strong><strong>AttributeError</strong><strong>)</strong> – raised when an error name is not found among
+    the registered names (in classes ServerStatus and
+    HTTPStatus)</p></li>
+<li><p><strong>(</strong><strong>TypeError</strong><strong>)</strong> – raised when Args <cite>status</cite> does not match String type</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -1988,39 +1996,6 @@ automatically</p></li>
 <section id="logging">
 <h3>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">mod.logging.add_logging()</span></code>:</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="mod.logging.add_logging">
-<span class="sig-prename descclassname"><span class="pre">mod.logging.</span></span><span class="sig-name descname"><span class="pre">add_logging</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">debug_status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mod.logging.add_logging" title="Permalink to this definition">¶</a></dt>
-<dd><p>Enable logging depending on start parameter uvicorn and choice their level.
-Logging information written in .log file which contains in /log folder and
-also duplicated in the console.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>application creates two log file contains in /log folder:</p>
-<p>one for error level - <cite>error.log</cite></p>
-<p>one for debug level - <cite>debug.log</cite></p>
-</div>
-<p class="rubric">Examples</p>
-<p>Instead of print we use:</p>
-<p><code class="docutils literal notranslate"><span class="pre">logger.debug('debug</span> <span class="pre">message')</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">logger.info('info</span> <span class="pre">message')</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">logger.warning('warn</span> <span class="pre">message')</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">logger.error('error</span> <span class="pre">message')</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">logger.critical('critical</span> <span class="pre">message')</span></code></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>debug_status</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int,</span> <span class="pre">requires</span></code>) – <p>where number corresponds its level</p>
-<p><cite>50 - CRITICAL</cite></p>
-<p><cite>40 - ERROR</cite></p>
-<p><cite>30 - WARNING</cite></p>
-<p><cite>25 - SUCCESS</cite></p>
-<p><cite>20 - INFO</cite></p>
-<p><cite>10 - DEBUG</cite></p>
-<p><cite>5 - TRACE</cite></p>
-</p>
-</dd>
-</dl>
-</dd></dl>
 </section>
 </section>
 </section>
