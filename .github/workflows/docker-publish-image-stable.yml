@@ -1,7 +1,5 @@
 name: Build and publish docker image
-on:
-  push:
-    tags: '*.*.*'
+on: push
 
 env:
   REGISTRY: ghcr.io
