@@ -6,6 +6,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}_docker
+  IMAGE_TAG: TAG
 
 jobs:
   build-and-push-image:
@@ -41,9 +42,13 @@ jobs:
         id: date
         run: echo "::set-output name=date::$(date +'%Y.%m.%d')"
 
-      - name: Set tag for image
-        id: imageTag
-        run: var1=${{ github.event_name }}; if $var1 == "release"; then echo "${{ steps.meta.outputs.tags }}"; fi
+      - name: Set IMAGE_TAG for release
+        if: github.event_name == 'release'
+        run: echo "IMAGE_TAG=${{ steps.meta.outputs.tags }}" >> $GITHUB_ENV
+
+      - name: Set IMAGE_TAG for common push
+        if: github.event_name == 'push'
+        run: echo "IMAGE_TAG=${{ steps.date.outputs.date }}" >> $GITHUB_ENV
 
       - name: Build and push Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
@@ -51,5 +56,5 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64
-          tags: ${{ steps.meta.outputs.tags }}_${{ steps.date.outputs.date }}
+          tags: ${{ env.IMAGE_TAG }}
           labels: ${{ steps.meta.outputs.labels }}
