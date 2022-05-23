@@ -43,5 +43,5 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: "123"
+          tags: ${{ steps.meta.outputs.tags }}_${{ steps.date.outputs.date }}
+          labels: ${{ steps.meta.outputs.labels }}
