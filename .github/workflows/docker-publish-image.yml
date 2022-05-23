@@ -41,7 +41,7 @@ jobs:
         with:
           builder: ${{ steps.builder1.outputs.name }}
           context: .
-          target: linux/amd64
+          platforms: linux/amd64
 
 
       # - name: Build and push Docker image
