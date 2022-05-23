@@ -36,12 +36,20 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+      - name: Build for amd64
+        uses: docker/build-push-action@v3
         with:
-          arch: arm64
+          builder: ${{ steps.builder1.outputs.name }}
           context: .
-          push: true
-          platforms: linux/amd64, linux/arm64
-          tags: ${{ steps.meta.outputs.tags }}_${{ steps.date.outputs.date }}
-          labels: ${{ steps.meta.outputs.labels }}
+          target: amd64
+
+
+      # - name: Build and push Docker image
+      #  uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+      #  with:
+      #    arch: arm64
+      #    context: .
+       #   push: true
+      #    platforms: linux/amd64, linux/arm64
+       #   tags: ${{ steps.meta.outputs.tags }}_${{ steps.date.outputs.date }}
+       #   labels: ${{ steps.meta.outputs.labels }}
