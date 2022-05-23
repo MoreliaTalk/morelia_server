@@ -1,5 +1,7 @@
 name: Build and publish docker image
-on: push
+on:
+  push:
+    branches: [ master ]
 
 env:
   REGISTRY: ghcr.io
@@ -41,5 +43,5 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64, linux/arm64
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.meta.outputs.tags }}_${{ steps.date.outputs.date }}
           labels: ${{ steps.meta.outputs.labels }}
