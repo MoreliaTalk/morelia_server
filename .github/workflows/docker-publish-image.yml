@@ -6,7 +6,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}_docker
-  IMAGE_TAG: TAG
+  IMAGE_TAG: tag_not_set
 
 jobs:
   build-and-push-image:
