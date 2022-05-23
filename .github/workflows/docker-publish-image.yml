@@ -31,24 +31,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y.%m.%d')"
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: none
-
-      - name: Get current date
-        id: date
-        run: echo "::set-output name=date::$(date +'%Y.%m.%d')"
-
-      - name: Set IMAGE_TAG for release
-        if: github.event_name == 'release'
-        run: echo "IMAGE_TAG=${{ steps.meta.outputs.tags }}" >> $GITHUB_ENV
-
-      - name: Set IMAGE_TAG for common push
-        if: github.event_name == 'push'
-        run: echo "IMAGE_TAG=${{ steps.date.outputs.date }}" >> $GITHUB_ENV
+          tags: |
+            type: semver, pattern={{raw}}
+            type=ref, event=branch, pattern=${{ steps.date.outputs.date }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
