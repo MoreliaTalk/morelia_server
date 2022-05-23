@@ -43,7 +43,7 @@ jobs:
 
       - name: Set tag for image
         id: imageTag
-        run: echo "$(if ${{ github.event_name }} == 'release'; then; echo '${{ steps.meta.outputs.tags }}');"
+        run: echo if ${{ github.event_name }} == 'release'; then; echo '${{ steps.meta.outputs.tags }}'
 
       - name: Build and push Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
