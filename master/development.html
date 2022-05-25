@@ -231,6 +231,26 @@
 <ol class="arabic simple" start="5">
 <li><p>If using GitHub Desktop, select <code class="docutils literal notranslate"><span class="pre">Clone</span> <span class="pre">repository...</span></code> from <code class="docutils literal notranslate"><span class="pre">File</span></code> menu and follow instructions.</p></li>
 </ol>
+<section id="running-before-create-pool-request">
+<h3>Running before create pool-request<a class="headerlink" href="#running-before-create-pool-request" title="Permalink to this headline">¶</a></h3>
+<p>Before create pool-request you must be perform two step:</p>
+<ol class="arabic simple">
+<li><p>Running <code class="docutils literal notranslate"><span class="pre">flake8</span></code> for checking code:</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">flake8</span> <span class="o">--</span><span class="n">config</span> <span class="o">./</span><span class="n">setup</span><span class="o">.</span><span class="n">cfg</span> <span class="o">--</span><span class="n">show</span><span class="o">-</span><span class="n">source</span> <span class="o">--</span><span class="n">statistics</span> <span class="o">--</span><span class="n">output</span><span class="o">-</span><span class="n">file</span> <span class="o">./</span><span class="n">log</span><span class="o">/</span><span class="n">flake8</span><span class="o">.</span><span class="n">log</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">--config</span> <span class="pre">./setup.cfg</span></code> - path to flake8 settings</p>
+<p><code class="docutils literal notranslate"><span class="pre">--show-source</span></code> - show the source generate each error or warning</p>
+<p><code class="docutils literal notranslate"><span class="pre">--statistics</span></code> - count errors and warnings</p>
+<p><code class="docutils literal notranslate"><span class="pre">--output-file</span> <span class="pre">./log/flake8.log</span></code> - path to file where flake8 saved all information about occurrences errors and warnings</p>
+<ol class="arabic simple" start="2">
+<li><p>Running unittest for testing code (<code class="docutils literal notranslate"><span class="pre">tests</span></code> it’s a directory contains all test for project):</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">coverage</span> <span class="n">run</span> <span class="o">-</span><span class="n">m</span> <span class="n">unittest</span> <span class="n">discover</span> <span class="n">tests</span>
+</pre></div>
+</div>
+</section>
 </section>
 <section id="creating-a-pool-request">
 <h2>Creating a pool-request<a class="headerlink" href="#creating-a-pool-request" title="Permalink to this headline">¶</a></h2>
@@ -363,7 +383,10 @@ development branch and click <code class="docutils literal notranslate"><span cl
 <li><a class="reference internal" href="#">Development</a><ul>
 <li><a class="reference internal" href="#git-repository">Git repository</a></li>
 <li><a class="reference internal" href="#fork-repository">Fork repository</a></li>
-<li><a class="reference internal" href="#cloning-a-repository">Cloning a repository</a></li>
+<li><a class="reference internal" href="#cloning-a-repository">Cloning a repository</a><ul>
+<li><a class="reference internal" href="#running-before-create-pool-request">Running before create pool-request</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#creating-a-pool-request">Creating a pool-request</a></li>
 <li><a class="reference internal" href="#code-style-requirements">Code style requirements</a></li>
 <li><a class="reference internal" href="#writing-and-running-tests">Writing and running tests</a></li>
