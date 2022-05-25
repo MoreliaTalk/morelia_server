@@ -1,63 +1,55 @@
 """
-    Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the
-    full list.
+Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+Look at the file AUTHORS.md(located at the root of the project) to get the
+full list.
 
-    This file is part of Morelia Server.
+This file is part of Morelia Server.
 
-    Morelia Server is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Morelia Server is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    Morelia Server is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+Morelia Server is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Lesser General Public License
+along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
-# ************** Standart module *********************
-import os
 from datetime import datetime
 from json import JSONDecodeError
-# ************** Standart module end *****************
+import logging as standart_logging
+import os
 
-
-# ************** External module *********************
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi import WebSocket
 from fastapi.staticfiles import StaticFiles
+from loguru import logger
 from starlette.responses import HTMLResponse
 from starlette.templating import Jinja2Templates
 from starlette.websockets import WebSocketDisconnect
-# ************** External module end *****************
 
-
-# ************** Morelia module **********************
+from admin import general
+from mod.config.config import ConfigHandler
 from mod.controller import MainHandler
 from mod.db.dbhandler import DBHandler
-from admin import admin
-from config import LOGGING
-from config import TEMPLATES as DIRECTORY
-from config import DATABASE
-# ************** Morelia module end ******************
+from mod.log_handler import add_logging
 
 
-# ************** Logging beginning *******************
-from loguru import logger
-from mod.logging import add_logging
-import logging as standart_logging
-# ************** Unicorn logger off ******************
-if LOGGING.getboolean("UVICORN_LOGGING_DISABLE"):
+# Get parameters contains in config.ini
+config = ConfigHandler()
+config_option = config.read()
+
+# Unicorn logger off
+if config_option.uvicorn_logging_disable:
     standart_logging.disable()
-# ************** Logging end *************************
 
 # loguru logger on
-add_logging(LOGGING.getint("level"))
+add_logging(config_option.level)
 
 # Record server start time (UTC)
 server_started = datetime.now()
@@ -67,7 +59,7 @@ app = FastAPI()
 logger.info("Start server")
 
 # Specifying where to load HTML page templates
-templates = Jinja2Templates(DIRECTORY.get("folder"))
+templates = Jinja2Templates(config_option.folder)
 
 # Search and filtered static files path
 main_path = os.getcwd()
@@ -78,12 +70,12 @@ else:
     file_static = os.path.join(main_path, 'static')
 
 # Set database connection
-db_connect = DBHandler(uri=DATABASE.get('uri'))
+db_connect = DBHandler(uri=config_option.uri)
 db_connect.create_table()
 
 
 app.mount("/admin",
-          admin.app)
+          general.app)
 
 app.mount("/static",
           StaticFiles(directory=file_static),
@@ -93,7 +85,7 @@ app.mount("/static",
 @app.get('/')
 def home_page(request: Request):
     """
-    Rendered home page where presents information about current working server
+    Rendered home page where presents information about current working server.
 
     Args:
         request(Request): not used
@@ -110,8 +102,7 @@ def home_page(request: Request):
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     """
-    Responsible for establishing a websocket connection between server and
-    client and exchanging requests/responses.
+    Responsible for establishing a websocket connection.
 
     Notes:
         Waiting for client to connect via websockets, after which receive a
@@ -149,10 +140,10 @@ async def websocket_endpoint(websocket: WebSocket):
             # create a "client" object and pass the request body to
             # it as a parameter. The "get_response" method generates
             # a response in JSON-object format.
-            client_request = MainHandler(request=data,
-                                         database=db_connect,
-                                         protocol='mtp')
-            response = await websocket.send_bytes(client_request.get_response())
+            request = MainHandler(request=data,
+                                  database=db_connect,
+                                  protocol='mtp')
+            response = await websocket.send_bytes(request.get_response())
             logger.info("Response sent to client")
             logger.debug(f"Result of processing: {response}")
         # After disconnecting the client (by the decision of the client,

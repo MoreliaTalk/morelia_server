@@ -1,41 +1,43 @@
 """
-    Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the
-    full list.
+Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+Look at the file AUTHORS.md(located at the root of the project) to get the
+full list.
 
-    This file is part of Morelia Server.
+This file is part of Morelia Server.
 
-    Morelia Server is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Morelia Server is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    Morelia Server is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+Morelia Server is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Lesser General Public License
+along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import json
-from time import time
-from uuid import uuid4
 from collections import namedtuple
+from time import time
+from typing import Any
+from typing import Optional
+from typing import Union
+from uuid import uuid4
 
-from pydantic import ValidationError
 from loguru import logger
+from pydantic import ValidationError
 from sqlobject.sresults import SelectResults
 
-from mod.protocol.mtp import api
 from mod import error
 from mod import lib
-from mod.db.dbhandler import DBHandler
-from mod.db.dbhandler import DatabaseWriteError
-from mod.db.dbhandler import DatabaseReadError
+from mod.config.config import ConfigHandler
 from mod.db.dbhandler import DatabaseAccessError
-from config import SERVER_LIMIT as LIMIT
+from mod.db.dbhandler import DatabaseReadError
+from mod.db.dbhandler import DatabaseWriteError
+from mod.db.dbhandler import DBHandler
+from mod.protocol.mtp import api
 
 
 class MTPErrorResponse:
@@ -56,7 +58,7 @@ class MTPErrorResponse:
 
     def __init__(self,
                  status: str,
-                 add_info: Exception | str = None) -> None:
+                 add_info: Optional[Exception | str] = None) -> None:
         self.status = status
         self.detail = add_info
 
@@ -68,7 +70,6 @@ class MTPErrorResponse:
             object (api.ErrorResponse): object with information about code,
             status, time and detailed description of error that has occurred.
 
-            {'code': 200,'status': 'Ok','time': 123456545,'detail': 'successfully'}
         """
 
         try:
@@ -78,13 +79,14 @@ class MTPErrorResponse:
             code = 520
             status = "Unknown Error"
             time_ = int(time())
-            detail = str(ERROR)
+            detail: Union[Exception, str] = str(ERROR)
         else:
             logger.debug(f"Status code({catch_error.code}):",
                          f" {catch_error.status}")
             code = catch_error.code
             status = catch_error.status
             time_ = int(time())
+
             if self.detail is None:
                 detail = catch_error.detail
             else:
@@ -120,6 +122,8 @@ class MTProtocol:
                                            revision=api.REVISION)
         self.get_time = int(time())
         self._db = database
+        self.config = ConfigHandler()
+        self.config_option = self.config.read()
 
         try:
             self.request = api.Request.parse_obj(request)
@@ -131,7 +135,8 @@ class MTProtocol:
         else:
             auth = self._check_auth(self.request.data.user[0].uuid,
                                     self.request.data.user[0].auth_id)
-            if auth.result:
+            version = self._check_protocol_version(self.request)
+            if version and auth.result:
                 match self.request.type:
                     case "get_update":
                         self.response = self._get_update(self.request)
@@ -155,7 +160,7 @@ class MTProtocol:
                         self.response = self._ping_pong(self.request)
                     case _:
                         self.response = self._errors("METHOD_NOT_ALLOWED")
-            else:
+            elif version and auth.result is False:
                 match self.request.type:
                     case 'register_user':
                         self.response = self._register_user(self.request)
@@ -164,12 +169,14 @@ class MTProtocol:
                     case _:
                         self.response = self._errors("UNAUTHORIZED",
                                                      auth.error_message)
+            else:
+                self.response = self._errors("VERSION_NOT_SUPPORTED")
 
     def _check_auth(self,
                     uuid: str,
-                    auth_id: str) -> namedtuple:
+                    auth_id: str) -> Any:
         """
-        Checking user authentication every each request
+        Checking user authentication every each request.
 
         Args:
             uuid (str): user identification number which granted moreliatalk
@@ -209,12 +216,12 @@ class MTProtocol:
                               message)
 
     def get_response(self,
-                     response: api.Response = None) -> json:
+                     response: api.Response = None) -> str:
         """
-        Generates a JSON-object containing result of an instance json
+        Generates a JSON-object containing result of an instance json.
 
         Returns:
-            (json): json-object which contains validated response
+            (str): json-object which contains validated response
 
         """
 
@@ -228,14 +235,14 @@ class MTProtocol:
     def _check_login(self,
                      login: str) -> bool:
         """
-        Checks database for a user with the same login and returns True
-        if there is such a user or False if no such user exists.
+        Checks database for a user with the same login.
 
         Args:
             login (str): user login
 
         Returns:
-            (bool): True of False
+            (bool): True if there is such a user or False if no such user
+                exists.
         """
 
         try:
@@ -430,8 +437,8 @@ class MTProtocol:
     def _all_messages(self,
                       request: api.Request) -> api.Response:
         """
-        Displays all messages of a specific flow retrieves them
-        from database and issues them as an array consisting of JSON.
+        Displays all messages of a specific flow.
+        Retrieves from database and issues them as an array consisting of JSON.
 
         See Also:
             https://github.com/MoreliaTalk/morelia_protocol
@@ -440,6 +447,7 @@ class MTProtocol:
         flow_uuid = request.data.flow[0].uuid
         flow = []
         message = []
+        LIMIT_MESSAGES = self.config_option.messages
 
         if request.data.flow[0].message_start is None:
             message_start = 0
@@ -457,8 +465,8 @@ class MTProtocol:
                          end: int,
                          start: int = 0) -> list[api.MessageResponse]:
             """
-            Converts the database object into a list of validated "Message"
-            objects.
+            Converts the database object into a list.
+            List contains validation Message object.
 
             Args:
                 db (SelectResults): database query result
@@ -470,43 +478,44 @@ class MTProtocol:
             """
 
             _list = []
+
             for element in db[start:end]:
                 _list.append(api.MessageResponse(
-                               uuid=element.uuid,
-                               client_id=None,
-                               text=element.text,
-                               from_user=element.user.uuid,
-                               time=element.time,
-                               from_flow=element.flow.uuid,
-                               file_picture=element.file_picture,
-                               file_video=element.file_video,
-                               file_audio=element.file_audio,
-                               file_document=element.file_document,
-                               emoji=element.emoji,
-                               edited_time=element.edited_time,
-                               edited_status=element.edited_status))
+                             uuid=element.uuid,
+                             client_id=None,
+                             text=element.text,
+                             from_user=element.user.uuid,
+                             time=element.time,
+                             from_flow=element.flow.uuid,
+                             file_picture=element.file_picture,
+                             file_video=element.file_video,
+                             file_audio=element.file_audio,
+                             file_document=element.file_document,
+                             emoji=element.emoji,
+                             edited_time=element.edited_time,
+                             edited_status=element.edited_status))
             return _list
 
         try:
             dbquery = self._db.get_message_by_more_time_and_flow(flow_uuid,
-                                                                 request.data.time)
+                                                                 request.data.time)  # noqa
             MESSAGE_COUNT = dbquery.count()
             dbquery[0]
         except DatabaseReadError as flow_error:
             errors = MTPErrorResponse("NOT_FOUND",
                                       str(flow_error))
         else:
-            if MESSAGE_COUNT <= LIMIT.getint("messages"):
+            if MESSAGE_COUNT <= LIMIT_MESSAGES:
                 flow.append(api.FlowResponse(uuid=flow_uuid))
                 message = get_messages(dbquery,
-                                       LIMIT.getint("messages"))
+                                       LIMIT_MESSAGES)
                 errors = MTPErrorResponse("OK")
                 logger.success("\'_all_messages\' executed successfully")
             else:
                 flow.append(api.FlowResponse(uuid=flow_uuid,
                                              message_start=message_start,
                                              message_end=MESSAGE_COUNT))
-                if message_volume <= LIMIT.getint("messages"):
+                if message_volume <= LIMIT_MESSAGES:
                     message = get_messages(dbquery,
                                            request.data.flow[0].message_end,
                                            request.data.flow[0].message_start)
@@ -516,7 +525,7 @@ class MTProtocol:
                     errors = MTPErrorResponse("FORBIDDEN",
                                               "Requested more messages"
                                               f" than server limit"
-                                              f" ({LIMIT.getint('messages')})")
+                                              f" ({LIMIT_MESSAGES})")
 
         data = api.DataResponse(time=self.get_time,
                                 flow=flow,
@@ -584,8 +593,7 @@ class MTProtocol:
     def _all_flow(self,
                   request: api.Request) -> api.Response:
         """
-        Allows to get a list of all flows and information about them
-        from database.
+        Get a list of all flows and information about them.
 
         See Also:
             https://github.com/MoreliaTalk/morelia_protocol
@@ -628,8 +636,9 @@ class MTProtocol:
 
         users_volume = len(request.data.user)
         user = []
+        LIMIT_USERS = self.config_option.users
 
-        if users_volume <= LIMIT.getint("users"):
+        if users_volume <= LIMIT_USERS:
             errors = MTPErrorResponse("OK")
             for element in request.data.user[1:]:
                 try:
@@ -648,7 +657,7 @@ class MTProtocol:
             logger.success("\'_user_info\' executed successfully")
         else:
             errors = MTPErrorResponse("TOO_MANY_REQUESTS",
-                                      f"Requested more {LIMIT.get('users')}"
+                                      f"Requested more {LIMIT_USERS}"
                                       " users than server limit")
 
         data = api.DataResponse(time=self.get_time,
@@ -662,8 +671,8 @@ class MTProtocol:
     def _authentication(self,
                         request: api.Request) -> api.Response:
         """
-        Performs authentication of registered client,
-        with issuance of a unique hash number of connection session.
+        Performs authentication of registered client.
+        With issuance of a unique hash number of connection session.
         During authentication password transmitted by client
         and password contained in server database are verified.
 
@@ -747,8 +756,7 @@ class MTProtocol:
     def _delete_message(self,
                         request: api.Request) -> api.Response:
         """
-        Function deletes the message from database Message
-        table by its ID.
+        Deletes the message from database Message table by its ID.
 
         See Also:
             https://github.com/MoreliaTalk/morelia_protocol
@@ -812,8 +820,7 @@ class MTProtocol:
     def _ping_pong(self,
                    request: api.Request) -> api.Response:
         """
-        Generates a response to a client's request
-        for communication between server and client.
+        Simple response/request communication between server and client.
 
         See Also:
             https://github.com/MoreliaTalk/morelia_protocol
@@ -829,7 +836,7 @@ class MTProtocol:
 
     def _errors(self,
                 status: str = None,
-                add_info: Exception | str = None,
+                add_info: Union[Exception, str, None] = None,
                 request: api.Request = None) -> api.Response:
         """
         Handles cases when a request to server is not recognized by it.
@@ -838,6 +845,12 @@ class MTProtocol:
 
         See Also:
             https://github.com/MoreliaTalk/morelia_protocol
+
+        Args:
+            status (str | None): error status name in UPPERCASE
+            add_info (Exception | str | None): additional information which
+                added to error message
+            request: (api.Request): request from client in dict format
         """
 
         if request is not None:
@@ -856,3 +869,13 @@ class MTProtocol:
                             data=None,
                             errors=errors.result(),
                             jsonapi=self.jsonapi)
+
+    def _check_protocol_version(self,
+                                request: api.Request) -> bool:
+        MIN = self.config_option.min_version
+        MAX = self.config_option.max_version
+        version = request.jsonapi.version
+        if MIN <= version <= MAX:
+            return True
+        else:
+            return False

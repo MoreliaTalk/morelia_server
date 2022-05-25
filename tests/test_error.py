@@ -17,18 +17,13 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
-import unittest
 
-from loguru import logger
+import unittest
 
 from mod import error
 
 
 class TestCheckError(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        logger.remove()
-
     def setUp(self):
         self.OK = "OK"
         self.WRONG_TYPE_STATUS = 201

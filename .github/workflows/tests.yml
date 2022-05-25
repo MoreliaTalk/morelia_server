@@ -23,11 +23,19 @@ jobs:
         
     - name: Create config for server
       run: |
-        mv example_config.ini config.ini
+        cp example_config.ini config.ini
                 
     - name: Run tests
       run: |
         pipenv run coverage run -m unittest discover tests
+
+    - name: Linting code
+      run: |
+        pipenv run flake8 --config ./setup.cfg --show-source --statistics
+        
+    - name: Type checking
+      run: |
+        pipenv run mypy --config=./setup.cfg .
 
     - name: Push report to coveralls.io
       env: 

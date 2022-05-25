@@ -24,7 +24,7 @@ import unittest
 
 from loguru import logger
 
-from mod import lib  # noqa
+from mod import lib
 
 # Add path to directory with code being checked
 # to variable 'PATH' to import modules from directory

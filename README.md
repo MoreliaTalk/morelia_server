@@ -303,7 +303,7 @@ python -m pdb ./debug_server.py
 
 [Telegram](https://t.me/joinchat/LImHShzAmIWvpMxDTr5Vxw) - группа где обсуждаются насущные вопросы.
 
-[Slack](www.moreliatalk.slack.com) - альтернативный вариант обсуждения проекта.
+[Slack](moreliatalk.slack.com) - обсуждение проекта.
 
 ## Лицензия ##
 

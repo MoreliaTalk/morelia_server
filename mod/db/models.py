@@ -1,23 +1,24 @@
 """
-    Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the
-    full list.
+Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+Look at the file AUTHORS.md(located at the root of the project) to get the
+full list.
 
-    This file is part of Morelia Server.
+This file is part of Morelia Server.
 
-    Morelia Server is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Morelia Server is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    Morelia Server is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+Morelia Server is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Lesser General Public License
+along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
+
 import sqlobject as orm
 
 
@@ -62,8 +63,7 @@ class UserConfig(orm.SQLObject):
 
 class Flow(orm.SQLObject):
     """
-    Flow table containing information about threads and their types
-    (chat, channel, group).
+    Flow table containing information about threads and their types.
 
     Args:
         uuid (str, required, unique): unique flow id which automated
@@ -87,8 +87,7 @@ class Flow(orm.SQLObject):
 
 class Message(orm.SQLObject):
     """
-    Generates a Message table containing information
-    about user messages.
+    Message table containing information about user messages.
 
     Args:
         uuid (str, required, unique): unique flow id which automated
@@ -122,8 +121,7 @@ class Message(orm.SQLObject):
 
 class Admin(orm.SQLObject):
     """
-    Generates Admin table containing information
-    about users with administrators role.
+    Admin table containing information about users with administrators role.
 
     Args:
         username (str, required, unique): name user which granted administrator

@@ -33,6 +33,8 @@ from mod.db.dbhandler import DatabaseReadError  # noqa
 
 
 class TestDBHandlerMainMethods(unittest.TestCase):
+    db: DBHandler
+
     @classmethod
     def setUpClass(cls) -> None:
         logger.remove()
@@ -65,24 +67,24 @@ class TestDBHandlerMainMethods(unittest.TestCase):
         db = DBHandler(uri="sqlite:/:memory:")
         self.assertFalse(db.debug)
         self.assertEqual(db._uri,
-                         "sqlite:/:memory:")
+                         "sqlite:/:memory:?debug=0")
 
     def test_create_db_set_debug(self):
         self.db.delete_table()
         db = DBHandler(uri="sqlite:/:memory:",
                        debug=True)
-        self.assertFalse(db.debug)
+        self.assertTrue(db.debug)
         self.assertEqual(db._uri,
-                         "sqlite:/:memory:")
+                         "sqlite:/:memory:?debug=1&logger=stderr&loglevel=critical")
 
     def test_create_db_set_debug_logger(self):
         self.db.delete_table()
         db = DBHandler(uri="sqlite:/:memory:",
                        debug=True,
                        logger='Test')
-        self.assertFalse(db.debug)
+        self.assertTrue(db.debug)
         self.assertEqual(db._uri,
-                         "sqlite:/:memory:")
+                         "sqlite:/:memory:?debug=1&logger=Test&loglevel=critical")
 
     def test_create_db_set_debug_logger_loglevel(self):
         db = DBHandler(uri="sqlite:/:memory:",
@@ -91,11 +93,11 @@ class TestDBHandlerMainMethods(unittest.TestCase):
                        loglevel='debug')
         self.assertTrue(db.debug)
         self.assertEqual(db._uri,
-                         "sqlite:/:memory:?debug=1?logger=Test?loglevel=debug")
+                         "sqlite:/:memory:?debug=1&logger=Test&loglevel=debug")
 
     def test_str(self):
         self.assertEqual(str(self.db),
-                         "Connected to database: sqlite:/:memory:")
+                         "Connected to database: sqlite:/:memory:?debug=0")
 
     def test_repr(self):
         self.assertEqual(repr(self.db),
@@ -198,6 +200,7 @@ class TestDBHandlerMethods(unittest.TestCase):
     def test_set_debug(self):
         self.db.debug = True
         self.assertTrue(self.db.debug)
+        self.db.debug = False
 
     def test_get_all_user(self):
         dbquery = self.db.get_all_user()

@@ -1,114 +1,359 @@
 """
-    Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the
-    full list.
+Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+Look at the file AUTHORS.md(located at the root of the project) to get the
+full list.
 
-    This file is part of Morelia Server.
+This file is part of Morelia Server.
 
-    Morelia Server is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Morelia Server is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    Morelia Server is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+Morelia Server is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Lesser General Public License
+along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from time import time
+import asyncio
+from functools import wraps
+from os.path import join
+from pathlib import Path
+import random
 from time import process_time
+from time import time
 from uuid import uuid4
 
 import click
+import uvicorn
+from websockets import client as ws_client
+from websockets import exceptions as ws_exceptions
 
 from mod import lib
-from mod.db import dbhandler
-from mod.db.dbhandler import DatabaseWriteError
-from mod.db.dbhandler import DatabaseReadError
+from mod.config.config import ConfigHandler
 from mod.db.dbhandler import DatabaseAccessError
-from mod.config import DATABASE
-from mod.config import SUPERUSER
+from mod.db.dbhandler import DatabaseReadError
+from mod.db.dbhandler import DatabaseWriteError
+from mod.db.dbhandler import DBHandler
+from mod.protocol.mtp import api as mtp_api
+
+config = ConfigHandler()
+config_option = config.read()
+
+SYMBOLS_FOR_RANDOM = "abcdefghijklmnopqrstuvwxyz \
+                      ABCDEFGHIJKLMNOPQRSTUVWXYZ \
+                      1234567890"
+
+
+async def connect_ws_and_send(message, address: str):
+    """
+    Connect and send message to address.
+
+    Args:
+        message: message for send
+        address(str): server address
+    """
+    try:
+        ws = await ws_client.connect(address)
+    except ConnectionRefusedError:
+        click.echo("Unable to connect to the server, please check the server")
+    else:
+        await ws.send(message.json())
+        try:
+            response = await ws.recv()
+        except ws_exceptions.ConnectionClosedError as error:
+            click.echo(f"Server disconnected not normal, error: {error}")
+        else:
+            click.echo(response)
+            await ws.close(1000)
+
+
+def click_async(func):
+    """
+    Wrapper to call the click function asynchronously.
+
+    Args:
+        func: function
+
+    Returns:
+        (wrapper)
+    """
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        return asyncio.run(func(*args, **kwargs))
+
+    return wrapper
 
 
 @click.group()
 def cli():
+    """
+    Group for all command.
+    """
     pass
 
 
-@cli.command("db-create", help="Create all table with all data")
-def db_create():
+@cli.group("db", help="manage database")
+def db_cli():
+    """
+    Group for db manipulation command.
+    """
+    pass
+
+
+@cli.group("testclient", help="mini-client for server")
+def client_cli():
+    """
+    Group for client command.
+    """
+    pass
+
+
+@cli.command("runserver", help="run app using the dev server")
+@click.option("-h", "--host", default="localhost")
+@click.option("-p", "--port", default=8080)
+@click.option("--log-level", default="debug")
+@click.option("--use-colors", default=True)
+@click.option("-r", "--reload", default=True)
+def run(host: str,
+        port: int,
+        log_level: str,
+        use_colors: bool,
+        reload: bool):
+    """
+    Run server.
+
+    Args:
+        host(str): host for run
+        port(str):port for run
+        log_level(str): level logs
+        use_colors(bool): enable use colors in terminal
+        reload(bool): enable hot reload
+    """
+
+    uvicorn.run("server:app",
+                host=host,
+                port=port,
+                http="h11",
+                ws="websockets",
+                log_level=log_level,
+                use_colors=use_colors,
+                debug=True,
+                reload=reload)
+
+
+@db_cli.command("create", help="Create all table with all data")
+@click.option("--uri",
+              default=None)
+def db_create(uri: str):
+    """
+    Create database, and create all table which contain in models.
+    """
+
+    if uri is None:
+        database = config_option.uri
+    elif uri == "test":
+        database = 'sqlite:/:memory:'
+
     start_time = process_time()
-    db = dbhandler.DBHandler(uri=DATABASE.get('uri'))
-    db.create_table()
-    click.echo(f'Table is created at: '
-               f'{process_time() - start_time} sec.')
+    db = DBHandler(uri=database)
+    try:
+        db.create_table()
+    except Exception as err:
+        click.echo(f"table not created. Error={err}")
+    else:
+        click.echo(f"Table is created at: "
+                   f"{process_time() - start_time} sec.")
 
 
-@cli.command("db-delete", help="Delete all table with all data")
-def db_delete():
+@db_cli.command("delete", help="Delete all table with all data")
+@click.option("--uri",
+              default=None)
+def db_delete(uri: str):
+    """
+    Delete all tables which contains data.
+    This function not delete database file.
+    """
+
+    if uri is None:
+        database = config_option.uri
+    elif uri == "test":
+        database = 'sqlite:/:memory:'
+
     start_time = process_time()
-    db = dbhandler.DBHandler(uri=DATABASE.get('uri'))
-    db.delete_table()
-    click.echo(f'Table is deleted at: '
-               f'{process_time() - start_time} sec.')
+    db = DBHandler(uri=database)
+    try:
+        db.delete_table()
+    except Exception as err:
+        click.echo(f"table not created. Error={err}")
+    else:
+        click.echo(f"Table is deleted at: "
+                   f"{process_time() - start_time} sec.")
 
 
-@cli.command("superuser-create", help="Create superuser in database")
-def create_superuser():
-    db = dbhandler.DBHandler(uri=DATABASE.get('uri'))
-    user_uuid = str(123456789)
-    hash_password = SUPERUSER.get('hash_password')
+@db_cli.command("user-create", help="Creates a user in the database, \
+                                     if login and password are empty, \
+                                     then generates them randomly")
+@click.option("-l",
+              "--login",
+              default="".join(random.sample(SYMBOLS_FOR_RANDOM, 6)))
+@click.option("--username", default="User")
+@click.option("-p",
+              "--password",
+              default="".join(random.sample(
+                  SYMBOLS_FOR_RANDOM, 20
+              )))
+def create_user(login: str,
+                username: str,
+                password: str):
+    """
+    Create user in database.
+
+    Args:
+        login(str): user login
+        username(str): username
+        password(str): user password
+    """
+
+    db = DBHandler(uri=config_option.uri)
+    user_uuid = str(uuid4().int)
     try:
         db.add_user(uuid=user_uuid,
-                    login="login",
-                    password="password",
-                    hash_password=hash_password,
-                    username="superuser",
+                    login=login,
+                    password=password,
+                    hash_password=lib.Hash(password, user_uuid).hash_password,
+                    username=username,
                     salt=b"salt",
                     key=b"key")
-        click.echo("Superuser created")
     except DatabaseWriteError as error:
-        click.echo(f'Failed to create a user. Error text: {error}')
+        click.echo(f"Failed to create a user. Error text: {error}")
+    else:
+        click.echo(f"{username} created, login: {login}, password: {password}")
 
 
-@cli.command("flow-create", help="Create flow type group in database")
-def create_flow():
-    db = dbhandler.DBHandler(uri=DATABASE.get('uri'))
-    user_uuid = str(123456789)
+@db_cli.command("flow-create", help="Create flow type group in database")
+@click.option("-l",
+              "--login",
+              help="Use login which you specified when run user-create")
+def create_flow(login: str):
+    """
+    Creating and adding test flow (group) in database.
+    """
+
+    db = DBHandler(uri=config_option.uri)
     try:
-        new_user = db.get_user_by_uuid(uuid=user_uuid)
-        new_flow = db.add_flow(uuid=str(uuid4().hex),
-                               users=[user_uuid],
-                               time_created=int(time()),
-                               flow_type="group",
-                               title="Test",
-                               info="Test flow",
-                               owner=user_uuid)
-        new_flow.addUserConfig(new_user)
-        click.echo("Flow created")
+        user = db.get_user_by_login(login=login)
     except (DatabaseReadError,
             DatabaseAccessError,
             DatabaseWriteError) as error:
         click.echo(f'Failed to create a flow. Error text: {error}')
+    else:
+        new_flow = db.add_flow(uuid=str(uuid4().int),
+                               users=[user.uuid],
+                               time_created=int(time()),
+                               flow_type="group",
+                               title="Test",
+                               info="Test flow",
+                               owner=user.uuid)
+        new_flow.addUserConfig(user)
+        click.echo("Flow created")
 
 
-@cli.command("admin-create", help="Create user in admin panel")
+@db_cli.command("admin-create", help="Create user in admin panel")
 @click.option("--username", help="username admin")
 @click.option("--password", help="password admin")
-def admin_create_user(username, password):
-    db = dbhandler.DBHandler(uri=DATABASE.get('uri'))
+def admin_create_user(username,
+                      password):
+    """
+    Create Admin user to management server with admin panel.
+
+    Args:
+        username: name of admin user
+        password: password of admin user
+    """
+
+    db = DBHandler(uri=config_option.uri)
 
     generator = lib.Hash(password,
-                         str(uuid4().hex),
+                         str(uuid4().int),
                          key=b"key",
                          salt=b"salt")
-    db.add_admin(username=username,
-                 hash_password=generator.password_hash())
-    click.echo(f"Admin created\nusername: {username}\npassword: {password}")
+    try:
+        db.add_admin(username=username,
+                     hash_password=generator.password_hash())
+    except (DatabaseReadError,
+            DatabaseAccessError,
+            DatabaseWriteError) as error:
+        click.echo(f'Failed to create a flow. Error text: {error}')
+    else:
+        click.echo(f"Admin created\nusername: "
+                   f"{username}\npassword: {password}")
+
+
+@client_cli.command("send",
+                    help="send message to server",
+                    context_settings=dict(ignore_unknown_options=True,
+                                          allow_extra_args=True))
+@click.option("-t",
+              type=click.Choice(("register_user",
+                                 "get_update",
+                                 "send_message",
+                                 "all_messages",
+                                 "add_flow",
+                                 "all_flow",
+                                 "user_info",
+                                 "authentication",
+                                 "delete_user",
+                                 "delete_message",
+                                 "edited_message",
+                                 "ping_pong",
+                                 "error")),
+              help="type message mtp protocol",
+              default="send_message")
+@click.option("-a", "--address", default="ws://127.0.0.1:8080/ws")
+@click.pass_context
+@click_async
+async def send(ctx, t, address):
+    """
+    Connect and send message protocol method.
+
+    Args:
+        ctx(click.context): click call context
+        t(str): type message protocol
+        address(str): server address
+    """
+
+    kwargs = dict([item.strip('--').split('=') for item in ctx.args])
+    message = mtp_api.Request.parse_file(
+        Path(Path(__file__).parent, "tests", "fixtures", join(t, ".json"))
+    )
+
+    message.data.user.append(mtp_api.BaseUser())
+
+    message_dict = message.dict()
+    for kw in kwargs:
+        request_to_message_dict = "request_to_message_dict"
+        for element in kw.split("."):
+            try:
+                element = int(element)
+            except ValueError:
+                request_to_message_dict += f'["{element}"]'
+            else:
+                request_to_message_dict += f'[{element}]'
+
+        exec(request_to_message_dict + f" = '{kwargs[kw]}'", {
+            "__builtins__": {},
+            "request_to_message_dict": request_to_message_dict
+        })
+
+    message = mtp_api.Request.parse_obj(message_dict)
+
+    await connect_ws_and_send(message, address)
 
 
 if __name__ == "__main__":

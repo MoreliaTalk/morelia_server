@@ -1,22 +1,22 @@
 """
-    Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the
-    full list.
+Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+Look at the file AUTHORS.md(located at the root of the project) to get the
+full list.
 
-    This file is part of Morelia Server.
+This file is part of Morelia Server.
 
-    Morelia Server is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Morelia Server is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    Morelia Server is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+Morelia Server is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Lesser General Public License
+along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import sys
@@ -24,11 +24,13 @@ import sys
 from loguru import logger
 
 from admin import logs
-from config import LOGGING
+from mod.config.config import ConfigHandler
 
+config = ConfigHandler()
+config_option = config.read()
 
-expiration_date = LOGGING.get('EXPIRATION_DATE')
-debug_expiration_date = LOGGING.get('DEBUG_EXPIRATION_DATE')
+expiration_date = config_option.expiration_date
+debug_expiration_date = config_option.debug_expiration_date
 
 
 def add_logging(debug_status: int) -> None:
@@ -81,14 +83,14 @@ def add_logging(debug_status: int) -> None:
     if DEBUG:
         # We connect the output to TTY, level DEBUG
         logger.add(sys.stdout,
-                   format=LOGGING.get("debug"),
+                   format=config_option.debug,
                    level="DEBUG",
                    enqueue=True,
                    colorize=True)
 
         # Connect the output to a file, level DEBUG
         logger.add('log/debug.log',
-                   format=LOGGING.get("debug"),
+                   format=config_option.debug,
                    level="DEBUG",
                    enqueue=True,
                    colorize=True,
@@ -99,14 +101,14 @@ def add_logging(debug_status: int) -> None:
     else:
         # We connect the output to TTY, level INFO
         logger.add(sys.stdout,
-                   format=LOGGING.get("info"),
+                   format=config_option.info,
                    level="INFO",
                    enqueue=True,
                    colorize=True)
 
     # We connect the output to a file, level ERROR
     logger.add('log/error.log',
-               format=LOGGING.get("error"),
+               format=config_option.error,
                level="ERROR",
                backtrace=True,
                diagnose=True,
@@ -118,7 +120,7 @@ def add_logging(debug_status: int) -> None:
                compression="zip")
 
     logger.add(logs.loguru_handler,
-               format=LOGGING.get("info"),
+               format=config_option.info,
                level="DEBUG",
                enqueue=True,
                catch=True)

@@ -212,6 +212,66 @@ Admin
 .. autofunction:: admin.logs.get_logs
 .. autofunction:: admin.logs.loguru_handler
 
+
+Config
+------
+
+``mod.config.config.ConfigHandler``:
+
+.. autoclass:: mod.config.config.ConfigHandler
+   :members:
+   :private-members:
+   :undoc-members:
+
+``mod.config.config.NameConfigError``:
+
+.. autoclass:: mod.config.config.NameConfigError
+   :members:
+   :private-members:
+   :undoc-members:
+
+``mod.config.config.BackupConfigError``:
+
+.. autoclass:: mod.config.config.BackupConfigError
+   :members:
+   :private-members:
+   :undoc-members:
+
+``mod.config.config.OperationConfigError``:
+
+.. autoclass:: mod.config.config.OperationConfigError
+   :members:
+   :private-members:
+   :undoc-members:
+
+``mod.config.config.AccessConfigError``:
+
+.. autoclass:: mod.config.config.AccessConfigError
+   :members:
+   :private-members:
+   :undoc-members:
+
+``mod.config.config.RebuildConfigError``:
+
+.. autoclass:: mod.config.config.RebuildConfigError
+   :members:
+   :private-members:
+   :undoc-members:
+
+``mod.config.config.CopyConfigError``:
+
+.. autoclass:: mod.config.config.CopyConfigError
+   :members:
+   :private-members:
+   :undoc-members:
+
+``mod.config.config.validator``:
+
+.. autoclass:: mod.config.validator.ConfigModel
+   :members:
+   :private-members:
+   :undoc-members:
+
 Hash
 ----
 

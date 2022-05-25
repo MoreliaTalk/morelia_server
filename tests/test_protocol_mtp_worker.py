@@ -31,7 +31,7 @@ from mod import lib
 from mod.db.dbhandler import DBHandler
 from mod.protocol.mtp.worker import MTProtocol
 from mod.protocol.mtp.worker import MTPErrorResponse
-from config import SERVER_LIMIT as LIMIT
+from mod.config.config import ConfigHandler
 
 # Add path to directory with code being checked
 # to variable 'PATH' to import modules from directory
@@ -54,8 +54,9 @@ PING_PONG = os.path.join(FIXTURES_PATH, "ping_pong.json")
 ERRORS = os.path.join(FIXTURES_PATH, "errors.json")
 NON_VALID_ERRORS = os.path.join(FIXTURES_PATH, "non_valid_errors.json")
 ERRORS_ONLY_TYPE = os.path.join(FIXTURES_PATH, "errors_only_type.json")
+VALID_API_VERSION = os.path.join(FIXTURES_PATH, "valid_api_version.json")
 
-DATABASE = "sqlite:/:memory:?debug=1"
+DATABASE = "sqlite:/:memory:"
 
 
 class TestCheckAuthToken(unittest.TestCase):
@@ -396,6 +397,8 @@ class TestAllMessages(unittest.TestCase):
         cls.db = DBHandler(uri=DATABASE)
 
     def setUp(self):
+        self.config_option = ConfigHandler().read()
+        self.limit_message = self.config_option.messages
         self.db.create_table()
         self.db.add_user(uuid="123456",
                          login="login",
@@ -415,13 +418,13 @@ class TestAllMessages(unittest.TestCase):
                                 "654321"],
                          flow_type="chat",
                          owner="654321")
-        for item in range(LIMIT.getint("messages") + 10):
+        for item in range(self.limit_message + 10):
             self.db.add_message(flow_uuid="07d949",
                                 user_uuid="123456",
                                 message_uuid=str(uuid4().int),
                                 text=f"Hello{item}",
                                 time=item)
-        for item in range(LIMIT.getint("messages") - 10):
+        for item in range(self.limit_message - 10):
             self.db.add_message(flow_uuid="07d950",
                                 user_uuid="654321",
                                 message_uuid=str(uuid4().int),
@@ -983,6 +986,52 @@ class TestJsonapi(unittest.TestCase):
         result = json.loads(run_method.get_response())
         self.assertEqual(result['jsonapi']['version'], api.VERSION)
         self.assertEqual(result['jsonapi']['revision'], api.REVISION)
+
+
+class TestCheckProtocolVersion(unittest.TestCase):
+    db: DBHandler
+
+    @classmethod
+    def setUpClass(cls):
+        logger.remove()
+        cls.db = DBHandler(uri=DATABASE)
+
+    def setUp(self):
+        self.db.create_table()
+        self.db.add_user(uuid="123456",
+                         login="login",
+                         password="password",
+                         auth_id="auth_id")
+        self.test = api.Request.parse_file(VALID_API_VERSION)
+
+    def tearDown(self):
+        self.db.delete_table()
+        del self.test
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        del cls.db
+
+    def test_check_protocol_version(self):
+        self.test.jsonapi.version = "1.0"
+        run_method = MTProtocol(self.test,
+                                self.db)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["type"], "error")
+
+    def test_wrong_protocol_version(self):
+        self.test.jsonapi.version = "0.1"
+        run_method = MTProtocol(self.test,
+                                self.db)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["errors"]["code"], 505)
+        self.assertEqual(result["errors"]["status"], "Version Not Supported")
+        self.test.jsonapi.version = "2.0"
+        run_method = MTProtocol(self.test,
+                                self.db)
+        result = json.loads(run_method.get_response())
+        self.assertEqual(result["errors"]["code"], 505)
+        self.assertEqual(result["errors"]["status"], "Version Not Supported")
 
 
 if __name__ == "__main__":
