@@ -20,8 +20,9 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import asyncio
+import os
 from functools import wraps
-from os.path import join
+from os import path
 from pathlib import Path
 import random
 from time import process_time
@@ -330,7 +331,7 @@ async def send(ctx, t, address):
 
     kwargs = dict([item.strip('--').split('=') for item in ctx.args])
     message = mtp_api.Request.parse_file(
-        Path(Path(__file__).parent, "tests", "fixtures", join(t, ".json"))
+        Path(Path(__file__).parent, "tests", "fixtures", f"{ t }.json")
     )
 
     message.data.user.append(mtp_api.BaseUser())
