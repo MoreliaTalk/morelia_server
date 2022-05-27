@@ -38,4 +38,3 @@ jobs:
         with:
           branch: docs
           folder: ./docs/build/html/
-          target-folder: ${{ github.ref_name }}
