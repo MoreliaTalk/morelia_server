@@ -87,14 +87,15 @@ class ConfigHandler:
     By default, it is config.ini
 
     Args:
-        name (str): name of configuration file.
+        name: name of configuration file.
         interpolation: Interpolation behaviour may be customized by providing
-            a custom handler through the interpolation argument,
-            by default it is BasicInterpolation. None can be used to turn off
-            interpolation completely, ExtendedInterpolation provides a more
-            advanced variant inspired by zc.buildout. More on the subject in
-            the dedicated documentation section for build-ins configparser
-            modules.
+                       a custom handler through the interpolation argument,
+                       by default it is BasicInterpolation. None can be used to
+                       turn off interpolation completely, ExtendedInterpolation
+                       provides a more advanced variant inspired by
+                       zc.buildout. More on the subject in the dedicated
+                       documentation section for build-ins configparser
+                       modules.
     """
     _directory: Optional[str]
 
@@ -115,12 +116,9 @@ class ConfigHandler:
         Configures configparser module to work with it.
 
         Args:
-            name (str): name of configuration file
-            directory (Any): directory name which contain configuration file,
-                e.g.: tests/fixtures
-
-        Returns:
-            None
+            name: name of configuration file
+            directory: directory name which contain configuration file, e.g.
+                       tests/fixtures
         """
 
         self.file_path = self._search_config(name=name,
@@ -135,15 +133,15 @@ class ConfigHandler:
         Copies data line by line from one file to another.
 
         Args:
-            src (str, PurePath): source file path
-            dst (str, PurePath): destination file path
+            src: source file path
+            dst: destination file path
 
         Returns:
-            (str): Copied string success
+            "Copied string success" message
 
         Raises:
             CopyConfigError: no write permissions to the file or because
-                the file itself is missing.
+                             the file itself is missing.
         """
 
         try:
@@ -159,20 +157,13 @@ class ConfigHandler:
     def __str__(self) -> str:
         """
         Returned string which contains file path for opened config file.
-
-        Returns:
-            (str): Config: /path/to/the/file/config.ini
         """
 
         return f"Config: {self.file_path}"
 
     def __repr__(self) -> str:
         """
-        Return name of created class and parameters send to class object.
-
-        Returns:
-            (str): Class __name__ with: config_name=config.ini,
-            root_directory=None, preprocessed value=None.
+        Returned name of created class and parameters send to class object.
         """
 
         return "".join((f"Class {self.__class__.__name__} with ",
@@ -187,12 +178,12 @@ class ConfigHandler:
         Searching config file and create full path to it.
 
         Args:
-            name (str): name of configuration file
-            directory (Any): directory name which contain configuration file,
-                e.g.: tests/fixtures
+            name: name of configuration file
+            directory: directory name which contain configuration file, e.g.
+                       tests/fixtures
 
         Returns:
-            (str): /path/to/config/file/config.ini
+            /path/to/config/file/config.ini
 
         Raises:
             NameConfigError: no such a file.
@@ -217,15 +208,16 @@ class ConfigHandler:
     def _backup_config_file(self) -> tuple[str, PurePath]:
         """
         Creating a backup copy of the configuration file.
+        
         Also, addition at the end of the name this string: BAK + Unix time.
 
         Returns:
-            tuple(str, PurePath): Tuple contains string 'Backup config.ini
-            to: /path/to/config/file' and path-like file object.
+            tuple: contains string 'Backup config.ini to /path/to/config/file'
+                   and path-like file object.
 
         Raises:
-            BackupConfigError: can't read the original settings file,
-            or you don't have written access to the directory.
+            BackupConfigError: can't read the original settings file, or you
+                               don't have written access to the directory.
         """
 
         backup_config_name = "".join((self._name,
@@ -251,7 +243,8 @@ class ConfigHandler:
         Read and validate the parameters contained in the configuration file.
 
         Returns:
-            ConfigMode: pydantic model which contains all validated parameters
+            pydantic model (ConfigModel) which contains all validated
+            parameters
         """
 
         sections = self._config.sections()
@@ -272,16 +265,16 @@ class ConfigHandler:
         Copying lines from example_config.ini to config.ini file.
 
         Args:
-            orig_config (str): default 'example_config.ini'
-            new_config (str): default 'config.ini'
-            directory (str): default 'tests/fixtures'
+            orig_config: default 'example_config.ini'
+            new_config: default 'config.ini'
+            directory: default 'tests/fixtures'
 
         Returns:
-            (str): Config rebuild success
+            "Config rebuild success" message
 
         Raises:
             RebuildConfigError: the lack of permissions to write to file
-                or the absence of file itself
+                                or the absence of file itself
         """
 
         try:
@@ -301,8 +294,8 @@ class ConfigHandler:
         Reports name of directory that is set for initial search config file.
 
         Returns:
-            (str, None): name of directory, if None that mean root directory
-            corresponds to the main (uppermost) project directory
+            name of directory, if None that mean root directory corresponds
+            to the main (uppermost) project directory
         """
 
         return self._directory
@@ -314,10 +307,7 @@ class ConfigHandler:
         Sets a new name for the root directory.
 
         Args:
-            name(str): new name root directory
-
-        Returns:
-            None
+            name: new name root directory
         """
 
         self._directory = str(name)
@@ -330,7 +320,7 @@ class ConfigHandler:
         Parameter that reports name of configuration file.
 
         Returns:
-            (str): name of configuration file
+            name of configuration file
         """
 
         return self._name
@@ -342,10 +332,7 @@ class ConfigHandler:
         Sets of new name for configuration file.
 
         Args:
-            name(str): new name for configuration file
-
-        Returns:
-            None
+            name: new name for configuration file
         """
 
         self._name = str(name)
@@ -359,7 +346,7 @@ class ConfigHandler:
         parameters.
 
         Returns:
-            Config (namedtuple): with key=value
+            Config: with key=value
         """
 
         valid = self._validate().dict()
@@ -383,20 +370,20 @@ class ConfigHandler:
         settings to a special file or not.
 
         Args:
-            section (str):  each led by a [section] header
-            key (str): name of parameters
-            value (Any): value of parameters, auto converted to string object
-            backup (bool): save or not previous settings, default True
+            section:  each led by a [section] header
+            key: name of parameters
+            value: value of parameters, auto converted to string object
+            backup: save or not previous settings, default True
 
         Returns:
-            tuple (str, PurePath | None): Tuple which contain string
-            'Completed' and path-like object with backup file link or None
-            if set backup is False
+            tuple which contain string 'Completed' and path-like object with
+            backup file link or None if set backup is False
 
         Raises:
-            AccessConfigError: lack of write permissions to the file
-                or the lack of the file itself
+            AccessConfigError: lack of write permissions to the file or
+                               the lack of the file itself
         """
+
         backup_info: Tuple[Optional[str], Optional[PurePath]]
 
         if backup:

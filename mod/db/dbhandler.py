@@ -59,16 +59,16 @@ class DBHandler:
     As a method prescribed frequently used actions with data from database.
 
     Args:
-        uri (str): [name of DB-API]:/:[directory or url or 'memory'] like that
-                   sqlite:/:memory:
-        debug (bool): enable or disable debug messages
-        logger (str): name of logger
-        loglevel (str): standard logging levels: info, debug, error.
-                        or stderr, stdout
-        path_to_models (str): path to the location of the file describing
-                              database tables
-
+        uri: [name of DB-API]:/:[directory or url or 'memory'] like that
+             sqlite:/:memory:
+        debug: enable or disable debug messages
+        logger: name of logger
+        loglevel: standard logging levels: info, debug, error.
+                  or stderr, stdout
+        path_to_models: path to the location of the file describing
+                        database tables
     """
+
     _logger: Optional[str]
     _loglevel: Optional[str]
 
@@ -102,19 +102,13 @@ class DBHandler:
     def __str__(self) -> str:
         """
         Returned string which contains URI for connected database.
-
-        Returns:
-            (str): Connected to database: URI
         """
 
         return f"Connected to database: {self._uri}"
 
     def __repr__(self) -> str:
         """
-        Return name class name and parameters send to class when is created.
-
-        Returns:
-            (str): Class __name__: debug=, logger=, loglevel=
+        Return class name and parameters send to class when is created.
         """
 
         return "".join((f"Class {self.__class__.__name__}: ",
@@ -127,7 +121,7 @@ class DBHandler:
         Search all class name which contains in models.
 
         Returns:
-            (tuple): name of table
+            name of table
         """
 
         classes = [cls_name for cls_name, cls_obj
@@ -138,9 +132,6 @@ class DBHandler:
     def create_table(self) -> None:
         """
         Create all table which contains in models.
-
-        Returns:
-            (None):
         """
 
         for item in self.__search_db_in_models():
@@ -152,9 +143,6 @@ class DBHandler:
     def delete_table(self) -> None:
         """
         Delete all table which contains in models.
-
-        Returns:
-            (None):
         """
 
         for item in self.__search_db_in_models():
@@ -166,12 +154,12 @@ class DBHandler:
         return
 
     @property
-    def debug(self) -> bool | None:
+    def debug(self) -> bool:
         """
         Shows is flag set in property `debug`.
 
         Returns:
-            (bool): True or False
+            True or False
         """
 
         if self._debug == "0":
@@ -186,10 +174,7 @@ class DBHandler:
         Set `debug` property.
 
         Args:
-            value (bool): True or False
-
-        Returns:
-            (None):
+            value: True or False
         """
 
         if value:
@@ -211,14 +196,13 @@ class DBHandler:
         Universal method for read data in database.
 
         Args:
-            table (str): name of table
-            get_one (str): sets how many objects will be returned, True for one
+            table: name of table
+            get_one: sets how many objects will be returned, True for one
                            object or False for many object
-            **kwargs (str): dict contains name of column and data
+            **kwargs: dict contains name of column and data
 
         Returns:
-            (SelectResult | SQLObject): ORM object contains one or many row
-                                        from database
+            ORM object contains one or many row from database
 
         Raises:
             DatabaseReadError: occurs when there is no table in the database,
@@ -260,8 +244,8 @@ class DBHandler:
         Universal method for write data in database.
 
         Args:
-            table (str): name of table
-            **kwargs (str): dict contains name of column and data
+            table: name of table
+            **kwargs: dict contains name of column and data
 
         Returns:
             (SQLObject):
@@ -296,7 +280,7 @@ class DBHandler:
         Gives out user by uuid contains in UserConfig table.
 
         Args:
-            uuid(str): unique user identify number
+            uuid: unique user identify number
 
         Returns:
             (SQLObject):
@@ -310,8 +294,9 @@ class DBHandler:
                           login: str) -> SQLObject:
         """
         Gives out user by login contains in UserConfig table.
+
         Args:
-            login (str): user login
+            login: user login
 
         Returns:
             (SQLObject):
@@ -328,8 +313,8 @@ class DBHandler:
         Gives out user by login and password contains in UserConfig table.
 
         Args:
-            login (str): user login
-            password (str): user password
+            login: user login
+            password: user password
 
         Returns:
             (SQLObject):
@@ -359,19 +344,19 @@ class DBHandler:
         If salt or key is None then used blank string converted to bytes.
 
         Args:
-            uuid (str): unique user identify number
-            login (str): user login
-            password (str): user password
-            hash_password (str): hash from password
-            username (str): public username
-            is_bot (bool): type of user
-            auth_id (str): authenticate token
-            token_ttl (int): time to live auth_id token
-            email (str): user email
-            avatar (bytes): user image or photo
-            bio (str): text information about user
-            salt (bytes): secret bytes string
-            key (bytes): secrets bytes string
+            uuid: unique user identify number
+            login: user login
+            password: user password
+            hash_password: hash from password
+            username: public username
+            is_bot: type of user
+            auth_id: authenticate token
+            token_ttl: time to live auth_id token
+            email: user email
+            avatar: user image or photo
+            bio: text information about user
+            salt: secret bytes string
+            key: secrets bytes string
 
         Returns:
             (SQLObject):
@@ -416,23 +401,22 @@ class DBHandler:
         Updating information in the table UserConfig.
 
         Args:
-            uuid (str): unique user identify number
-            login (str): user login
-            password (str): user password
-            hash_password (str): hash from password
-            username (str): public username
-            is_bot (bool): type of user
-            auth_id (str): authenticate token
-            token_ttl (int): time to live auth_id token
-            email (str): user email
-            avatar (bytes): user image or photo
-            bio (str): text information about user
-            salt (bytes): secret bytes string
-            key (bytes): secrets bytes string
+            uuid: unique user identify number
+            login: user login
+            password: user password
+            hash_password: hash from password
+            username: public username
+            is_bot: type of user
+            auth_id: authenticate token
+            token_ttl: time to live auth_id token
+            email: user email
+            avatar: user image or photo
+            bio: text information about user
+            salt: secret bytes string
+            key: secrets bytes string
 
         Returns:
-            (str): message "Updated"
-
+            "Updated" message
         """
 
         dbquery = self.__read_db(table="UserConfig",
@@ -493,7 +477,7 @@ class DBHandler:
         Gives out one message by uuid which contains in Message table.
 
         Args:
-            uuid(str): unique user identify number
+            uuid: unique user identify number
 
         Returns:
             (SQLObject):
@@ -509,7 +493,7 @@ class DBHandler:
         Gives out all message which contains desired text string.
 
         Args:
-            text (str): text string to be found
+            text: text string to be found
 
         Returns:
             (SelectResults):
@@ -522,10 +506,10 @@ class DBHandler:
     @staticmethod
     def get_message_by_exact_time(time: int) -> SelectResults:
         """
-        Gives out message by time, full compliance for requested time.
+        Gives out message by time == requested time.
 
         Args:
-            time (str): Unix-like time
+            time: Unix-like time
 
         Returns:
             (SelectResults):
@@ -536,10 +520,10 @@ class DBHandler:
     @staticmethod
     def get_message_by_less_time(time: int) -> SelectResults:
         """
-        Gives out message by time, <= requested time.
+        Gives out message by time <= requested time.
 
         Args:
-            time (str): Unix-like time
+            time: Unix-like time
 
         Returns:
             (SelectResults):
@@ -550,10 +534,10 @@ class DBHandler:
     @staticmethod
     def get_message_by_more_time(time: int) -> SelectResults:
         """
-        Gives out message by time, >= requested time.
+        Gives out message by time >= requested time.
 
         Args:
-            time (str): Unix-like time
+            time: Unix-like time
 
         Returns:
             (SelectResults):
@@ -568,8 +552,8 @@ class DBHandler:
         Gives out message by flow and time >= than requested.
 
         Args:
-            flow_uuid (str): unique identify number from flow
-            time (int): Unix-like time
+            flow_uuid: unique identify number from flow
+            time: Unix-like time
 
         Returns:
             (SelectResults):
@@ -586,11 +570,11 @@ class DBHandler:
                                           flow_uuid: str,
                                           time: int) -> SelectResults:
         """
-        Gives out message by flow and time, <= requested time.
+        Gives out message by flow and time <= requested time.
 
         Args:
-            flow_uuid (str): unique identify number from flow
-            time (int): Unix-like time
+            flow_uuid: unique identify number from flow
+            time: Unix-like time
 
         Returns:
             (SelectResults):
@@ -607,11 +591,11 @@ class DBHandler:
                                            flow_uuid: str,
                                            time: int) -> SelectResults:
         """
-        Gives out message by flow and time, full compliance for requested time.
+        Gives out message by flow and time == requested time.
 
         Args:
-            flow_uuid (str): unique identify number from flow
-            time (int): Unix-like time
+            flow_uuid: unique identify number from flow
+            time: Unix-like time
 
         Returns:
             (SelectResults):
@@ -643,16 +627,16 @@ class DBHandler:
             "flow" and "user" in the database is checked.
 
         Args:
-            flow_uuid (str): unique identify number from flow
-            user_uuid (str): unique user identify number
-            message_uuid (str): unique identify number from message
-            time (int): Unix-like time
-            text (str): message text
-            picture (bytes): appending image
-            video (bytes): appending video
-            audio (bytes): appending audio
-            document (bytes): appending document
-            emoji (bytes): appending emoji image
+            flow_uuid: unique identify number from flow
+            user_uuid: unique user identify number
+            message_uuid: unique identify number from message
+            time: Unix-like time
+            text: message text
+            picture: appending image
+            video: appending video
+            audio: appending audio
+            document: appending document
+            emoji: appending emoji image
 
         Returns:
             (SQLObject):
@@ -692,19 +676,18 @@ class DBHandler:
         Update message content which contains in Message table.
 
         Args:
-            uuid (str): unique identify number from message
-            text (str): message text
-            picture (bytes): appending image
-            video (bytes): appending video
-            audio (bytes): appending audio
-            document (bytes): appending document
-            emoji (bytes): appending emoji image
-            edited_time (int): time when user last time is corrected his
-                               message
-            edited_status (bool): True if user corrected his message
+            uuid: unique identify number from message
+            text: message text
+            picture: appending image
+            video: appending video
+            audio: appending audio
+            document: appending document
+            emoji: appending emoji image
+            edited_time: time when user last time is corrected his message
+            edited_status: True if user corrected his message
 
         Returns:
-            (str): message "Updated"
+            "Updated" message
         """
 
         dbquery = self.__read_db(table="Message",
@@ -753,7 +736,7 @@ class DBHandler:
         Gives out one flow by uuid from Flow table.
 
         Args:
-            uuid (str): unique user identify number
+            uuid: unique user identify number
 
         Returns:
             (SQLObject):
@@ -769,7 +752,7 @@ class DBHandler:
         Gives out flow by title which contains in Flow table.
 
         Args:
-            title (str): name added in public information about flow
+            title: name added in public information about flow
 
         Returns:
             (SelectResults):
@@ -782,10 +765,10 @@ class DBHandler:
     @staticmethod
     def get_flow_by_more_time(time: int) -> SelectResults:
         """
-        Gives flow by time, full compliance requested time.
+        Gives flow by time => requested time.
 
         Args:
-            time (int): Unix-like time
+            time: Unix-like time
 
         Returns:
             (SelectResults):
@@ -799,7 +782,7 @@ class DBHandler:
         Gives out flow by time <= requested time.
 
         Args:
-            time (int): Unix-like time
+            time: Unix-like time
 
         Returns:
             (SelectResults):
@@ -810,10 +793,10 @@ class DBHandler:
     @staticmethod
     def get_flow_by_exact_time(time: int) -> SelectResults:
         """
-        Gives out floe by time == requested time.
+        Gives out flow by time == requested time.
 
         Args:
-            time (int): Unix-like time
+            time: Unix-like time
 
         Returns:
             (SelectResults):
@@ -833,13 +816,13 @@ class DBHandler:
         Added new flow to the Flow table.
 
         Args:
-            uuid (str): unique identify number from flow
-            users (list | tuple): uuid user which used that flow
-            time_created (int): time when created flow
-            flow_type (str): ``chat`` or ``group`` or ``channel``
-            title (str): name added in public information about flow
-            info (str): text added in public information about flow
-            owner (str): user uuid which created that flow
+            uuid: unique identify number from flow
+            users: uuid user which used that flow
+            time_created: time when created flow
+            flow_type: ``chat`` or ``group`` or ``channel``
+            title: name added in public information about flow
+            info: text added in public information about flow
+            owner: user uuid which created that flow
 
         Returns:
             (SQLObject):
@@ -868,14 +851,14 @@ class DBHandler:
         Update information about flow which contains in Flow table.
 
         Args:
-            uuid (str): unique identify number from flow
-            flow_type (str): ``chat`` or ``group`` or ``channel``
-            title (str): name added in public information about flow
-            info (str): text added in public information about flow
-            owner (str): user uuid which created that flow
+            uuid: unique identify number from flow
+            flow_type: ``chat`` or ``group`` or ``channel``
+            title: name added in public information about flow
+            info: text added in public information about flow
+            owner: user uuid which created that flow
 
         Returns:
-            (str): message "Updated"
+            "Updated" message
         """
 
         dbquery = self.__read_db(table="Flow",
@@ -940,7 +923,7 @@ class DBHandler:
         Gives user by name from Admin table.
 
         Args:
-            username (str): name user which granted administrator rights
+            username: name user which granted administrator rights
 
         Returns:
             (SQLObject):
@@ -957,9 +940,8 @@ class DBHandler:
         Added new admin to the Admin table.
 
         Args:
-            username (str): name user which granted administrator rights
-            hash_password (str): hash-function generated from administrator
-                                 password
+            username: name user which granted administrator rights
+            hash_password: hash-function generated from administrator password
 
         Returns:
             (SQLObject):

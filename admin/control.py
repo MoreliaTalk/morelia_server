@@ -47,11 +47,11 @@ def delete_user(request: Request,
     After returns a response and redirecting to the main page of admin panel.
 
     Args:
-        request(Request): request for server
-        uuid(str): uuid admin user
+        request: request for server
+        uuid: uuid admin user
 
     Returns:
-        (HTMLResponse): response redirecting to the main admin page
+        response redirecting to the main admin page
     """
 
     fake_uuid = str(uuid4().int)

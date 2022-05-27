@@ -59,10 +59,10 @@ def get_admin_user_data(username: str):
     Requesting data from the database and checking it against the username.
 
     Args:
-        username(str): username admin user
+        username: username admin user
 
     Returns:
-        (SQLObject): admin user data from db
+        admin user data from db
     """
 
     data = db_connect.get_admin_by_name(username=username)
@@ -76,10 +76,10 @@ def login_token(data: OAuth2PasswordRequestForm = Depends()):
     Returns a response that contains the admin token, valid for 15 minutes.
 
     Args:
-        data(OAuth2PasswordRequestForm): login data
+        data: login data
 
     Returns:
-        (HTMLResponse): response with cookies embedded in it
+        response with cookies embedded in it
     """
 
     admin_user_data_db = get_admin_user_data(data.username)
@@ -116,10 +116,10 @@ def logout(request: Request):
     Returns a response that contains the invalid admin token.
 
     Args:
-        request(Request): request for server
+        request: request for server
 
     Returns:
-        (HTMLResponse): response with cookies embedded in it
+        response with cookies embedded in it
     """
 
     incorrect_token = "MoreliaTalk"

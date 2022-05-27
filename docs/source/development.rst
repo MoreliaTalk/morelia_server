@@ -7,9 +7,7 @@ Development
 Git repository
 --------------
 
-Stable branch `master <https://github.com/MoreliaTalk/morelia_server/tree/master>`_
-
-Branch to add new functionality `develop <https://github.com/MoreliaTalk/morelia_server/tree/develop>`_
+Main branch `master <https://github.com/MoreliaTalk/morelia_server/tree/master>`_
 
 
 Fork repository
@@ -31,11 +29,11 @@ Cloning a repository
  git clone https://github.com/{username}/morelia_server.git
  cd morelia_server
 
-2. Switching to ``develop`` branch:
+2. Switching to ``master`` branch:
 
 ::
 
- git checkout develop
+ git checkout master
 
 3. Synchronizing your fork with original repository ``upstream`` Morelia Server:
 
@@ -58,12 +56,19 @@ Cloning a repository
 5. If using GitHub Desktop, select ``Clone repository...`` from ``File`` menu and follow instructions.
 
 
-Running before create pool-request
+Running before create pull-request
 __________________________________
 
-Before create pool-request you must be perform two step:
+Before create pull-request you must be perform three steps:
 
-1. Running ``flake8`` for checking code:
+1. Running static type checker ``mypy``:
+
+::
+
+ pipenv run mypy --config=./setup.cfg .
+
+
+2. Running ``flake8`` for checking code:
 
 ::
 
@@ -77,14 +82,14 @@ Before create pool-request you must be perform two step:
 
 ``--output-file ./log/flake8.log`` - path to file where flake8 saved all information about occurrences errors and warnings
 
-2. Running unittest for testing code (``tests`` it's a directory contains all test for project):
+3. Running unittest for testing code (``tests`` it's a directory contains all test for project):
 
 ::
 
  pipenv run coverage run -m unittest discover tests
 
 
-Creating a pool-request
+Creating a pull-request
 -----------------------
 
 For making changes to development branch Morelia Server.
@@ -93,10 +98,10 @@ For making changes to development branch Morelia Server.
 
 ::
 
- git pull upstream develop
+ git pull upstream master
 
 
-2. Sending changes to development branch of your fork:
+2. Sending changes to main branch of your fork:
 
 ::
 
@@ -105,7 +110,7 @@ For making changes to development branch Morelia Server.
 
 3. To create a pull-request, you need to go to `GitHub <https://www.github.com>`_, select your fork and click on
 ``New pull request`` in right-hand menu, then select branch from which you want to push changes to Morelia Server
-development branch and click ``Create pull request``.
+master branch and click ``Create pull request``.
 
 
 Code style requirements
@@ -132,72 +137,54 @@ To run tests, run (replace asterisk with test name):
  pipenv run python -v ./tests/test_*.py
 
 
-Running the debugger
---------------------
-
-To run debugger in a working server environment, through console
-
-::
-
- python -m pdb ./debug_server.py
-
-
-To get help in debug mode:
-
-::
-
- (pdb) help
-
 
 Repository description
 ----------------------
 
-`/admin/templates` - templates of admin pages
+``/admin/templates`` - templates of admin pages
 
-`/admin/admin.py` - admin.py
+``/admin/general.py`` - 
 
-`/admin/control.py` - control.py
+``/admin/control.py`` - 
 
-`/admin/login.py` - login.py
+``/admin/login.py`` - 
 
-`/admin/logs.py` - logs.py
+``/admin/logs.py`` - 
 
-`/mod/db/dbhandler.py` - module is designed to perform queries to the database
+``/mod/db/dbhandler.py`` - module is designed to perform queries to the database
 
-`/mod/db/models.py` - module is responsible for the description of database tables to work through OPM
+``/mod/db/models.py`` - module is responsible for the description of database tables to work through OPM
 
-`/mod/protocol/matrix/api.py` - module is responsible for the description of API, as well as the validation of data.
+``/mod/protocol/matrix/api.py`` - module is responsible for the description of API, as well as the validation of data.
 
-`/mod/protocol/matrix/worker.py` - implementation of the protocol
+``/mod/protocol/matrix/worker.py`` - implementation of the protocol
 
-`/mod/protocol/mtp/api.py` - module responsible for API description, as well as data validation.
+``/mod/protocol/mtp/api.py`` - module responsible for API description, as well as data validation.
 
-`/mod/protocol/worker.py` - module is responsible for implementing the methods described in `Morelia Protocol <https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md>`_.
+``/mod/protocol/worker.py`` - module is responsible for implementing the methods described in `Morelia Protocol <https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md>`_.
 
-`/mod/error.py` - module is responsible for checking and generating responses with error codes.
+``/mod/error.py`` - module is responsible for checking and generating responses with error codes.
 
-`/mod/controller.py` - module is responsible for processing requests according to the protocol type.
+``/mod/controller.py`` - module is responsible for processing requests according to the protocol type.
 
-`/mod/lib.py` - module is responsible for password hashing, comparing password with its hash sum, creating hash for ``auth_id``.
+``/mod/lib.py`` - module is responsible for password hashing, comparing password with its hash sum, creating hash for ``auth_id``.
 
-`/mod/logging.py` - module configures logging.
+``/mod/log_handler.py`` - module configures logging.
 
-`/config.py` - module reads settings from config.ini
+``/mod/config/config.py`` - module reads settings from config.ini
 
-`/static/` - static files
+``/mod/config/validator`` - data validation for config.ini
 
-`/server.py` - main server code
+``/static/`` - static files
 
-`/manage.py` - database migration manager (creating and deleting database tables)
+``/server.py`` - main server code
 
-`/tests/fixtures/` - json-files with preliminarily prepared data for tests
+``/manage.py`` - database migration manager (creating and deleting database tables), mnanage database, create and delete admin, user and flow. Running server and run mini test client.
 
-`/tests/config.ini` - server config for the tests
+``/tests/fixtures/`` - json-files with preliminarily prepared data for tests
 
-`/tests/test_*.py` - tests
+``/tests/fixtures/config.ini`` - server config for the tests
 
-`/debug_server.py` - wrapper for server.py to debug through the ``pdb`` utility.
+``/tests/test_*.py`` - tests
 
-`/example_config.ini` - file containing example server settings, just rename it to ``config.ini`` before running the server.
-
-`/client.py` - mini-customer to test the server.
+``/example_config.ini`` - file containing example server settings, just rename it to ``config.ini`` before running the server.

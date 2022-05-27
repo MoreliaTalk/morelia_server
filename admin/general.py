@@ -54,12 +54,12 @@ def not_login_exception_handler(request: Request,
     Catches exception NotAuthenticatedException and redirects to login page.
 
     Args:
-        request(Request): request to the server
-        exc(login.NotAuthenticatedException): catchable user authentication
+        request: request to the server
+        exc: catchable user authentication
             error
 
     Returns:
-        (RedirectResponse): redirect response to /admin/login
+        redirect response to /admin/login
     """
 
     return RedirectResponse(url="/admin/login")
@@ -72,11 +72,10 @@ def login_admin(request: Request):
     Return a response generated from login.html
 
     Args:
-        request(Request): request to the server
+        request: request to the server
 
     Returns:
-        (templates.TemplateResponse): response generated from login.html
-            template
+        response generated from login.html template
     """
 
     return templates.TemplateResponse("login.html",
@@ -90,12 +89,11 @@ def index_admin(request: Request,
     Returns a response with the main page of the admin panel.
 
     Args:
-        request(Request): request to the server
+        request: request to the server
         user: user authentication check
 
     Returns:
-        (templates.TemplateResponse): response generated from index_admin.html
-        qtemplate
+        response generated from index_admin.html template
     """
 
     return templates.TemplateResponse("index_admin.html",
@@ -109,12 +107,11 @@ def status_admin(request: Request,
     Returns a response with the status page of the admin panel.
 
     Args:
-        request(Request): request to the server
+        request: request to the server
         user: user authentication check
 
     Returns:
-        (templates.TemplateResponse): response generated from
-            status_admin.html template
+        response generated from status_admin.html template
     """
 
     dbquery = db_connect.get_table_count()
@@ -134,12 +131,11 @@ def manage_admin(request: Request,
     Returns a response with the mange page of the admin panel.
 
     Args:
-        request(Request): request to the server
+        request: request to the server
         user: user authentication check
 
     Returns:
-        (templates.TemplateResponse): response generated from
-            manage_admin.html template
+        response generated from manage_admin.html template
     """
 
     dbquery = db_connect.get_all_user()
@@ -155,12 +151,11 @@ def manage_logs(request: Request,
     Returns a response with the logs view page of the admin panel.
 
     Args:
-        request(Request): request to the server
+        request: request to the server
         user: user authentication check
 
     Returns:
-        (templates.TemplateResponse): response generated from logs_admin.html
-            template
+        response generated from logs_admin.html template
     """
 
     return templates.TemplateResponse("logs_admin.html",

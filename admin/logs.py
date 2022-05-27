@@ -37,7 +37,7 @@ def get_logs(request: Request,
     Returns a dict with server logs.
 
     Args:
-        request(Request): request to the server
+        request: request to the server
         user: user authentication check
 
     Returns:
@@ -52,7 +52,7 @@ def loguru_handler(log: str):
     Function collects server logs.
 
     Args:
-        log(str): new log string
+        log: new log string
     """
 
     global log_string

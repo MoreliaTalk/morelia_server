@@ -7,7 +7,7 @@ Install
 
 .. _installation:
 
-* Install `Python <https://www.python.org/downloads/>`_ version 3.8 or higher.
+* Install `Python <https://www.python.org/downloads/>`_ version 3.10 or higher.
 
 * Download and install the latest version `git <https://git-scm.com/downloads>`_.
 
@@ -50,28 +50,29 @@ Before you start the server you need to make some settings (create a database, t
 
 ::
 
- pipenv run python ./manage.py --db create
+ pipenv run python ./manage.py db create
 
 
 2. If you want to delete all tables in the created database (**WARNING** only tables are deleted, the database is not deleted):
 
 ::
 
- pipenv run python ./manage.py --db delete
+ pipenv run python ./manage.py db delete
 
 
 3. Add the administrator in the created database:
 
 ::
 
- pipenv run python ./manage.py --table superuser
+ pipenv run python ./manage.py db admin-create
 
 
-4. Additionally, you can create a ``flow`` with the group type:
+4. Additionally, you can create a ``flow`` or ``user``:
 
 ::
 
- pipenv run python ./manage.py --table flow
+ pipenv run python ./manage.py db flow-create
+ pipenv run python ./manage.py db user-create
 
 
 5. Information about all the features of the configuration manager:
@@ -88,76 +89,26 @@ To start server, use command:
 
 ::
 
- uvicorn server:app --host 0.0.0.0 --port 8000 --reload --use-colors --http h11 --ws websockets
+ pipenv run python ./manage.py runserver
 
 
-Additional parameters that can be sent to server:
-
+Parameters that can be sent to server:
+--host, -h <str>            IP address, default `localhost`
+--port, -p <str>            Port for server, default 8000
 --log-level <str>           Set the log level. Options: **critical**, **error**, **warning**, **info**, **debug**, **trace**.
                             Default: **info**.
 --use-colors                Enable colorized formatting of the log records, in case this is not set it will be auto-detected.
-                            This option is ignored if the ``--log-config`` CLI option is used.
---no-use-colors             Disable colorized formatting of the log records.
---loop <str>                Set the event loop implementation. The uvloop implementation provides greater performance,
-                            but is not compatible with Windows or PyPy. Options: **auto**, **asyncio**, **uvloop**.
-                            Default: **auto**.
---http <str>                Set the HTTP protocol implementation. The httptools implementation provides greater performance,
-                            but it is not compatible with PyPy, and requires compilation on Windows.
-                            Options: **auto**, **h11**, **httptools**. Default: **auto**.
---ws <str>                  Set the WebSockets protocol implementation. Either of the websockets and wsproto packages are
-                            supported. Use **none** to deny all websocket requests. Options: **auto**, **none**, **websockets**,
-                            **wsproto**. Default: **auto**.
---lifespan <str>            Set the Lifespan protocol implementation. Options: **auto**, **on**, **off**. Default: **auto**.
---interface                 Select ASGI3, ASGI2, or WSGI as the application interface. Note that WSGI mode always disables
-                            WebSocket support, as it is not supported by the WSGI interface.
-                            Options: **auto**, **asgi3**, **asgi2**, **wsgi**. Default: **auto**.
---limit-concurrency <int>   Maximum number of concurrent connections or tasks to allow, before issuing HTTP 503 responses.
-                            Useful for ensuring known memory usage patterns even under over-resourced loads.
---limit-max-requests <int>  Maximum number of requests to service before terminating the process.
-                            Useful when running together with a process manager, for preventing memory leaks from impacting
-                            long-running processes.
---backlog <int>             Maximum number of connections to hold in backlog. Relevant for heavy incoming traffic.
-                            Default: **2048**
---ssl-keyfile <path>        SSL key file
---ssl-certfile <path>       SSL certificate file
---ssl-version <int>         SSL version to use (see stdlib ssl module's)
---ssl-cert-reqs <int>       Whether client certificate is required (see stdlib ssl module's)
---ssl-ca-certs <str>        CA certificates file
---ssl-ciphers <str>         Ciphers to use (see stdlib ssl module's)
---timeout-keep-alive <int>  Close Keep-Alive connections if no new data is received within this timeout. Default: 5.
-
-
-**DEBUG** mode
---------------
-
-To easily start the server in debug mode, all you need to do is run `debug_server.py`:
-
-::
-
- pipenv run python ./debug_server.py
+--reload, -r                Enable auto-reload. Uvicorn supports two versions of auto-reloading behavior enabled by this option.
+                            There are important differences between them.
 
 
 Working with built-in client
 ----------------------------
 
-To test the server, run the mini client ``client.py`` in the console:
+To test the server, you can send a test message using the built-in mini client, for which you must use the key "-t" to pass the type of message from the options:
+``register_user``, ``get_update``, ``send_message``, ``all_messages``, ``add_flow``, ``all_flow``, ``user_info``, ``authentication``, ``delete_user``, ``delete_message``,
+``edited_message``, ``ping_pong``, ``error``.
 
 ::
 
- pipenv run python -i ./client.py
-
-
-After launching, the client will send an authorization message (AUTH) to the server, the server's response will be displayed
-in the console, after which ``python`` will go into interactive line mode ``>>>``, so that it is possible to perform additional checks.
-
-In the interactive console, there will be one function available to send ``end_message`` which takes two arguments
-``message`` message and ``uri`` server address. In the argument ``message`` you need to pass an object with type *"dict"*
-or *"str"*, you can use ready-made examples of queries: **AUTH**, **GET_UPDATE**, **ADD_FLOW**, **ALL_FLOW**.
-In the argument you must pass an object with type *"str"*, you can use ready examples of server address: **LOCALHOST**.
-
-::
-
- >>> send_message(GET_UPDATE, LOCALHOST)
-
-
-If no arguments are passed to the function, the default is to send an **AUTH** message to **LOCALHOST**.
+ pipenv run python ./manage.py testclient send -t register_user

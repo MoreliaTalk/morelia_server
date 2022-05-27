@@ -51,9 +51,8 @@ class MTPErrorResponse:
     code "520" and status "Unknown Error" are used.
 
     Args:
-        status (str): Error type
-        add_info ([Exception] or [str], optional): Additional information
-        to be added. Defaults to None.
+        status: Error type
+        add_info: Additional information to be added. Defaults to None.
     """
 
     def __init__(self,
@@ -109,7 +108,7 @@ class MTProtocol:
 
     Args:
         request: JSON request from websocket client
-        database (DBHandler): object - database connection point
+        database: object - database connection point
         
     Returns:
         returns class api.Response
@@ -179,18 +178,17 @@ class MTProtocol:
         Checking user authentication every each request.
 
         Args:
-            uuid (str): user identification number which granted moreliatalk
+            uuid: user identification number which granted moreliatalk
                         server
-            auth_id (str): authentication token which granted moreliatalk
+            auth_id: authentication token which granted moreliatalk
                             server
 
         Returns:
-                object (namedtuple): object with two parameters, which contain:
+                object: object with two parameters, which contain:
 
-                                     ``result``: True or False
+                        ``result``: True or False
 
-                                     ``error_message``: text description of
-                                     the error
+                        ``error_message``: text description of the error
         """
 
         Result = namedtuple('Result', ['result',
@@ -221,8 +219,7 @@ class MTProtocol:
         Generates a JSON-object containing result of an instance json.
 
         Returns:
-            (str): json-object which contains validated response
-
+            json-object which contains validated response
         """
 
         if response is None:
@@ -238,11 +235,10 @@ class MTProtocol:
         Checks database for a user with the same login.
 
         Args:
-            login (str): user login
+            login: user login
 
         Returns:
-            (bool): True if there is such a user or False if no such user
-                exists.
+            True if there is such a user or False if no such user exists.
         """
 
         try:
@@ -259,15 +255,11 @@ class MTProtocol:
         """
         Registers user who is not in the database.
 
-        See Also:
-            https://github.com/MoreliaTalk/morelia_protocol
-
         Note:
             This version also authentication user, that exist in database
 
         Returns:
-            (api.Response): validated response
-
+            validated response
         """
 
         uuid = str(uuid4().int)
@@ -315,11 +307,8 @@ class MTProtocol:
         """
         Provides updates of flows, messages and users in them from time.
 
-        See Also:
-            https://github.com/MoreliaTalk/morelia_protocol
-
         Returns:
-            (api.Response): validated response
+            validated response
         """
 
         # select all fields of the user table
@@ -386,9 +375,6 @@ class MTProtocol:
                       request: api.Request) -> api.Response:
         """
         Saves user message in database.
-
-        See Also:
-            https://github.com/MoreliaTalk/morelia_protocol
         """
 
         message_uuid = str(uuid4().int)
@@ -439,9 +425,6 @@ class MTProtocol:
         """
         Displays all messages of a specific flow.
         Retrieves from database and issues them as an array consisting of JSON.
-
-        See Also:
-            https://github.com/MoreliaTalk/morelia_protocol
         """
 
         flow_uuid = request.data.flow[0].uuid
@@ -469,12 +452,12 @@ class MTProtocol:
             List contains validation Message object.
 
             Args:
-                db (SelectResults): database query result
-                end (int): last message number
-                start (int): first message number
+                db: database query result
+                end: last message number
+                start: first message number
 
             Returns:
-                (list[api.MessageResponse]): list contains of validated object
+                list contains of validated object
             """
 
             _list = []
@@ -495,7 +478,6 @@ class MTProtocol:
                              edited_time=element.edited_time,
                              edited_status=element.edited_status))
             return _list
-
         try:
             dbquery = self._db.get_message_by_more_time_and_flow(flow_uuid,
                                                                  request.data.time)  # noqa
@@ -540,9 +522,6 @@ class MTProtocol:
                   request: api.Request) -> api.Response:
         """
         Allows to add a new flow to database.
-
-        See Also:
-            https://github.com/MoreliaTalk/morelia_protocol
         """
 
         flow_uuid = str(uuid4().int)
@@ -594,9 +573,6 @@ class MTProtocol:
                   request: api.Request) -> api.Response:
         """
         Get a list of all flows and information about them.
-
-        See Also:
-            https://github.com/MoreliaTalk/morelia_protocol
         """
 
         flow = []
@@ -629,9 +605,6 @@ class MTProtocol:
                    request: api.Request) -> api.Response:
         """
         Provides information about all personal settings of user.
-
-        See Also:
-            https://github.com/MoreliaTalk/morelia_protocol
         """
 
         users_volume = len(request.data.user)
@@ -675,9 +648,6 @@ class MTProtocol:
         With issuance of a unique hash number of connection session.
         During authentication password transmitted by client
         and password contained in server database are verified.
-
-        See Also:
-            https://github.com/MoreliaTalk/morelia_protocol
         """
 
         login = request.data.user[0].login
@@ -717,10 +687,7 @@ class MTProtocol:
     def _delete_user(self,
                      request: api.Request) -> api.Response:
         """
-        Function irretrievably deletes the user from database.
-
-        See Also:
-            https://github.com/MoreliaTalk/morelia_protocol
+        Irretrievably deletes the user from database.
         """
 
         uuid = str(uuid4().int)
@@ -757,9 +724,6 @@ class MTProtocol:
                         request: api.Request) -> api.Response:
         """
         Deletes the message from database Message table by its ID.
-
-        See Also:
-            https://github.com/MoreliaTalk/morelia_protocol
         """
 
         message_uuid = request.data.message[0].uuid
@@ -792,9 +756,6 @@ class MTProtocol:
         """
         Changes text and time in database Message table.
         Value of edited_status column changes from None to True.
-
-        See Also:
-            https://github.com/MoreliaTalk/morelia_protocol
         """
 
         message_uuid = request.data.message[0].uuid
@@ -821,9 +782,6 @@ class MTProtocol:
                    request: api.Request) -> api.Response:
         """
         Simple response/request communication between server and client.
-
-        See Also:
-            https://github.com/MoreliaTalk/morelia_protocol
         """
 
         errors = MTPErrorResponse("OK")
@@ -843,14 +801,10 @@ class MTProtocol:
         Get a standard answer type: error, which contains an object
         with a description of error.
 
-        See Also:
-            https://github.com/MoreliaTalk/morelia_protocol
-
         Args:
-            status (str | None): error status name in UPPERCASE
-            add_info (Exception | str | None): additional information which
-                added to error message
-            request: (api.Request): request from client in dict format
+            status: error status name in UPPERCASE
+            add_info: additional information which added to error message
+            request: request from client in dict format
         """
 
         if request is not None:
@@ -872,6 +826,14 @@ class MTProtocol:
 
     def _check_protocol_version(self,
                                 request: api.Request) -> bool:
+        """
+        Checks the version of the protocol in the client request.
+
+        Returns:
+            True if client protocol version > minimum and < maximum
+            of supported by server.
+        """
+
         MIN = self.config_option.min_version
         MAX = self.config_option.max_version
         version = request.jsonapi.version
