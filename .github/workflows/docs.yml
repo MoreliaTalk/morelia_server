@@ -1,7 +1,5 @@
 name: Build and push docs
-on: 
-  push:
-    branches: [ master ]
+on: push
 
 jobs:
   build-and-deploy:
