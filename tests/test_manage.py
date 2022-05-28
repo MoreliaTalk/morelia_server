@@ -122,6 +122,8 @@ class TestCreateUserAndFlowAndAdmin(unittest.TestCase):
 
 
 class TestDBCli(unittest.TestCase):
+    db_uri: str
+
     @classmethod
     def setUpClass(cls) -> None:
         logger.remove()

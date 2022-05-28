@@ -20,9 +20,7 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import asyncio
-import os
 from functools import wraps
-from os import path
 from pathlib import Path
 import random
 from time import process_time
@@ -201,7 +199,7 @@ def db_delete(ctx):
                   SYMBOLS_FOR_RANDOM, 20
               )))
 @click.pass_context
-def create_user(ctx,
+def create_user(ctx: click.Context,
                 login: str,
                 username: str,
                 password: str):
@@ -209,6 +207,7 @@ def create_user(ctx,
     Create user in database.
 
     Args:
+        ctx(click.Context): click call context
         login(str): user login
         username(str): username
         password(str): user password
@@ -263,15 +262,16 @@ def create_flow(ctx, login: str):
 @click.option("--username", help="username admin")
 @click.option("--password", help="password admin")
 @click.pass_context
-def admin_create_user(ctx,
-                      username,
-                      password):
+def admin_create_user(ctx: click.Context,
+                      username: str,
+                      password: str):
     """
     Create Admin user to management server with admin panel.
 
     Args:
-        username: name of admin user
-        password: password of admin user
+        ctx(click.Context): click call context
+        username(str): name of admin user
+        password(str): password of admin user
     """
 
     db = DBHandler(ctx.obj["uri"])

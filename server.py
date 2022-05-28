@@ -18,16 +18,20 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
-import sys
+
 from datetime import datetime
 from json import JSONDecodeError
 import logging as standart_logging
+import sys
+
 from loguru import logger
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import HTMLResponse
-from starlette.routing import Route, WebSocketRoute
-from starlette.websockets import WebSocketDisconnect, WebSocket
+from starlette.routing import Route
+from starlette.routing import WebSocketRoute
+from starlette.websockets import WebSocket
+from starlette.websockets import WebSocketDisconnect
 
 from mod.config.config import ConfigHandler
 from mod.controller import MainHandler
@@ -101,9 +105,10 @@ async def websocket_endpoint(websocket: WebSocket):
 
     # Waiting for the client to connect via websockets
     await websocket.accept()
-    logger.info("".join(("Clients information: ",
-                         "host: ", str(websocket.client.host),
-                         " port: ", str(websocket.client.port))))
+    if websocket.client is not None:
+        logger.info("".join(("Clients information: ",
+                             "host: ", str(websocket.client.host),
+                             " port: ", str(websocket.client.port))))
     logger.debug(f"Websocket scope: {str(websocket.scope)}")
     while True:
         try:
