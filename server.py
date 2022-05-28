@@ -18,7 +18,7 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
-
+import sys
 from datetime import datetime
 from json import JSONDecodeError
 import logging as standart_logging
@@ -50,7 +50,11 @@ add_logging(config_option.level)
 server_started = datetime.now()
 
 # Set database connection
-db_connect = DBHandler(uri=config_option.uri)
+if "unittest" in sys.modules:
+    db_connect = DBHandler()
+else:
+    db_connect = DBHandler(uri=config_option.uri)
+
 db_connect.create_table()
 
 

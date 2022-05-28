@@ -25,7 +25,7 @@ import unittest
 
 from click.testing import CliRunner
 from loguru import logger
-from manage import admin_create_user
+from manage import admin_create_user, db_cli
 from manage import create_flow
 from manage import create_user
 from manage import db_create
@@ -36,6 +36,7 @@ from mod.db.dbhandler import DBHandler
 
 
 class TestCreateUserAndFlowAndAdmin(unittest.TestCase):
+    db_uri: str
     config: ConfigHandler
     config_option: Any
     db: DBHandler
@@ -46,9 +47,9 @@ class TestCreateUserAndFlowAndAdmin(unittest.TestCase):
         logger.remove()
         cls.config = ConfigHandler()
         cls.config_option = cls.config.read()
-        cls.db = DBHandler(uri=cls.config_option.uri)
+        cls.db_uri = "sqlite:/:memory:?cache=shared"
+        cls.db = DBHandler(uri=cls.db_uri)
         cls.db.create_table()
-        cls.path = PurePath(Path.cwd(), "db_sqlite.db")
 
     def setUp(self) -> None:
         self.username = "UserHello"
@@ -65,13 +66,11 @@ class TestCreateUserAndFlowAndAdmin(unittest.TestCase):
         del cls.db
 
     def test_create_user(self):
-        result = self.runner.invoke(create_user,
-                                    ["--username",
-                                     f"{self.username}",
-                                     "--login",
-                                     f"{self.login}",
-                                     "--password",
-                                     f"{self.password}"])
+        result = self.runner.invoke(db_cli, [f"--uri={self.db_uri}",
+                                             "user-create",
+                                             f"--username={self.username}",
+                                             f"--login={self.login}",
+                                             f"--password={self.password}"])
         self.assertEqual(result.exit_code, 0)
         self.assertRegex(result.output,
                          f"{self.username} created, login: {self.login}, "
@@ -79,49 +78,45 @@ class TestCreateUserAndFlowAndAdmin(unittest.TestCase):
 
     def test_wrong_create_user(self):
         self.db.delete_table()
-        result = self.runner.invoke(create_user,
-                                    ["--username",
-                                     f"{self.username}",
-                                     "--login",
-                                     f"{self.login}",
-                                     "--password",
-                                     f"{self.password}"])
+        result = self.runner.invoke(db_cli, [f"--uri={self.db_uri}",
+                                             "user-create",
+                                             f"--username={self.username}",
+                                             f"--login={self.login}",
+                                             f"--password={self.password}"])
         self.assertRegex(result.stdout,
                          "Failed to create a user. Error text:")
 
     def test_create_flow(self):
-        self.runner.invoke(create_user,
-                           ["--username",
-                            f"{self.username}",
-                            "--login",
-                            f"{self.login}",
-                            "--password",
-                            f"{self.password}"])
-        result = self.runner.invoke(create_flow,
-                                    ["--login", f"{self.login}"])
+        self.runner.invoke(db_cli, [f"--uri={self.db_uri}",
+                                    "user-create",
+                                    f"--username={self.username}",
+                                    f"--login={self.login}",
+                                    f"--password={self.password}"])
+        result = self.runner.invoke(db_cli, [f"--uri={self.db_uri}",
+                                             "flow-create",
+                                             f"--login={self.login}"])
         self.assertEqual(result.stdout, "Flow created\n")
 
     def test_wrong_create_flow(self):
-        result = self.runner.invoke(create_flow,
-                                    ["--login", f"{self.login}"])
+        result = self.runner.invoke(db_cli, [f"--uri={self.db_uri}",
+                                             "flow-create",
+                                             f"--login={self.login}"])
         self.assertRegex(result.stdout,
                          "Failed to create a flow. Error text: ")
 
     def test_create_admin_user(self):
-        result = self.runner.invoke(admin_create_user,
-                                    ["--username",
-                                     f"{self.username}",
-                                     "--password",
-                                     f"{self.password}"])
+        result = self.runner.invoke(db_cli, [f"--uri={self.db_uri}",
+                                             "admin-create",
+                                             f"--username={self.username}",
+                                             f"--password={self.password}"])
         self.assertRegex(result.stdout, "Admin created\nusername: ")
 
     def test_wrong_create_admin_user(self):
         self.db.delete_table()
-        result = self.runner.invoke(admin_create_user,
-                                    ["--username",
-                                     f"{self.username}",
-                                     "--password",
-                                     f"{self.password}"])
+        result = self.runner.invoke(db_cli, [f"--uri={self.db_uri}",
+                                             "admin-create",
+                                             f"--username={self.username}",
+                                             f"--password={self.password}"])
         self.assertRegex(result.stdout,
                          "Failed to create a flow. Error text:")
 
@@ -130,6 +125,7 @@ class TestDBCli(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         logger.remove()
+        cls.db_uri = "sqlite:/:memory:"
 
     def setUp(self) -> None:
         self.runner = CliRunner()
@@ -138,12 +134,16 @@ class TestDBCli(unittest.TestCase):
         del self.runner
 
     def test_db_create(self):
-        result = self.runner.invoke(db_create, ["--uri", "test"])
+        result = self.runner.invoke(db_cli, [f"--uri={self.db_uri}",
+                                             "create"])
+        self.assertEqual(result.exit_code, 0)
         self.assertRegex(result.stdout, "Table is created at: ")
 
     def test_db_delete(self):
-        self.runner.invoke(db_create, ["--uri", "test"])
-        result = self.runner.invoke(db_delete, ["--uri", "test"])
+        self.runner.invoke(db_cli, [f"--uri={self.db_uri}",
+                                    "create"])
+        result = self.runner.invoke(db_cli, [f"--uri={self.db_uri}",
+                                             "delete"])
         self.assertRegex(result.stdout, "Table is deleted at: ")
 
 
