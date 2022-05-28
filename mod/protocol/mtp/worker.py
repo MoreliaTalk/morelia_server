@@ -271,7 +271,7 @@ class MTProtocol:
         data = None
 
         if login is None or password is None:
-            errors = MTPErrorResponse("BAD_REQUEST")
+            errors = MTPErrorResponse("UNAUTHORIZED")
         else:
             if self._check_login(login):
                 errors = MTPErrorResponse("CONFLICT")
