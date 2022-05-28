@@ -32,8 +32,8 @@ class ConfigModel(BaseModel):
         Additional configuration for validation scheme.
 
         Args:
-            anystr_strip_whitespace (bool): whether to strip leading and
-                trailing whitespace for str & byte types
+            anystr_strip_whitespace : whether to strip leading and trailing
+                                      whitespace for str & byte types
         """
 
         anystr_strip_whitespace = True
