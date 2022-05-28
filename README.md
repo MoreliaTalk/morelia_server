@@ -10,13 +10,11 @@ Language [EN](./README_ENG.md), [RU](./README.md)
 
 [Master](https://github.com/MoreliaTalk/morelia_server/tree/master) - стабильная ветка.
 
-[Develop](https://github.com/MoreliaTalk/morelia_server/tree/develop) - ветка для добавления нового функционала.
-
 ## В разработке применяется ##
 
 * [Python 3.10](https://www.python.org/) - язык программирования
 
-* [FastAPI](https://fastapi.tiangolo.com) - основной фреймворк
+* [Starlette](https://www.starlette.io/) - основной фреймворк
 
 * [SQLObject](http://sqlobject.org) - ORM для работы с базой данный
 
@@ -28,13 +26,10 @@ Language [EN](./README_ENG.md), [RU](./README.md)
 
 ## Описание репозитория ##
 
-* /admin
-  * /templates - шаблоны страниц админки
-  * admin.py
-  * control.py
-  * login.py
-  * logs.py
 * /mod
+  * /config
+    * config.py - модуль отвечает за работу с конфигурационным файлом config.ini
+    * validator.py - модуль для валидации конфигурационного файла
   * /db
     * dbhandler.py - модуль предназначен для выполнения запросов к БД
     * models.py - модуль отвечает за описание таблиц БД для работы через ОРМ.
@@ -48,18 +43,15 @@ Language [EN](./README_ENG.md), [RU](./README.md)
     * error.py - модуль отвечает за проверку и генерацию ответов с кодами ошибок.
     * controller.py - модуль обрабатывает запрос в соответствии с типом протокола
     * lib.py - модуль отвечает за хеширование пароля, сравнения пароля с его хэш-суммой, создание хеша для auth_id.
-    * logging.py - модуль настройки логирования.
+    * log_handler.py - модуль настройки логирования.
     * config.py - модуль читает настройки из config.ini
-* /static - 
 * server.py - основной код сервера
-* manage.py - менеджер миграции для БД (создание и удаление таблиц базы данных)
+* manage.py - cli-инструмент для работы с сервером(запуск, тестовый клиент, работа с бд, и т.п.)
 * /tests
   * fixtures/ - json-файлы с заранее подготовленными данными, для проведения тестов.
   * config.ini - конфиг сервера для проведения тестов
   * test_*.py - тесты
-* debug_server.py - обёртка для server.py для дебага через утилиту `pdb`.
-* example_config.ini - файл содержащий пример настроек сервера, перед запуском сервера просто переименуйте в `config.ini`.
-* client.py - мини-клиент для проверки работы сервера.
+* example_config.ini - файл содержащий пример настроек сервера, перед запуском сервера просто переименуйте или скопируйте в `config.ini`.
 
 ## Установка ##
 
@@ -82,12 +74,6 @@ Language [EN](./README_ENG.md), [RU](./README.md)
 ```cmd
 git clone https://github.com/{username}/morelia_server.git
 cd morelia_server
-```
-
-Переключаемся на ветку develop
-
-```cmd
-git checkout develop
 ```
 
 Синхронизируем свой форк с оригинальным репозиторием `upstream` Morelia Server
@@ -213,45 +199,50 @@ uvicorn server:app --host 0.0.0.0 --port 8000 --reload --use-colors --http h11 -
 
 ## Запуск сервера в режиме DEBUG ##
 
-Для лёгкого запуска сервера в режиме отладки нужно всего лишь запустить `debug_server.py`:
+Для лёгкого запуска сервера в режиме отладки нужно воспользоваться соответствующей опцией в `manage.py`:
 
 ```cmd
-pipenv run python ./debug_server.py
+pipenv run python ./manage.py runserver
 ```
+
+Опции:
+
+`--host <str>` - адрес хоста
+
+`--port <int>` - порт, на котором будет запущен сервер
+
+`--log-level <str>` - устанавливает уровень логирования. Варианты: "critical", "error", "warning", "info", "debug", "trace". По умолчанию: "info".
+
+`--use-colors / --no-use-colors` - включает и выключает цветовое выделение логов
+
+`--reload <bool>` - активирует/деактивирует автоматический перезапуск сервера при изменении его кода
+
 
 ## Проверка работоспособности сервера с помощью встроенного клиента ##
 
-Для проверки работы сервера запустите мини-клиент `client.py` в консоли:
+Для проверки работы сервера запустите встроенный в `manage.py` мини-клиент:
 
 ```cmd
-pipenv run python -i ./client.py
+pipenv run python manage.py testclient send
 ```
 
-После запуска клиент отправит на сервер сообщение об авторизации (AUTH), ответ сервера будет выведен в консоль, после чего `python` перейдёт в режим интерактивной строки `>>>`, для того чтобы была возможность провести дополнительные проверки.
+Примечание: перед запуском клиента нужно запустить сервер
 
-В интерактивной консоли будет доступна одна функция отправки сообщений `send_message` которая принимает два аргумента `message`-сообщение и `uri`-адрес сервера. В аргументе `message` необходимо передать объект с типом "dict" или "str", можно использовать готовые примеры запросов: AUTH, GET_UPDATE, ADD_FLOW, ALL_FLOW. В аргументе необходимо передать объект с типом "str", можно использовать готовый пример адреса сервера: LOCALHOST.
+## Создание пулл-реквеста для внесения изменений в master-ветку Morelia Server ##
 
-```py
->>> send_message(GET_UPDATE, LOCALHOST)
-```
-
-Если в функцию не передать ни одного аргумента, по умолчанию будет отправлено сообщение AUTH на LOCALHOST.
-
-## Создание пулл-реквеста для внесения изменений в develop-ветку Morelia Server ##
-
-Получение последних изменений из develop-ветки Morelia Server
+Получение последних изменений из master-ветки Morelia Server
 
 ```cmd
-git pull upstream develop
+git pull upstream master
 ```
 
-Отправка изменений в develop-ветку своего форка
+Отправка изменений в master-ветку своего форка
 
 ```cmd
 git push
 ```
 
-Для создания пулл-реквеста, необходимо перейти на [GitHub](https://www.github.com), выбрать свой форк и в правом меню нажать на `New pull request`, после чего выбрать бранч из которого будет производиться перенос изменений в develop-ветку Morelia Server и нажать `Create pull request`.
+Для создания пулл-реквеста, необходимо перейти на [GitHub](https://www.github.com), выбрать свой форк и в правом меню нажать на `New pull request`, после чего выбрать ветвь из которого будет производиться перенос изменений в master-ветку Morelia Server и нажать `Create pull request`.
 
 ## Требования к стилю кода ##
 
@@ -301,7 +292,7 @@ python -m pdb ./debug_server.py
 
 ## Контакты ##
 
-[Telegram](https://t.me/joinchat/LImHShzAmIWvpMxDTr5Vxw) - группа где обсуждаются насущные вопросы.
+[Telegram](https://t.me/+xfohB6gWiOU5YTUy) - группа где обсуждаются насущные вопросы.
 
 [Slack](moreliatalk.slack.com) - обсуждение проекта.
 
