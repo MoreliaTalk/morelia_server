@@ -1,4 +1,4 @@
-# Morelia Server - мессенджер (сервер) для Morelia Network #
+# Morelia Server - сервер для мессенджера MoreliaTalk #
 
 
 ![tests](https://github.com/MoreliaTalk/morelia_server/workflows/Test%20and%20Linting/badge.svg)
