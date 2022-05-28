@@ -22,13 +22,12 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 from datetime import datetime
 from json import JSONDecodeError
 import logging as standart_logging
-
-from fastapi import FastAPI
-from fastapi import Request
-from fastapi import WebSocket
 from loguru import logger
+from starlette.applications import Starlette
+from starlette.requests import Request
 from starlette.responses import HTMLResponse
-from starlette.websockets import WebSocketDisconnect
+from starlette.routing import Route, WebSocketRoute
+from starlette.websockets import WebSocketDisconnect, WebSocket
 
 from mod.config.config import ConfigHandler
 from mod.controller import MainHandler
@@ -50,17 +49,12 @@ add_logging(config_option.level)
 # Record server start time (UTC)
 server_started = datetime.now()
 
-# Server instance creation
-app = FastAPI()
-logger.info("Start server")
-
 # Set database connection
 db_connect = DBHandler(uri=config_option.uri)
 db_connect.create_table()
 
 
-@app.get('/')
-def home_page(request: Request):
+async def homepage(request: Request):
     """
     Rendered home page where presents information about current working server.
 
@@ -76,7 +70,6 @@ def home_page(request: Request):
 
 
 # Chat websocket
-@app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     """
     Responsible for establishing a websocket connection.
@@ -141,6 +134,14 @@ async def websocket_endpoint(websocket: WebSocket):
                 # "code=1000" - normal session termination
                 await websocket.close(CODE)
                 logger.info(f"Close with code: {CODE}")
+
+# Server instance creation
+app = Starlette(routes=[
+    Route("/", endpoint=homepage),
+    WebSocketRoute("/ws", endpoint=websocket_endpoint)
+])
+
+logger.info("Start server")
 
 
 if __name__ == "__main__":
