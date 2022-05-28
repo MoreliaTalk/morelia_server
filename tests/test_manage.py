@@ -25,11 +25,7 @@ import unittest
 
 from click.testing import CliRunner
 from loguru import logger
-from manage import admin_create_user, db_cli
-from manage import create_flow
-from manage import create_user
-from manage import db_create
-from manage import db_delete
+from manage import db_cli
 
 from mod.config.config import ConfigHandler
 from mod.db.dbhandler import DBHandler
