@@ -213,7 +213,7 @@ pipenv run python ./manage.py runserver
 
 `--log-level <str>` - устанавливает уровень логирования. Варианты: "critical", "error", "warning", "info", "debug", "trace". По умолчанию: "info".
 
-`--use-colors / --no-use-colors` - включает и выключает цветовое выделение логов
+`--use-colors <bool>` - включает и выключает цветовое выделение логов
 
 `--reload <bool>` - активирует/деактивирует автоматический перезапуск сервера при изменении его кода
 
