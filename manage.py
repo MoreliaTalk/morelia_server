@@ -21,7 +21,6 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 
 import asyncio
 from functools import wraps
-from os.path import join
 from pathlib import Path
 import random
 from time import process_time
@@ -39,7 +38,11 @@ from mod.db.dbhandler import DatabaseAccessError
 from mod.db.dbhandler import DatabaseReadError
 from mod.db.dbhandler import DatabaseWriteError
 from mod.db.dbhandler import DBHandler
-from mod.protocol.mtp import api as mtp_api
+from mod.protocol.mtp.api import BaseUser
+from mod.protocol.mtp.api import BaseVersion
+from mod.protocol.mtp.api import DataRequest
+from mod.protocol.mtp.api import Request
+
 
 config = ConfigHandler()
 config_option = config.read()
@@ -49,7 +52,8 @@ SYMBOLS_FOR_RANDOM = "abcdefghijklmnopqrstuvwxyz \
                       1234567890"
 
 
-async def connect_ws_and_send(message, address: str):
+async def connect_ws_and_send(message: Request,
+                              address: str):
     """
     Connect and send message to address.
 
@@ -294,7 +298,7 @@ def admin_create_user(ctx: click.Context,
 
 
 @client_cli.command("send",
-                    help="send message to server",
+                    help="send message to server used API method name.",
                     context_settings=dict(ignore_unknown_options=True,
                                           allow_extra_args=True))
 @click.option("-t",
@@ -310,48 +314,50 @@ def admin_create_user(ctx: click.Context,
                                  "delete_message",
                                  "edited_message",
                                  "ping_pong",
-                                 "error")),
-              help="type message mtp protocol",
+                                 "errors")),
+              help="MTP protocol API method name, default send_message.",
               default="send_message")
-@click.option("-a", "--address", default="ws://127.0.0.1:8080/ws")
+@click.option("-a",
+              "--address",
+              default="ws://127.0.0.1:8080/ws",
+              help="server address and port, default ws://127.0.0.1:8080/ws")
 @click.pass_context
 @click_async
-async def send(ctx, t, address):
+async def send(ctx: click.Context,
+               t: str,
+               address: str) -> None:
     """
     Connect and send message protocol method.
 
     Args:
-        ctx(click.context): click call context
-        t(str): type message protocol
-        address(str): server address
+        ctx: additional arguments in the form of --key=value, the following
+             pairs are supported - --uuid=, --auth_id=, --username=,
+             --password=
+        t: type of message protocol
+        address: server address
     """
 
-    kwargs = dict([item.strip('--').split('=') for item in ctx.args])
-    message = mtp_api.Request.parse_file(
-        Path(Path(__file__).parent, "tests", "fixtures", join(t, ".json"))
-    )
-
-    message.data.user.append(mtp_api.BaseUser())
-
-    message_dict = message.dict()
-    for kw in kwargs:
-        request_to_message_dict = "request_to_message_dict"
-        for element in kw.split("."):
-            try:
-                element = int(element)
-            except ValueError:
-                request_to_message_dict += f'["{element}"]'
-            else:
-                request_to_message_dict += f'[{element}]'
-
-        exec(request_to_message_dict + f" = '{kwargs[kw]}'", {
-            "__builtins__": {},
-            "request_to_message_dict": request_to_message_dict
-        })
-
-    message = mtp_api.Request.parse_obj(message_dict)
-
-    await connect_ws_and_send(message, address)
+    try:
+        kwargs = dict([item.strip('--').split('=') for item in ctx.args])
+    except ValueError:
+        click.echo(f"Incorrect key sent={ctx.args}, you must pass --key=value")
+        return
+    else:
+        jsonapi = BaseVersion(version="1.0")
+        message = Request(type=t,
+                          jsonapi=jsonapi)
+        message.parse_file(Path(Path(__file__).parent,
+                                "tests",
+                                "fixtures",
+                                "".join((t, ".json"))))
+        message.data = DataRequest()
+        message.data.user = []
+        message.data.user.append(BaseUser())
+        message.data.user[0].uuid = kwargs.setdefault("uuid", "66666")
+        message.data.user[0].auth_id = kwargs.setdefault("auth_id", "auth_id")
+        message.data.user[0].username = kwargs.setdefault("username", "User")
+        message.data.user[0].password = kwargs.setdefault("password", "1234")
+        await connect_ws_and_send(message, address)
 
 
 if __name__ == "__main__":
