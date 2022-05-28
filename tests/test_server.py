@@ -83,4 +83,4 @@ class TestMainPage(unittest.TestCase):
 
     def test_main_page(self):
         response = self.test_client.get("/")
-        self.assertEqual(response.text, "<h1>MoreliaTalkServer</h1>")
+        self.assertEqual(response.text, "<h1>MoreliaServer</h1>")

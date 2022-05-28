@@ -22,18 +22,17 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 from datetime import datetime
 from json import JSONDecodeError
 import logging as standart_logging
-import os
+import sys
 
-from fastapi import FastAPI
-from fastapi import Request
-from fastapi import WebSocket
-from fastapi.staticfiles import StaticFiles
 from loguru import logger
+from starlette.applications import Starlette
+from starlette.requests import Request
 from starlette.responses import HTMLResponse
-from starlette.templating import Jinja2Templates
+from starlette.routing import Route
+from starlette.routing import WebSocketRoute
+from starlette.websockets import WebSocket
 from starlette.websockets import WebSocketDisconnect
 
-from admin import general
 from mod.config.config import ConfigHandler
 from mod.controller import MainHandler
 from mod.db.dbhandler import DBHandler
@@ -54,36 +53,16 @@ add_logging(config_option.level)
 # Record server start time (UTC)
 server_started = datetime.now()
 
-# Server instance creation
-app = FastAPI()
-logger.info("Start server")
-
-# Specifying where to load HTML page templates
-templates = Jinja2Templates(config_option.folder)
-
-# Search and filtered static files path
-main_path = os.getcwd()
-base_path = os.path.split(main_path)
-if base_path[1] == 'tests':
-    file_static = os.path.join(base_path[0], 'static')
-else:
-    file_static = os.path.join(main_path, 'static')
-
 # Set database connection
-db_connect = DBHandler(uri=config_option.uri)
+if "unittest" in sys.modules:
+    db_connect = DBHandler()
+else:
+    db_connect = DBHandler(uri=config_option.uri)
+
 db_connect.create_table()
 
 
-app.mount("/admin",
-          general.app)
-
-app.mount("/static",
-          StaticFiles(directory=file_static),
-          name="static")
-
-
-@app.get('/')
-def home_page(request: Request):
+async def homepage(request: Request):
     """
     Rendered home page where presents information about current working server.
 
@@ -95,11 +74,10 @@ def home_page(request: Request):
 
     """
 
-    return HTMLResponse("<h1>MoreliaTalkServer</h1>")
+    return HTMLResponse("<h1>MoreliaServer</h1>")
 
 
 # Chat websocket
-@app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     """
     Responsible for establishing a websocket connection.
@@ -127,9 +105,10 @@ async def websocket_endpoint(websocket: WebSocket):
 
     # Waiting for the client to connect via websockets
     await websocket.accept()
-    logger.info("".join(("Clients information: ",
-                         "host: ", str(websocket.client.host),
-                         " port: ", str(websocket.client.port))))
+    if websocket.client is not None:
+        logger.info("".join(("Clients information: ",
+                             "host: ", str(websocket.client.host),
+                             " port: ", str(websocket.client.port))))
     logger.debug(f"Websocket scope: {str(websocket.scope)}")
     while True:
         try:
@@ -164,6 +143,14 @@ async def websocket_endpoint(websocket: WebSocket):
                 # "code=1000" - normal session termination
                 await websocket.close(CODE)
                 logger.info(f"Close with code: {CODE}")
+
+# Server instance creation
+app = Starlette(routes=[
+    Route("/", endpoint=homepage),
+    WebSocketRoute("/ws", endpoint=websocket_endpoint)
+])
+
+logger.info("Start server")
 
 
 if __name__ == "__main__":

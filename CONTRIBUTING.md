@@ -10,7 +10,7 @@ own code:
 - The ``#general`` channel on our [Slack](https://moreliatalk.slack.com) chat.
 - Ask on our [GitHub Discussions](https://github.com/MoreliaTalk/morelia_server/discussions).
 - Ask for support in our telegram chatroom:
-[Project MoreliaTalk](https://t.me/joinchat/LImHShzAmIWvpMxDTr5Vxw).
+[Project MoreliaTalk](https://t.me/+xfohB6gWiOU5YTUy).
 
 
 ## Reporting issues ##
@@ -24,7 +24,7 @@ Include the following information in your post:
     your own code.
 - Describe what actually happened. Include the full traceback if there
     was an exception.
-- List your Python and Morelia server versions. If possible, check if this
+- List your Python and MoreliaServer versions. If possible, check if this
     issue is already fixed in the latest releases or the latest code in
     the repository.
 
@@ -39,9 +39,10 @@ an issue that interests you.
 
 Include the following in your patch:
 
-- All patches create in [develop](https://github.com/MoreliaTalk/morelia_server/tree/develop).
+- all patches are created in separate branches. 
 For example new branch name ``develop-#xxx``. Where xxx in name is the issue number. 
 - Use [Flake8](https://github.com/PyCQA/flake8) to format your code.
+- Check types in your code using [mypy](https://github.com/python/mypy)
 - Include tests if your patch adds or changes code. Make sure the test
     not fails.
 - Update any relevant docs pages and docstrings. Doc pages and

@@ -23,7 +23,6 @@ import sys
 
 from loguru import logger
 
-from admin import logs
 from mod.config.config import ConfigHandler
 
 config = ConfigHandler()
@@ -118,9 +117,3 @@ def add_logging(debug_status: int) -> None:
                retention=f"{expiration_date} days",
                rotation="10 MB",
                compression="zip")
-
-    logger.add(logs.loguru_handler,
-               format=config_option.info,
-               level="DEBUG",
-               enqueue=True,
-               catch=True)

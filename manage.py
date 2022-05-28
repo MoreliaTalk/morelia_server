@@ -99,11 +99,14 @@ def cli():
 
 
 @cli.group("db", help="manage database")
-def db_cli():
+@click.option("--uri", default=config_option.uri)
+@click.pass_context
+def db_cli(ctx, uri):
     """
     Group for db manipulation command.
     """
-    pass
+    ctx.ensure_object(dict)
+    ctx.obj['uri'] = uri
 
 
 @cli.group("testclient", help="mini-client for server")
@@ -148,20 +151,14 @@ def run(host: str,
 
 
 @db_cli.command("create", help="Create all table with all data")
-@click.option("--uri",
-              default=None)
-def db_create(uri: str):
+@click.pass_context
+def db_create(ctx):
     """
     Create database, and create all table which contain in models.
     """
 
-    if uri is None:
-        database = config_option.uri
-    elif uri == "test":
-        database = 'sqlite:/:memory:'
-
     start_time = process_time()
-    db = DBHandler(uri=database)
+    db = DBHandler(ctx.obj["uri"])
     try:
         db.create_table()
     except Exception as err:
@@ -172,21 +169,15 @@ def db_create(uri: str):
 
 
 @db_cli.command("delete", help="Delete all table with all data")
-@click.option("--uri",
-              default=None)
-def db_delete(uri: str):
+@click.pass_context
+def db_delete(ctx):
     """
     Delete all tables which contains data.
     This function not delete database file.
     """
 
-    if uri is None:
-        database = config_option.uri
-    elif uri == "test":
-        database = 'sqlite:/:memory:'
-
     start_time = process_time()
-    db = DBHandler(uri=database)
+    db = DBHandler(ctx.obj["uri"])
     try:
         db.delete_table()
     except Exception as err:
@@ -208,19 +199,22 @@ def db_delete(uri: str):
               default="".join(random.sample(
                   SYMBOLS_FOR_RANDOM, 20
               )))
-def create_user(login: str,
+@click.pass_context
+def create_user(ctx: click.Context,
+                login: str,
                 username: str,
                 password: str):
     """
     Create user in database.
 
     Args:
+        ctx(click.Context): click call context
         login(str): user login
         username(str): username
         password(str): user password
     """
 
-    db = DBHandler(uri=config_option.uri)
+    db = DBHandler(ctx.obj["uri"])
     user_uuid = str(uuid4().int)
     try:
         db.add_user(uuid=user_uuid,
@@ -240,12 +234,13 @@ def create_user(login: str,
 @click.option("-l",
               "--login",
               help="Use login which you specified when run user-create")
-def create_flow(login: str):
+@click.pass_context
+def create_flow(ctx, login: str):
     """
     Creating and adding test flow (group) in database.
     """
 
-    db = DBHandler(uri=config_option.uri)
+    db = DBHandler(ctx.obj["uri"])
     try:
         user = db.get_user_by_login(login=login)
     except (DatabaseReadError,
@@ -267,17 +262,20 @@ def create_flow(login: str):
 @db_cli.command("admin-create", help="Create user in admin panel")
 @click.option("--username", help="username admin")
 @click.option("--password", help="password admin")
-def admin_create_user(username,
-                      password):
+@click.pass_context
+def admin_create_user(ctx: click.Context,
+                      username: str,
+                      password: str):
     """
     Create Admin user to management server with admin panel.
 
     Args:
-        username: name of admin user
-        password: password of admin user
+        ctx(click.Context): click call context
+        username(str): name of admin user
+        password(str): password of admin user
     """
 
-    db = DBHandler(uri=config_option.uri)
+    db = DBHandler(ctx.obj["uri"])
 
     generator = lib.Hash(password,
                          str(uuid4().int),
