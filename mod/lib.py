@@ -33,17 +33,14 @@ class Hash:
     Hash for password, sessions, checks password hashes. Authenticator token.
 
     Args:
-        password (str, required): password
-        uuid (int or str, required): unique user identity number
-        salt (bytes | None, required): additional unique identifier which added
-                                       to the password when generating
-                                       hash_password, there can be any line:
-                                       mother's maiden name, favorite writer,
-                                       etc.
-        key (bytes | None, optional): additional argument, if value is None
-                                      then function will generate it
-                                      automatically
-        hash_password (str, optional): password hash (previously calculated)
+        password: password
+        uuid: unique user identity number
+        salt: additional unique identifier which added to the password when
+              generating hash_password, there can be any line e.q.
+              mother's maiden name, favorite writer, etc.
+        key: additional argument, if value is None then function will generate
+             it automatically
+        hash_password: password hash (previously calculated)
 
     """
 
@@ -82,7 +79,7 @@ class Hash:
         Getting the value of salt.
 
         Returns:
-            (bytes): salt
+            salt
         """
 
         return self.salt
@@ -93,7 +90,7 @@ class Hash:
         Getting the value of key.
 
         Returns:
-            (bytes): key
+            key
         """
 
         return self.key
@@ -103,7 +100,7 @@ class Hash:
         Generates a password hash.
 
         Returns:
-            hash password (str): returns blake2b hash
+            hash password: returns blake2b hash
         """
 
         hash_password = blake2b(self.binary_password,
@@ -117,7 +114,7 @@ class Hash:
         Comparison of calculated hash and original password.
 
         Returns:
-            (bool): True or False
+            True or False
         """
 
         if self.hash_password is None:
@@ -132,7 +129,7 @@ class Hash:
         Generating authenticator token for client session connection to server.
 
         Returns:
-            (str): authenticate token
+            authenticate token
         """
 
         uuid = self.uuid.to_bytes(self.uuid.bit_length(),

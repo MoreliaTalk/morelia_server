@@ -83,22 +83,22 @@ def check_error_pattern(status: str) -> CatchError:
     The error name is passed as a "status" parameter.
 
     Args:
-        status (str): error name
+        status: error name
 
     Returns:
-        (CatchError): named tuple with three value, where
+        named tuple with three value, where
 
-                        ``value`` - status code of error
+            ``value`` - status code of error
 
-                        ``phrase`` - status name of error
+            ``phrase`` - status name of error
 
-                        ``description`` - short description of the error
+            ``description`` - short description of the error
 
     Raise:
-        (AttributeError): raised when an error name is not found among
-                          the registered names (in classes ServerStatus and
-                          HTTPStatus)
-        (TypeError):      raised when Args `status` does not match String type
+        AttributeError: raised when an error name is not found among
+                        the registered names (in classes ServerStatus and
+                        HTTPStatus)
+        TypeError:      raised when Args `status` does not match String type
     """
 
     try:

@@ -39,24 +39,24 @@ def add_logging(debug_status: int) -> None:
     also duplicated in the console.
 
     Note:
-        application creates two log file contains in /log folder:
+        application creates two log file contains in /log folder
 
-        one for error level - `error.log`
+            one for error level - `error.log`
 
-        one for debug level - `debug.log`
+            one for debug level - `debug.log`
 
     Examples:
-        Instead of print we use:
+        Instead of print we use
 
-        ``logger.debug('debug message')``
+            ``logger.debug('debug message')``
 
-        ``logger.info('info message')``
+            ``logger.info('info message')``
 
-        ``logger.warning('warn message')``
+            ``logger.warning('warn message')``
 
-        ``logger.error('error message')``
+            ``logger.error('error message')``
 
-        ``logger.critical('critical message')``
+            ``logger.critical('critical message')``
 
     Args:
         debug_status (int, requires): where number corresponds its level
