@@ -278,32 +278,35 @@ class MTProtocol:
         user = []
         data = None
 
-        if self._check_login(login):
-            errors = MTPErrorResponse("CONFLICT")
+        if login is None or password is None:
+            errors = MTPErrorResponse("BAD_REQUEST")
         else:
-            generated = lib.Hash(password,
-                                 uuid)
-            auth_id = generated.auth_id()
-            self._db.add_user(uuid,
-                              login,
-                              password,
-                              hash_password=generated.password_hash(),
-                              username=username,
-                              is_bot=False,
-                              auth_id=auth_id,
-                              token_ttl=self.get_time,
-                              email=email,
-                              avatar=None,
-                              bio=None,
-                              salt=generated.get_salt,
-                              key=generated.get_key)
-            user.append(api.UserResponse(uuid=uuid,
-                                         auth_id=auth_id,
-                                         token_ttl=self.get_time))
-            data = api.DataResponse(time=self.get_time,
-                                    user=user)
-            errors = MTPErrorResponse("CREATED")
-            logger.success("User is register")
+            if self._check_login(login):
+                errors = MTPErrorResponse("CONFLICT")
+            else:
+                generated = lib.Hash(password,
+                                     uuid)
+                auth_id = generated.auth_id()
+                self._db.add_user(uuid,
+                                  login,
+                                  password,
+                                  hash_password=generated.password_hash(),
+                                  username=username,
+                                  is_bot=False,
+                                  auth_id=auth_id,
+                                  token_ttl=self.get_time,
+                                  email=email,
+                                  avatar=None,
+                                  bio=None,
+                                  salt=generated.get_salt,
+                                  key=generated.get_key)
+                user.append(api.UserResponse(uuid=uuid,
+                                             auth_id=auth_id,
+                                             token_ttl=self.get_time))
+                data = api.DataResponse(time=self.get_time,
+                                        user=user)
+                errors = MTPErrorResponse("CREATED")
+                logger.success("User is register")
 
         return api.Response(type=request.type,
                             data=data,
