@@ -190,7 +190,7 @@
 <section id="install">
 <h2>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h2>
 <ul class="simple" id="installation">
-<li><p>Install <a class="reference external" href="https://www.python.org/downloads/">Python</a> version 3.8 or higher.</p></li>
+<li><p>Install <a class="reference external" href="https://www.python.org/downloads/">Python</a> version 3.10 or higher.</p></li>
 <li><p>Download and install the latest version <a class="reference external" href="https://git-scm.com/downloads">git</a>.</p></li>
 <li><p>If you need a GUI, install <a class="reference external" href="https://desktop.github.com/">GitHub Desktop</a>.</p></li>
 <li><p>Set up Git or GitHub Desktop by entering your <code class="docutils literal notranslate"><span class="pre">username</span></code> and <code class="docutils literal notranslate"><span class="pre">email</span></code> from an account created on <a class="reference external" href="https://www.github.com">github</a>.</p></li>
@@ -225,25 +225,26 @@
 <ol class="arabic simple">
 <li><p>Create a database with empty tables:</p></li>
 </ol>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">db</span> <span class="n">create</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">db</span> <span class="n">create</span>
 </pre></div>
 </div>
 <ol class="arabic simple" start="2">
 <li><p>If you want to delete all tables in the created database (<strong>WARNING</strong> only tables are deleted, the database is not deleted):</p></li>
 </ol>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">db</span> <span class="n">delete</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">db</span> <span class="n">delete</span>
 </pre></div>
 </div>
 <ol class="arabic simple" start="3">
 <li><p>Add the administrator in the created database:</p></li>
 </ol>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">table</span> <span class="n">superuser</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">db</span> <span class="n">admin</span><span class="o">-</span><span class="n">create</span>
 </pre></div>
 </div>
 <ol class="arabic simple" start="4">
-<li><p>Additionally, you can create a <code class="docutils literal notranslate"><span class="pre">flow</span></code> with the group type:</p></li>
+<li><p>Additionally, you can create a <code class="docutils literal notranslate"><span class="pre">flow</span></code> or <code class="docutils literal notranslate"><span class="pre">user</span></code>:</p></li>
 </ol>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">table</span> <span class="n">flow</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">db</span> <span class="n">flow</span><span class="o">-</span><span class="n">create</span>
+<span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">db</span> <span class="n">user</span><span class="o">-</span><span class="n">create</span>
 </pre></div>
 </div>
 <ol class="arabic simple" start="5">
@@ -256,104 +257,34 @@
 <section id="server-startup">
 <h2>Server startup<a class="headerlink" href="#server-startup" title="Permalink to this headline">¶</a></h2>
 <p>To start server, use command:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">uvicorn</span> <span class="n">server</span><span class="p">:</span><span class="n">app</span> <span class="o">--</span><span class="n">host</span> <span class="mf">0.0.0.0</span> <span class="o">--</span><span class="n">port</span> <span class="mi">8000</span> <span class="o">--</span><span class="n">reload</span> <span class="o">--</span><span class="n">use</span><span class="o">-</span><span class="n">colors</span> <span class="o">--</span><span class="n">http</span> <span class="n">h11</span> <span class="o">--</span><span class="n">ws</span> <span class="n">websockets</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">runserver</span>
 </pre></div>
 </div>
-<p>Additional parameters that can be sent to server:</p>
+<p>Parameters that can be sent to server:
+–host, -h &lt;str&gt;            IP address, default <cite>localhost</cite>
+–port, -p &lt;str&gt;            Port for server, default 8000
+–log-level &lt;str&gt;           Set the log level. Options: <strong>critical</strong>, <strong>error</strong>, <strong>warning</strong>, <strong>info</strong>, <strong>debug</strong>, <strong>trace</strong>.</p>
+<blockquote>
+<div><p>Default: <strong>info</strong>.</p>
+</div></blockquote>
 <dl class="option-list">
-<dt><kbd><span class="option">--log-level <var>&lt;str&gt;</var></span></kbd></dt>
-<dd><p>Set the log level. Options: <strong>critical</strong>, <strong>error</strong>, <strong>warning</strong>, <strong>info</strong>, <strong>debug</strong>, <strong>trace</strong>.
-Default: <strong>info</strong>.</p>
-</dd>
 <dt><kbd><span class="option">--use-colors</span></kbd></dt>
-<dd><p>Enable colorized formatting of the log records, in case this is not set it will be auto-detected.
-This option is ignored if the <code class="docutils literal notranslate"><span class="pre">--log-config</span></code> CLI option is used.</p>
+<dd><p>Enable colorized formatting of the log records, in case this is not set it will be auto-detected.</p>
 </dd>
-<dt><kbd><span class="option">--no-use-colors</span></kbd></dt>
-<dd><p>Disable colorized formatting of the log records.</p>
-</dd>
-<dt><kbd><span class="option">--loop <var>&lt;str&gt;</var></span></kbd></dt>
-<dd><p>Set the event loop implementation. The uvloop implementation provides greater performance,
-but is not compatible with Windows or PyPy. Options: <strong>auto</strong>, <strong>asyncio</strong>, <strong>uvloop</strong>.
-Default: <strong>auto</strong>.</p>
-</dd>
-<dt><kbd><span class="option">--http <var>&lt;str&gt;</var></span></kbd></dt>
-<dd><p>Set the HTTP protocol implementation. The httptools implementation provides greater performance,
-but it is not compatible with PyPy, and requires compilation on Windows.
-Options: <strong>auto</strong>, <strong>h11</strong>, <strong>httptools</strong>. Default: <strong>auto</strong>.</p>
-</dd>
-<dt><kbd><span class="option">--ws <var>&lt;str&gt;</var></span></kbd></dt>
-<dd><p>Set the WebSockets protocol implementation. Either of the websockets and wsproto packages are
-supported. Use <strong>none</strong> to deny all websocket requests. Options: <strong>auto</strong>, <strong>none</strong>, <strong>websockets</strong>,
-<strong>wsproto</strong>. Default: <strong>auto</strong>.</p>
-</dd>
-<dt><kbd><span class="option">--lifespan <var>&lt;str&gt;</var></span></kbd></dt>
-<dd><p>Set the Lifespan protocol implementation. Options: <strong>auto</strong>, <strong>on</strong>, <strong>off</strong>. Default: <strong>auto</strong>.</p>
-</dd>
-<dt><kbd><span class="option">--interface</span></kbd></dt>
-<dd><p>Select ASGI3, ASGI2, or WSGI as the application interface. Note that WSGI mode always disables
-WebSocket support, as it is not supported by the WSGI interface.
-Options: <strong>auto</strong>, <strong>asgi3</strong>, <strong>asgi2</strong>, <strong>wsgi</strong>. Default: <strong>auto</strong>.</p>
-</dd>
-<dt><kbd><span class="option">--limit-concurrency <var>&lt;int&gt;</var></span></kbd></dt>
-<dd><p>Maximum number of concurrent connections or tasks to allow, before issuing HTTP 503 responses.
-Useful for ensuring known memory usage patterns even under over-resourced loads.</p>
-</dd>
-<dt><kbd><span class="option">--limit-max-requests <var>&lt;int&gt;</var></span></kbd></dt>
-<dd><p>Maximum number of requests to service before terminating the process.
-Useful when running together with a process manager, for preventing memory leaks from impacting
-long-running processes.</p>
-</dd>
-<dt><kbd><span class="option">--backlog <var>&lt;int&gt;</var></span></kbd></dt>
-<dd><p>Maximum number of connections to hold in backlog. Relevant for heavy incoming traffic.
-Default: <strong>2048</strong></p>
-</dd>
-<dt><kbd><span class="option">--ssl-keyfile <var>&lt;path&gt;</var></span></kbd></dt>
-<dd><p>SSL key file</p>
-</dd>
-<dt><kbd><span class="option">--ssl-certfile <var>&lt;path&gt;</var></span></kbd></dt>
-<dd><p>SSL certificate file</p>
-</dd>
-<dt><kbd><span class="option">--ssl-version <var>&lt;int&gt;</var></span></kbd></dt>
-<dd><p>SSL version to use (see stdlib ssl module’s)</p>
-</dd>
-<dt><kbd><span class="option">--ssl-cert-reqs <var>&lt;int&gt;</var></span></kbd></dt>
-<dd><p>Whether client certificate is required (see stdlib ssl module’s)</p>
-</dd>
-<dt><kbd><span class="option">--ssl-ca-certs <var>&lt;str&gt;</var></span></kbd></dt>
-<dd><p>CA certificates file</p>
-</dd>
-<dt><kbd><span class="option">--ssl-ciphers <var>&lt;str&gt;</var></span></kbd></dt>
-<dd><p>Ciphers to use (see stdlib ssl module’s)</p>
-</dd>
-<dt><kbd><span class="option">--timeout-keep-alive <var>&lt;int&gt;</var></span></kbd></dt>
-<dd><p>Close Keep-Alive connections if no new data is received within this timeout. Default: 5.</p>
+<dt><kbd><span class="option">--reload</span>, <span class="option">-r</span></kbd></dt>
+<dd><p>Enable auto-reload. Uvicorn supports two versions of auto-reloading behavior enabled by this option.
+There are important differences between them.</p>
 </dd>
 </dl>
 </section>
-<section id="debug-mode">
-<h2><strong>DEBUG</strong> mode<a class="headerlink" href="#debug-mode" title="Permalink to this headline">¶</a></h2>
-<p>To easily start the server in debug mode, all you need to do is run <cite>debug_server.py</cite>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">debug_server</span><span class="o">.</span><span class="n">py</span>
-</pre></div>
-</div>
-</section>
 <section id="working-with-built-in-client">
 <h2>Working with built-in client<a class="headerlink" href="#working-with-built-in-client" title="Permalink to this headline">¶</a></h2>
-<p>To test the server, run the mini client <code class="docutils literal notranslate"><span class="pre">client.py</span></code> in the console:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">-</span><span class="n">i</span> <span class="o">./</span><span class="n">client</span><span class="o">.</span><span class="n">py</span>
+<p>To test the server, you can send a test message using the built-in mini client, for which you must use the key “-t” to pass the type of message from the options:
+<code class="docutils literal notranslate"><span class="pre">register_user</span></code>, <code class="docutils literal notranslate"><span class="pre">get_update</span></code>, <code class="docutils literal notranslate"><span class="pre">send_message</span></code>, <code class="docutils literal notranslate"><span class="pre">all_messages</span></code>, <code class="docutils literal notranslate"><span class="pre">add_flow</span></code>, <code class="docutils literal notranslate"><span class="pre">all_flow</span></code>, <code class="docutils literal notranslate"><span class="pre">user_info</span></code>, <code class="docutils literal notranslate"><span class="pre">authentication</span></code>, <code class="docutils literal notranslate"><span class="pre">delete_user</span></code>, <code class="docutils literal notranslate"><span class="pre">delete_message</span></code>,
+<code class="docutils literal notranslate"><span class="pre">edited_message</span></code>, <code class="docutils literal notranslate"><span class="pre">ping_pong</span></code>, <code class="docutils literal notranslate"><span class="pre">error</span></code>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">testclient</span> <span class="n">send</span> <span class="o">-</span><span class="n">t</span> <span class="n">register_user</span>
 </pre></div>
 </div>
-<p>After launching, the client will send an authorization message (AUTH) to the server, the server’s response will be displayed
-in the console, after which <code class="docutils literal notranslate"><span class="pre">python</span></code> will go into interactive line mode <code class="docutils literal notranslate"><span class="pre">&gt;&gt;&gt;</span></code>, so that it is possible to perform additional checks.</p>
-<p>In the interactive console, there will be one function available to send <code class="docutils literal notranslate"><span class="pre">end_message</span></code> which takes two arguments
-<code class="docutils literal notranslate"><span class="pre">message</span></code> message and <code class="docutils literal notranslate"><span class="pre">uri</span></code> server address. In the argument <code class="docutils literal notranslate"><span class="pre">message</span></code> you need to pass an object with type <em>“dict”</em>
-or <em>“str”</em>, you can use ready-made examples of queries: <strong>AUTH</strong>, <strong>GET_UPDATE</strong>, <strong>ADD_FLOW</strong>, <strong>ALL_FLOW</strong>.
-In the argument you must pass an object with type <em>“str”</em>, you can use ready examples of server address: <strong>LOCALHOST</strong>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">send_message</span><span class="p">(</span><span class="n">GET_UPDATE</span><span class="p">,</span> <span class="n">LOCALHOST</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>If no arguments are passed to the function, the default is to send an <strong>AUTH</strong> message to <strong>LOCALHOST</strong>.</p>
 </section>
 </section>
 
@@ -413,7 +344,6 @@ In the argument you must pass an object with type <em>“str”</em>, you can us
 <li><a class="reference internal" href="#configuring-the-pipenv">Configuring the Pipenv</a></li>
 <li><a class="reference internal" href="#before-starting-the-server">Before starting the server</a></li>
 <li><a class="reference internal" href="#server-startup">Server startup</a></li>
-<li><a class="reference internal" href="#debug-mode"><strong>DEBUG</strong> mode</a></li>
 <li><a class="reference internal" href="#working-with-built-in-client">Working with built-in client</a></li>
 </ul>
 </li>

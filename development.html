@@ -189,8 +189,7 @@
 <h1>Development<a class="headerlink" href="#development" title="Permalink to this headline">¶</a></h1>
 <section id="git-repository">
 <span id="id1"></span><h2>Git repository<a class="headerlink" href="#git-repository" title="Permalink to this headline">¶</a></h2>
-<p>Stable branch <a class="reference external" href="https://github.com/MoreliaTalk/morelia_server/tree/master">master</a></p>
-<p>Branch to add new functionality <a class="reference external" href="https://github.com/MoreliaTalk/morelia_server/tree/develop">develop</a></p>
+<p>Main branch <a class="reference external" href="https://github.com/MoreliaTalk/morelia_server/tree/master">master</a></p>
 </section>
 <section id="fork-repository">
 <h2>Fork repository<a class="headerlink" href="#fork-repository" title="Permalink to this headline">¶</a></h2>
@@ -207,9 +206,9 @@
 </pre></div>
 </div>
 <ol class="arabic simple" start="2">
-<li><p>Switching to <code class="docutils literal notranslate"><span class="pre">develop</span></code> branch:</p></li>
+<li><p>Switching to <code class="docutils literal notranslate"><span class="pre">master</span></code> branch:</p></li>
 </ol>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">checkout</span> <span class="n">develop</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">checkout</span> <span class="n">master</span>
 </pre></div>
 </div>
 <ol class="arabic simple" start="3">
@@ -231,10 +230,16 @@
 <ol class="arabic simple" start="5">
 <li><p>If using GitHub Desktop, select <code class="docutils literal notranslate"><span class="pre">Clone</span> <span class="pre">repository...</span></code> from <code class="docutils literal notranslate"><span class="pre">File</span></code> menu and follow instructions.</p></li>
 </ol>
-<section id="running-before-create-pool-request">
-<h3>Running before create pool-request<a class="headerlink" href="#running-before-create-pool-request" title="Permalink to this headline">¶</a></h3>
-<p>Before create pool-request you must be perform two step:</p>
+<section id="running-before-create-pull-request">
+<h3>Running before create pull-request<a class="headerlink" href="#running-before-create-pull-request" title="Permalink to this headline">¶</a></h3>
+<p>Before create pull-request you must be perform three steps:</p>
 <ol class="arabic simple">
+<li><p>Running static type checker <code class="docutils literal notranslate"><span class="pre">mypy</span></code>:</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">mypy</span> <span class="o">--</span><span class="n">config</span><span class="o">=./</span><span class="n">setup</span><span class="o">.</span><span class="n">cfg</span> <span class="o">.</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
 <li><p>Running <code class="docutils literal notranslate"><span class="pre">flake8</span></code> for checking code:</p></li>
 </ol>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">flake8</span> <span class="o">--</span><span class="n">config</span> <span class="o">./</span><span class="n">setup</span><span class="o">.</span><span class="n">cfg</span> <span class="o">--</span><span class="n">show</span><span class="o">-</span><span class="n">source</span> <span class="o">--</span><span class="n">statistics</span> <span class="o">--</span><span class="n">output</span><span class="o">-</span><span class="n">file</span> <span class="o">./</span><span class="n">log</span><span class="o">/</span><span class="n">flake8</span><span class="o">.</span><span class="n">log</span>
@@ -244,7 +249,7 @@
 <p><code class="docutils literal notranslate"><span class="pre">--show-source</span></code> - show the source generate each error or warning</p>
 <p><code class="docutils literal notranslate"><span class="pre">--statistics</span></code> - count errors and warnings</p>
 <p><code class="docutils literal notranslate"><span class="pre">--output-file</span> <span class="pre">./log/flake8.log</span></code> - path to file where flake8 saved all information about occurrences errors and warnings</p>
-<ol class="arabic simple" start="2">
+<ol class="arabic simple" start="3">
 <li><p>Running unittest for testing code (<code class="docutils literal notranslate"><span class="pre">tests</span></code> it’s a directory contains all test for project):</p></li>
 </ol>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">coverage</span> <span class="n">run</span> <span class="o">-</span><span class="n">m</span> <span class="n">unittest</span> <span class="n">discover</span> <span class="n">tests</span>
@@ -252,24 +257,24 @@
 </div>
 </section>
 </section>
-<section id="creating-a-pool-request">
-<h2>Creating a pool-request<a class="headerlink" href="#creating-a-pool-request" title="Permalink to this headline">¶</a></h2>
+<section id="creating-a-pull-request">
+<h2>Creating a pull-request<a class="headerlink" href="#creating-a-pull-request" title="Permalink to this headline">¶</a></h2>
 <p>For making changes to development branch Morelia Server.</p>
 <ol class="arabic simple">
 <li><p>Getting the latest changes from development branch Morelia Server:</p></li>
 </ol>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">pull</span> <span class="n">upstream</span> <span class="n">develop</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">pull</span> <span class="n">upstream</span> <span class="n">master</span>
 </pre></div>
 </div>
 <ol class="arabic simple" start="2">
-<li><p>Sending changes to development branch of your fork:</p></li>
+<li><p>Sending changes to main branch of your fork:</p></li>
 </ol>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">push</span>
 </pre></div>
 </div>
 <p>3. To create a pull-request, you need to go to <a class="reference external" href="https://www.github.com">GitHub</a>, select your fork and click on
 <code class="docutils literal notranslate"><span class="pre">New</span> <span class="pre">pull</span> <span class="pre">request</span></code> in right-hand menu, then select branch from which you want to push changes to Morelia Server
-development branch and click <code class="docutils literal notranslate"><span class="pre">Create</span> <span class="pre">pull</span> <span class="pre">request</span></code>.</p>
+master branch and click <code class="docutils literal notranslate"><span class="pre">Create</span> <span class="pre">pull</span> <span class="pre">request</span></code>.</p>
 </section>
 <section id="code-style-requirements">
 <h2>Code style requirements<a class="headerlink" href="#code-style-requirements" title="Permalink to this headline">¶</a></h2>
@@ -288,44 +293,32 @@ development branch and click <code class="docutils literal notranslate"><span cl
 </pre></div>
 </div>
 </section>
-<section id="running-the-debugger">
-<h2>Running the debugger<a class="headerlink" href="#running-the-debugger" title="Permalink to this headline">¶</a></h2>
-<p>To run debugger in a working server environment, through console</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pdb</span> <span class="o">./</span><span class="n">debug_server</span><span class="o">.</span><span class="n">py</span>
-</pre></div>
-</div>
-<p>To get help in debug mode:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">pdb</span><span class="p">)</span> <span class="n">help</span>
-</pre></div>
-</div>
-</section>
 <section id="repository-description">
 <h2>Repository description<a class="headerlink" href="#repository-description" title="Permalink to this headline">¶</a></h2>
-<p><cite>/admin/templates</cite> - templates of admin pages</p>
-<p><cite>/admin/admin.py</cite> - admin.py</p>
-<p><cite>/admin/control.py</cite> - control.py</p>
-<p><cite>/admin/login.py</cite> - login.py</p>
-<p><cite>/admin/logs.py</cite> - logs.py</p>
-<p><cite>/mod/db/dbhandler.py</cite> - module is designed to perform queries to the database</p>
-<p><cite>/mod/db/models.py</cite> - module is responsible for the description of database tables to work through OPM</p>
-<p><cite>/mod/protocol/matrix/api.py</cite> - module is responsible for the description of API, as well as the validation of data.</p>
-<p><cite>/mod/protocol/matrix/worker.py</cite> - implementation of the protocol</p>
-<p><cite>/mod/protocol/mtp/api.py</cite> - module responsible for API description, as well as data validation.</p>
-<p><cite>/mod/protocol/worker.py</cite> - module is responsible for implementing the methods described in <a class="reference external" href="https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md">Morelia Protocol</a>.</p>
-<p><cite>/mod/error.py</cite> - module is responsible for checking and generating responses with error codes.</p>
-<p><cite>/mod/controller.py</cite> - module is responsible for processing requests according to the protocol type.</p>
-<p><cite>/mod/lib.py</cite> - module is responsible for password hashing, comparing password with its hash sum, creating hash for <code class="docutils literal notranslate"><span class="pre">auth_id</span></code>.</p>
-<p><cite>/mod/logging.py</cite> - module configures logging.</p>
-<p><cite>/config.py</cite> - module reads settings from config.ini</p>
-<p><cite>/static/</cite> - static files</p>
-<p><cite>/server.py</cite> - main server code</p>
-<p><cite>/manage.py</cite> - database migration manager (creating and deleting database tables)</p>
-<p><cite>/tests/fixtures/</cite> - json-files with preliminarily prepared data for tests</p>
-<p><cite>/tests/config.ini</cite> - server config for the tests</p>
-<p><cite>/tests/test_*.py</cite> - tests</p>
-<p><cite>/debug_server.py</cite> - wrapper for server.py to debug through the <code class="docutils literal notranslate"><span class="pre">pdb</span></code> utility.</p>
-<p><cite>/example_config.ini</cite> - file containing example server settings, just rename it to <code class="docutils literal notranslate"><span class="pre">config.ini</span></code> before running the server.</p>
-<p><cite>/client.py</cite> - mini-customer to test the server.</p>
+<p><code class="docutils literal notranslate"><span class="pre">/admin/templates</span></code> - templates of admin pages</p>
+<p><code class="docutils literal notranslate"><span class="pre">/admin/general.py</span></code> -</p>
+<p><code class="docutils literal notranslate"><span class="pre">/admin/control.py</span></code> -</p>
+<p><code class="docutils literal notranslate"><span class="pre">/admin/login.py</span></code> -</p>
+<p><code class="docutils literal notranslate"><span class="pre">/admin/logs.py</span></code> -</p>
+<p><code class="docutils literal notranslate"><span class="pre">/mod/db/dbhandler.py</span></code> - module is designed to perform queries to the database</p>
+<p><code class="docutils literal notranslate"><span class="pre">/mod/db/models.py</span></code> - module is responsible for the description of database tables to work through OPM</p>
+<p><code class="docutils literal notranslate"><span class="pre">/mod/protocol/matrix/api.py</span></code> - module is responsible for the description of API, as well as the validation of data.</p>
+<p><code class="docutils literal notranslate"><span class="pre">/mod/protocol/matrix/worker.py</span></code> - implementation of the protocol</p>
+<p><code class="docutils literal notranslate"><span class="pre">/mod/protocol/mtp/api.py</span></code> - module responsible for API description, as well as data validation.</p>
+<p><code class="docutils literal notranslate"><span class="pre">/mod/protocol/worker.py</span></code> - module is responsible for implementing the methods described in <a class="reference external" href="https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md">Morelia Protocol</a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">/mod/error.py</span></code> - module is responsible for checking and generating responses with error codes.</p>
+<p><code class="docutils literal notranslate"><span class="pre">/mod/controller.py</span></code> - module is responsible for processing requests according to the protocol type.</p>
+<p><code class="docutils literal notranslate"><span class="pre">/mod/lib.py</span></code> - module is responsible for password hashing, comparing password with its hash sum, creating hash for <code class="docutils literal notranslate"><span class="pre">auth_id</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">/mod/log_handler.py</span></code> - module configures logging.</p>
+<p><code class="docutils literal notranslate"><span class="pre">/mod/config/config.py</span></code> - module reads settings from config.ini</p>
+<p><code class="docutils literal notranslate"><span class="pre">/mod/config/validator</span></code> - data validation for config.ini</p>
+<p><code class="docutils literal notranslate"><span class="pre">/static/</span></code> - static files</p>
+<p><code class="docutils literal notranslate"><span class="pre">/server.py</span></code> - main server code</p>
+<p><code class="docutils literal notranslate"><span class="pre">/manage.py</span></code> - database migration manager (creating and deleting database tables), mnanage database, create and delete admin, user and flow. Running server and run mini test client.</p>
+<p><code class="docutils literal notranslate"><span class="pre">/tests/fixtures/</span></code> - json-files with preliminarily prepared data for tests</p>
+<p><code class="docutils literal notranslate"><span class="pre">/tests/fixtures/config.ini</span></code> - server config for the tests</p>
+<p><code class="docutils literal notranslate"><span class="pre">/tests/test_*.py</span></code> - tests</p>
+<p><code class="docutils literal notranslate"><span class="pre">/example_config.ini</span></code> - file containing example server settings, just rename it to <code class="docutils literal notranslate"><span class="pre">config.ini</span></code> before running the server.</p>
 </section>
 </section>
 
@@ -384,13 +377,12 @@ development branch and click <code class="docutils literal notranslate"><span cl
 <li><a class="reference internal" href="#git-repository">Git repository</a></li>
 <li><a class="reference internal" href="#fork-repository">Fork repository</a></li>
 <li><a class="reference internal" href="#cloning-a-repository">Cloning a repository</a><ul>
-<li><a class="reference internal" href="#running-before-create-pool-request">Running before create pool-request</a></li>
+<li><a class="reference internal" href="#running-before-create-pull-request">Running before create pull-request</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#creating-a-pool-request">Creating a pool-request</a></li>
+<li><a class="reference internal" href="#creating-a-pull-request">Creating a pull-request</a></li>
 <li><a class="reference internal" href="#code-style-requirements">Code style requirements</a></li>
 <li><a class="reference internal" href="#writing-and-running-tests">Writing and running tests</a></li>
-<li><a class="reference internal" href="#running-the-debugger">Running the debugger</a></li>
 <li><a class="reference internal" href="#repository-description">Repository description</a></li>
 </ul>
 </li>

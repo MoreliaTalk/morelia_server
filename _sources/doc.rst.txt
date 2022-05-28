@@ -31,7 +31,7 @@ To work with MTP protocol server used ``protocol.mtp`` module which included the
 MTPErrorResponse
 ----------------
 
-Class ``mod.protocol.mtp.worker.MTPErrorResponse`` return response object with validation:
+Return response object with validation:
 
 .. autoclass:: mod.protocol.mtp.worker.MTPErrorResponse
    :members:
@@ -42,7 +42,7 @@ Class ``mod.protocol.mtp.worker.MTPErrorResponse`` return response object with v
 MTProtocol
 ----------
 
-Class ``mod.protocol.mtp.worker.MTProtocol`` processing all methods contains MTP protocol description:
+Processing all methods contains MTP protocol description:
 
 .. autoclass:: mod.protocol.mtp.worker.MTProtocol
    :members:
@@ -53,7 +53,7 @@ Class ``mod.protocol.mtp.worker.MTProtocol`` processing all methods contains MTP
 Validations Response
 --------------------
 
-Class ``mod.protocol.mtp.api.Response`` processing results of MTPProtocol methods with following validation and generate
+Processing results of MTPProtocol methods with following validation and generate
 response in JSON format:
 
 .. autoclass:: mod.protocol.mtp.api.Response
@@ -66,8 +66,8 @@ response in JSON format:
 Validations Request
 --------------------
 
-General description of the class ``mod.protocol.mtp.api.Request`` processing response received from clients with following
-validation and generate error code when response not corresponds protocol methods:
+Processing response received from clients with following validation and generate
+error code when response not corresponds protocol methods:
 
 .. autoclass:: mod.protocol.mtp.api.Request
    :members: data, errors, type, jsonapi, meta
@@ -85,7 +85,7 @@ Read fully description about latest version of **Matrix** protocol to `this <htt
 MatrixProtocol
 --------------
 
-Class ``mod.protocol.matrix.worker.MatrixProtocol`` processing half methods contains Matrix protocol description:
+Processing half methods contains Matrix protocol description:
 
 .. autoclass:: mod.protocol.matrix.worker.MatrixProtocol
    :members:
@@ -96,16 +96,16 @@ Class ``mod.protocol.matrix.worker.MatrixProtocol`` processing half methods cont
 Validations Response
 --------------------
 
-General description of the class ``mod.protocol.matrix.api.Response`` processing results of MatrixProtocol methods with
-following validation and generate response in JSON format:
+Processing results of MatrixProtocol methods with following validation and generate
+response in JSON format:
 
 
 
 Validations Request
 --------------------
 
-General description of the class ``mod.protocol.matrix.api.Request`` processing response received from clients with following
-validation and generate error code when response not corresponds protocol methods:
+Processing response received from clients with following validation and generate
+error code when response not corresponds protocol methods:
 
 
 
@@ -116,7 +116,7 @@ Database
 DBhandler
 ---------
 
-Class ``mod.db.dbhandler.DBHandler`` high layer class has to work with database without query in raw SQL:
+High layer class has to work with database without query in raw SQL:
 
 .. autoclass:: mod.db.dbhandler.DBHandler
    :members:
@@ -131,7 +131,7 @@ Models
 UserConfig
 ++++++++++
 
-Description UserConfig table where saving user secure and personal information ``mod.db.models.UserConfig``:
+UserConfig table where saving user secure and personal information:
 
 .. autoclass:: mod.db.models.UserConfig
 
@@ -139,7 +139,7 @@ Description UserConfig table where saving user secure and personal information `
 Flow
 ++++
 
-Description Flow table where saving flow information ``mod.db.models.Flow``:
+Flow table where saving flow information:
 
 .. autoclass:: mod.db.models.Flow
 
@@ -147,7 +147,7 @@ Description Flow table where saving flow information ``mod.db.models.Flow``:
 Message
 +++++++
 
-Description Message table where saving message information ``mod.db.models.Message``:
+Message table where saving message information:
 
 .. autoclass:: mod.db.models.Message
 
@@ -155,7 +155,7 @@ Description Message table where saving message information ``mod.db.models.Messa
 Admin
 +++++
 
-Description Admin table where saving access rights for web administration panel ``mod.db.models.Admin``:
+Admin table where saving access rights for web administration panel:
 
 .. autoclass:: mod.db.models.Admin
 
@@ -167,7 +167,7 @@ Controller
 MainHandler
 -----------
 
-Class identifies and redirects requests with accordance type of protocol ``mod.controller.MainHandler``:
+Class identifies and redirects requests with accordance type of protocol:
 
 .. autoclass:: mod.controller.MainHandler
    :members:
@@ -178,9 +178,7 @@ Class identifies and redirects requests with accordance type of protocol ``mod.c
 Error
 =====
 
-Contains several new error code which additional for standard HTTP error code.
-
-General description of the class ``mod.error.ServerStatus``:
+Contains several new error code which additional for standard HTTP error code:
 
 .. autoclass:: mod.error.ServerStatus
 
@@ -198,13 +196,13 @@ Admin
 
 ``admin``
 
-.. autofunction:: admin.admin.index_admin
-.. autofunction:: admin.admin.login_admin
-.. autofunction:: admin.admin.manage_admin
-.. autofunction:: admin.admin.manage_logs
-.. autofunction:: admin.admin.status_admin
+.. autofunction:: admin.general.index_admin
+.. autofunction:: admin.general.login_admin
+.. autofunction:: admin.general.manage_admin
+.. autofunction:: admin.general.manage_logs
+.. autofunction:: admin.general.status_admin
 .. autoexception:: admin.login.NotAuthenticatedException
-.. autofunction:: admin.admin.not_login_exception_handler
+.. autofunction:: admin.general.not_login_exception_handler
 .. autofunction:: admin.login.get_admin_user_data
 .. autofunction:: admin.login.login_token
 .. autofunction:: admin.login.logout
@@ -216,66 +214,62 @@ Admin
 Config
 ------
 
-``mod.config.config.ConfigHandler``:
+Module for working with the configuration file. Allows you to read and save the basic parameters
+to the settings file in the root directory of the project:
 
 .. autoclass:: mod.config.config.ConfigHandler
    :members:
    :private-members:
    :undoc-members:
 
-``mod.config.config.NameConfigError``:
 
-.. autoclass:: mod.config.config.NameConfigError
+.. autoexception:: mod.config.config.NameConfigError
    :members:
    :private-members:
    :undoc-members:
 
-``mod.config.config.BackupConfigError``:
 
-.. autoclass:: mod.config.config.BackupConfigError
+.. autoexception:: mod.config.config.BackupConfigError
    :members:
    :private-members:
    :undoc-members:
 
-``mod.config.config.OperationConfigError``:
 
-.. autoclass:: mod.config.config.OperationConfigError
+.. autoexception:: mod.config.config.OperationConfigError
    :members:
    :private-members:
    :undoc-members:
 
-``mod.config.config.AccessConfigError``:
 
-.. autoclass:: mod.config.config.AccessConfigError
+.. autoexception:: mod.config.config.AccessConfigError
    :members:
    :private-members:
    :undoc-members:
 
-``mod.config.config.RebuildConfigError``:
 
-.. autoclass:: mod.config.config.RebuildConfigError
+.. autoexception:: mod.config.config.RebuildConfigError
    :members:
    :private-members:
    :undoc-members:
 
-``mod.config.config.CopyConfigError``:
 
-.. autoclass:: mod.config.config.CopyConfigError
+.. autoexception:: mod.config.config.CopyConfigError
    :members:
    :private-members:
    :undoc-members:
 
-``mod.config.config.validator``:
 
 .. autoclass:: mod.config.validator.ConfigModel
-   :members:
+   :members: debug, debug_expiration_date, error, expiration_date, folder, info, level, max_version, messages, min_version, secret_key, size_auth_id, size_password, uri, users, uvicorn_logging_disable
    :private-members:
    :undoc-members:
 
 Hash
 ----
 
-``mod.lib.Hash``:
+Generating a hash for a password or session.
+Password hash verification.
+Generating a user authentication token.
 
 .. autoclass:: mod.lib.Hash
    :members:
@@ -286,6 +280,6 @@ Hash
 Logging
 -------
 
-``mod.logging.add_logging()``:
+Adding and configuring project logging.
 
-.. autofunction:: mod.logging.add_logging
+.. autofunction:: mod.log_handler.add_logging
