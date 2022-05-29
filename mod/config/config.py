@@ -97,7 +97,25 @@ class ConfigHandler:
                        documentation section for build-ins configparser
                        modules.
     """
+    __instance: Optional['ConfigHandler'] = None
     _directory: Optional[str]
+
+    def __new__(cls, *args, **kwargs):
+        """
+        A function called when creating a new object.
+        If such an object already exists, returns it.
+        And if not, creates a new one.
+
+        Args:
+            cls(ConfigHandler): class ConfigHandler
+            *args:
+            **kwargs:
+        """
+
+        if cls.__instance is None:
+            cls.__instance = super().__new__(cls)
+
+        return cls.__instance
 
     def __init__(self,
                  name: str = 'config.ini',
