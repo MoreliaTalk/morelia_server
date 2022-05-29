@@ -7,6 +7,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}_docker
+  SHA7: ${GITHUB_SHA:7}
 
 jobs:
   build-and-push-image:
@@ -43,7 +44,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=semver, pattern={{raw}}
-            type=raw, value=${{github.sha::7}}_${{ steps.date.outputs.date }}
+            type=raw, value=${env.SHA7}}_${{ steps.date.outputs.date }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
