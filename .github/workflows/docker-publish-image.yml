@@ -7,7 +7,6 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}_docker
-  SHA8: ${GITHUB_SHA::8}
 
 jobs:
   build-and-push-image:
@@ -44,7 +43,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=semver, pattern={{raw}}
-            type=raw, value=$SHA8_${{ steps.date.outputs.date }}
+            type=raw, value=$(echo ${github.sha} | cut -c1-8)_${{ steps.date.outputs.date }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
