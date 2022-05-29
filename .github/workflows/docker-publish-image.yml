@@ -1,7 +1,7 @@
 name: Build and publish docker image
 on:
   push:
-    branches: [ master ]
+    branches: [ master, develop-fix-docket-tag-naming ]
     tags: '*'
 
 env:
@@ -43,7 +43,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=semver, pattern={{raw}}
-            type=raw, value=${{ steps.date.outputs.date }}
+            type=raw, value=$(git rev-parse --short "$GITHUB_SHA")_${{ steps.date.outputs.date }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
