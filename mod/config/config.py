@@ -126,14 +126,6 @@ class ConfigHandler:
         self._set_configparser(self._name,
                                self._directory)
 
-    def __del__(self):
-        """
-        The function to be called when the object is deleted.
-        When this happens, we reset our __instance to None.
-        """
-
-        self.__instance = None
-
     def _set_configparser(self,
                           name: str,
                           directory: Any) -> None:
