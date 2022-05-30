@@ -44,6 +44,9 @@ from mod.protocol.mtp.api import DataRequest
 from mod.protocol.mtp.api import Request
 
 
+VERSION = "v0.3"
+
+
 config = ConfigHandler()
 config_option = config.read()
 
@@ -94,53 +97,124 @@ def click_async(func):
     return wrapper
 
 
-@click.group()
-def cli():
-    """
-    Group for all command.
-    """
+def copy_config():
     pass
 
 
-@cli.group("db", help="manage database")
-@click.option("--uri", default=config_option.uri)
+def create_table():
+    pass
+
+
+def create_superuser(username):
+    click.echo(f"{username}")
+
+
+@click.group(name="Main group for all options.")
+@click.version_option(version=VERSION,
+                      package_name="MoreliaTalk server")
+@click.help_option()
+def cli() -> None:
+    """
+    Morelia Talk server manager.
+
+    It's main tool for working with the MoreliaTalk server,
+    allowing you to start and configure server.
+    """
+
+
+@cli.group("init")
+# @click.option("--username",
+#               help="Username")
+# @click.option("--password",
+#               prompt=True,
+#               hide_input=True)
+def init() -> None:
+    """
+    Preparing the MoreliaTalk server for work.
+
+    This command will copy config.ini from example_config.ini,
+    create a database and an administrator account.
+    """
+    try:
+        copy_config()
+    except Exception as err:
+        click.echo(f"Error{err}")
+        return
+    else:
+        click.echo("Config => Ok")
+
+    try:
+        create_table()
+    except Exception as err:
+        click.echo(f"ERROR={err}")
+        return
+    else:
+        click.echo("Database => Ok")
+
+    try:
+        create_superuser()
+    except Exception as err:
+        click.echo(f"ERROR={err}")
+    else:
+        click.echo("User created => Ok")
+        # click.echo(f"name={} with password={}")
+        click.echo("For run server in normal mode: ./manage.py run server")
+        click.echo("For run server in develop mode: ./manage.py run devserver")
+
+
+@cli.group("db")
 @click.pass_context
-def db_cli(ctx, uri):
+def db() -> None:
     """
-    Group for db manipulation command.
+    Tools for creating and managing database.
+
     """
-    ctx.ensure_object(dict)
-    ctx.obj['uri'] = uri
 
 
-@cli.group("testclient", help="mini-client for server")
-def client_cli():
+@cli.group("client")
+def client() -> None:
     """
-    Group for client command.
+    Mini-client for checking the server.
+
     """
-    pass
 
 
-@cli.command("runserver", help="run app using the dev server")
-@click.option("-h", "--host", default="localhost")
-@click.option("-p", "--port", default=8080)
-@click.option("--log-level", default="debug")
-@click.option("--use-colors", default=True)
-@click.option("-r", "--reload", default=True)
-def run(host: str,
-        port: int,
-        log_level: str,
-        use_colors: bool,
-        reload: bool):
+@cli.group("run")
+def run() -> None:
     """
-    Run server.
+    Tools for running server in production or developing mode.
+
+    """
+
+
+@run.command("devserver")
+@click.option("-h",
+              "--host",
+              default="localhost")
+@click.option("-p",
+              "--port",
+              default=8080)
+@click.option("--log-level",
+              default="debug")
+@click.option("--use-colors",
+              default=True)
+@click.option("-r",
+              "--reload",
+              default=True)
+def devserver(host: str,
+              port: int,
+              log_level: str,
+              use_colors: bool,
+              reload: bool) -> None:
+    """
+    Run server in debug (developing) mode.
 
     Args:
-        host(str): host for run
-        port(str):port for run
-        log_level(str): level logs
-        use_colors(bool): enable use colors in terminal
-        reload(bool): enable hot reload
+        host: IP or DNS name for running server
+        port: IP port for running server
+        log_level: level logs
+        use_colors: enable use colors in terminal
+        reload: enable hot reload
     """
 
     uvicorn.run("server:app",
@@ -154,7 +228,48 @@ def run(host: str,
                 reload=reload)
 
 
-@db_cli.command("create", help="Create all table with all data")
+@run.command("server")
+@click.option("-h",
+              "--host",
+              default="localhost")
+@click.option("-p",
+              "--port",
+              default=8080)
+@click.option("--log-level",
+              default="error")
+@click.option("--use-colors",
+              default=False)
+@click.option("-r",
+              "--reload",
+              default=True)
+def server(host: str,
+           port: int,
+           log_level: str,
+           use_colors: bool,
+           reload: bool) -> None:
+    """
+    Run server in production (normal) mode.
+
+    Args:
+        host: IP or DNS name for running server
+        port: IP port for running server
+        log_level: level logs
+        use_colors: enable use colors in terminal
+        reload: enable hot reload
+    """
+
+    uvicorn.run("server:app",
+                host=host,
+                port=port,
+                http="h11",
+                ws="websockets",
+                log_level=log_level,
+                use_colors=use_colors,
+                debug=False,
+                reload=reload)
+
+
+@db.command("create", help="Create all table with all data")
 @click.pass_context
 def db_create(ctx):
     """
@@ -172,7 +287,7 @@ def db_create(ctx):
                    f"{process_time() - start_time} sec.")
 
 
-@db_cli.command("delete", help="Delete all table with all data")
+@db.command("delete", help="Delete all table with all data")
 @click.pass_context
 def db_delete(ctx):
     """
@@ -191,7 +306,7 @@ def db_delete(ctx):
                    f"{process_time() - start_time} sec.")
 
 
-@db_cli.command("user-create", help="Creates a user in the database, \
+@db.command("user-create", help="Creates a user in the database, \
                                      if login and password are empty, \
                                      then generates them randomly")
 @click.option("-l",
@@ -234,7 +349,7 @@ def create_user(ctx: click.Context,
         click.echo(f"{username} created, login: {login}, password: {password}")
 
 
-@db_cli.command("flow-create", help="Create flow type group in database")
+@db.command("flow-create", help="Create flow type group in database")
 @click.option("-l",
               "--login",
               help="Use login which you specified when run user-create")
@@ -263,7 +378,7 @@ def create_flow(ctx, login: str):
         click.echo("Flow created")
 
 
-@db_cli.command("admin-create", help="Create user in admin panel")
+@db.command("admin-create", help="Create user in admin panel")
 @click.option("--username", help="username admin")
 @click.option("--password", help="password admin")
 @click.pass_context
@@ -297,7 +412,7 @@ def admin_create_user(ctx: click.Context,
                    f"{username}\npassword: {password}")
 
 
-@client_cli.command("send",
+@client.command("send",
                     help="send message to server used API method name.",
                     context_settings=dict(ignore_unknown_options=True,
                                           allow_extra_args=True))
