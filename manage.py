@@ -26,6 +26,7 @@ from pathlib import PurePath
 from pyclbr import Function
 import random
 from time import time
+from typing import Callable
 from uuid import uuid4
 
 import click
@@ -78,7 +79,7 @@ async def connect_ws_and_send(message: Request,
             await ws.close(1000)
 
 
-def click_async(func: Function):
+def click_async(func: Callable):
     """
     Wrapper to call the click function asynchronously.
 
