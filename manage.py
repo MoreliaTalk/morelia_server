@@ -22,33 +22,32 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 import asyncio
 from functools import wraps
 from pathlib import Path
+from pathlib import PurePath
+from pyclbr import Function
 import random
-from time import process_time
 from time import time
 from uuid import uuid4
 
 import click
+from sqlobject import SQLObjectNotFound
 import uvicorn
 from websockets import client as ws_client
 from websockets import exceptions as ws_exceptions
 
-from mod import lib
 from mod.config.config import ConfigHandler
 from mod.db.dbhandler import DatabaseAccessError
 from mod.db.dbhandler import DatabaseReadError
 from mod.db.dbhandler import DatabaseWriteError
 from mod.db.dbhandler import DBHandler
+from mod.lib import Hash
 from mod.protocol.mtp.api import BaseUser
 from mod.protocol.mtp.api import BaseVersion
 from mod.protocol.mtp.api import DataRequest
+from mod.protocol.mtp.api import FlowRequest
 from mod.protocol.mtp.api import Request
 
 
 VERSION = "v0.3"
-
-
-config = ConfigHandler()
-config_option = config.read()
 
 SYMBOLS_FOR_RANDOM = "abcdefghijklmnopqrstuvwxyz \
                       ABCDEFGHIJKLMNOPQRSTUVWXYZ \
@@ -56,7 +55,7 @@ SYMBOLS_FOR_RANDOM = "abcdefghijklmnopqrstuvwxyz \
 
 
 async def connect_ws_and_send(message: Request,
-                              address: str):
+                              address: str) -> None:
     """
     Connect and send message to address.
 
@@ -79,7 +78,7 @@ async def connect_ws_and_send(message: Request,
             await ws.close(1000)
 
 
-def click_async(func):
+def click_async(func: Function):
     """
     Wrapper to call the click function asynchronously.
 
@@ -97,19 +96,59 @@ def click_async(func):
     return wrapper
 
 
-def copy_config():
-    pass
+def copy_config(source: str,
+                destination: str) -> None:
+    """
+    Copies the configuration file.
+
+    File example_config.ini copied to config.ini in root directory with
+    project files.
+
+    Args:
+        source: source file name, default example_config.ini
+        destination: destination file name, default config.ini
+    """
+
+    src = PurePath(source)
+    dst = PurePath(destination)
+
+    with open(dst, "w+") as new_file:
+        old_file = open(src, 'r')
+        new_file.write(old_file.read())
+        old_file.close()
 
 
-def create_table():
-    pass
+def create_table() -> None:
+    """
+    Creates a database file and fills it with empty tables.
+    """
+
+    config = ConfigHandler(log=False)
+    config_read = config.read()
+    db = DBHandler(uri=config_read.uri)
+    db.create_table()
 
 
-def create_superuser(username):
-    click.echo(f"{username}")
+def create_administrator(username: str,
+                         password: str) -> None:
+    """
+    Creates an administrator account to manage the server.
+
+    Args:
+        username: name for new administrator user
+        password: password for new administrator user
+    """
+
+    config = ConfigHandler(log=False)
+    config_read = config.read()
+    db = DBHandler(uri=config_read.uri)
+    user_uuid = str(uuid4().int)
+    db.add_admin(username=username,
+                 hash_password=Hash(password, user_uuid).password_hash())
 
 
-@click.group(name="Main group for all options.")
+@click.group(name="Main group for all options.",
+             help="Morelia Talk server manager.")
 @click.version_option(version=VERSION,
                       package_name="MoreliaTalk server")
 @click.help_option()
@@ -122,244 +161,112 @@ def cli() -> None:
     """
 
 
-@cli.group("init")
-# @click.option("--username",
-#               help="Username")
-# @click.option("--password",
-#               prompt=True,
-#               hide_input=True)
-def init() -> None:
-    """
-    Preparing the MoreliaTalk server for work.
-
-    This command will copy config.ini from example_config.ini,
-    create a database and an administrator account.
-    """
-    try:
-        copy_config()
-    except Exception as err:
-        click.echo(f"Error{err}")
-        return
-    else:
-        click.echo("Config => Ok")
-
-    try:
-        create_table()
-    except Exception as err:
-        click.echo(f"ERROR={err}")
-        return
-    else:
-        click.echo("Database => Ok")
-
-    try:
-        create_superuser()
-    except Exception as err:
-        click.echo(f"ERROR={err}")
-    else:
-        click.echo("User created => Ok")
-        # click.echo(f"name={} with password={}")
-        click.echo("For run server in normal mode: ./manage.py run server")
-        click.echo("For run server in develop mode: ./manage.py run devserver")
-
-
-@cli.group("db")
+@cli.group("create",
+           help="Tools for creating object in database.")
+@click.option("--uri",
+              default="sqlite:db_sqlite.db",
+              show_default=True,
+              help="Connection to database.")
 @click.pass_context
-def db() -> None:
+def create(context: click.Context,
+           uri: str) -> None:
     """
-    Tools for creating and managing database.
-
-    """
-
-
-@cli.group("client")
-def client() -> None:
-    """
-    Mini-client for checking the server.
-
-    """
-
-
-@cli.group("run")
-def run() -> None:
-    """
-    Tools for running server in production or developing mode.
-
-    """
-
-
-@run.command("devserver")
-@click.option("-h",
-              "--host",
-              default="localhost")
-@click.option("-p",
-              "--port",
-              default=8080)
-@click.option("--log-level",
-              default="debug")
-@click.option("--use-colors",
-              default=True)
-@click.option("-r",
-              "--reload",
-              default=True)
-def devserver(host: str,
-              port: int,
-              log_level: str,
-              use_colors: bool,
-              reload: bool) -> None:
-    """
-    Run server in debug (developing) mode.
+    Tools for creating object in database.
 
     Args:
-        host: IP or DNS name for running server
-        port: IP port for running server
-        log_level: level logs
-        use_colors: enable use colors in terminal
-        reload: enable hot reload
+        context: click call context
+        uri: Connection to database, like: sqlite:db_sqlite.db
     """
 
-    uvicorn.run("server:app",
-                host=host,
-                port=port,
-                http="h11",
-                ws="websockets",
-                log_level=log_level,
-                use_colors=use_colors,
-                debug=True,
-                reload=reload)
+    context.ensure_object(dict)
+    context.obj['uri'] = uri
 
 
-@run.command("server")
-@click.option("-h",
-              "--host",
-              default="localhost")
-@click.option("-p",
-              "--port",
-              default=8080)
-@click.option("--log-level",
-              default="error")
-@click.option("--use-colors",
-              default=False)
-@click.option("-r",
-              "--reload",
-              default=True)
-def server(host: str,
-           port: int,
-           log_level: str,
-           use_colors: bool,
-           reload: bool) -> None:
-    """
-    Run server in production (normal) mode.
-
-    Args:
-        host: IP or DNS name for running server
-        port: IP port for running server
-        log_level: level logs
-        use_colors: enable use colors in terminal
-        reload: enable hot reload
-    """
-
-    uvicorn.run("server:app",
-                host=host,
-                port=port,
-                http="h11",
-                ws="websockets",
-                log_level=log_level,
-                use_colors=use_colors,
-                debug=False,
-                reload=reload)
-
-
-@db.command("create", help="Create all table with all data")
+@create.command("db",
+                help="Create all table with all data")
 @click.pass_context
-def db_create(ctx):
+def create_db(context: click.Context) -> None:
     """
     Create database, and create all table which contain in models.
     """
 
-    start_time = process_time()
-    db = DBHandler(ctx.obj["uri"])
+    db = DBHandler(context.obj["uri"])
     try:
         db.create_table()
-    except Exception as err:
-        click.echo(f"table not created. Error={err}")
+    except (DatabaseReadError,
+            DatabaseAccessError,
+            DatabaseWriteError) as err:
+        click.echo(f"The database is unavailable, table not created. {err}")
     else:
-        click.echo(f"Table is created at: "
-                   f"{process_time() - start_time} sec.")
+        click.echo("Database with table is created.")
 
 
-@db.command("delete", help="Delete all table with all data")
+@create.command("user",
+                help="Creates a user in the database, \
+                if login and password are empty, \
+                then generates them randomly")
+@click.option("--login",
+              type=str,
+              default="".join(random.sample(SYMBOLS_FOR_RANDOM, 6)),
+              help="New user login name.")
+@click.option("--username",
+              type=str,
+              default="User",
+              show_default=True,
+              help="New user name.")
+@click.option("--password",
+              type=str,
+              default="".join(random.sample(SYMBOLS_FOR_RANDOM, 20)),
+              help="New user password.")
 @click.pass_context
-def db_delete(ctx):
-    """
-    Delete all tables which contains data.
-    This function not delete database file.
-    """
-
-    start_time = process_time()
-    db = DBHandler(ctx.obj["uri"])
-    try:
-        db.delete_table()
-    except Exception as err:
-        click.echo(f"table not created. Error={err}")
-    else:
-        click.echo(f"Table is deleted at: "
-                   f"{process_time() - start_time} sec.")
-
-
-@db.command("user-create", help="Creates a user in the database, \
-                                     if login and password are empty, \
-                                     then generates them randomly")
-@click.option("-l",
-              "--login",
-              default="".join(random.sample(SYMBOLS_FOR_RANDOM, 6)))
-@click.option("--username", default="User")
-@click.option("-p",
-              "--password",
-              default="".join(random.sample(
-                  SYMBOLS_FOR_RANDOM, 20
-              )))
-@click.pass_context
-def create_user(ctx: click.Context,
+def create_user(context: click.Context,
                 login: str,
                 username: str,
-                password: str):
+                password: str) -> None:
     """
     Create user in database.
 
     Args:
-        ctx(click.Context): click call context
-        login(str): user login
-        username(str): username
-        password(str): user password
+        context: click call context
+        login: user login
+        username: username
+        password: user password
     """
 
-    db = DBHandler(ctx.obj["uri"])
+    db = DBHandler(context.obj["uri"])
     user_uuid = str(uuid4().int)
     try:
         db.add_user(uuid=user_uuid,
                     login=login,
                     password=password,
-                    hash_password=lib.Hash(password, user_uuid).hash_password,
+                    hash_password=Hash(password, user_uuid).hash_password,
                     username=username,
                     salt=b"salt",
                     key=b"key")
     except DatabaseWriteError as error:
         click.echo(f"Failed to create a user. Error text: {error}")
     else:
-        click.echo(f"{username} created, login: {login}, password: {password}")
+        click.echo(f"User with name={username}, login={login}, ")
+        click.echo(f"and password={password} is created")
 
 
-@db.command("flow-create", help="Create flow type group in database")
-@click.option("-l",
-              "--login",
-              help="Use login which you specified when run user-create")
+@create.command("flow",
+                help="Create flow type group in database")
+@click.option("--login",
+              type=str,
+              help="Use login which you specified when create user")
 @click.pass_context
-def create_flow(ctx, login: str):
+def create_flow(context: click.Context,
+                login: str) -> None:
     """
-    Creating and adding test flow (group) in database.
+    Creating and adding test flow (group) to database.
+
+    Args:
+        context: click call context.
+        login: use login which you specified when create user.
     """
 
-    db = DBHandler(ctx.obj["uri"])
+    db = DBHandler(context.obj["uri"])
     try:
         user = db.get_user_by_login(login=login)
     except (DatabaseReadError,
@@ -375,31 +282,40 @@ def create_flow(ctx, login: str):
                                info="Test flow",
                                owner=user.uuid)
         new_flow.addUserConfig(user)
-        click.echo("Flow created")
+        flow_uuid = db.get_flow_by_title("Test")
+        click.echo(f"Flow created, uuid={flow_uuid.uuid}.")
 
 
-@db.command("admin-create", help="Create user in admin panel")
-@click.option("--username", help="username admin")
-@click.option("--password", help="password admin")
+@create.command("admin",
+                help="Create user for admin panel")
+@click.option("--username",
+              type=str,
+              prompt=True,
+              help="Name for administrator user.")
+@click.option("--password",
+              type=str,
+              prompt=True,
+              hide_input=True,
+              help="New password for administrator user.")
 @click.pass_context
-def admin_create_user(ctx: click.Context,
-                      username: str,
-                      password: str):
+def create_admin(context: click.Context,
+                 username: str,
+                 password: str) -> None:
     """
     Create Admin user to management server with admin panel.
 
     Args:
-        ctx(click.Context): click call context
-        username(str): name of admin user
-        password(str): password of admin user
+        context: click call context
+        username: name of admin user
+        password: password of admin user
     """
 
-    db = DBHandler(ctx.obj["uri"])
+    db = DBHandler(context.obj["uri"])
 
-    generator = lib.Hash(password,
-                         str(uuid4().int),
-                         key=b"key",
-                         salt=b"salt")
+    generator = Hash(password,
+                     str(uuid4().int),
+                     key=b"key",
+                     salt=b"salt")
     try:
         db.add_admin(username=username,
                      hash_password=generator.password_hash())
@@ -408,15 +324,85 @@ def admin_create_user(ctx: click.Context,
             DatabaseWriteError) as error:
         click.echo(f'Failed to create a flow. Error text: {error}')
     else:
-        click.echo(f"Admin created\nusername: "
-                   f"{username}\npassword: {password}")
+        click.echo("Admin created.")
+        click.echo(f"User name={username}, password={password}")
+
+
+@cli.group("delete",
+           help="Tools for deleting object in database.")
+@click.option("--uri",
+              default="sqlite:db_sqlite.db",
+              show_default=True,
+              help="Connection to database.")
+@click.pass_context
+def delete(context: click.Context,
+           uri: str) -> None:
+    """
+    Tools for deleting object in database.
+
+    Args:
+        context: click call context
+        uri: Connection to database, like: sqlite:db_sqlite.db
+    """
+
+    context.ensure_object(dict)
+    context.obj['uri'] = uri
+
+
+@delete.command("db",
+                help="Delete all table with all data")
+@click.pass_context
+def delete_db(context: click.Context) -> None:
+    """
+    Delete all tables which contains data.
+
+    This function not delete database file.
+
+    Args:
+        context: click call context
+    """
+
+    db = DBHandler(context.obj["uri"])
+    try:
+        db.delete_table()
+    except (DatabaseReadError,
+            DatabaseAccessError,
+            DatabaseWriteError) as err:
+        click.echo(f"The database is unavailable, table not deleted. {err}")
+    else:
+        click.echo("All table is deleted.")
+
+
+@cli.group("client",
+           help="Mini-client for send message to the MoreliaTalk server.")
+def client() -> None:
+    """
+    Mini-client for send message to the MoreliaTalk server.
+    """
 
 
 @client.command("send",
-                    help="send message to server used API method name.",
-                    context_settings=dict(ignore_unknown_options=True,
-                                          allow_extra_args=True))
-@click.option("-t",
+                help="Send message to server used API method name.")
+@click.option("--login",
+              type=str,
+              help="User login.")
+@click.option("--username",
+              type=str,
+              help="User name.")
+@click.option("--password",
+              type=str,
+              help="User password.")
+@click.option("--user-uuid",
+              type=str,
+              help="User unique ID.")
+@click.option("--user-auth-id",
+              type=str,
+              help="User authentication ID.")
+@click.option("--flow-uuid",
+              type=str,
+              help="Flow unique ID.")
+@click.option("--type",
+              "type_",
               type=click.Choice(("register_user",
                                  "get_update",
                                  "send_message",
@@ -425,54 +411,274 @@ def admin_create_user(ctx: click.Context,
                                  "all_flow",
                                  "user_info",
                                  "authentication",
-                                 "delete_user",
-                                 "delete_message",
-                                 "edited_message",
-                                 "ping_pong",
-                                 "errors")),
-              help="MTP protocol API method name, default send_message.",
-              default="send_message")
-@click.option("-a",
-              "--address",
+                                 "ping_pong")),
+              default="send_message",
+              show_default=True,
+              help="MTP protocol API method name.")
+@click.option("--address",
+              type=str,
               default="ws://127.0.0.1:8080/ws",
-              help="server address and port, default ws://127.0.0.1:8080/ws")
-@click.pass_context
+              show_default=True,
+              help="Server address and port.")
 @click_async
-async def send(ctx: click.Context,
-               t: str,
+async def send(login: str,
+               username: str,
+               password: str,
+               user_uuid: str,
+               flow_uuid: str,
+               user_auth_id: str,
+               type_: str,
                address: str) -> None:
     """
     Connect and send message protocol method.
 
     Args:
-        ctx: additional arguments in the form of --key=value, the following
-             pairs are supported - --uuid=, --auth_id=, --username=,
-             --password=
-        t: type of message protocol
-        address: server address
+        login: user login.
+        username: user name.
+        password: user password.
+        user_uuid: user uuid.
+        flow_uuid: flow uuid.
+        user_auth_id: user authentication ID.
+        type_: name of API method.
+        address: server address.
+    """
+
+    message = Request(type=type_,
+                      jsonapi=BaseVersion(version="1.0"))
+    message.data = DataRequest()
+    message.data.user = []
+    message.data.user.append(BaseUser())
+    message.parse_file(Path(Path(__file__).parent,
+                            "tests",
+                            "fixtures",
+                            "".join((type_, ".json"))))
+    match type_:
+        case ("register_user",):
+            message.data.user[0].username = username
+            message.data.user[0].password = password
+        case ("get_update",
+              "add_flow",
+              "all_flow",
+              "ping_pong",
+              "user_info"):
+            message.data.user[0].uuid = user_uuid
+            message.data.user[0].auth_id = user_auth_id
+        case ("all_message", "send_message"):
+            message.data.flow = []
+            message.data.flow.append(FlowRequest())
+            message.data.flow[0].uuid = flow_uuid
+            message.data.user[0].uuid = user_uuid
+            message.data.user[0].auth_id = user_auth_id
+        case ("authentication"):
+            message.data.user[0].password = password
+            message.data.user[0].login = login
+
+    await connect_ws_and_send(message, address)
+
+
+@cli.group("run",
+           help="Tools for running server in production or developing mode.")
+def run() -> None:
+    """
+    Tools for running server in production or developing mode.
+    """
+
+
+@run.command("init")
+@click.option("--username",
+              type=str,
+              prompt=True,
+              help="Name for new user.")
+@click.option("--password",
+              type=str,
+              prompt=True,
+              hide_input=True,
+              help="Password for new user.")
+@click.option("--source",
+              type=str,
+              show_default=True,
+              default='example_config.ini',
+              help="source file name")
+@click.option("--destination",
+              type=str,
+              show_default=True,
+              default='config.ini',
+              help="destination file name")
+def init(username: str,
+         password: str,
+         source: str,
+         destination: str) -> None:
+    """
+    Preparing the MoreliaTalk server for work.
+
+    This command will copy config.ini from example_config.ini,
+    create a database and an administrator account.
+
+    Args:
+        username: name for new administrator user
+        password: password for new administrator user
+        source: source file name, default example_config.ini
+        destination: destination file name, default config.ini
     """
 
     try:
-        kwargs = dict([item.strip('--').split('=') for item in ctx.args])
-    except ValueError:
-        click.echo(f"Incorrect key sent={ctx.args}, you must pass --key=value")
+        copy_config(source,
+                    destination)
+    except OSError:
+        click.echo("Example of config file not found, or ")
+        click.echo("no write access rights in the current directory.")
+        return
+    except Exception as err:
+        click.echo(f"Config =>x Bad. An unknown error occurred. {err}")
         return
     else:
-        jsonapi = BaseVersion(version="1.0")
-        message = Request(type=t,
-                          jsonapi=jsonapi)
-        message.parse_file(Path(Path(__file__).parent,
-                                "tests",
-                                "fixtures",
-                                "".join((t, ".json"))))
-        message.data = DataRequest()
-        message.data.user = []
-        message.data.user.append(BaseUser())
-        message.data.user[0].uuid = kwargs.setdefault("uuid", "66666")
-        message.data.user[0].auth_id = kwargs.setdefault("auth_id", "auth_id")
-        message.data.user[0].username = kwargs.setdefault("username", "User")
-        message.data.user[0].password = kwargs.setdefault("password", "1234")
-        await connect_ws_and_send(message, address)
+        click.echo("Config => Ok.")
+
+    try:
+        create_table()
+    except SQLObjectNotFound:
+        click.echo("Database file not found, or ")
+        click.echo("no write access rights in the current directory.")
+    except Exception as err:
+        click.echo(f"Database =>x Bad. An unknown error occurred. {err}")
+        return
+    else:
+        click.echo("Database => Ok.")
+
+    try:
+        create_administrator(username,
+                             password)
+    except DatabaseWriteError:
+        click.echo("Database file not found, or ")
+        click.echo("no write access rights in the current directory.")
+    except Exception as err:
+        click.echo(f"Create admin =>x Bad. An unknown error occurred. {err}")
+    else:
+        click.echo("Create admin => Ok.")
+        click.echo(f"User name={username} is created")
+        click.echo("<=====================================================>")
+        click.echo("For run server in normal mode: ./manage.py run server")
+        click.echo("For run server in develop mode: ./manage.py run devserver")
+
+
+@run.command("devserver",
+             help="Run server in debug (developing) mode.")
+@click.option("--host",
+              type=str,
+              default="127.0.0.1",
+              show_default=True,
+              help="IP or DNS name for running server")
+@click.option("--port",
+              type=int,
+              default=8080,
+              show_default=True,
+              help="IP port for running server")
+@click.option("--log-level",
+              type=click.Choice(("critical",
+                                 "error",
+                                 "warning",
+                                 "info",
+                                 "debug",
+                                 "trace")),
+              default="debug",
+              show_default=True,
+              help="level logs")
+@click.option("--use-colors",
+              is_flag=True,
+              default=True,
+              show_default=True,
+              help="enable use colors in terminal")
+@click.option("--reload",
+              is_flag=True,
+              default=True,
+              show_default=True,
+              help="enable hot reloaded")
+def devserver(host: str,
+              port: int,
+              log_level: str,
+              use_colors: bool,
+              reload: bool) -> None:
+    """
+    Run server in debug (developing) mode.
+
+    Args:
+        host: IP or DNS name for running server
+        port: IP port for running server
+        log_level: level logs
+        use_colors: enable use colors in terminal
+        reload: enable hot reloaded
+    """
+
+    click.echo(f"Develop server started at address=https//{host}:{port}")
+    uvicorn.run("server:app",
+                host=host,
+                port=port,
+                http="h11",
+                ws="websockets",
+                log_level=log_level,
+                use_colors=use_colors,
+                debug=True,
+                reload=reload)
+
+
+@run.command("server",
+             help="Run server in production (normal) mode.")
+@click.option("--host",
+              type=str,
+              default="localhost",
+              show_default=True,
+              help="IP or DNS name for running server")
+@click.option("--port",
+              type=int,
+              default=8080,
+              show_default=True,
+              help="IP port for running server")
+@click.option("--log-level",
+              type=click.Choice(("critical",  
+                                 "error",
+                                 "warning",
+                                 "info",
+                                 "debug",
+                                 "trace")),
+              default="error",
+              show_default=True,
+              help="level logs")
+@click.option("--use-colors",
+              is_flag=True,
+              default=False,
+              show_default=True,
+              help="enable use colors in terminal")
+@click.option("--reload",
+              is_flag=True,
+              default=False,
+              show_default=True,
+              help="enable hot reloaded")
+def server(host: str,
+           port: int,
+           log_level: str,
+           use_colors: bool,
+           reload: bool) -> None:
+    """
+    Run server in production (normal) mode.
+
+    Args:
+        host: IP or DNS name for running server
+        port: IP port for running server
+        log_level: level logs
+        use_colors: enable use colors in terminal
+        reload: enable hot reloaded
+    """
+
+    click.echo(f"Server started at address=https//{host}:{port}")
+    uvicorn.run("server:app",
+                host=host,
+                port=port,
+                http="h11",
+                ws="websockets",
+                log_level=log_level,
+                use_colors=use_colors,
+                debug=False,
+                reload=reload)
 
 
 if __name__ == "__main__":
