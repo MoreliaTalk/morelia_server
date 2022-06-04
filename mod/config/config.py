@@ -96,6 +96,7 @@ class ConfigHandler:
                        zc.buildout. More on the subject in the dedicated
                        documentation section for build-ins configparser
                        modules.
+        log: Disble/enable logger from loguru, default True.
     """
     __instance: Optional['ConfigHandler'] = None
     _directory: Optional[str]
@@ -119,12 +120,15 @@ class ConfigHandler:
 
     def __init__(self,
                  name: str = 'config.ini',
-                 interpolation: Interpolation = None) -> None:
+                 interpolation: Interpolation = None,
+                 log: bool = True) -> None:
         self._name = str(name)
         self._directory = None
         self._interpolation = interpolation
         self._set_configparser(self._name,
                                self._directory)
+        if log is False:
+            logger.remove()
 
     def _set_configparser(self,
                           name: str,
@@ -217,7 +221,6 @@ class ConfigHandler:
                                      directory,
                                      name)
             if Path(test_path).is_file():
-                logger.debug(f"Config file found: [{test_path}]")
                 return str(test_path)
         message = f"{name} in {test_path} not found"
         logger.error(message)
