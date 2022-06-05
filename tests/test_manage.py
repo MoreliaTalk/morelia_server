@@ -35,7 +35,7 @@ from mod.lib import Hash
 
 
 class TestCLICreateAndDelete(unittest.TestCase):
-    db_uri: str
+    uri: str
     db: DBHandler
     path: PurePath
 
@@ -152,12 +152,15 @@ class TestCLIRun(unittest.TestCase):
     def tearDown(self) -> None:
         pass
 
+    @unittest.skip("Not working")
     def test_init(self):
         pass
 
+    @unittest.skip("Not working")
     def test_devserver(self):
         pass
 
+    @unittest.skip("Not working")
     def test_server(self):
         pass
 
@@ -167,6 +170,10 @@ class TestCLIClient(unittest.TestCase):
         pass
 
     def tearDown(self) -> None:
+        pass
+
+    @unittest.skip("Not working")
+    def test_client(self):
         pass
 
 
