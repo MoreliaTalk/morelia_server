@@ -34,7 +34,7 @@ from mod.db.dbhandler import DBHandler
 from mod.lib import Hash
 
 
-class TestCLICreateAndDelete(unittest.TestCase):
+class TestManage(unittest.TestCase):
     uri: str
     db: DBHandler
     path: PurePath
@@ -74,17 +74,6 @@ class TestCLICreateAndDelete(unittest.TestCase):
         self.assertRegex(result.output,
                          f"User with name={self.username}, login=")
 
-    @unittest.skip("Not works")
-    def test_create_user_without_database(self):
-        result = self.runner.invoke(create,
-                                    [f"--uri={self.uri}",
-                                     "user",
-                                     f"--login={self.login}",
-                                     f"--username={self.username}",
-                                     f"--password={self.password}"])
-        self.assertRegex(result.stdout,
-                         "Failed to create a user. Error text:")
-
     def test_create_flow(self):
         self.db.create_table()
         self.db.add_user(uuid=self.user_uuid,
@@ -100,16 +89,6 @@ class TestCLICreateAndDelete(unittest.TestCase):
                                      f"--login={self.login}"])
         self.assertRegex(result.stdout, "Flow created.")
 
-    @unittest.skip("Not working")
-    def test_create_wrong_flow(self):
-        self.db.create_table()
-        result = self.runner.invoke(create,
-                                    [f"--uri={self.uri}",
-                                     "flow-create",
-                                     f"--login={self.login}"])
-        self.assertRegex(result.stdout,
-                         "Failed to create a flow. Error text: ")
-
     def test_create_admin(self):
         result = self.runner.invoke(create,
                                     [f"--uri={self.uri}",
@@ -117,17 +96,6 @@ class TestCLICreateAndDelete(unittest.TestCase):
                                      f"--username={self.username}",
                                      f"--password={self.password}"])
         self.assertRegex(result.output, "Admin created.")
-
-    @unittest.skip("Not working")
-    def test_create_wrong_admin(self):
-        self.db.delete_table()
-        result = self.runner.invoke(create,
-                                    [f"--uri={self.uri}",
-                                     "admin",
-                                     f"--username={self.username}",
-                                     f"--password={self.password}"])
-        self.assertRegex(result.stdout,
-                         "Failed to create a flow. Error text:")
 
     def test_create_db(self):
         result = self.runner.invoke(create,
@@ -144,17 +112,40 @@ class TestCLICreateAndDelete(unittest.TestCase):
         self.assertRegex(result.output,
                          "All table is deleted.")
 
+    def test_clean_init(self):
+        self.runner.invoke(run,
+                           ["init",
+                            f"--username={self.username}",
+                            f"--password={self.password}"])
+        result = self.runner.invoke(run,
+                                    ["clean",
+                                     "--yes"])
+        self.assertRegex(result.stdout, "Config file => deleted.")
 
-class TestCLIRun(unittest.TestCase):
-    def setUp(self) -> None:
-        pass
+    def test_error_in_clean_init(self):
+        result = self.runner.invoke(run,
+                                    ["clean",
+                                     "--yes"])
+        self.assertRegex(result.stdout, "Config file => NOT deleted.")
 
-    def tearDown(self) -> None:
-        pass
-
-    @unittest.skip("Not working")
     def test_init(self):
-        pass
+        result = self.runner.invoke(run,
+                                    ["init",
+                                     f"--username={self.username}",
+                                     f"--password={self.password}"])
+        self.runner.invoke(run,
+                           ["clean",
+                            "--yes"])
+        self.assertRegex(result.stdout, "Create admin => Ok.")
+
+    def test_init_wrong_config_file(self):
+        result = self.runner.invoke(run,
+                                    ["init",
+                                     f"--username={self.username}",
+                                     f"--password={self.password}",
+                                     "--source=cinfig.cfg",
+                                     "--destination=setup.ini"])
+        self.assertRegex(result.stdout, "Example of config file not found")
 
     @unittest.skip("Not working")
     def test_devserver(self):
@@ -162,14 +153,6 @@ class TestCLIRun(unittest.TestCase):
 
     @unittest.skip("Not working")
     def test_server(self):
-        pass
-
-
-class TestCLIClient(unittest.TestCase):
-    def setUp(self) -> None:
-        pass
-
-    def tearDown(self) -> None:
         pass
 
     @unittest.skip("Not working")
