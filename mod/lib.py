@@ -24,8 +24,6 @@ from hmac import compare_digest
 from os import urandom
 import sys
 
-from mod.config.config import ConfigHandler
-
 
 class Hash:
     """
@@ -39,9 +37,10 @@ class Hash:
               generating hash_password, there can be any line e.q.
               mother's maiden name, favorite writer, etc.
         key: additional argument, if value is None then function will generate
-             it automatically
-        hash_password: password hash (previously calculated)
-
+             it automatically.
+        hash_password: password hash (previously calculated).
+        size_password: size of output password in bytes, default 32.
+        size_auth_id: size of output auth_id in bytes, default 16.
     """
 
     def __init__(self,
@@ -49,9 +48,9 @@ class Hash:
                  uuid: int | str,
                  salt: bytes = None,
                  key: bytes = None,
-                 hash_password: str = None) -> None:
-        self.config = ConfigHandler()
-        self.config_option = self.config.read()
+                 hash_password: str = None,
+                 size_password: int = 32,
+                 size_auth_id: int = 16) -> None:
 
         if salt is None:
             self.salt = urandom(16)
@@ -70,8 +69,8 @@ class Hash:
 
         self.binary_password = password.encode('utf-8')
         self.hash_password = hash_password
-        self.size_password = self.config_option.size_password
-        self.size_auth_id = self.config_option.size_auth_id
+        self.size_password = size_password
+        self.size_auth_id = size_auth_id
 
     @property
     def get_salt(self) -> bytes:
