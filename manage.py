@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+Copyright (c) 2020 - present MoreliaTalk team and other.
 Look at the file AUTHORS.md(located at the root of the project) to get the
 full list.
 
@@ -23,7 +23,6 @@ import asyncio
 from functools import wraps
 from pathlib import Path
 from pathlib import PurePath
-from pyclbr import Function
 import random
 from time import time
 from typing import Callable
@@ -50,9 +49,7 @@ from mod.protocol.mtp.api import Request
 
 VERSION = "v0.3"
 
-SYMBOLS_FOR_RANDOM = "abcdefghijklmnopqrstuvwxyz \
-                      ABCDEFGHIJKLMNOPQRSTUVWXYZ \
-                      1234567890"
+SYMBOLS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
 
 
 async def connect_ws_and_send(message: Request,
@@ -125,8 +122,8 @@ def create_table() -> None:
     """
 
     config = ConfigHandler(log=False)
-    config_read = config.read()
-    db = DBHandler(uri=config_read.uri)
+    config_options = config.read()
+    db = DBHandler(uri=config_options.uri)
     db.create_table()
 
 
@@ -199,7 +196,7 @@ def create_db(context: click.Context) -> None:
             DatabaseWriteError) as err:
         click.echo(f"The database is unavailable, table not created. {err}")
     else:
-        click.echo("Database with table is created.")
+        click.echo("Database is created.")
 
 
 @create.command("user",
@@ -208,7 +205,7 @@ def create_db(context: click.Context) -> None:
                 then generates them randomly")
 @click.option("--login",
               type=str,
-              default="".join(random.sample(SYMBOLS_FOR_RANDOM, 6)),
+              default="".join(random.sample(SYMBOLS, 6)),
               help="New user login name.")
 @click.option("--username",
               type=str,
@@ -217,7 +214,7 @@ def create_db(context: click.Context) -> None:
               help="New user name.")
 @click.option("--password",
               type=str,
-              default="".join(random.sample(SYMBOLS_FOR_RANDOM, 20)),
+              default="".join(random.sample(SYMBOLS, 20)),
               help="New user password.")
 @click.pass_context
 def create_user(context: click.Context,
@@ -235,17 +232,23 @@ def create_user(context: click.Context,
     """
 
     db = DBHandler(context.obj["uri"])
+    try:
+        db.create_table()
+    except DatabaseWriteError as error:
+        click.echo(f"Failed to create database. Error text: {error}")
+        return None
+
     user_uuid = str(uuid4().int)
     try:
         db.add_user(uuid=user_uuid,
                     login=login,
                     password=password,
-                    hash_password=Hash(password, user_uuid).hash_password,
+                    hash_password=Hash(password, user_uuid).password_hash(),
                     username=username,
                     salt=b"salt",
                     key=b"key")
-    except DatabaseWriteError as error:
-        click.echo(f"Failed to create a user. Error text: {error}")
+    except Exception as err:
+        click.echo(f"{err}")
     else:
         click.echo(f"User with name={username}, login={login}, ")
         click.echo(f"and password={password} is created")
@@ -269,6 +272,12 @@ def create_flow(context: click.Context,
 
     db = DBHandler(context.obj["uri"])
     try:
+        db.create_table()
+    except DatabaseWriteError as error:
+        click.echo(f"Failed to create database. Error text: {error}")
+        return None
+
+    try:
         user = db.get_user_by_login(login=login)
     except (DatabaseReadError,
             DatabaseAccessError,
@@ -283,8 +292,7 @@ def create_flow(context: click.Context,
                                info="Test flow",
                                owner=user.uuid)
         new_flow.addUserConfig(user)
-        flow_uuid = db.get_flow_by_title("Test")
-        click.echo(f"Flow created, uuid={flow_uuid.uuid}.")
+        click.echo("Flow created.")
 
 
 @create.command("admin",
@@ -312,6 +320,11 @@ def create_admin(context: click.Context,
     """
 
     db = DBHandler(context.obj["uri"])
+    try:
+        db.create_table()
+    except DatabaseWriteError as error:
+        click.echo(f"Failed to create database. Error text: {error}")
+        return None
 
     generator = Hash(password,
                      str(uuid4().int),
