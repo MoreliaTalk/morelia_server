@@ -21,8 +21,8 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 
 import asyncio
 from functools import wraps
+import os
 from pathlib import Path
-from pathlib import PurePath
 import random
 from time import time
 from typing import Callable
@@ -47,9 +47,20 @@ from mod.protocol.mtp.api import FlowRequest
 from mod.protocol.mtp.api import Request
 
 
-VERSION = "v0.3"
+VERSION = 'v0.3'
 
-SYMBOLS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+DEFAULT_CONFIG = 'config.ini'
+DEFAULT_EXAMPLE_CONFIG = 'example_config.ini'
+
+DEFAULT_DB = 'db_sqlite.db'
+
+SYMBOLS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
+
+
+class CopyConfigError(Exception):
+    """
+    Occurs when the original configuration file does not exist.
+    """
 
 
 async def connect_ws_and_send(message: Request,
@@ -107,13 +118,16 @@ def copy_config(source: str,
         destination: destination file name, default config.ini
     """
 
-    src = PurePath(source)
-    dst = PurePath(destination)
+    src = Path(source)
+    dst = Path(destination)
 
-    with open(dst, "w+") as new_file:
-        old_file = open(src, 'r')
-        new_file.write(old_file.read())
-        old_file.close()
+    if src.is_file():
+        with open(dst.absolute(), "w+") as new_file:
+            old_file = open(src.absolute(), 'r')
+            new_file.write(old_file.read())
+            old_file.close()
+    else:
+        raise CopyConfigError(f"There is no such file={src.name}")
 
 
 def create_table() -> None:
@@ -511,12 +525,12 @@ def run() -> None:
 @click.option("--source",
               type=str,
               show_default=True,
-              default='example_config.ini',
+              default=DEFAULT_EXAMPLE_CONFIG,
               help="source file name")
 @click.option("--destination",
               type=str,
               show_default=True,
-              default='config.ini',
+              default=DEFAULT_CONFIG,
               help="destination file name")
 def init(username: str,
          password: str,
@@ -538,7 +552,7 @@ def init(username: str,
     try:
         copy_config(source,
                     destination)
-    except OSError:
+    except (CopyConfigError, OSError):
         click.echo("Example of config file not found, or ")
         click.echo("no write access rights in the current directory.")
         return
@@ -693,6 +707,42 @@ def server(host: str,
                 use_colors=use_colors,
                 debug=False,
                 reload=reload)
+
+
+@run.command("clean",
+             help="Clean created config and database file.")
+@click.option("--config-name",
+              type=str,
+              show_default=True,
+              default=DEFAULT_CONFIG,
+              help="name of config file")
+@click.option("--db-name",
+              type=str,
+              show_default=True,
+              default=DEFAULT_DB,
+              help="name of database file")
+@click.confirmation_option(prompt='Are you sure you want to drop file?')
+def clean_init(config_name: str,
+               db_name: str) -> None:
+    """
+    Clean created config and database file.
+
+    Args:
+        config_name: name of config file.
+        db_name: name of database file.
+    """
+
+    if Path(config_name).is_file():
+        os.remove(config_name)
+        click.echo("Config file => deleted.")
+    else:
+        click.echo("Config file => NOT deleted.")
+    
+    if Path(db_name).is_file():
+        os.remove(db_name)
+        click.echo("Database file => deleted.")
+    else:
+        click.echo("Database file => NOT deleted.")
 
 
 if __name__ == "__main__":
