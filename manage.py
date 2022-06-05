@@ -648,7 +648,7 @@ def devserver(host: str,
               show_default=True,
               help="IP port for running server")
 @click.option("--log-level",
-              type=click.Choice(("critical",  
+              type=click.Choice(("critical",
                                  "error",
                                  "warning",
                                  "info",
