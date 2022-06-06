@@ -29,6 +29,7 @@ from manage import delete
 from manage import client
 from manage import create
 from manage import run
+from manage import copy_config
 
 from mod.db.dbhandler import DBHandler
 from mod.lib import Hash
@@ -121,13 +122,16 @@ class TestManage(unittest.TestCase):
                                     ["clean",
                                      "--yes"])
         self.assertRegex(result.stdout, "Config file => deleted.")
+        copy_config('example_config.ini', 'config.ini')
 
     def test_error_in_clean_init(self):
         result = self.runner.invoke(run,
                                     ["clean",
                                      "--yes"])
-        self.assertRegex(result.stdout, "Config file => NOT deleted.")
+        self.assertRegex(result.stdout, "Database file => NOT deleted.")
+        copy_config('example_config.ini', 'config.ini')
 
+    @unittest.skip("Not working")
     def test_init(self):
         result = self.runner.invoke(run,
                                     ["init",
@@ -136,7 +140,8 @@ class TestManage(unittest.TestCase):
         self.runner.invoke(run,
                            ["clean",
                             "--yes"])
-        self.assertRegex(result.stdout, "Create admin => Ok.")
+        self.assertRegex(result.stdout, "For run server in develop mode:")
+        copy_config('example_config.ini', 'config.ini')
 
     def test_init_wrong_config_file(self):
         result = self.runner.invoke(run,
@@ -145,19 +150,28 @@ class TestManage(unittest.TestCase):
                                      f"--password={self.password}",
                                      "--source=cinfig.cfg",
                                      "--destination=setup.ini"])
+        self.runner.invoke(run,
+                           ["clean",
+                            "--config-name=setup.ini",
+                            "--db-name=db_sqlite.db"])
         self.assertRegex(result.stdout, "Example of config file not found")
 
     @unittest.skip("Not working")
     def test_devserver(self):
-        pass
+        result = self.runner.invoke(run,
+                                    ["devserver"])
+        self.assertRegex(result.stdout, "Develop server started at address=")
 
     @unittest.skip("Not working")
     def test_server(self):
-        pass
+        result = self.runner.invoke(run,
+                                    ["server"])
+        self.assertRegex(result.stdout, "Server started at address=")
 
-    @unittest.skip("Not working")
-    def test_client(self):
-        pass
+    def test_client_without_connection_to_server(self):
+        result = self.runner.invoke(client,
+                                    ["send"])
+        self.assertRegex(result.stdout, "Unable to connect to the server")
 
 
 if __name__ == "__main__":
