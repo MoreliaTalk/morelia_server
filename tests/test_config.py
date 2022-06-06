@@ -44,7 +44,7 @@ class TestConfigHandler(unittest.TestCase):
         self.example_config = 'example_config.ini'
         self.config_name = 'config.ini'
         self.fixtures = 'tests/fixtures'
-        self.test = ConfigHandler()
+        self.test = ConfigHandler(directory=self.fixtures)
 
     def tearDown(self) -> None:
         del self.example_config
@@ -54,7 +54,7 @@ class TestConfigHandler(unittest.TestCase):
 
     def test_set_configparser(self):
         self.test._set_configparser(name=self.config_name,
-                                    directory=None)
+                                    directory=self.fixtures)
         result = self.test._config.sections()
         self.assertEqual(result[0], "DATABASE")
 
@@ -93,7 +93,7 @@ class TestConfigHandler(unittest.TestCase):
 
     def test_search_config(self):
         full_path = self.test._search_config(self.config_name,
-                                             None)
+                                             self.fixtures)
         result = PurePath(full_path)
         self.assertIsInstance(result, (str, PurePath))
         self.assertEqual(result.parts[-1], self.config_name)
@@ -149,7 +149,7 @@ class TestConfigHandler(unittest.TestCase):
 
     def test_get_root_directory(self):
         directory = self.test.root_directory
-        self.assertEqual(directory, None)
+        self.assertEqual(directory, self.fixtures)
 
     def test_set_root_directory(self):
         self.test.root_directory = self.fixtures
@@ -163,8 +163,8 @@ class TestConfigHandler(unittest.TestCase):
         self.assertEqual(result, self.config_name)
 
     def test_set_config_name(self):
-        result = self.test.config_name = 'setup.cfg'
-        self.assertEqual(result, 'setup.cfg')
+        result = self.test.config_name = 'blank_setup.cfg'
+        self.assertEqual(result, 'blank_setup.cfg')
 
     def test_read(self):
         result = self.test.read()

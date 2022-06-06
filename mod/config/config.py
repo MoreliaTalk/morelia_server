@@ -119,11 +119,12 @@ class ConfigHandler:
         return cls.__instance
 
     def __init__(self,
-                 name: str = 'config.ini',
+                 directory: Optional[str] = None,
+                 name: Optional[str] = "config.ini",
                  interpolation: Interpolation = None,
                  log: bool = True) -> None:
         self._name = str(name)
-        self._directory = None
+        self._directory = directory
         self._interpolation = interpolation
         self._set_configparser(self._name,
                                self._directory)
