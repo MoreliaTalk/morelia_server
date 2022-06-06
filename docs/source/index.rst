@@ -22,8 +22,6 @@ For we development uses
 
 * `Python 3.10 <https://www.python.org/>`_ - programming language
 
-* `FastAPI <https://fastapi.tiangolo.com>`_ - basic framework
-
 * `SQLObject <http://sqlobject.org>`_ - ORM for working with the database
 
 * `Pydantic <https://pydantic-docs.helpmanual.io>`_ - data validation
