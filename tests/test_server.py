@@ -23,12 +23,19 @@ import json
 import unittest
 
 from loguru import logger
+from mod.config.config import ConfigHandler
+from mod.db.dbhandler import DBHandler
 from server import app
 from starlette.testclient import TestClient, WebSocketTestSession
 from starlette.websockets import WebSocketDisconnect
 
 
 class TestWebsocket(unittest.TestCase):
+    config: ConfigHandler
+    config_option: ConfigHandler
+    db: DBHandler
+    ws_client: TestClient
+
     class DisconnectErr(Exception):
         pass
 
@@ -36,6 +43,14 @@ class TestWebsocket(unittest.TestCase):
     def setUpClass(cls):
         logger.remove()
         cls.ws_client = TestClient(app)
+        cls.config = ConfigHandler()
+        cls.config_option = cls.config.read()
+        cls.db = DBHandler(uri=cls.config_option.uri)
+        cls.db.create_table()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        del cls.db
 
     def test_normal_connect(self):
         with self.ws_client.websocket_connect("/ws") as connection:
@@ -59,7 +74,6 @@ class TestWebsocket(unittest.TestCase):
                 connection.exit_stack.callback(callback)
                 connection.close(1006)
 
-    @unittest.skip("Not working")
     def test_send_normal_message(self):
         with self.ws_client.websocket_connect("/ws") as connection:
             connection.send_json({"type": "ping-pong",
