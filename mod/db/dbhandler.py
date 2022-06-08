@@ -69,8 +69,27 @@ class DBHandler:
                         database tables
     """
 
+    __instance: Optional['DBHandler'] = None
     _logger: Optional[str]
     _loglevel: Optional[str]
+
+    def __new__(cls, *args, **kwargs):
+        """
+        A function called when creating a new object.
+
+        If such an object already exists, returns it.
+        And if not, creates a new one.
+
+        Args:
+            cls: class DBHandler
+            *args:
+            **kwargs:
+        """
+
+        if cls.__instance is None:
+            cls.__instance = super().__new__(cls)
+
+        return cls.__instance
 
     def __init__(self,
                  uri: str = 'sqlite:/:memory:',

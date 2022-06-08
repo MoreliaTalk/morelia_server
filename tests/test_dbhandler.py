@@ -33,14 +33,13 @@ from mod.db.dbhandler import DatabaseReadError  # noqa
 
 
 class TestDBHandlerMainMethods(unittest.TestCase):
-    db: DBHandler
 
     @classmethod
     def setUpClass(cls) -> None:
         logger.remove()
-        cls.db = DBHandler(uri="sqlite:/:memory:")
 
     def setUp(self):
+        self.db = DBHandler(uri="sqlite:/:memory:")
         self.db.create_table()
 
     def tearDown(self):
