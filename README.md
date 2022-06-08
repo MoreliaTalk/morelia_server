@@ -236,9 +236,9 @@ pipenv run python -v ./tests/test_*.py
 
 ## Контакты ##
 
-[Telegram](https://t.me/+xfohB6gWiOU5YTUy) - группа для связи с разработчиками.
+[Telegram](https://t.me/+xfohB6gWiOU5YTUy) - группа для обсуждения вопросов разработки.
 
-[Slack](moreliatalk.slack.com) - дополнительный канал для связи с разработчиками.
+[Slack](moreliatalk.slack.com) - дополнительный канал для обсуждения вопросов разработки.
 
 ## Лицензия ##
 
