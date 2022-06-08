@@ -31,7 +31,6 @@ from sqlobject.main import SQLObjectNotFound
 from sqlobject.sqlbuilder import AND
 from sqlobject.sresults import SelectResults
 
-from mod.config.config import ConfigHandler
 from mod.db import models
 
 
@@ -70,7 +69,7 @@ class DBHandler:
                         database tables
     """
 
-    __instance: Optional[ConfigHandler] = None
+    __instance: Optional['DBHandler'] = None
     _logger: Optional[str]
     _loglevel: Optional[str]
 
@@ -82,7 +81,7 @@ class DBHandler:
         And if not, creates a new one.
 
         Args:
-            cls(ConfigHandler): class ConfigHandler
+            cls: class DBHandler
             *args:
             **kwargs:
         """
