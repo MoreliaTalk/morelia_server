@@ -25,7 +25,7 @@ from loguru import logger
 
 from mod.config.config import ConfigHandler
 
-config = ConfigHandler(log=False)
+config = ConfigHandler()
 config_option = config.read()
 
 expiration_date = config_option.expiration_date
