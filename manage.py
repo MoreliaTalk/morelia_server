@@ -736,13 +736,13 @@ def clean_init(config_name: str,
         os.remove(config_name)
         click.echo("Config file => deleted.")
     else:
-        click.echo("Config file => NOT deleted.")
+        click.echo("Config file is not found => NOT deleted.")
     
     if Path(db_name).is_file():
         os.remove(db_name)
         click.echo("Database file => deleted.")
     else:
-        click.echo("Database file => NOT deleted.")
+        click.echo("Database file is not found => NOT deleted.")
 
 
 if __name__ == "__main__":

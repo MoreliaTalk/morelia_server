@@ -19,12 +19,15 @@ You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from pathlib import PurePath
+from pathlib import PurePath, Path
 import unittest
+from unittest.mock import patch, Mock
 from uuid import uuid4
 
 from click.testing import CliRunner
 from loguru import logger
+
+import manage
 from manage import delete
 from manage import client
 from manage import create
@@ -113,60 +116,58 @@ class TestManage(unittest.TestCase):
         self.assertRegex(result.output,
                          "All table is deleted.")
 
-    @unittest.skip("Not working")
-    def test_clean_init(self):
-        self.runner.invoke(run,
-                           ["init",
-                            f"--username={self.username}",
-                            f"--password={self.password}"])
+    @patch('pathlib.Path.is_file', return_value=True)
+    @patch('os.remove', return_value=None)
+    def test_clean_init(self, is_file_mock, remove_mock):
         result = self.runner.invoke(run,
                                     ["clean",
                                      "--yes"])
-        self.assertRegex(result.stdout, "Config file => deleted.")
-        copy_config('example_config.ini', 'config.ini')
+        self.assertEqual(result.stdout, "".join(("Config file => deleted.\n",
+                                                 "Database file => deleted.\n")))
 
-    @unittest.skip("Not working")
-    def test_error_in_clean_init(self):
+    @patch('pathlib.Path.is_file', return_value=False)
+    @patch('os.remove', return_value=None)
+    def test_error_in_clean_init(self, is_file_mock, remove_mock):
         result = self.runner.invoke(run,
                                     ["clean",
                                      "--yes"])
-        self.assertRegex(result.stdout, "Database file => NOT deleted.")
-        copy_config('example_config.ini', 'config.ini')
+        self.assertEqual(result.stdout,
+                         "".join(("Config file is not found => NOT deleted.\n",
+                                  "Database file is not found => NOT deleted.\n")))
 
-    @unittest.skip("Not working")
-    def test_init(self):
+    @patch('manage.copy_config', return_value=None)
+    @patch('manage.create_table', return_value=None)
+    @patch('manage.create_administrator', return_value=None)
+    def test_init(self, copy_conf_mock, create_table, create_admin_mock):
         result = self.runner.invoke(run,
                                     ["init",
                                      f"--username={self.username}",
                                      f"--password={self.password}"])
-        self.runner.invoke(run,
-                           ["clean",
-                            "--yes"])
-        self.assertRegex(result.stdout, "For run server in develop mode:")
-        copy_config('example_config.ini', 'config.ini')
+        self.assertRegex(result.stdout, "Config => Ok")
+        self.assertRegex(result.stdout, "Database => Ok")
+        self.assertRegex(result.stdout, "admin => Ok")
 
-    @unittest.skip("Not working")
-    def test_init_wrong_config_file(self):
+    @patch('manage.copy_config', return_value=None)
+    def test_init_wrong_config_file(self, copy_conf_mock: Mock):
+        copy_conf_mock.side_effect = manage.CopyConfigError()
+
         result = self.runner.invoke(run,
                                     ["init",
                                      f"--username={self.username}",
                                      f"--password={self.password}",
                                      "--source=cinfig.cfg",
                                      "--destination=setup.ini"])
-        self.runner.invoke(run,
-                           ["clean",
-                            "--config-name=setup.ini",
-                            "--db-name=db_sqlite.db"])
+
         self.assertRegex(result.stdout, "Example of config file not found")
 
-    @unittest.skip("Not working")
-    def test_devserver(self):
+    @patch('uvicorn.run', return_value=None)
+    def test_devserver(self, run_server_mock):
         result = self.runner.invoke(run,
                                     ["devserver"])
         self.assertRegex(result.stdout, "Develop server started at address=")
 
-    @unittest.skip("Not working")
-    def test_server(self):
+    @patch('uvicorn.run', return_value=None)
+    def test_server(self, run_server_mock):
         result = self.runner.invoke(run,
                                     ["server"])
         self.assertRegex(result.stdout, "Server started at address=")
