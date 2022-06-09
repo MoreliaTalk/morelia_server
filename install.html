@@ -223,28 +223,22 @@
 <h2>Before starting the server<a class="headerlink" href="#before-starting-the-server" title="Permalink to this headline">¶</a></h2>
 <p>Before you start the server you need to make some settings (create a database, tables and add the first user - administrator)</p>
 <ol class="arabic simple">
-<li><p>Create a database with empty tables:</p></li>
+<li><p>Create <cite>config.ini</cite>, database file and administrator account:</p></li>
 </ol>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">db</span> <span class="n">create</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">run</span> <span class="n">init</span>
 </pre></div>
 </div>
 <ol class="arabic simple" start="2">
 <li><p>If you want to delete all tables in the created database (<strong>WARNING</strong> only tables are deleted, the database is not deleted):</p></li>
 </ol>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">db</span> <span class="n">delete</span>
-</pre></div>
-</div>
-<ol class="arabic simple" start="3">
-<li><p>Add the administrator in the created database:</p></li>
-</ol>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">db</span> <span class="n">admin</span><span class="o">-</span><span class="n">create</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">delete</span> <span class="n">db</span>
 </pre></div>
 </div>
 <ol class="arabic simple" start="4">
 <li><p>Additionally, you can create a <code class="docutils literal notranslate"><span class="pre">flow</span></code> or <code class="docutils literal notranslate"><span class="pre">user</span></code>:</p></li>
 </ol>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">db</span> <span class="n">flow</span><span class="o">-</span><span class="n">create</span>
-<span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">db</span> <span class="n">user</span><span class="o">-</span><span class="n">create</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">create</span> <span class="n">flow</span>
+<span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">create</span> <span class="n">user</span>
 </pre></div>
 </div>
 <ol class="arabic simple" start="5">
@@ -257,7 +251,7 @@
 <section id="server-startup">
 <h2>Server startup<a class="headerlink" href="#server-startup" title="Permalink to this headline">¶</a></h2>
 <p>To start server, use command:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">runserver</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">run</span> <span class="n">server</span>
 </pre></div>
 </div>
 <p>Parameters that can be sent to server:
@@ -282,7 +276,7 @@ There are important differences between them.</p>
 <p>To test the server, you can send a test message using the built-in mini client, for which you must use the key “-t” to pass the type of message from the options:
 <code class="docutils literal notranslate"><span class="pre">register_user</span></code>, <code class="docutils literal notranslate"><span class="pre">get_update</span></code>, <code class="docutils literal notranslate"><span class="pre">send_message</span></code>, <code class="docutils literal notranslate"><span class="pre">all_messages</span></code>, <code class="docutils literal notranslate"><span class="pre">add_flow</span></code>, <code class="docutils literal notranslate"><span class="pre">all_flow</span></code>, <code class="docutils literal notranslate"><span class="pre">user_info</span></code>, <code class="docutils literal notranslate"><span class="pre">authentication</span></code>, <code class="docutils literal notranslate"><span class="pre">delete_user</span></code>, <code class="docutils literal notranslate"><span class="pre">delete_message</span></code>,
 <code class="docutils literal notranslate"><span class="pre">edited_message</span></code>, <code class="docutils literal notranslate"><span class="pre">ping_pong</span></code>, <code class="docutils literal notranslate"><span class="pre">error</span></code>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">testclient</span> <span class="n">send</span> <span class="o">-</span><span class="n">t</span> <span class="n">register_user</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipenv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">./</span><span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">client</span> <span class="n">send</span> <span class="o">--</span><span class="nb">type</span> <span class="n">register_user</span>
 </pre></div>
 </div>
 </section>
