@@ -39,7 +39,7 @@ from mod.db.dbhandler import DBHandler
 from mod.log_handler import add_logging
 
 # Unicorn logger off
-from mod.shared_objects import config_option, db_connect
+from mod.shared_lib import config_option, db_connect
 
 
 def on_startup():

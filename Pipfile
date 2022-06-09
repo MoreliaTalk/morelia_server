@@ -30,6 +30,7 @@ requests = "==2.27.1"
 win32-setctime = "*"
 sphinx = "==4.4.0"
 furo = "==2022.1.2"
+tomli = "==2.0.1"
 
 [scripts]
 manage = "python manage.py"
