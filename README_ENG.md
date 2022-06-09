@@ -121,30 +121,24 @@ pipenv install --ignore-pipfile
 Before starting server, you need to make some settings (create a database, tables and add first user - administrator)
 
 Open `example_config.ini` file, find URI parameter, replace it with database path, example:
-`URI = 'sqlite:db_sqlite.db' `, save file as `config.ini`
+`URI = 'sqlite:db_sqlite.db' `.
 
-Create a database with empty tables:
+Create `config.ini`, database file and create administrator:
 
 ```cmd
-pipenv run python ./manage.py --db create
+pipenv run python ./manage.py run init
 ```
 
 If you need to delete all tables in created database (WARNING, only tables are deleted, database is not deleted):
 
 ```cmd
-pipenv run pipenv run python ./manage.py --db delete
-```
-
-Add an administrator to created database:
-
-```cmd
-python ./manage.py superuser-create
+pipenv run python ./manage.py delete db
 ```
 
 Additionally, you can create a `flow` with a group type:
 
 ```cmd
-pipenv run python ./manage.py --table flow
+pipenv run python ./manage.py create flow
 ```
 
 Information about all features of settings manager:
@@ -153,56 +147,20 @@ Information about all features of settings manager:
 pipenv run python ./manage.py --help
 ```
 
-## Start server ##
+## Start server in develop mode ##
 
 To start server, use command:
 
 ```cmd
-uvicorn server:app --host 0.0.0.0 --port 8000 --reload --use-colors --http h11 --ws websockets
+pipenv run python ./manage.py run devserver
 ```
 
-Additional parameters that can be passed to server:
+## Starting server in normal mode ##
 
-`--log-level <str>` - Set log level. Options: 'critical', 'error', 'warning', 'info', 'debug', 'trace'. Default: 'info'.
-
-`--use-colors / --no-use-colors` - Enable / disable colorized formatting of log records, in case this is not set it will be auto-detected. This option is ignored if `--log-config` CLI option is used.
-
-`--loop <str>` - Set event loop implementation. uvloop implementation provides greater performance, but is not compatible with Windows or PyPy. Options: 'auto', 'asyncio', 'uvloop'. Default: 'auto'.
-
-`--http <str>` - Set HTTP protocol implementation. httptools implementation provides greater performance, but it is not compatible with PyPy, and requires compilation on Windows. Options: 'auto', 'h11', 'httptools'. Default: 'auto'.
-
-`--ws <str>` - Set WebSockets protocol implementation. Either of websockets and wsproto packages are supported. Use 'none' to deny all websocket requests. Options: 'auto', 'none', 'websockets', 'wsproto'. Default: 'auto'.
-
-`--lifespan <str>` - Set Lifespan protocol implementation. Options: 'auto', 'on', 'off'. Default: 'auto'.
-
-`--interface` - Select ASGI3, ASGI2, or WSGI as application interface. Note that WSGI mode always disables WebSocket support, as it is not supported by WSGI interface. Options: 'auto', 'asgi3', 'asgi2', 'wsgi'. Default: 'auto'.
-
-`--limit-concurrency <int>` - Maximum number of concurrent connections or tasks to allow, before issuing HTTP 503 responses. Useful for ensuring known memory usage patterns even under over-resourced loads.
-
-`--limit-max-requests <int>` - Maximum number of requests to service before terminating process. Useful when running together with a process manager, for preventing memory leaks from impacting long-running processes.
-
-`--backlog <int>` - Maximum number of connections to hold in backlog. Relevant for heavy incoming traffic. Default: 2048
-
-`--ssl-keyfile <path>` - SSL key file
-
-`--ssl-certfile <path>` - SSL certificate file
-
-`--ssl-version <int>` - SSL version to use (see stdlib ssl module's)
-
-`--ssl-cert-reqs <int>` - Whether client certificate is required (see stdlib ssl module's)
-
-`--ssl-ca-certs <str>` - CA certificates file
-
-`--ssl-ciphers <str>` - Ciphers to use (see stdlib ssl module's)
-
-`--timeout-keep-alive <int>` - Close Keep-Alive connections if no new data is received within this timeout. Default: 5
-
-## Starting server in DEBUG mode ##
-
-To easily start server in debug mode, you need to use appropriate option in `manage.py`:
+To start server, use command:
 
 ```cmd
-pipenv run python ./manage.py runserver
+pipenv run python ./manage.py run server
 ```
 
 Options:
@@ -211,11 +169,11 @@ Options:
 
 `--port <int>` - port on which server will be launched
 
-`--log-level <str>` - sets logging level. Options: "critical", "error", "warning", "info", "debug", "trace". Default: "info".
+`--log-level <str>` - sets logging level. Options: "critical", "error", "warning", "info", "debug", "trace". Default: "debug".
 
-`--use-colors <bool>` - turns color highlighting of logs on and off
+`--use-colors` - turns color highlighting of logs on and off
 
-`--reload <bool>` - activates/deactivates automatic restart of server when its code changes
+`--reload` - activates/deactivates automatic restart of server when its code changes
 
 
 ## Checking health of server using built-in client ##
@@ -223,7 +181,7 @@ Options:
 To check if server is working, run built-in mini-client in `manage.py`:
 
 ```cmd
-pipenv run python manage.py testclient send
+pipenv run python manage.py client send
 ```
 
 Note: before starting client, you need to start server
@@ -276,28 +234,18 @@ To run tests, run (instead of an asterisk, substitute name of test)
 pipenv run python -v ./tests/test_*.py
 ```
 
-## Run debugger ##
-
-To run debugger in field, via console
-
-```cmd
-python -m pdb ./debug_server.py
-```
-
-For help in debug mode
-
-```cmd
-(pdb)help
-```
-
 ## Contacts ##
 
-[Telegram](https://t.me/+xfohB6gWiOU5YTUy) - a group where pressing issues are discussed.
+[Telegram](https://t.me/+xfohB6gWiOU5YTUy) - Developer contact group.
 
-[Slack](moreliatalk.slack.com) - project discussion.
+[Slack](moreliatalk.slack.com) - an additional channel for communicating with developers.
 
 ## License ##
 
-Copyright (c) 2020 - present [NekrodNIK](https://github.com/NekrodNIK), [Stepan Skriabin](https://github.com/stepanskryabin), [rus-ai](https://github .com/rus-ai) and others. See full list in AUTHORS.md file.
+Copyright (c) 2020 - present MoreliaTalk team
+  [NekrodNIK](https://github.com/NekrodNIK),
+  [Stepan Skriabin](https://github.com/stepanskryabin),
+  [rus-ai](https://github .com/rus-ai) and others.
+  See full list in AUTHORS.md file.
 
 Morelia Server is licensed under GNU Lesser General Public License version 3 or later (LGPL-3.0-or-later). See COPYING.LESSER file for details.

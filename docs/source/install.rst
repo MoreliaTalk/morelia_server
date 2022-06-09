@@ -46,33 +46,26 @@ Before starting the server
 
 Before you start the server you need to make some settings (create a database, tables and add the first user - administrator)
 
-1. Create a database with empty tables:
+1. Create `config.ini`, database file and administrator account:
 
 ::
 
- pipenv run python ./manage.py db create
+ pipenv run python ./manage.py run init
 
 
 2. If you want to delete all tables in the created database (**WARNING** only tables are deleted, the database is not deleted):
 
 ::
 
- pipenv run python ./manage.py db delete
-
-
-3. Add the administrator in the created database:
-
-::
-
- pipenv run python ./manage.py db admin-create
+ pipenv run python ./manage.py delete db
 
 
 4. Additionally, you can create a ``flow`` or ``user``:
 
 ::
 
- pipenv run python ./manage.py db flow-create
- pipenv run python ./manage.py db user-create
+ pipenv run python ./manage.py create flow
+ pipenv run python ./manage.py create user
 
 
 5. Information about all the features of the configuration manager:
@@ -89,7 +82,7 @@ To start server, use command:
 
 ::
 
- pipenv run python ./manage.py runserver
+ pipenv run python ./manage.py run server
 
 
 Parameters that can be sent to server:
@@ -111,4 +104,4 @@ To test the server, you can send a test message using the built-in mini client, 
 
 ::
 
- pipenv run python ./manage.py testclient send -t register_user
+ pipenv run python ./manage.py client send --type register_user

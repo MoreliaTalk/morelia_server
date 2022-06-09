@@ -141,16 +141,6 @@ To run tests, run (replace asterisk with test name):
 Repository description
 ----------------------
 
-``/admin/templates`` - templates of admin pages
-
-``/admin/general.py`` - 
-
-``/admin/control.py`` - 
-
-``/admin/login.py`` - 
-
-``/admin/logs.py`` - 
-
 ``/mod/db/dbhandler.py`` - module is designed to perform queries to the database
 
 ``/mod/db/models.py`` - module is responsible for the description of database tables to work through OPM
