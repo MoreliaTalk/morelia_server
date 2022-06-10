@@ -96,40 +96,19 @@ class ConfigHandler:
                        zc.buildout. More on the subject in the dedicated
                        documentation section for build-ins configparser
                        modules.
-        log: Disble/enable logger from loguru, default True.
+        log: Disable/enable logger from loguru, default True.
     """
-    __instance: Optional['ConfigHandler'] = None
     _directory: Optional[str]
-
-    def __new__(cls, *args, **kwargs):
-        """
-        A function called when creating a new object.
-        If such an object already exists, returns it.
-        And if not, creates a new one.
-
-        Args:
-            cls(ConfigHandler): class ConfigHandler
-            *args:
-            **kwargs:
-        """
-
-        if cls.__instance is None:
-            cls.__instance = super().__new__(cls)
-
-        return cls.__instance
 
     def __init__(self,
                  directory: Optional[str] = None,
                  name: Optional[str] = "config.ini",
-                 interpolation: Interpolation = None,
-                 log: bool = True) -> None:
+                 interpolation: Interpolation = None) -> None:
         self._name = str(name)
         self._directory = directory
         self._interpolation = interpolation
         self._set_configparser(self._name,
                                self._directory)
-        if log is False:
-            logger.remove()
 
     def _set_configparser(self,
                           name: str,
@@ -223,9 +202,6 @@ class ConfigHandler:
                                      name)
             if Path(test_path).is_file():
                 return str(test_path)
-        message = f"{name} in {test_path} not found"
-        logger.error(message)
-        raise NameConfigError(message)
 
     def _backup_config_file(self) -> tuple[str, PurePath]:
         """

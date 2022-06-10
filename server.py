@@ -38,28 +38,20 @@ from mod.controller import MainHandler
 from mod.db.dbhandler import DBHandler
 from mod.log_handler import add_logging
 
-
-# Get parameters contains in config.ini
-config = ConfigHandler()
-config_option = config.read()
-
 # Unicorn logger off
-if config_option.uvicorn_logging_disable:
-    standart_logging.disable()
+from mod.shared_objects import config_option, db_connect
 
-# loguru logger on
-add_logging(config_option.level)
 
-# Record server start time (UTC)
-server_started = datetime.now()
+def on_startup():
+    if config_option.uvicorn_logging_disable:
+        standart_logging.disable()
 
-# Set database connection
-if "unittest" in sys.modules:
-    db_connect = DBHandler()
-else:
-    db_connect = DBHandler(uri=config_option.uri)
+    # loguru logger on
+    add_logging(config_option.level)
 
-db_connect.create_table()
+    # Record server start time (UTC)
+    server_started = datetime.now()
+    db_connect.create_table()
 
 
 async def homepage(request: Request):
@@ -145,10 +137,12 @@ async def websocket_endpoint(websocket: WebSocket):
                 logger.info(f"Close with code: {CODE}")
 
 # Server instance creation
-app = Starlette(routes=[
-    Route("/", endpoint=homepage),
-    WebSocketRoute("/ws", endpoint=websocket_endpoint)
-])
+app = Starlette(
+    routes=[
+        Route("/", endpoint=homepage),
+        WebSocketRoute("/ws", endpoint=websocket_endpoint)
+    ],
+    on_startup=[on_startup])
 
 logger.info("Start server")
 
