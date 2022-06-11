@@ -56,17 +56,6 @@ class ConfigModel(BaseModel):
     Validation scheme for configuration file.
     """
 
-    class Config:
-        """
-        Additional configuration for validation scheme.
-
-        Args:
-            anystr_strip_whitespace: whether to strip leading and trailing
-                                      whitespace for str & byte types
-        """
-
-        anystr_strip_whitespace = True
-
     # Database section
     database: DatabaseModel
     # Hash size section
