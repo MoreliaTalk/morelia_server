@@ -130,7 +130,7 @@ class ConfigHandler:
 
         return "".join((f"Class {self.__class__.__name__} with ",
                         f"config_name= {self._name}, ",
-                        f"root_directory= {self._directory}, ",
+                        f"full_path= {self._fullpath}, ",
                         f"preprocessed value= {self._interpolation}"))
 
     @staticmethod
@@ -152,3 +152,6 @@ class ConfigHandler:
             validated = self._parse_and_validate(file.read())
 
         return validated
+
+
+print(ConfigHandler().read())

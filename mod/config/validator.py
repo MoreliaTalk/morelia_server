@@ -22,6 +22,35 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 from pydantic import BaseModel
 
 
+class DatabaseModel(BaseModel):
+    url: str
+
+
+class HashSizeModel(BaseModel):
+    size_password: int
+    size_auth_id: int
+
+
+class LoggingModel(BaseModel):
+    level: int
+    expiration_date: int
+    debug_expiration_date: int
+    uvicorn_logging_disable: bool
+    debug: str
+    error: str
+    info: str
+
+
+class LimitsModel(BaseModel):
+    messages: int
+    users: int
+
+
+class ApiModel(BaseModel):
+    max_version: str
+    min_version: str
+
+
 class ConfigModel(BaseModel):
     """
     Validation scheme for configuration file.
@@ -32,32 +61,19 @@ class ConfigModel(BaseModel):
         Additional configuration for validation scheme.
 
         Args:
-            anystr_strip_whitespace : whether to strip leading and trailing
+            anystr_strip_whitespace: whether to strip leading and trailing
                                       whitespace for str & byte types
         """
 
         anystr_strip_whitespace = True
 
     # Database section
-    uri: str
+    database: DatabaseModel
     # Hash size section
-    size_password: int
-    size_auth_id: int
+    hash_size: HashSizeModel
     # Logging section
-    level: int
-    expiration_date: int
-    debug_expiration_date: int
-    uvicorn_logging_disable: bool
-    debug: str
-    error: str
-    info: str
-    # Templates section
-    folder: str
+    logging: LoggingModel
     # Server limit section
-    messages: int
-    users: int
+    limits: LimitsModel
     # API version section
-    max_version: str
-    min_version: str
-    # Admin section
-    secret_key: str
+    api: ApiModel
