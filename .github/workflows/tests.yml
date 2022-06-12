@@ -20,10 +20,6 @@ jobs:
     - name: Install dependencies
       run: |
         pipenv install --dev
-        
-    - name: Create config for server
-      run: |
-        cp example_config.ini config.ini
                 
     - name: Run tests
       run: |
