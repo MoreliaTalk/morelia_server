@@ -55,13 +55,10 @@ class ConfigHandler:
     _directory: Optional[str]
 
     def __init__(self,
-                 filepath: PurePath | str = "default_config.toml",
-                 interpolation: Interpolation = None) -> None:
+                 filepath: PurePath | str = "config.toml") -> None:
         self._fullpath = self._get_fullpath(PurePath(filepath))
-        self._check_config_exist()
-
         self._name = self._fullpath.name
-        self._interpolation = interpolation
+        self._check_config_exist()
 
     @staticmethod
     def _get_fullpath(filepath: PurePath):

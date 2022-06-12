@@ -19,6 +19,6 @@ You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from handler import ConfigHandler
-from models import ConfigModel
+from mod.config.handler import ConfigHandler
+from mod.config.models import ConfigModel
 
