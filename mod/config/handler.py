@@ -61,7 +61,7 @@ class ConfigHandler:
         if filepath.is_absolute():
             fullpath = Path(filepath)
         else:
-            fullpath = Path(Path(__file__).parent.parent.parent, filepath)
+            fullpath = Path(PurePath(__file__).parent.parent.parent, filepath)
 
         if fullpath.is_file():
             logger.info("Config found")
@@ -69,13 +69,6 @@ class ConfigHandler:
         else:
             logger.info(f"{fullpath.name} in {fullpath.parent} not found. Default settings are used.")
             return None
-
-    def __str__(self) -> str:
-        """
-        Returned string which contains file path for opened config file.
-        """
-
-        return f"Config: {self._path}"
 
     def _parse_and_validate(self, data: str) -> ConfigModel:
         parsed_conf = tomli.loads(data)
@@ -103,3 +96,10 @@ class ConfigHandler:
             validated = ConfigModel()
 
         return validated
+
+    def __str__(self) -> str:
+        """
+        Returned string which contains file path for opened config file.
+        """
+
+        return f"Config: {self._path}"
