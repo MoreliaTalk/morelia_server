@@ -587,7 +587,9 @@ def conf_restore(backup: bool, source: str | None):
             config_data = file.read()
 
     if backup:
-        backup_config.callback(DEFAULT_CONFIG + ".BAK+" + str(int(time())))  # type: ignore
+        backup_config.callback("".join((DEFAULT_CONFIG,
+                                        ".BAK+",
+                                        str(int(time())))))  # type: ignore
 
     with open(DEFAULT_CONFIG, "w") as file:
         file.write(config_data)
@@ -597,7 +599,7 @@ def conf_restore(backup: bool, source: str | None):
              help="Backup current config")
 @click.option("--backup-name",
               type=str,
-              default=DEFAULT_CONFIG + ".BAK+" + str(int(time())))
+              default="".join((DEFAULT_CONFIG, ".BAK+", str(int(time())))))
 def backup_config(backup_name: str):
     """
     Backup current config file.
