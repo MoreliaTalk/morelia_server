@@ -65,7 +65,7 @@ class ConfigHandler:
             logger.info("Config found")
             return fullpath
         else:
-            logger.warning(f"{fullpath.name} in {fullpath.parent} not found. Default settings are used.")
+            logger.info(f"{fullpath.name} in {fullpath.parent} not found. Default settings are used.")
 
     def __str__(self) -> str:
         """
