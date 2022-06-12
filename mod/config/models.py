@@ -64,8 +64,8 @@ class ApiModel(BaseModel):
     """
     Validation scheme for api field in configuration file.
     """
-    max_version: str = 1.9
-    min_version: str = 1.0
+    max_version: str = "1.9"
+    min_version: str = "1.0"
 
 
 class ConfigModel(BaseModel):

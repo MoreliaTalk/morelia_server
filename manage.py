@@ -135,9 +135,9 @@ def create_table() -> None:
     Creates a database file and fills it with empty tables.
     """
 
-    config = ConfigHandler(log=False)
+    config = ConfigHandler()
     config_options = config.read()
-    db = DBHandler(uri=config_options.uri)
+    db = DBHandler(uri=config_options.database.url)
     db.create_table()
 
 
@@ -151,9 +151,9 @@ def create_administrator(username: str,
         password: password for new administrator user
     """
 
-    config = ConfigHandler(log=False)
+    config = ConfigHandler()
     config_read = config.read()
-    db = DBHandler(uri=config_read.uri)
+    db = DBHandler(uri=config_read.database.url)
     user_uuid = str(uuid4().int)
     db.add_admin(username=username,
                  hash_password=Hash(password, user_uuid).password_hash())
@@ -587,7 +587,7 @@ def conf_restore(backup: bool, source: str | None):
             config_data = file.read()
 
     if backup:
-        backup_config.callback(DEFAULT_CONFIG + ".BAK+" + str(int(time())))
+        backup_config.callback(DEFAULT_CONFIG + ".BAK+" + str(int(time())))  # type: ignore
 
     with open(DEFAULT_CONFIG, "w") as file:
         file.write(config_data)
