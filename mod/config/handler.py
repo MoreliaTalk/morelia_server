@@ -18,16 +18,18 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
+import logging
 from pathlib import Path
 from pathlib import PurePath
 
+import pydantic
 import tomli
 from loguru import logger
 
 from mod.config.models import ConfigModel
 
 
-class ConfigNotFound(Exception):
+class ConfigIsNotValidException(Exception):
     pass
 
 
@@ -66,6 +68,7 @@ class ConfigHandler:
             return fullpath
         else:
             logger.info(f"{fullpath.name} in {fullpath.parent} not found. Default settings are used.")
+            return None
 
     def __str__(self) -> str:
         """
@@ -74,10 +77,14 @@ class ConfigHandler:
 
         return f"Config: {self._path}"
 
-    @staticmethod
-    def _parse_and_validate(data: str) -> ConfigModel:
+    def _parse_and_validate(self, data: str) -> ConfigModel:
         parsed_conf = tomli.loads(data)
-        validated_conf = ConfigModel.parse_obj(parsed_conf)
+        try:
+            validated_conf = ConfigModel.parse_obj(parsed_conf)
+        except pydantic.ValidationError:
+            logging.error(f"Config {self._path} is not valid")
+            raise ConfigIsNotValidException()
+
         return validated_conf
 
     def read(self) -> ConfigModel:

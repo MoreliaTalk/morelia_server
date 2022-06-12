@@ -398,7 +398,7 @@ class TestAllMessages(unittest.TestCase):
 
     def setUp(self):
         self.config_option = ConfigHandler().read()
-        self.limit_message = self.config_option.messages
+        self.limit_message = self.config_option.limits.messages
         self.db.create_table()
         self.db.add_user(uuid="123456",
                          login="login",

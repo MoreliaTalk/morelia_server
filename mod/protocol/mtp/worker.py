@@ -431,7 +431,7 @@ class MTProtocol:
         flow_uuid = request.data.flow[0].uuid
         flow = []
         message = []
-        LIMIT_MESSAGES = config_option.messages
+        LIMIT_MESSAGES = config_option.limits.messages
 
         if request.data.flow[0].message_start is None:
             message_start = 0
@@ -610,7 +610,7 @@ class MTProtocol:
 
         users_volume = len(request.data.user)
         user = []
-        LIMIT_USERS = config_option.users
+        LIMIT_USERS = config_option.limits.users
 
         if users_volume <= LIMIT_USERS:
             errors = MTPErrorResponse("OK")
@@ -835,8 +835,8 @@ class MTProtocol:
             of supported by server.
         """
 
-        MIN = config_option.min_version
-        MAX = config_option.max_version
+        MIN = config_option.api.min_version
+        MAX = config_option.api.max_version
         version = request.jsonapi.version
         if MIN <= version <= MAX:
             return True

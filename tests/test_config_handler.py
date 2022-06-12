@@ -26,13 +26,8 @@ from pathlib import PurePath
 from loguru import logger
 from pydantic import ValidationError
 
-from mod.config.handler import ConfigHandler
-from mod.config.handler import AccessConfigError
-from mod.config.handler import BackupConfigError
-from mod.config.handler import RebuildConfigError
-from mod.config.handler import ConfigModel
-from mod.config.handler import NameConfigError
-from mod.config.handler import CopyConfigError
+from mod.config import ConfigHandler
+from mod.config import ConfigModel
 
 
 class TestConfigHandler(unittest.TestCase):
@@ -44,7 +39,7 @@ class TestConfigHandler(unittest.TestCase):
         self.example_config = 'example_config.ini'
         self.config_name = 'config.ini'
         self.fixtures = 'tests/fixtures'
-        self.test = ConfigHandler(directory=self.fixtures)
+        self.test = ConfigHandler()
 
     def tearDown(self) -> None:
         del self.example_config
@@ -52,22 +47,9 @@ class TestConfigHandler(unittest.TestCase):
         del self.fixtures
         del self.test
 
-    def test_set_configparser(self):
-        self.test._set_configparser(name=self.config_name,
-                                    directory=self.fixtures)
-        result = self.test._config.sections()
-        self.assertEqual(result[0], "DATABASE")
-
     def test__str__(self):
         self.assertRegex(str(self.test),
                          'Config:')
-
-    def test__repr__(self):
-        result = repr(self.test)
-        self.assertRegex(result,
-                         "ConfigHandler")
-        self.assertRegex(result,
-                         self.config_name)
 
     def test_copy_string(self):
         source = self.test._search_config(name=self.example_config,

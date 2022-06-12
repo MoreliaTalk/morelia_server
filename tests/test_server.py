@@ -25,6 +25,7 @@ import unittest
 from loguru import logger
 from mod.config.handler import ConfigHandler
 from mod.db.dbhandler import DBHandler
+from mod.shared_lib import config_option
 from server import app
 from starlette.testclient import TestClient, WebSocketTestSession
 from starlette.websockets import WebSocketDisconnect
@@ -43,9 +44,7 @@ class TestWebsocket(unittest.TestCase):
     def setUpClass(cls):
         logger.remove()
         cls.ws_client = TestClient(app)
-        cls.config = ConfigHandler()
-        cls.config_option = cls.config.read()
-        cls.db = DBHandler(uri=cls.config_option.uri)
+        cls.db = DBHandler(uri=config_option.database.url)
         cls.db.create_table()
 
     @classmethod
