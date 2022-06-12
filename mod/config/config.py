@@ -26,56 +26,13 @@ from typing import Any
 from typing import Optional
 
 import tomli
-import tomli_w
 from loguru import logger
 
 from mod.config.validator import ConfigModel
 
 
-class NameConfigError(Exception):
-    """
-    Occurs when there is an error in the name of the file.
-    For example there is no such file at all.
-    """
-
-
-class BackupConfigError(OSError):
-    """
-    Occurs when a backup of a file is impossible.
-    For example, you can't read the original settings file,
-    or you don't have written access to the directory.
-    """
-
-
-class OperationConfigError(Exception):
-    """
-    Occurs when an option written to a configuration file is duplicated.
-    Or when a configuration file parsing error has occurred.
-    """
-
-
-class AccessConfigError(OSError):
-    """
-    Occurs when writing to the configuration file failed.
-    Because of the lack of write permissions to the file
-    or the lack of the file itself.
-    """
-
-
-class RebuildConfigError(Exception):
-    """
-    Occurs when the configuration file could not be restored.
-    Because of the lack of permissions to write to the file
-    or the absence of the file itself.
-    """
-
-
-class CopyConfigError(Exception):
-    """
-    Occurs when it was not possible to copy old configuration file to new one.
-    Because there are no write permissions to the file or because the file
-    itself is missing.
-    """
+class ConfigNotFound(Exception):
+    pass
 
 
 class ConfigHandler:
@@ -101,9 +58,7 @@ class ConfigHandler:
                  filepath: PurePath | str = "default_config.toml",
                  interpolation: Interpolation = None) -> None:
         self._fullpath = self._get_fullpath(PurePath(filepath))
-
-        if not self._is_exist():
-            self.restore_default_config()
+        self._check_config_exist()
 
         self._name = self._fullpath.name
         self._interpolation = interpolation
@@ -115,14 +70,11 @@ class ConfigHandler:
         else:
             return Path(Path(__file__).parent.parent.parent, filepath)
 
-    def _is_exist(self):
-        return self._fullpath.is_file()
-
-    def restore_default_config(self):
-        new_model = ConfigModel()
-        with self._fullpath.open(mode="w") as file:
-            new_toml = tomli_w.dumps(new_model.dict())
-            file.write(new_toml)
+    def _check_config_exist(self):
+        if not self._fullpath.is_file():
+            message = f"{self._name} in {self._fullpath.cwd()} not found"
+            logger.error(message)
+            raise ConfigNotFound(message)
 
     def __str__(self) -> str:
         """
