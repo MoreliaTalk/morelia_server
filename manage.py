@@ -50,7 +50,7 @@ from mod.protocol.mtp.api import Request
 
 VERSION = 'v0.3'
 
-DEFAULT_CONFIG = 'config.ini'
+DEFAULT_CONFIG = 'config.toml'
 
 DEFAULT_DB = 'db_sqlite.db'
 
@@ -583,18 +583,18 @@ def conf_restore(backup: bool, source: str | None):
             config_data = file.read()
 
     if backup:
-        backup_config.callback("config.toml" + ".BAK+" + str(int(time())))
+        backup_config.callback(DEFAULT_CONFIG + ".BAK+" + str(int(time())))
 
-    with open("config.toml", "w") as file:
+    with open(DEFAULT_CONFIG, "w") as file:
         file.write(config_data)
 
 
 @run.command("conf_backup",
              help="Backup current config")
-@click.option("--backup-name", type=str, default="config.toml" + ".BAK+" + str(int(time())))
+@click.option("--backup-name", type=str, default=DEFAULT_CONFIG + ".BAK+" + str(int(time())))
 def backup_config(backup_name):
     try:
-        config = open("config.toml", "r")
+        config = open(DEFAULT_CONFIG, "r")
     except FileNotFoundError:
         click.echo("config.toml file not found")
     else:
