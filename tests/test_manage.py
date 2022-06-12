@@ -135,30 +135,15 @@ class TestManage(unittest.TestCase):
                          "".join(("Config file is not found => NOT deleted.\n",
                                   "Database file is not found => NOT deleted.\n")))
 
-    @patch('manage.copy_config', return_value=None)
     @patch('manage.create_table', return_value=None)
     @patch('manage.create_administrator', return_value=None)
-    def test_init(self, copy_conf_mock, create_table, create_admin_mock):
+    def test_init(self, create_table, create_admin_mock):
         result = self.runner.invoke(run,
                                     ["init",
                                      f"--username={self.username}",
                                      f"--password={self.password}"])
-        self.assertRegex(result.stdout, "Config => Ok")
         self.assertRegex(result.stdout, "Database => Ok")
         self.assertRegex(result.stdout, "admin => Ok")
-
-    @patch('manage.copy_config', return_value=None)
-    def test_init_wrong_config_file(self, copy_conf_mock: Mock):
-        copy_conf_mock.side_effect = manage.CopyConfigError()
-
-        result = self.runner.invoke(run,
-                                    ["init",
-                                     f"--username={self.username}",
-                                     f"--password={self.password}",
-                                     "--source=cinfig.cfg",
-                                     "--destination=setup.ini"])
-
-        self.assertRegex(result.stdout, "Example of config file not found")
 
     @patch('uvicorn.run', return_value=None)
     def test_devserver(self, run_server_mock):

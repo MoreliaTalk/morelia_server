@@ -522,15 +522,8 @@ def run() -> None:
               prompt=True,
               hide_input=True,
               help="Password for new user.")
-@click.option("--destination",
-              type=str,
-              show_default=True,
-              default=DEFAULT_CONFIG,
-              help="destination file name")
 def init(username: str,
-         password: str,
-         source: str,
-         destination: str) -> None:
+         password: str) -> None:
     """
     Preparing the MoreliaTalk server for work.
 
