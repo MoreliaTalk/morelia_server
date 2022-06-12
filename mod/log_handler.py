@@ -22,6 +22,7 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 import sys
 
 from loguru import logger
+
 from mod.shared_lib import config_option
 
 expiration_date = config_option.logging.expiration_date

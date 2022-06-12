@@ -23,15 +23,24 @@ from pydantic import BaseModel
 
 
 class DatabaseModel(BaseModel):
+    """
+    Validation scheme for database field in configuration file.
+    """
     url: str = "sqlite:db_sqlite.db"
 
 
 class HashSizeModel(BaseModel):
+    """
+    Validation scheme for hash_size field in configuration file.
+    """
     size_password: int = 32
     size_auth_id: int = 16
 
 
 class LoggingModel(BaseModel):
+    """
+    Validation scheme for logging field in configuration file.
+    """
     level: int = 20
     expiration_date: int = 3
     debug_expiration_date: int = 3
@@ -44,11 +53,17 @@ class LoggingModel(BaseModel):
 
 
 class LimitsModel(BaseModel):
+    """
+    Validation scheme for limits field in configuration file.
+    """
     messages: int = 100
     users: int = 100
 
 
 class ApiModel(BaseModel):
+    """
+    Validation scheme for api field in configuration file.
+    """
     max_version: str = 1.9
     min_version: str = 1.0
 

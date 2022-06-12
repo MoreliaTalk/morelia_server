@@ -29,8 +29,8 @@ from typing import Callable
 from uuid import uuid4
 
 import click
-import tomli_w
 from sqlobject import SQLObjectNotFound
+import tomli_w
 import uvicorn
 from websockets import client as ws_client
 from websockets import exceptions as ws_exceptions
@@ -566,9 +566,20 @@ def init(username: str,
 
 @run.command("conf_restore",
              help="Restore default configuration or backup")
-@click.option("--backup/--no-backup", type=bool, default=False, help="Backup current config")
+@click.option("--backup/--no-backup",
+              type=bool,
+              default=False,
+              help="Backup current config")
 @click.option("--source", type=str, default=None, help="path to backup file")
 def conf_restore(backup: bool, source: str | None):
+    """
+    Restore configuration default config file or backup.
+
+    Args:
+        backup(bool): backup current config file
+        source(str | None): path to backup file for restore,
+        if None, restore default config
+    """
     if source is None:
         config_data = tomli_w.dumps(ConfigModel().dict())
     else:
@@ -584,8 +595,16 @@ def conf_restore(backup: bool, source: str | None):
 
 @run.command("conf_backup",
              help="Backup current config")
-@click.option("--backup-name", type=str, default=DEFAULT_CONFIG + ".BAK+" + str(int(time())))
-def backup_config(backup_name):
+@click.option("--backup-name",
+              type=str,
+              default=DEFAULT_CONFIG + ".BAK+" + str(int(time())))
+def backup_config(backup_name: str):
+    """
+    Backup current config file.
+
+    Args:
+        backup_name(str): name for new backup
+    """
     try:
         config = open(DEFAULT_CONFIG, "r")
     except FileNotFoundError:

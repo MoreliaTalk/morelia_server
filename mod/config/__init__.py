@@ -18,7 +18,5 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
-
-from mod.config.handler import ConfigHandler
-from mod.config.models import ConfigModel
-
+from mod.config.handler import ConfigHandler  # noqa: F401
+from mod.config.models import ConfigModel  # noqa: F401

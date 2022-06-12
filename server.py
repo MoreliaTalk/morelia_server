@@ -22,7 +22,6 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 from datetime import datetime
 from json import JSONDecodeError
 import logging as standart_logging
-import sys
 
 from loguru import logger
 from starlette.applications import Starlette
@@ -32,14 +31,17 @@ from starlette.routing import Route
 from starlette.routing import WebSocketRoute
 from starlette.websockets import WebSocket
 from starlette.websockets import WebSocketDisconnect
+
 from mod.controller import MainHandler
 from mod.log_handler import add_logging
-
-# Unicorn logger off
-from mod.shared_lib import config_option, db_connect
+from mod.shared_lib import config_option
+from mod.shared_lib import db_connect
 
 
 def on_startup():
+    """
+    This function run on start up server and init server initializes it.
+    """
     if config_option.logging.uvicorn_logging_disable:
         standart_logging.disable()
 
@@ -51,6 +53,7 @@ def on_startup():
     db_connect.create_table()
 
     logger.info("Start server")
+    logger.info(f"Started time {server_started}")
 
 
 async def homepage(request: Request):

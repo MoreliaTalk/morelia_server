@@ -22,15 +22,17 @@ import logging
 from pathlib import Path
 from pathlib import PurePath
 
+from loguru import logger
 import pydantic
 import tomli
-from loguru import logger
 
 from mod.config.models import ConfigModel
 
 
 class ConfigIsNotValidException(Exception):
-    pass
+    """
+    Occurs when the file is missing.
+    """
 
 
 class ConfigHandler:
@@ -67,7 +69,8 @@ class ConfigHandler:
             logger.info("Config found")
             return fullpath
         else:
-            logger.info(f"{fullpath.name} in {fullpath.parent} not found. Default settings are used.")
+            logger.info(f"{fullpath.name} in {fullpath.parent} not found. "
+                        f"Default settings are used.")
             return None
 
     def _parse_and_validate(self, data: str) -> ConfigModel:
