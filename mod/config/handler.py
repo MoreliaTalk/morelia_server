@@ -18,12 +18,8 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
-import os
-from configparser import Interpolation
 from pathlib import Path
 from pathlib import PurePath
-from typing import Any
-from typing import Optional
 
 import tomli
 from loguru import logger
@@ -52,43 +48,31 @@ class ConfigHandler:
                        modules.
         log: Disable/enable logger from loguru, default True.
     """
-    _directory: Optional[str]
+    _path: Path | None
 
     def __init__(self,
                  filepath: PurePath | str = "config.toml") -> None:
-        self._fullpath = self._get_fullpath(PurePath(filepath))
-        self._name = self._fullpath.name
-        self._check_config_exist()
+        self._path = self._get_fullpath_and_check_exist(PurePath(filepath))
 
     @staticmethod
-    def _get_fullpath(filepath: PurePath):
+    def _get_fullpath_and_check_exist(filepath: PurePath) -> Path | None:
         if filepath.is_absolute():
-            return Path(filepath)
+            fullpath = Path(filepath)
         else:
-            return Path(Path(__file__).parent.parent.parent, filepath)
+            fullpath = Path(Path(__file__).parent.parent.parent, filepath)
 
-    def _check_config_exist(self):
-        if not self._fullpath.is_file():
-            message = f"{self._name} in {self._fullpath.cwd()} not found"
-            logger.error(message)
-            raise ConfigNotFound(message)
+        if fullpath.is_file():
+            logger.info("Config found")
+            return fullpath
+        else:
+            logger.warning(f"{fullpath.name} in {fullpath.parent} not found. Default settings are used.")
 
     def __str__(self) -> str:
         """
         Returned string which contains file path for opened config file.
         """
 
-        return f"Config: {self._fullpath}"
-
-    def __repr__(self) -> str:
-        """
-        Returned name of created class and parameters send to class object.
-        """
-
-        return "".join((f"Class {self.__class__.__name__} with ",
-                        f"config_name= {self._name}, ",
-                        f"full_path= {self._fullpath}, ",
-                        f"preprocessed value= {self._interpolation}"))
+        return f"Config: {self._path}"
 
     @staticmethod
     def _parse_and_validate(data: str) -> ConfigModel:
@@ -105,7 +89,10 @@ class ConfigHandler:
         Returns:
             Config: with key=value
         """
-        with self._fullpath.open() as file:
-            validated = self._parse_and_validate(file.read())
+        if self._path is not None:
+            with self._path.open() as file:
+                validated = self._parse_and_validate(file.read())
+        else:
+            validated = ConfigModel()
 
         return validated
