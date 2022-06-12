@@ -138,14 +138,13 @@ async def websocket_endpoint(websocket: WebSocket):
                 await websocket.close(CODE)
                 logger.info(f"Close with code: {CODE}")
 
-# Server instance creation
-app = Starlette(
-    routes=[
-        Route("/", endpoint=homepage),
-        WebSocketRoute("/ws", endpoint=websocket_endpoint)
-    ],
-    on_startup=[on_startup])
 
+# Server instance creation
+app = Starlette(routes=[Route("/",
+                              endpoint=homepage),
+                        WebSocketRoute("/ws",
+                                       endpoint=websocket_endpoint)],
+                on_startup=[on_startup])
 
 if __name__ == "__main__":
     print("to start the server, write the following command in the console:")
