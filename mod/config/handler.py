@@ -28,7 +28,7 @@ from typing import Optional
 import tomli
 from loguru import logger
 
-from mod.config.validator import ConfigModel
+from mod.config.models import ConfigModel
 
 
 class ConfigNotFound(Exception):
@@ -99,7 +99,7 @@ class ConfigHandler:
         validated_conf = ConfigModel.parse_obj(parsed_conf)
         return validated_conf
 
-    def read(self) -> Any:
+    def read(self) -> ConfigModel:
         """
         Read settings from a configuration file.
         Also, validate settings and generate a named tuple with key=value

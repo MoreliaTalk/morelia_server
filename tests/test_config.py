@@ -26,13 +26,13 @@ from pathlib import PurePath
 from loguru import logger
 from pydantic import ValidationError
 
-from mod.config.config import ConfigHandler
-from mod.config.config import AccessConfigError
-from mod.config.config import BackupConfigError
-from mod.config.config import RebuildConfigError
-from mod.config.config import ConfigModel
-from mod.config.config import NameConfigError
-from mod.config.config import CopyConfigError
+from mod.config.handler import ConfigHandler
+from mod.config.handler import AccessConfigError
+from mod.config.handler import BackupConfigError
+from mod.config.handler import RebuildConfigError
+from mod.config.handler import ConfigModel
+from mod.config.handler import NameConfigError
+from mod.config.handler import CopyConfigError
 
 
 class TestConfigHandler(unittest.TestCase):

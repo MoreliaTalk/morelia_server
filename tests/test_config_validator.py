@@ -20,7 +20,7 @@
 """
 
 import unittest
-from mod.config.validator import ConfigModel
+from mod.config.models import ConfigModel
 from pydantic.error_wrappers import ValidationError
 
 

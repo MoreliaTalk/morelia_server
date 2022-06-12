@@ -1,6 +1,6 @@
 import sys
 
-from mod.config.config import ConfigHandler
+from mod.config import ConfigHandler
 from mod.db.dbhandler import DBHandler
 
 # Get parameters contains in config.ini

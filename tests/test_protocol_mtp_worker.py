@@ -31,7 +31,7 @@ from mod import lib
 from mod.db.dbhandler import DBHandler
 from mod.protocol.mtp.worker import MTProtocol
 from mod.protocol.mtp.worker import MTPErrorResponse
-from mod.config.config import ConfigHandler
+from mod.config.handler import ConfigHandler
 
 # Add path to directory with code being checked
 # to variable 'PATH' to import modules from directory

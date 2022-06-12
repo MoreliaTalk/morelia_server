@@ -32,10 +32,7 @@ from starlette.routing import Route
 from starlette.routing import WebSocketRoute
 from starlette.websockets import WebSocket
 from starlette.websockets import WebSocketDisconnect
-
-from mod.config.config import ConfigHandler
 from mod.controller import MainHandler
-from mod.db.dbhandler import DBHandler
 from mod.log_handler import add_logging
 
 # Unicorn logger off

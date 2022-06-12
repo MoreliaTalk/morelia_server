@@ -23,7 +23,7 @@ import json
 import unittest
 
 from loguru import logger
-from mod.config.config import ConfigHandler
+from mod.config.handler import ConfigHandler
 from mod.db.dbhandler import DBHandler
 from server import app
 from starlette.testclient import TestClient, WebSocketTestSession
