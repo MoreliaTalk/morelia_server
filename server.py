@@ -40,15 +40,17 @@ from mod.shared_lib import config_option, db_connect
 
 
 def on_startup():
-    if config_option.uvicorn_logging_disable:
+    if config_option.logging.uvicorn_logging_disable:
         standart_logging.disable()
 
     # loguru logger on
-    add_logging(config_option.level)
+    add_logging(config_option.logging.level)
 
     # Record server start time (UTC)
     server_started = datetime.now()
     db_connect.create_table()
+
+    logger.info("Start server")
 
 
 async def homepage(request: Request):
@@ -140,8 +142,6 @@ app = Starlette(
         WebSocketRoute("/ws", endpoint=websocket_endpoint)
     ],
     on_startup=[on_startup])
-
-logger.info("Start server")
 
 
 if __name__ == "__main__":

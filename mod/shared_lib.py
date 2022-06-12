@@ -11,4 +11,4 @@ config_option = _config.read()
 if "unittest" in sys.modules:
     db_connect = DBHandler()
 else:
-    db_connect = DBHandler(uri=config_option.uri)
+    db_connect = DBHandler(uri=config_option.database.url)
