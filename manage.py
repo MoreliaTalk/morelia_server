@@ -583,7 +583,7 @@ def conf_restore(backup: bool, source: str | None):
             config_data = file.read()
 
     if backup:
-        backup_config()
+        backup_config.callback("config.toml" + ".BAK+" + str(int(time())))
 
     with open("config.toml", "w") as file:
         file.write(config_data)
