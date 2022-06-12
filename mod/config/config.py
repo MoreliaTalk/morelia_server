@@ -18,6 +18,7 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
+import os
 from configparser import Interpolation
 from pathlib import Path
 from pathlib import PurePath
@@ -25,6 +26,7 @@ from typing import Any
 from typing import Optional
 
 import tomli
+import tomli_w
 from loguru import logger
 
 from mod.config.validator import ConfigModel
@@ -96,25 +98,31 @@ class ConfigHandler:
     _directory: Optional[str]
 
     def __init__(self,
-                 filepath: PurePath | str = "config.ini",
+                 filepath: PurePath | str = "default_config.toml",
                  interpolation: Interpolation = None) -> None:
-        self._fullpath = self._check_filepath_and_get_fullpath(PurePath(filepath))
+        self._fullpath = self._get_fullpath(PurePath(filepath))
+
+        if not self._is_exist():
+            self.restore_default_config()
+
         self._name = self._fullpath.name
         self._interpolation = interpolation
 
     @staticmethod
-    def _check_filepath_and_get_fullpath(filepath: PurePath):
+    def _get_fullpath(filepath: PurePath):
         if filepath.is_absolute():
-            fullpath = Path(filepath)
+            return Path(filepath)
         else:
-            fullpath = Path(Path(__file__).parent.parent.parent, filepath)
+            return Path(Path(__file__).parent.parent.parent, filepath)
 
-        if not fullpath.is_file():
-            message = f"{fullpath.name} in {fullpath.cwd()} not found"
-            logger.error(message)
-            raise NameConfigError(message)
+    def _is_exist(self):
+        return self._fullpath.is_file()
 
-        return fullpath
+    def restore_default_config(self):
+        new_model = ConfigModel()
+        with self._fullpath.open(mode="w") as file:
+            new_toml = tomli_w.dumps(new_model.dict())
+            file.write(new_toml)
 
     def __str__(self) -> str:
         """
@@ -152,6 +160,3 @@ class ConfigHandler:
             validated = self._parse_and_validate(file.read())
 
         return validated
-
-
-print(ConfigHandler().read())

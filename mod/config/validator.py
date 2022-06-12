@@ -23,32 +23,34 @@ from pydantic import BaseModel
 
 
 class DatabaseModel(BaseModel):
-    url: str
+    url: str = "sqlite:db_sqlite.db"
 
 
 class HashSizeModel(BaseModel):
-    size_password: int
-    size_auth_id: int
+    size_password: int = 32
+    size_auth_id: int = 16
 
 
 class LoggingModel(BaseModel):
-    level: int
-    expiration_date: int
-    debug_expiration_date: int
-    uvicorn_logging_disable: bool
-    debug: str
-    error: str
-    info: str
+    level: int = 20
+    expiration_date: int = 3
+    debug_expiration_date: int = 3
+    uvicorn_logging_disable: bool = True
+    debug: str = "[<b>{time: DD/MM/YY HH:mm:ss}</>]  [<g>{level}</>] " \
+                 "{module} | {function} | line:{line: >3} | {message}"
+    error: str = "[<b>{time:DD/MM/YY HH:mm:ss}</>]  [<r>{level}</>] " \
+                 "{module} | {function} | line:{line: >3} | {message}"
+    info: str = "[<b>{time:DD/MM/YY HH:mm:ss}</>]  [<e>{level}</>]  {message}"
 
 
 class LimitsModel(BaseModel):
-    messages: int
-    users: int
+    messages: int = 100
+    users: int = 100
 
 
 class ApiModel(BaseModel):
-    max_version: str
-    min_version: str
+    max_version: str = 1.9
+    min_version: str = 1.0
 
 
 class ConfigModel(BaseModel):
@@ -57,12 +59,12 @@ class ConfigModel(BaseModel):
     """
 
     # Database section
-    database: DatabaseModel
+    database: DatabaseModel = DatabaseModel()
     # Hash size section
-    hash_size: HashSizeModel
+    hash_size: HashSizeModel = HashSizeModel()
     # Logging section
-    logging: LoggingModel
+    logging: LoggingModel = LoggingModel()
     # Server limit section
-    limits: LimitsModel
+    limits: LimitsModel = LimitsModel()
     # API version section
-    api: ApiModel
+    api: ApiModel = ApiModel()
