@@ -481,7 +481,7 @@ async def send(login: str,
                             "fixtures",
                             "".join((type_, ".json"))))
     match type_:
-        case ("register_user", ):
+        case ("register_user"):
             message.data.user[0].username = username
             message.data.user[0].password = password
         case ("get_update",
