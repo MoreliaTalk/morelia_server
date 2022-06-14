@@ -32,7 +32,6 @@ from manage import delete
 from manage import client
 from manage import create
 from manage import run
-from manage import copy_config
 
 from mod.db.dbhandler import DBHandler
 from mod.lib import Hash
@@ -118,7 +117,7 @@ class TestManage(unittest.TestCase):
 
     @patch('pathlib.Path.is_file', return_value=True)
     @patch('os.remove', return_value=None)
-    def test_clean_init(self, is_file_mock, remove_mock):
+    def test_clean_init(self, _, __):
         result = self.runner.invoke(run,
                                     ["clean",
                                      "--yes"])
@@ -127,7 +126,7 @@ class TestManage(unittest.TestCase):
 
     @patch('pathlib.Path.is_file', return_value=False)
     @patch('os.remove', return_value=None)
-    def test_error_in_clean_init(self, is_file_mock, remove_mock):
+    def test_error_in_clean_init(self, _, __):
         result = self.runner.invoke(run,
                                     ["clean",
                                      "--yes"])
@@ -137,7 +136,7 @@ class TestManage(unittest.TestCase):
 
     @patch('manage.create_table', return_value=None)
     @patch('manage.create_administrator', return_value=None)
-    def test_init(self, create_table, create_admin_mock):
+    def test_init(self, _, __):
         result = self.runner.invoke(run,
                                     ["init",
                                      f"--username={self.username}",
@@ -146,13 +145,13 @@ class TestManage(unittest.TestCase):
         self.assertRegex(result.stdout, "admin => Ok")
 
     @patch('uvicorn.run', return_value=None)
-    def test_devserver(self, run_server_mock):
+    def test_devserver(self, _):
         result = self.runner.invoke(run,
                                     ["devserver"])
         self.assertRegex(result.stdout, "Develop server started at address=")
 
     @patch('uvicorn.run', return_value=None)
-    def test_server(self, run_server_mock):
+    def test_server(self, _):
         result = self.runner.invoke(run,
                                     ["server"])
         self.assertRegex(result.stdout, "Server started at address=")

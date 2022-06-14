@@ -140,11 +140,11 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 # Server instance creation
-app = Starlette(routes=[Route("/",
-                              endpoint=homepage),
-                        WebSocketRoute("/ws",
-                                       endpoint=websocket_endpoint)],
-                on_startup=[on_startup])
+app = Starlette(on_startup=[on_startup], routes=[
+    Route("/", endpoint=homepage),
+    WebSocketRoute("/ws", endpoint=websocket_endpoint)
+])
+
 
 if __name__ == "__main__":
     print("to start the server, write the following command in the console:")
