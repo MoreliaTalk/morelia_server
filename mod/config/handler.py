@@ -168,5 +168,14 @@ class ConfigHandler:
 
         return f"Config: {self._path}"
 
+    def __repr__(self) -> str:
+        """
+        Returned name of created class and parameters send to class object.
+        """
+
+        return "".join((f"Class {self.__class__.__name__} with ",
+                        f"config_name= {self._path.name}, ",
+                        f"config_directory= {self._path.parent}, "))
+
 
 print(ConfigHandler().restore())
