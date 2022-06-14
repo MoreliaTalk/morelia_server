@@ -30,7 +30,6 @@ from uuid import uuid4
 
 import click
 from sqlobject import SQLObjectNotFound
-import tomli_w
 import uvicorn
 from websockets import client as ws_client
 from websockets import exceptions as ws_exceptions
@@ -50,7 +49,11 @@ from mod.protocol.mtp.api import Request
 
 VERSION = 'v0.3'
 
-DEFAULT_CONFIG = 'config.toml'
+DEFAULT_CONFIG = 'config.init'
+
+DEFAULT_CONFIG_BACKUP = lambda: "".join((DEFAULT_CONFIG,
+                                         ".BAK+",
+                                         str(int(time()))))
 
 DEFAULT_DB = 'db_sqlite.db'
 
@@ -580,40 +583,27 @@ def conf_restore(backup: bool, source: str | None):
         source(str | None): path to backup file for restore,
         if None, restore default config
     """
-    if source is None:
-        config_data = tomli_w.dumps(ConfigModel().dict())
-    else:
-        with open(source) as file:
-            config_data = file.read()
+    config = ConfigHandler()
 
     if backup:
-        backup_config.callback("".join((DEFAULT_CONFIG,
-                                        ".BAK+",
-                                        str(int(time())))))  # type: ignore
+        config.backup(DEFAULT_CONFIG_BACKUP())
 
-    with open(DEFAULT_CONFIG, "w") as file:
-        file.write(config_data)
+    config.restore(source)
 
 
 @run.command("conf_backup",
              help="Backup current config")
 @click.option("--backup-name",
               type=str,
-              default="".join((DEFAULT_CONFIG, ".BAK+", str(int(time())))))
-def backup_config(backup_name: str):
+              default="".join(DEFAULT_CONFIG_BACKUP()))
+def conf_backup(backup_name: str):
     """
     Backup current config file.
 
     Args:
         backup_name(str): name for new backup
     """
-    try:
-        config = open(DEFAULT_CONFIG, "r")
-    except FileNotFoundError:
-        click.echo("config.toml file not found")
-    else:
-        with open(backup_name, "w") as backup:
-            backup.write(config.read())
+    ConfigHandler().backup(backup_name)
 
 
 @run.command("devserver",
