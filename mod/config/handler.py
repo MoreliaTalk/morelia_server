@@ -69,15 +69,7 @@ class ConfigHandler:
     By default, it is config.ini
 
     Args:
-        name: name of configuration file.
-        interpolation: Interpolation behaviour may be customized by providing
-                       a custom handler through the interpolation argument,
-                       by default it is BasicInterpolation. None can be used to
-                       turn off interpolation completely, ExtendedInterpolation
-                       provides a more advanced variant inspired by
-                       zc.buildout. More on the subject in the dedicated
-                       documentation section for build-ins configparser
-                       modules.
+        filepath(PurePath | str): absolute or relative path to file
         log: Disable/enable logger from loguru, default True.
     """
     _path: Path
