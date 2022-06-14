@@ -50,9 +50,7 @@ class IniParser:
 
 
 class ConfigIsNotValidError(Exception):
-    """
-    Occurs when the file is missing.
-    """
+    pass
 
 
 class ConfigNotExistError(Exception):
