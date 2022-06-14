@@ -18,21 +18,49 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
+import io
 import logging
 from pathlib import Path
 from pathlib import PurePath
+from time import time
 
 from loguru import logger
 import pydantic
-import tomli
+import configparser
 
 from mod.config.models import ConfigModel
+
+
+class IniParser:
+    @staticmethod
+    def loads(data: str) -> dict:
+        parser = configparser.ConfigParser()
+        parser.read_string(data)
+        return dict(parser)
+
+    @staticmethod
+    def dumps(data: dict) -> str:
+        io_string = io.StringIO()
+        parser = configparser.ConfigParser()
+
+        parser.read_dict(data)
+        parser.write(io_string)
+
+        return io_string.read()
 
 
 class ConfigIsNotValidException(Exception):
     """
     Occurs when the file is missing.
     """
+
+
+class ConfigNotExistError(Exception):
+    pass
+
+
+class ConfigBackupNotFoundError(Exception):
+    pass
 
 
 class ConfigHandler:
@@ -56,7 +84,7 @@ class ConfigHandler:
     _is_exist: bool
 
     def __init__(self,
-                 filepath: PurePath | str = "config.toml") -> None:
+                 filepath: PurePath | str = "config.ini") -> None:
         self._path = self._get_fullpath(PurePath(filepath))
         self._check_exist()
 
@@ -77,9 +105,8 @@ class ConfigHandler:
             self._is_exist = False
 
     def _parse_and_validate(self, data: str) -> ConfigModel:
-        parsed_conf = tomli.loads(data)
         try:
-            validated_conf = ConfigModel.parse_obj(parsed_conf)
+            validated_conf = ConfigModel.parse_obj(IniParser.loads(data))
         except pydantic.ValidationError:
             logging.error(f"Config {self._path} is not valid")
             raise ConfigIsNotValidException()
@@ -103,9 +130,48 @@ class ConfigHandler:
 
         return validated
 
+    def _write_raw(self, data: str):
+        with self._path.open() as file:
+            file.write(data)
+
+        if not self._is_exist:
+            self._is_exist = True
+
+    def write(self, data: ConfigModel, backup: bool = True):
+        if backup:
+            self.backup()
+
+        self._write_raw(IniParser.dumps(data.dict()))
+
+    def backup(self, backup_name: str = None):
+        data = self.read()
+
+        if backup_name:
+            filename = backup_name
+        else:
+            filename = "".join((self._path.name, ".BAK", str(time())))
+
+        with open(filename, "w") as file:
+            file.write(IniParser.dumps(data.dict()))
+
+    def restore(self, backup_name: str = None):
+        if backup_name is None:
+            data = IniParser.dumps(ConfigModel().dict())
+        else:
+            if Path(backup_name).is_file():
+                with self._path.open() as file:
+                    data = file.read()
+            else:
+                raise ConfigBackupNotFoundError()
+
+        self._write_raw(data)
+
     def __str__(self) -> str:
         """
         Returned string which contains file path for opened config file.
         """
 
         return f"Config: {self._path}"
+
+
+print(ConfigHandler().restore())
