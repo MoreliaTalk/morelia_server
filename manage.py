@@ -110,31 +110,6 @@ def click_async(func: Callable):
     return wrapper
 
 
-def copy_config(source: str,
-                destination: str) -> None:
-    """
-    Copies the configuration file.
-
-    File example_config.ini copied to config.ini in root directory with
-    project files.
-
-    Args:
-        source: source file name, default example_config.ini
-        destination: destination file name, default config.ini
-    """
-
-    src = Path(source)
-    dst = Path(destination)
-
-    if src.is_file():
-        with open(dst.absolute(), "w+") as new_file:
-            old_file = open(src.absolute(), 'r')
-            new_file.write(old_file.read())
-            old_file.close()
-    else:
-        raise CopyConfigError(f"There is no such file={src.name}")
-
-
 def create_table() -> None:
     """
     Creates a database file and fills it with empty tables.
