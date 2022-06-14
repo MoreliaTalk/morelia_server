@@ -34,7 +34,6 @@ import uvicorn
 from websockets import client as ws_client
 from websockets import exceptions as ws_exceptions
 
-from mod.config import ConfigModel
 from mod.config.handler import ConfigHandler
 from mod.db.dbhandler import DatabaseAccessError
 from mod.db.dbhandler import DatabaseReadError
@@ -51,9 +50,18 @@ VERSION = 'v0.3'
 
 DEFAULT_CONFIG = 'config.init'
 
-DEFAULT_CONFIG_BACKUP = lambda: "".join((DEFAULT_CONFIG,
-                                         ".BAK+",
-                                         str(int(time()))))
+
+def get_default_backup_config_name() -> str:
+    """
+    Get name for a config backup based on the current time.
+
+    Returns:
+        str: config backup name
+    """
+    return "".join((DEFAULT_CONFIG,
+                    ".BAK+",
+                    str(int(time()))))
+
 
 DEFAULT_DB = 'db_sqlite.db'
 
@@ -586,7 +594,7 @@ def conf_restore(backup: bool, source: str | None):
     config = ConfigHandler()
 
     if backup:
-        config.backup(DEFAULT_CONFIG_BACKUP())
+        config.backup(get_default_backup_config_name())
 
     config.restore(source)
 
@@ -595,7 +603,7 @@ def conf_restore(backup: bool, source: str | None):
              help="Backup current config")
 @click.option("--backup-name",
               type=str,
-              default="".join(DEFAULT_CONFIG_BACKUP()))
+              default="".join(get_default_backup_config_name()))
 def conf_backup(backup_name: str):
     """
     Backup current config file.

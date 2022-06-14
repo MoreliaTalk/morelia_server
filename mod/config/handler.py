@@ -18,6 +18,7 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
+import configparser
 import io
 import logging
 from pathlib import Path
@@ -26,7 +27,6 @@ from time import time
 
 from loguru import logger
 import pydantic
-import configparser
 
 from mod.config.models import ConfigModel
 
@@ -49,7 +49,7 @@ class IniParser:
         return io_string.read()
 
 
-class ConfigIsNotValidException(Exception):
+class ConfigIsNotValidError(Exception):
     """
     Occurs when the file is missing.
     """
@@ -135,7 +135,7 @@ class ConfigHandler:
 
     def write(self, data: ConfigModel, backup: bool = True):
         if backup:
-            self.backup("".join((self._path, ".BAK+", str(time()))))
+            self.backup("".join((str(self._path), ".BAK+", str(time()))))
 
         self._write_raw(IniParser.dumps(data.dict()))
 
