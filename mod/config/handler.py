@@ -103,7 +103,7 @@ class ConfigHandler:
             validated_conf = ConfigModel.parse_obj(IniParser.loads(data))
         except pydantic.ValidationError:
             logging.error(f"Config {self._path} is not valid")
-            raise ConfigIsNotValidError()
+            validated_conf = ConfigModel()
 
         return validated_conf
 
