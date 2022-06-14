@@ -84,7 +84,11 @@ class ConfigHandler:
     _is_exist: bool
 
     def __init__(self,
-                 filepath: PurePath | str = "config.ini") -> None:
+                 filepath: PurePath | str = "config.ini",
+                 log: bool = True) -> None:
+        if log is False:
+            logger.remove()
+
         self._path = self._get_fullpath(PurePath(filepath))
         self._check_exist()
 
@@ -175,7 +179,4 @@ class ConfigHandler:
 
         return "".join((f"Class {self.__class__.__name__} with ",
                         f"config_name= {self._path.name}, ",
-                        f"config_directory= {self._path.parent}, "))
-
-
-print(ConfigHandler().restore())
+                        f"config_directory= {self._path.parent}"))
