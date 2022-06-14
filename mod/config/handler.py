@@ -139,19 +139,14 @@ class ConfigHandler:
 
     def write(self, data: ConfigModel, backup: bool = True):
         if backup:
-            self.backup()
+            self.backup("".join((self._path, ".BAK+", str(time()))))
 
         self._write_raw(IniParser.dumps(data.dict()))
 
-    def backup(self, backup_name: str = None):
+    def backup(self, backup_name: str):
         data = self.read()
 
-        if backup_name:
-            filename = backup_name
-        else:
-            filename = "".join((self._path.name, ".BAK", str(time())))
-
-        with open(filename, "w") as file:
+        with open(backup_name, "w") as file:
             file.write(IniParser.dumps(data.dict()))
 
     def restore(self, backup_name: str = None):

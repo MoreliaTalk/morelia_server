@@ -138,7 +138,7 @@ dmypy.json
 
 ## Morelia stuff
 *.db
-config.toml
-config.toml.BAK*
+config.ini
+config.ini.BAK*
 ngrok.exe
 /docs/log/

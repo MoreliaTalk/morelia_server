@@ -11,7 +11,7 @@ from mod.config import ConfigHandler, ConfigModel
 class TestConfigHandler(TestCase):
     @patch("mod.config.handler.Path.is_file", return_value=True)
     def test_get_fullpath_and_check_exist(self, is_file_mock):
-        self.assertEqual(ConfigHandler._get_fullpath(PurePath("config.toml")),
+        self.assertEqual(ConfigHandler._get_fullpath(),
                          Path(PurePath(__file__).parent.parent, "config.toml"))
 
     @patch("pathlib.Path")
