@@ -52,26 +52,29 @@ class ConfigHandler:
                        modules.
         log: Disable/enable logger from loguru, default True.
     """
-    _path: Path | None
+    _path: Path
+    _is_exist: bool
 
     def __init__(self,
                  filepath: PurePath | str = "config.toml") -> None:
-        self._path = self._get_fullpath_and_check_exist(PurePath(filepath))
+        self._path = self._get_fullpath(PurePath(filepath))
+        self._check_exist()
 
     @staticmethod
-    def _get_fullpath_and_check_exist(filepath: PurePath) -> Path | None:
+    def _get_fullpath(filepath: PurePath) -> Path:
         if filepath.is_absolute():
-            fullpath = Path(filepath)
+            return Path(filepath)
         else:
-            fullpath = Path(PurePath(__file__).parent.parent.parent, filepath)
+            return Path(PurePath(__file__).parent.parent.parent, filepath)
 
-        if fullpath.is_file():
+    def _check_exist(self):
+        if self._path.is_file():
             logger.info("Config found")
-            return fullpath
+            self._is_exist = True
         else:
-            logger.info(f"{fullpath.name} in {fullpath.parent} not found. "
+            logger.info(f"{self._path.name} in {self._path.parent} not found. "
                         f"Default settings are used.")
-            return None
+            self._is_exist = False
 
     def _parse_and_validate(self, data: str) -> ConfigModel:
         parsed_conf = tomli.loads(data)
@@ -92,7 +95,7 @@ class ConfigHandler:
         Returns:
             Config: with key=value
         """
-        if self._path is not None:
+        if self._is_exist:
             with self._path.open() as file:
                 validated = self._parse_and_validate(file.read())
         else:

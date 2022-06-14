@@ -11,11 +11,11 @@ from mod.config import ConfigHandler, ConfigModel
 class TestConfigHandler(TestCase):
     @patch("mod.config.handler.Path.is_file", return_value=True)
     def test_get_fullpath_and_check_exist(self, is_file_mock):
-        self.assertEqual(ConfigHandler._get_fullpath_and_check_exist(PurePath("config.toml")),
+        self.assertEqual(ConfigHandler._get_fullpath(PurePath("config.toml")),
                          Path(PurePath(__file__).parent.parent, "config.toml"))
 
     @patch("pathlib.Path")
-    @patch("mod.config.ConfigHandler._get_fullpath_and_check_exist")
+    @patch("mod.config.ConfigHandler._get_fullpath")
     def test_read(self, MockPath, mock_get_path):
         mock_path = MockPath()
 
@@ -31,7 +31,7 @@ class TestConfigHandler(TestCase):
         self.assertEqual(value_read, fake_toml)
 
     @patch("pathlib.Path")
-    @patch("mod.config.ConfigHandler._get_fullpath_and_check_exist")
+    @patch("mod.config.ConfigHandler._get_fullpath")
     def test_str(self, MockPath, mock_get_path: Mock):
         mock_path = MockPath()
 
