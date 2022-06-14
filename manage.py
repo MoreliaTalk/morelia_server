@@ -68,12 +68,6 @@ DEFAULT_DB = 'db_sqlite.db'
 SYMBOLS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
 
 
-class CopyConfigError(Exception):
-    """
-    Occurs when the original configuration file does not exist.
-    """
-
-
 async def connect_ws_and_send(message: Request,
                               address: str) -> None:
     """
@@ -544,8 +538,6 @@ def init(username: str,
     Args:
         username: name for new administrator user
         password: password for new administrator user
-        source: source file name, default example_config.ini
-        destination: destination file name, default config.ini
     """
 
     try:
