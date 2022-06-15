@@ -558,7 +558,7 @@ def conf_restore(backup: bool, source: str | None):
         source(str | None): path to backup file for restore,
         if None, restore default config
     """
-    config = ConfigHandler()
+    config = ConfigHandler(log=False)
 
     if backup:
         config.backup(get_default_backup_config_name())
@@ -578,7 +578,7 @@ def conf_backup(backup_name: str):
     Args:
         backup_name(str): name for new backup
     """
-    ConfigHandler().backup(backup_name)
+    ConfigHandler(log=False).backup(backup_name)
 
 
 @run.command("devserver",
