@@ -23,7 +23,7 @@ import io
 from pathlib import PurePath
 from pathlib import Path
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from mod.config.handler import ConfigHandler
 from mod.config.handler import IniParser
@@ -50,8 +50,8 @@ class TestIniParser(TestCase):
 class TestConfigHandler(TestCase):
     @patch("mod.config.handler.Path.is_file", return_value=True)
     def test_get_fullpath(self, _):
-        self.assertEqual(ConfigHandler._get_fullpath(PurePath("config.toml")),
-                         Path(PurePath(__file__).parent.parent, "config.toml"))
+        self.assertEqual(ConfigHandler._get_fullpath(PurePath("config.ini")),
+                         Path(PurePath(__file__).parent.parent, "config.ini"))
 
     @patch("pathlib.Path")
     @patch("mod.config.handler.ConfigHandler._get_fullpath")
@@ -62,12 +62,34 @@ class TestConfigHandler(TestCase):
         mock_path.open.return_value = fake_file
         mock_get_path.return_value = mock_path
 
-        fake_model = ConfigModel()
-        fake_file.write(IniParser.dumps(fake_model.dict()))
+        model = ConfigModel()
+        fake_file.write(IniParser.dumps(model.dict()))
 
-        value_read = ConfigHandler("config.toml").read()
+        value_read = ConfigHandler("config.ini").read()
 
-        self.assertEqual(value_read, fake_model)
+        self.assertEqual(value_read, model)
+
+    @patch("pathlib.Path")
+    @patch("mod.config.handler.ConfigHandler._get_fullpath")
+    @patch("io.FileIO")
+    def test_write(self, mock_path, mock_get_path, file_mock: Mock):
+        def fake_write(data: str):
+            nonlocal write_value
+            write_value = data
+
+        mock_path = mock_path()
+
+        mock_path.open.return_value = file_mock
+        mock_get_path.return_value = mock_path
+
+        write_value = None
+        file_mock.__enter__().write.side_effect = fake_write
+
+        model = ConfigModel()
+
+        ConfigHandler("config.ini").write(model, backup=False)
+
+        self.assertEqual(model, ConfigModel.parse_obj(IniParser.loads(write_value)), model)
 
     @patch("pathlib.Path")
     @patch("mod.config.handler.ConfigHandler._get_fullpath")
@@ -75,9 +97,9 @@ class TestConfigHandler(TestCase):
         mock_path = mock_path()
 
         mock_get_path.return_value = mock_path
-        mock_path.__str__.return_value = "config.toml"
+        mock_path.__str__.return_value = "config.ini"
 
-        self.assertEqual(ConfigHandler("config.toml").__str__(), "Config: config.toml")
+        self.assertEqual(ConfigHandler("config.ini").__str__(), "Config: config.ini")
 
     @patch("pathlib.Path")
     @patch("mod.config.handler.ConfigHandler._get_fullpath")
@@ -85,11 +107,11 @@ class TestConfigHandler(TestCase):
         mock_path = mock_path()
 
         mock_get_path.return_value = mock_path
-        mock_path.name = "config.toml"
+        mock_path.name = "config.ini"
         mock_path.parent = "directory"
 
-        data = ConfigHandler("config.toml").__repr__()
+        data = ConfigHandler("config.ini").__repr__()
 
         self.assertRegex(data, ConfigHandler.__name__)
-        self.assertRegex(data, "config.toml",)
+        self.assertRegex(data, "config.ini")
         self.assertRegex(data, "directory")
