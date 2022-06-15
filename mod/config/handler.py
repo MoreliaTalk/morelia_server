@@ -32,14 +32,35 @@ from mod.config.models import ConfigModel
 
 
 class IniParser:
+    """
+    This class a layer for conveniently converting dict \
+    to string in .ini file format and back using ConfigParser.
+    """
+
     @staticmethod
     def loads(data: str) -> dict:
+        """
+        Converts a string in .ini format to a parsed dict
+        Args:
+            data(str): .ini string
+
+        Returns:
+            dict: parsed object
+        """
         parser = configparser.ConfigParser()
         parser.read_string(data)
         return dict(parser)
 
     @staticmethod
     def dumps(data: dict) -> str:
+        """
+        Converts a dict to string in .ini format
+        Args:
+            data(str): any dict
+
+        Returns:
+            dict: .ini string
+        """
         io_string = io.StringIO()
         parser = configparser.ConfigParser()
 

@@ -32,10 +32,10 @@ from starlette.routing import WebSocketRoute
 from starlette.websockets import WebSocket
 from starlette.websockets import WebSocketDisconnect
 
-from mod.controller import MainHandler
-from mod.log_handler import add_logging
 from mod.config.instance import config_option
+from mod.controller import MainHandler
 from mod.db.instance import db_connect
+from mod.log_handler import add_logging
 
 
 def on_startup():

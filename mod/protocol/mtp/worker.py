@@ -32,12 +32,12 @@ from sqlobject.sresults import SelectResults
 
 from mod import error
 from mod import lib
+from mod.config.instance import config_option
 from mod.db.dbhandler import DatabaseAccessError
 from mod.db.dbhandler import DatabaseReadError
 from mod.db.dbhandler import DatabaseWriteError
 from mod.db.dbhandler import DBHandler
 from mod.protocol.mtp import api
-from mod.config.instance import config_option
 
 
 class MTPErrorResponse:
