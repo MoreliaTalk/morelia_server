@@ -120,8 +120,9 @@ class TestManage(unittest.TestCase):
         result = self.runner.invoke(run,
                                     ["clean",
                                      "--yes"])
-        self.assertEqual(result.stdout, "".join(("Config file => deleted.\n",
-                                                 "Database file => deleted.\n")))
+        self.assertEqual(result.stdout,
+                         "".join(("Config file => deleted.\n",
+                                  "Database file => deleted.\n")))
 
     @patch('pathlib.Path.is_file', return_value=False)
     @patch('os.remove', return_value=None)
