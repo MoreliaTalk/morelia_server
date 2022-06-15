@@ -80,7 +80,7 @@ class ConfigBackupNotFoundError(Exception):
 
 class ConfigHandler:
     """
-    Main module for work with settings contains in configuration file.
+    Class for work with settings contains in configuration file.
     By default, it is config.ini
 
     Args:
@@ -101,12 +101,21 @@ class ConfigHandler:
 
     @staticmethod
     def _get_fullpath(filepath: PurePath) -> Path:
+        """
+        Returns the full absolute path to the file,
+        depending on whether the path given for input is absolute.
+        Args:
+            filepath(PurePath): relative or absolute path to file
+
+        Returns:
+
+        """
         if filepath.is_absolute():
             return Path(filepath)
         else:
             return Path(PurePath(__file__).parent.parent.parent, filepath)
 
-    def _check_exist(self):
+    def _check_exist(self) -> None:
         if self._path.is_file():
             logger.info("Config found")
             self._is_exist = True
@@ -143,25 +152,25 @@ class ConfigHandler:
         return validated
 
     def _write_raw(self, data: str):
-        with self._path.open() as file:
+        with self._path.open("w") as file:
             file.write(data)
 
         if not self._is_exist:
             self._is_exist = True
 
-    def write(self, data: ConfigModel, backup: bool = True):
+    def write(self, data: ConfigModel, backup: bool = True) -> None:
         if backup:
             self.backup("".join((str(self._path), ".BAK+", str(time()))))
 
         self._write_raw(IniParser.dumps(data.dict()))
 
-    def backup(self, backup_name: str):
+    def backup(self, backup_name: str) -> None:
         data = self.read()
 
         with open(backup_name, "w") as file:
             file.write(IniParser.dumps(data.dict()))
 
-    def restore(self, backup_name: str = None):
+    def restore(self, backup_name: str = None) -> None:
         if backup_name is None:
             data = IniParser.dumps(ConfigModel().dict())
         else:
