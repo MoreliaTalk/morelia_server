@@ -62,12 +62,12 @@ class IniParser:
             dict: .ini string
         """
         io_string = io.StringIO()
+
         parser = configparser.ConfigParser()
-
         parser.read_dict(data)
-        parser.write(io_string)
 
-        return io_string.read()
+        parser.write(io_string)
+        return io_string.getvalue()
 
 
 class ConfigNotExistError(Exception):
@@ -239,3 +239,7 @@ class ConfigHandler:
         return "".join((f"Class {self.__class__.__name__} with ",
                         f"config_name= {self._path.name}, ",
                         f"config_directory= {self._path.parent}"))
+
+
+
+ConfigHandler().write(ConfigModel())

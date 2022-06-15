@@ -20,19 +20,36 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import io
-from pathlib import PurePath, Path
+from pathlib import PurePath
+from pathlib import Path
 from unittest import TestCase
-from unittest.mock import patch, Mock
-
-import tomli_w
+from unittest.mock import patch
 
 from mod.config.handler import ConfigHandler
+from mod.config.handler import IniParser
 from mod.config.models import ConfigModel
+
+
+class TestIniParser(TestCase):
+    def test_loads(self):
+        parsed = IniParser.loads("[db] \n uri=ok")
+        self.assertEqual(parsed["db"]["uri"], "ok")
+
+    def test_dumps(self):
+        data = {
+            "db": {
+                "uri": "ok"
+            }
+        }
+        ini = IniParser.dumps(data)
+
+        self.assertRegex(ini, "[db]")
+        self.assertRegex(ini, "uri = ok")
 
 
 class TestConfigHandler(TestCase):
     @patch("mod.config.handler.Path.is_file", return_value=True)
-    def test_get_fullpath_and_check_exist(self, _):
+    def test_get_fullpath(self, _):
         self.assertEqual(ConfigHandler._get_fullpath(PurePath("config.toml")),
                          Path(PurePath(__file__).parent.parent, "config.toml"))
 
@@ -43,26 +60,36 @@ class TestConfigHandler(TestCase):
 
         fake_file = io.StringIO()
         mock_path.open.return_value = fake_file
-
-        fake_toml = ConfigModel().dict()
-        fake_file.write(tomli_w.dumps(fake_toml))
         mock_get_path.return_value = mock_path
+
+        fake_model = ConfigModel()
+        fake_file.write(IniParser.dumps(fake_model.dict()))
 
         value_read = ConfigHandler("config.toml").read()
 
-        self.assertEqual(value_read, fake_toml)
+        self.assertEqual(value_read, fake_model)
 
     @patch("pathlib.Path")
     @patch("mod.config.handler.ConfigHandler._get_fullpath")
-    def test_str(self, mock_path, mock_get_path: Mock):
+    def test_str(self, mock_path, mock_get_path):
         mock_path = mock_path()
 
-        fake_file = io.StringIO()
-        mock_path.open.return_value = fake_file
-
-        fake_toml = ConfigModel().dict()
-        fake_file.write(tomli_w.dumps(fake_toml))
         mock_get_path.return_value = mock_path
-        mock_get_path().__str__.return_value = "config.toml"
+        mock_path.__str__.return_value = "config.toml"
 
-        self.assertRegex(ConfigHandler("config.toml").__str__(), "config.toml")
+        self.assertEqual(ConfigHandler("config.toml").__str__(), "Config: config.toml")
+
+    @patch("pathlib.Path")
+    @patch("mod.config.handler.ConfigHandler._get_fullpath")
+    def test_repr(self, mock_path, mock_get_path):
+        mock_path = mock_path()
+
+        mock_get_path.return_value = mock_path
+        mock_path.name = "config.toml"
+        mock_path.parent = "directory"
+
+        data = ConfigHandler("config.toml").__repr__()
+
+        self.assertRegex(data, ConfigHandler.__name__)
+        self.assertRegex(data, "config.toml",)
+        self.assertRegex(data, "directory")
