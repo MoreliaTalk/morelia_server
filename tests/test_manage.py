@@ -19,15 +19,14 @@ You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from pathlib import PurePath, Path
+from pathlib import PurePath
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 from uuid import uuid4
 
 from click.testing import CliRunner
 from loguru import logger
 
-import manage
 from manage import delete
 from manage import client
 from manage import create

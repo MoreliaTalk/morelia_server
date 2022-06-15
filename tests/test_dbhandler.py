@@ -25,11 +25,11 @@ from loguru import logger
 from sqlobject.main import SQLObject
 from sqlobject.sresults import SelectResults
 
-from mod.db.dbhandler import DBHandler  # noqa
-from mod.db import models  # noqa
-from mod.db.dbhandler import DatabaseAccessError  # noqa
-from mod.db.dbhandler import DatabaseWriteError  # noqa
-from mod.db.dbhandler import DatabaseReadError  # noqa
+from mod.db.dbhandler import DBHandler
+from mod.db import models
+from mod.db.dbhandler import DatabaseAccessError
+from mod.db.dbhandler import DatabaseWriteError
+from mod.db.dbhandler import DatabaseReadError
 
 
 class TestDBHandlerMainMethods(unittest.TestCase):
