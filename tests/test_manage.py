@@ -130,9 +130,8 @@ class TestManage(unittest.TestCase):
         result = self.runner.invoke(run,
                                     ["clean",
                                      "--yes"])
-        self.assertEqual(result.stdout,
-                         "".join(("Config file is not found => NOT deleted.\n",
-                                  "Database file is not found => NOT deleted.\n")))
+        self.assertRegex(result.stdout, "Config file is not found")
+        self.assertRegex(result.stdout, "Database file is not found")
 
     @patch('manage.create_table', return_value=None)
     @patch('manage.create_administrator', return_value=None)
