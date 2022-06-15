@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+Copyright (c) 2022 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
 Look at the file AUTHORS.md(located at the root of the project) to get the
 full list.
 
@@ -19,4 +19,9 @@ You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
-__all__ = ['dbhandler']
+from mod.config.instance import config_option
+from mod.db.dbhandler import DBHandler
+
+
+# Set database connection
+db_connect = DBHandler(uri=config_option.database.url)

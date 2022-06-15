@@ -5,7 +5,8 @@ from unittest.mock import patch, Mock
 
 import tomli_w
 
-from mod.config import ConfigHandler, ConfigModel
+from mod.config.handler import ConfigHandler
+from mod.config.models import ConfigModel
 
 
 class TestConfigHandler(TestCase):
@@ -15,7 +16,7 @@ class TestConfigHandler(TestCase):
                          Path(PurePath(__file__).parent.parent, "config.toml"))
 
     @patch("pathlib.Path")
-    @patch("mod.config.ConfigHandler._get_fullpath")
+    @patch("mod.config.handler.ConfigHandler._get_fullpath")
     def test_read(self, mock_path, mock_get_path):
         mock_path = mock_path()
 
@@ -31,7 +32,7 @@ class TestConfigHandler(TestCase):
         self.assertEqual(value_read, fake_toml)
 
     @patch("pathlib.Path")
-    @patch("mod.config.ConfigHandler._get_fullpath")
+    @patch("mod.config.handler.ConfigHandler._get_fullpath")
     def test_str(self, mock_path, mock_get_path: Mock):
         mock_path = mock_path()
 

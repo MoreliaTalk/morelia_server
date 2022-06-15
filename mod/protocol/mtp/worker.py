@@ -37,7 +37,7 @@ from mod.db.dbhandler import DatabaseReadError
 from mod.db.dbhandler import DatabaseWriteError
 from mod.db.dbhandler import DBHandler
 from mod.protocol.mtp import api
-from mod.shared_lib import config_option
+from mod.config.instance import config_option
 
 
 class MTPErrorResponse:

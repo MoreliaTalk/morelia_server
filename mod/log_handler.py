@@ -23,7 +23,7 @@ import sys
 
 from loguru import logger
 
-from mod.shared_lib import config_option
+from mod.config.instance import config_option
 
 expiration_date = config_option.logging.expiration_date
 debug_expiration_date = config_option.logging.debug_expiration_date

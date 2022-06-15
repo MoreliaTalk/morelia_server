@@ -34,8 +34,8 @@ from starlette.websockets import WebSocketDisconnect
 
 from mod.controller import MainHandler
 from mod.log_handler import add_logging
-from mod.shared_lib import config_option
-from mod.shared_lib import db_connect
+from mod.config.instance import config_option
+from mod.db.instance import db_connect
 
 
 def on_startup():
