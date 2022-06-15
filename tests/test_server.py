@@ -21,20 +21,17 @@
 
 import json
 import unittest
+from unittest.mock import patch
 
 from loguru import logger
-from mod.config.handler import ConfigHandler
 from mod.db.dbhandler import DBHandler
-from mod.shared_lib import config_option
 from server import app
 from starlette.testclient import TestClient, WebSocketTestSession
 from starlette.websockets import WebSocketDisconnect
 
 
+@patch("server.db_connect", return_value=DBHandler("sqlite:/:memory:"))
 class TestWebsocket(unittest.TestCase):
-    config: ConfigHandler
-    config_option: ConfigHandler
-    db: DBHandler
     ws_client: TestClient
 
     class DisconnectErr(Exception):
@@ -44,27 +41,21 @@ class TestWebsocket(unittest.TestCase):
     def setUpClass(cls):
         logger.remove()
         cls.ws_client = TestClient(app)
-        cls.db = DBHandler(uri=config_option.database.url)
-        cls.db.create_table()
 
-    @classmethod
-    def tearDownClass(cls) -> None:
-        del cls.db
-
-    def test_normal_connect(self):
+    def test_normal_connect(self, _):
         with self.ws_client.websocket_connect("/ws") as connection:
             self.assertIsInstance(connection, WebSocketTestSession)
 
-    def test_not_websocket_endpoint_connect(self):
+    def test_not_websocket_endpoint_connect(self, _):
         with self.assertRaises(WebSocketDisconnect):
             with self.ws_client.websocket_connect("/no-ws"):
                 pass
 
-    def test_normal_disconnect(self):
+    def test_normal_disconnect(self, _):
         with self.ws_client.websocket_connect("/ws") as connection:
             connection.close()
 
-    def test_not_normal_disconnect(self):
+    def test_not_normal_disconnect(self, _):
         with self.assertRaises(self.DisconnectErr):
             with self.ws_client.websocket_connect("/ws") as connection:
                 def callback():
@@ -73,7 +64,7 @@ class TestWebsocket(unittest.TestCase):
                 connection.exit_stack.callback(callback)
                 connection.close(1006)
 
-    def test_send_normal_message(self):
+    def test_send_normal_message(self, _):
         with self.ws_client.websocket_connect("/ws") as connection:
             connection.send_json({"type": "ping-pong",
                                   "data": {"user": [{}]},
@@ -82,18 +73,19 @@ class TestWebsocket(unittest.TestCase):
                                   "meta": None})
             self.assertIsNotNone(json.loads(connection.receive_bytes()))
 
-    def test_send_incorrect_message(self):
+    def test_send_incorrect_message(self, _):
         with self.assertRaises(WebSocketDisconnect):
             with self.ws_client.websocket_connect("/ws") as connection:
                 connection.send_text("hello error!")
                 connection.receive_bytes()
 
 
+@patch("server.db_connect", return_value=DBHandler("sqlite:/:memory:"))
 class TestMainPage(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.test_client = TestClient(app)
 
-    def test_main_page(self):
+    def test_main_page(self, _):
         response = self.test_client.get("/")
         self.assertEqual(response.text, "<h1>MoreliaServer</h1>")
