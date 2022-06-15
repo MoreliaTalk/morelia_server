@@ -40,7 +40,7 @@ class IniParser:
     @staticmethod
     def loads(data: str) -> dict:
         """
-        Converts a string in .ini format to a parsed dict
+        Converts a string in .ini format to a parsed dict.
         Args:
             data(str): .ini string
 
@@ -54,7 +54,7 @@ class IniParser:
     @staticmethod
     def dumps(data: dict) -> str:
         """
-        Converts a dict to string in .ini format
+        Converts a dict to string in .ini format.
         Args:
             data(str): any dict
 
@@ -71,11 +71,15 @@ class IniParser:
 
 
 class ConfigNotExistError(Exception):
-    pass
+    """
+    Raises in the absence of a config on the specified path.
+    """
 
 
-class ConfigBackupNotFoundError(Exception):
-    pass
+class BackupNotExistError(Exception):
+    """
+    Raises in the absence of a config backup on the specified path.
+    """
 
 
 class ConfigHandler:
@@ -102,13 +106,13 @@ class ConfigHandler:
     @staticmethod
     def _get_fullpath(filepath: PurePath) -> Path:
         """
-        Returns the full absolute path to the file,
+        Returns the full absolute path to the file, \
         depending on whether the path given for input is absolute.
         Args:
             filepath(PurePath): relative or absolute path to file
 
         Returns:
-
+            filepath(Path): absolute path to file
         """
         if filepath.is_absolute():
             return Path(filepath)
@@ -116,6 +120,9 @@ class ConfigHandler:
             return Path(PurePath(__file__).parent.parent.parent, filepath)
 
     def _check_exist(self) -> None:
+        """
+        Checks for the existence of a config file.
+        """
         if self._path.is_file():
             logger.info("Config found")
             self._is_exist = True
@@ -125,6 +132,15 @@ class ConfigHandler:
             self._is_exist = False
 
     def _parse_and_validate(self, data: str) -> ConfigModel:
+        """
+        Parse string in .ini format and validate from pydantic.
+
+        Args:
+            data(str): .ini file string
+
+        Returns:
+            ConfigModel: validated config model
+        """
         try:
             validated_conf = ConfigModel.parse_obj(IniParser.loads(data))
         except pydantic.ValidationError:
@@ -137,11 +153,10 @@ class ConfigHandler:
     def read(self) -> ConfigModel:
         """
         Read settings from a configuration file.
-        Also, validate settings and generate a named tuple with key=value
-        parameters.
+        If the config is not available, returns the settings by default.
 
         Returns:
-            Config: with key=value
+            ConfigModel
         """
         if self._is_exist:
             with self._path.open() as file:
@@ -151,7 +166,13 @@ class ConfigHandler:
 
         return validated
 
-    def _write_raw(self, data: str):
+    def _write_raw(self, data: str) -> None:
+        """
+        Write raw string to config file.
+
+        Args:
+            data(str): raw string
+        """
         with self._path.open("w") as file:
             file.write(data)
 
@@ -159,18 +180,39 @@ class ConfigHandler:
             self._is_exist = True
 
     def write(self, data: ConfigModel, backup: bool = True) -> None:
+        """
+        Write ConfigModel to config file.
+        Also, if backup=True, the current configuration is backed up.
+
+        Args:
+            data(ConfigModel): data for write
+            backup(bool): backup this config
+        """
         if backup:
             self.backup("".join((str(self._path), ".BAK+", str(time()))))
 
         self._write_raw(IniParser.dumps(data.dict()))
 
     def backup(self, backup_name: str) -> None:
+        """
+        Backup current config file.
+        The new backup will be in the configuration file folder
+        Args:
+            backup_name(str): name new backup
+        """
         data = self.read()
 
         with open(backup_name, "w") as file:
             file.write(IniParser.dumps(data.dict()))
 
     def restore(self, backup_name: str = None) -> None:
+        """
+        Restore config file from backup.
+
+        Args:
+            backup_name(str): Name of the backup from which the
+            data will be restored
+        """
         if backup_name is None:
             data = IniParser.dumps(ConfigModel().dict())
         else:
@@ -178,7 +220,7 @@ class ConfigHandler:
                 with self._path.open() as file:
                     data = file.read()
             else:
-                raise ConfigBackupNotFoundError()
+                raise BackupNotExistError()
 
         self._write_raw(data)
 
