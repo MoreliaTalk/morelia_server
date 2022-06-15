@@ -73,6 +73,8 @@ class TestConfigHandler(TestCase):
     @patch("mod.config.handler.ConfigHandler._get_fullpath")
     @patch("io.FileIO")
     def test_write(self, mock_path, mock_get_path, file_mock: Mock):
+        write_value: str = ""
+
         def fake_write(data: str):
             nonlocal write_value
             write_value = data
@@ -82,7 +84,6 @@ class TestConfigHandler(TestCase):
         mock_path.open.return_value = file_mock
         mock_get_path.return_value = mock_path
 
-        write_value = None
         file_mock.__enter__().write.side_effect = fake_write
 
         model = ConfigModel()
