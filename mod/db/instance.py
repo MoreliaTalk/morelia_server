@@ -1,5 +1,5 @@
 """
-Copyright (c) 2022 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+Copyright (c) 2022 - present MoreliaTalk team and other.
 Look at the file AUTHORS.md(located at the root of the project) to get the
 full list.
 
