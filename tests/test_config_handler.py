@@ -53,44 +53,50 @@ class TestConfigHandler(TestCase):
         self.assertEqual(ConfigHandler._get_fullpath(PurePath("config.ini")),
                          Path(PurePath(__file__).parent.parent, "config.ini"))
 
-    @patch("pathlib.Path")
     @patch("mod.config.handler.ConfigHandler._get_fullpath")
-    def test_read(self, mock_path, mock_get_path):
-        mock_path = mock_path()
-
-        fake_file = io.StringIO()
-        mock_path.open.return_value = fake_file
-        mock_get_path.return_value = mock_path
-
+    def test_read(self, mock_get_path):
         model = ConfigModel()
-        fake_file.write(IniParser.dumps(model.dict()))
+        in_file = IniParser.dumps(model.dict())
+
+        mock_get_path().open().__enter__().read.return_value = in_file
 
         value_read = ConfigHandler("config.ini").read()
-
         self.assertEqual(value_read, model)
 
-    @patch("pathlib.Path")
     @patch("mod.config.handler.ConfigHandler._get_fullpath")
-    @patch("io.FileIO")
-    def test_write(self, mock_path, mock_get_path, file_mock: Mock):
-        write_value: str = ""
-
-        def fake_write(data: str):
-            nonlocal write_value
-            write_value = data
-
-        mock_path = mock_path()
-
-        mock_path.open.return_value = file_mock
-        mock_get_path.return_value = mock_path
-
-        file_mock.__enter__().write.side_effect = fake_write
-
+    def test_write(self, mock_get_path):
         model = ConfigModel()
+        expected_data = IniParser.dumps(model.dict())
 
         ConfigHandler("config.ini").write(model, backup=False)
+        write_data = mock_get_path().open().__enter__().write.call_args[0][0]
 
-        self.assertEqual(model, ConfigModel.parse_obj(IniParser.loads(write_value)), model)
+        self.assertEqual(write_data, expected_data)
+
+    @patch("builtins.open")
+    @patch("mod.config.handler.ConfigHandler.read")
+    @patch("mod.config.handler.ConfigHandler._get_fullpath")
+    def test_backup(self, _, mock_cfg_read, mock_open):
+        model = ConfigModel()
+        in_config_file = IniParser.dumps(model.dict())
+
+        mock_cfg_read.return_value = model
+        ConfigHandler("config.ini").backup("new_backup")
+
+        backup_write_data = mock_open().__enter__().write.call_args[0][0]
+        self.assertEqual(backup_write_data, in_config_file)
+
+    @patch("mod.config.handler.Path")
+    @patch("mod.config.handler.ConfigHandler._write_raw")
+    @patch("mod.config.handler.ConfigHandler._get_fullpath")
+    def test_restore(self, _, mock_write_raw, mock_path):
+        in_backup_data = IniParser.dumps(ConfigModel().dict())
+
+        mock_path().open().__enter__().read.return_value = in_backup_data
+
+        ConfigHandler("config.ini").restore("new_backup")
+
+        self.assertEqual(mock_write_raw.call_args[0][0], in_backup_data)
 
     @patch("pathlib.Path")
     @patch("mod.config.handler.ConfigHandler._get_fullpath")

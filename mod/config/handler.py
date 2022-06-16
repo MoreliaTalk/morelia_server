@@ -216,8 +216,9 @@ class ConfigHandler:
         if backup_name is None:
             data = IniParser.dumps(ConfigModel().dict())
         else:
-            if Path(backup_name).is_file():
-                with self._path.open() as file:
+            backup_path = Path(backup_name)
+            if backup_path.is_file():
+                with backup_path.open() as file:
                     data = file.read()
             else:
                 raise BackupNotExistError()
