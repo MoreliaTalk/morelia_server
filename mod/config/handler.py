@@ -70,12 +70,6 @@ class IniParser:
         return io_string.getvalue()
 
 
-class ConfigNotExistError(Exception):
-    """
-    Raises in the absence of a config on the specified path.
-    """
-
-
 class BackupNotExistError(Exception):
     """
     Raises in the absence of a config backup on the specified path.
@@ -221,7 +215,7 @@ class ConfigHandler:
                 with backup_path.open() as file:
                     data = file.read()
             else:
-                raise BackupNotExistError()
+                raise BackupNotExistError(f"Backup file {backup_path.name} not exist in {backup_path.parent}")
 
         self._write_raw(data)
 
