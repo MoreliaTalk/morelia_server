@@ -25,7 +25,7 @@ from pathlib import Path
 from unittest import TestCase
 from unittest.mock import patch, Mock
 
-from mod.config.handler import ConfigHandler, BackupNotExistError
+from mod.config.handler import ConfigHandler, BackupNotFoundError
 from mod.config.handler import IniParser
 from mod.config.models import ConfigModel
 
@@ -105,7 +105,7 @@ class TestConfigHandler(TestCase):
     @patch("mod.config.handler.ConfigHandler._get_fullpath")
     @patch("mod.config.handler.Path.is_file", return_value=False)
     def test_restore_backup_not_exist(self, _, __):
-        with self.assertRaises(BackupNotExistError):
+        with self.assertRaises(BackupNotFoundError):
             ConfigHandler("config.ini").restore("new_backup")
 
     @patch("mod.config.handler.ConfigHandler._write_raw")
