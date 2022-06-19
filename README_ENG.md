@@ -26,15 +26,17 @@ Language [EN](./README_ENG.md), [RU](./README.md)
 
 ## Repository description ##
 
-*/mod
-  */config
+* /mod
+  * /config
     * config.py - module is responsible for working with config.ini configuration file
     * validator.py - module for validating configuration file
-  */db
+    * * instance.py - the module contains a handler instance for working with the config
+  * /db
     * dbhandler.py - module is designed to execute queries to database
     * models.py - module is responsible for describing database tables for working through ORM.
+    * instance.py - the module contains a handler instance for working with the database
   * /protocol
-    */matrix
+    * /matrix
       * api.py - module is responsible for description of API, as well as data validation.
       * worker.py - protocol implementation
     * /mtp
@@ -243,9 +245,9 @@ pipenv run python -v ./tests/test_*.py
 ## License ##
 
 Copyright (c) 2020 - present MoreliaTalk team
-  [NekrodNIK](https://github.com/NekrodNIK),
+  ([NekrodNIK](https://github.com/NekrodNIK),
   [Stepan Skriabin](https://github.com/stepanskryabin),
   [rus-ai](https://github .com/rus-ai) and others.
-  See full list in AUTHORS.md file.
+  See full list in AUTHORS.md file.)
 
-Morelia Server is licensed under GNU Lesser General Public License version 3 or later (LGPL-3.0-or-later). See COPYING.LESSER file for details.
+MoreliaTalkServer is distributed under the GNU Lesser General Public License version 3 or later (LGPL-3.0 or later). See COPYING.LESSER file for details.

@@ -250,4 +250,4 @@ Copyright (c) 2020 - настоящее время MoreliaTalk team
   [rus-ai](https://github.com/rus-ai) и другие.
   Смотрите полный список в файле AUTHORS.md)
 
-Morelia Server распространяется под лицензией GNU Lesser General Public License версии 3 или более поздней (LGPL-3.0-or-later). Подробности смотрите в файле COPYING.LESSER.
+MoreliaTalkServer распространяется под лицензией GNU Lesser General Public License версии 3 или более поздней (LGPL-3.0-or-later). Подробности смотрите в файле COPYING.LESSER.
