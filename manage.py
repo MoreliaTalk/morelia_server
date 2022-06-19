@@ -34,8 +34,8 @@ import uvicorn
 from websockets import client as ws_client
 from websockets import exceptions as ws_exceptions
 
-from mod.config.handler import ConfigHandler
 from mod.config.handler import BackupNotFoundError
+from mod.config.handler import ConfigHandler
 from mod.db.dbhandler import DatabaseAccessError
 from mod.db.dbhandler import DatabaseReadError
 from mod.db.dbhandler import DatabaseWriteError
