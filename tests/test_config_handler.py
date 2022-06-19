@@ -49,8 +49,13 @@ class TestIniParser(TestCase):
 
 class TestConfigHandler(TestCase):
     @patch("mod.config.handler.Path.is_file", return_value=True)
-    def test_get_fullpath(self, _):
+    def test_get_fullpath_relative_input(self, _):
         self.assertEqual(ConfigHandler._get_fullpath(PurePath("config.ini")),
+                         Path(PurePath(__file__).parent.parent, "config.ini"))
+
+    @patch("mod.config.handler.Path.is_file", return_value=True)
+    def test_get_fullpath_absolute_input(self, _):
+        self.assertEqual(ConfigHandler._get_fullpath(PurePath(PurePath(__file__).parent.parent, "config.ini")),
                          Path(PurePath(__file__).parent.parent, "config.ini"))
 
     @patch("mod.config.handler.ConfigHandler._get_fullpath")
@@ -92,10 +97,17 @@ class TestConfigHandler(TestCase):
     def test_restore(self, _, mock_write_raw, mock_path):
         in_backup_data = IniParser.dumps(ConfigModel().dict())
 
-        mock_path().open().__enter__().read.return_value = in_backup_data
-
+        mock_path("new_backup").open().__enter__().read.return_value = in_backup_data
         ConfigHandler("config.ini").restore("new_backup")
 
+        self.assertEqual(mock_write_raw.call_args[0][0], in_backup_data)
+
+    @patch("mod.config.handler.Path")
+    @patch("mod.config.handler.ConfigHandler._write_raw")
+    @patch("mod.config.handler.ConfigHandler._get_fullpath")
+    def test_restore_default_config(self, _, mock_write_raw, mock_path):
+        in_backup_data = IniParser.dumps(ConfigModel().dict())
+        ConfigHandler("config.ini").restore()
         self.assertEqual(mock_write_raw.call_args[0][0], in_backup_data)
 
     @patch("pathlib.Path")
