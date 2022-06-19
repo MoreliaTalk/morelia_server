@@ -160,6 +160,18 @@ class TestManage(unittest.TestCase):
                                     ["send"])
         self.assertRegex(result.stdout, "Unable to connect to the server")
 
+    @patch("mod.config.handler.ConfigHandler.restore")
+    def test_conf_restore(self, _):
+        result = self.runner.invoke(run,
+                                    ["conf_restore"])
+        self.assertRegex(result.stdout, "Successful restore config")
+
+    @patch("mod.config.handler.ConfigHandler.backup")
+    def test_conf_backup(self, _):
+        result = self.runner.invoke(run,
+                                    ["conf_backup"])
+        self.assertRegex(result.stdout, "Successful backup current config")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -566,6 +566,8 @@ def conf_restore(backup: bool, source: str | None):
 
     config.restore(source)
 
+    click.echo("Successful restore config")
+
 
 @run.command("conf_backup",
              help="Backup current config")
@@ -583,6 +585,8 @@ def conf_backup(backup_name: str):
         ConfigHandler(log=False).backup(backup_name)
     except BackupNotFoundError:
         click.echo(f"Backup {backup_name} is not found")
+
+    click.echo("Successful backup current config")
 
 
 @run.command("devserver",
