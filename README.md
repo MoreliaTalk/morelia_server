@@ -244,10 +244,10 @@ pipenv run python -v ./tests/test_*.py
 
 ## Лицензия ##
 
-Copyright (c) 2020 - настоящее время MoreliaTalk team
-  [NekrodNIK](https://github.com/NekrodNIK),
+Copyright (c) 2020 - настоящее время MoreliaTalk team 
+  ([NekrodNIK](https://github.com/NekrodNIK),
   [Stepan Skriabin](https://github.com/stepanskryabin),
   [rus-ai](https://github.com/rus-ai) и другие.
-  Смотрите полный список в файле AUTHORS.md.
+  Смотрите полный список в файле AUTHORS.md)
 
 Morelia Server распространяется под лицензией GNU Lesser General Public License версии 3 или более поздней (LGPL-3.0-or-later). Подробности смотрите в файле COPYING.LESSER.
