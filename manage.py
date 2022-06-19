@@ -564,9 +564,16 @@ def conf_restore(backup: bool, source: str | None):
     if backup:
         config.backup(get_default_backup_config_name())
 
-    config.restore(source)
-
-    click.echo("Successful restore config")
+    if source:
+        try:
+            config.restore(source)
+        except BackupNotFoundError:
+            click.echo(f"Backup from {source} is not found")
+        else:
+            click.echo(f"Successful restore config from {source}")
+    else:
+        config.restore()
+        click.echo("Successful restore default config")
 
 
 @run.command("conf_backup",
@@ -581,11 +588,7 @@ def conf_backup(backup_name: str):
     Args:
         backup_name(str): name for new backup
     """
-    try:
-        ConfigHandler(log=False).backup(backup_name)
-    except BackupNotFoundError:
-        click.echo(f"Backup {backup_name} is not found")
-
+    ConfigHandler(log=False).backup(backup_name)
     click.echo("Successful backup current config")
 
 

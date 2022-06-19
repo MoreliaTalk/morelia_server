@@ -31,6 +31,7 @@ from manage import delete
 from manage import client
 from manage import create
 from manage import run
+from mod.config.handler import BackupNotFoundError
 
 from mod.db.dbhandler import DBHandler
 from mod.lib import Hash
@@ -164,7 +165,14 @@ class TestManage(unittest.TestCase):
     def test_conf_restore(self, _):
         result = self.runner.invoke(run,
                                     ["conf_restore"])
-        self.assertRegex(result.stdout, "Successful restore config")
+        self.assertRegex(result.stdout, "Successful restore default config")
+
+    @patch("mod.config.handler.ConfigHandler.restore", side_effect=BackupNotFoundError)
+    def test_conf_restore_backup_not_found(self, mock_restore):
+        result = self.runner.invoke(run,
+                                    ["conf_restore",
+                                     "--source", "file"])
+        self.assertRegex(result.stdout, "Backup from file is not found")
 
     @patch("mod.config.handler.ConfigHandler.backup")
     def test_conf_backup(self, _):
