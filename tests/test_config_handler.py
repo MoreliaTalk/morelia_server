@@ -25,7 +25,7 @@ from pathlib import Path
 from unittest import TestCase
 from unittest.mock import patch, Mock
 
-from mod.config.handler import ConfigHandler
+from mod.config.handler import ConfigHandler, BackupNotExistError
 from mod.config.handler import IniParser
 from mod.config.models import ConfigModel
 
@@ -97,21 +97,26 @@ class TestConfigHandler(TestCase):
     def test_restore(self, _, mock_write_raw, mock_path):
         in_backup_data = IniParser.dumps(ConfigModel().dict())
 
-        mock_path("new_backup").open().__enter__().read.return_value = in_backup_data
+        mock_path().open().__enter__().read.return_value = in_backup_data
         ConfigHandler("config.ini").restore("new_backup")
 
         self.assertEqual(mock_write_raw.call_args[0][0], in_backup_data)
 
-    @patch("mod.config.handler.Path")
+    @patch("mod.config.handler.ConfigHandler._get_fullpath")
+    @patch("mod.config.handler.Path.is_file", return_value=False)
+    def test_restore_backup_not_exist(self, _, __):
+        with self.assertRaises(BackupNotExistError):
+            ConfigHandler("config.ini").restore("new_backup")
+
     @patch("mod.config.handler.ConfigHandler._write_raw")
     @patch("mod.config.handler.ConfigHandler._get_fullpath")
-    def test_restore_default_config(self, _, mock_write_raw, mock_path):
+    def test_restore_default_config(self, _, mock_write_raw):
         in_backup_data = IniParser.dumps(ConfigModel().dict())
         ConfigHandler("config.ini").restore()
         self.assertEqual(mock_write_raw.call_args[0][0], in_backup_data)
 
-    @patch("pathlib.Path")
     @patch("mod.config.handler.ConfigHandler._get_fullpath")
+    @patch("pathlib.Path")
     def test_str(self, mock_path, mock_get_path):
         mock_path = mock_path()
 
@@ -120,8 +125,8 @@ class TestConfigHandler(TestCase):
 
         self.assertEqual(ConfigHandler("config.ini").__str__(), "Config: config.ini")
 
-    @patch("pathlib.Path")
     @patch("mod.config.handler.ConfigHandler._get_fullpath")
+    @patch("pathlib.Path")
     def test_repr(self, mock_path, mock_get_path):
         mock_path = mock_path()
 

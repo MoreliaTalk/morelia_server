@@ -215,7 +215,7 @@ class ConfigHandler:
                 with backup_path.open() as file:
                     data = file.read()
             else:
-                raise BackupNotExistError(f"Backup file {backup_path.name}"
+                raise BackupNotExistError(f"Backup file {backup_path.name} "
                                           f"not exist in {backup_path.parent}")
 
         self._write_raw(data)
