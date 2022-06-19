@@ -168,7 +168,7 @@ class TestManage(unittest.TestCase):
         self.assertRegex(result.stdout, "Successful restore default config")
 
     @patch("mod.config.handler.ConfigHandler.restore", side_effect=BackupNotFoundError)
-    def test_conf_restore_backup_not_found(self, mock_restore):
+    def test_conf_restore_backup_not_found(self, _):
         result = self.runner.invoke(run,
                                     ["conf_restore",
                                      "--source", "file"])
