@@ -28,13 +28,13 @@ class MainHandler:
     According to the selected protocol sends a request to the handler.
 
     Args:
-        request (object): JSON request from websocket client
+        request (str): JSON request from websocket client
         database (DBHandler): object - database connection point
         protocol (str): name of using protocol, 'mtp' or 'matrix'.
     """
 
     def __init__(self,
-                 request,
+                 request: str,
                  database: DBHandler,
                  protocol: str = 'mtp') -> None:
         self.request = request
@@ -46,7 +46,7 @@ class MainHandler:
         else:
             self.response = self._mtp_handler()
 
-    def get_response(self):
+    def get_response(self) -> str:
         """
         Returns result of request processing depending on the protocol.
 

@@ -38,7 +38,7 @@ class MatrixProtocol:
     """
 
     def __init__(self,
-                 request,
+                 request: str,
                  database: DBHandler):
         self.request = request
         self._db = database

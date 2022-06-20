@@ -105,11 +105,14 @@ async def websocket_endpoint(websocket: WebSocket):
 
     # Waiting for the client to connect via websockets
     await websocket.accept()
+
     if websocket.client is not None:
         logger.info("".join(("Clients information: ",
                              "host: ", str(websocket.client.host),
                              " port: ", str(websocket.client.port))))
+
     logger.debug(f"Websocket scope: {str(websocket.scope)}")
+
     while True:
         try:
             # Receive a request from the client as a JSON object
@@ -140,20 +143,17 @@ async def websocket_endpoint(websocket: WebSocket):
         else:
             if websocket.client_state.value == 0:
                 CODE = 1000
-                # "code=1000" - normal session termination
+                # 1000 - normal session termination
                 await websocket.close(CODE)
                 logger.info(f"Close with code: {CODE}")
 
 # Server instance creation
-app = Starlette(routes=[
-    Route("/", endpoint=homepage),
-    WebSocketRoute("/ws", endpoint=websocket_endpoint)
-])
+app = Starlette(routes=[Route("/", endpoint=homepage),
+                        WebSocketRoute("/ws", endpoint=websocket_endpoint)])
 
 logger.info("Start server")
 
 
 if __name__ == "__main__":
-    print("to start the server, write the following command in the console:")
-    print("uvicorn server:app --host 0.0.0.0 --port 8000 --reload --use-colors \
-          --http h11 --ws websockets &")
+    print("to start MoreliaTalk server, use in terminal: "
+          "'pipenv run python manage.py run server'")

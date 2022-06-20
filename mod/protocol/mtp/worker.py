@@ -19,11 +19,8 @@ You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from collections import namedtuple
 from time import time
-from typing import Any
-from typing import Optional
-from typing import Union
+from typing import NamedTuple
 from uuid import uuid4
 
 from loguru import logger
@@ -38,6 +35,20 @@ from mod.db.dbhandler import DatabaseReadError
 from mod.db.dbhandler import DatabaseWriteError
 from mod.db.dbhandler import DBHandler
 from mod.protocol.mtp import api
+
+
+class AuthStatus(NamedTuple):
+    """
+    Stores the result of the user authentication status check.
+
+    Attrs:
+        result: True or False
+
+        error_message: text description of the error
+    """
+
+    result: bool
+    error_message: str
 
 
 class MTPErrorResponse:
@@ -57,7 +68,7 @@ class MTPErrorResponse:
 
     def __init__(self,
                  status: str,
-                 add_info: Optional[Exception | str] = None) -> None:
+                 add_info: Exception | str = None) -> None:
         self.status = status
         self.detail = add_info
 
@@ -74,26 +85,25 @@ class MTPErrorResponse:
         try:
             catch_error = error.check_error_pattern(self.status)
         except Exception as ERROR:
-            logger.exception(str(ERROR))
+            detail = str(ERROR)
+            logger.exception(detail)
             code = 520
             status = "Unknown Error"
-            time_ = int(time())
-            detail: Union[Exception, str] = str(ERROR)
+            _time = int(time())
         else:
             logger.debug(f"Status code({catch_error.code}):",
                          f" {catch_error.status}")
             code = catch_error.code
             status = catch_error.status
-            time_ = int(time())
+            _time = int(time())
+            detail = self.detail
 
             if self.detail is None:
                 detail = catch_error.detail
-            else:
-                detail = self.detail
 
         return api.ErrorsResponse(code=code,
                                   status=status,
-                                  time=time_,
+                                  time=_time,
                                   detail=detail)
 
 
@@ -115,14 +125,18 @@ class MTProtocol:
     """
 
     def __init__(self,
-                 request,
-                 database: DBHandler):
+                 request: str,
+                 database: DBHandler) -> None:
         self.jsonapi = api.VersionResponse(version=api.VERSION,
                                            revision=api.REVISION)
         self.get_time = int(time())
         self._db = database
         self.config = ConfigHandler()
         self.config_option = self.config.read()
+        self.LIMIT_MESSAGES: str = self.config_option.messages
+        self.MIN: str = self.config_option.min_version
+        self.MAX: str = self.config_option.max_version
+        self.LIMIT_USERS: str = self.config_option.users
 
         try:
             self.request = api.Request.parse_obj(request)
@@ -171,63 +185,82 @@ class MTProtocol:
             else:
                 self.response = self._errors("VERSION_NOT_SUPPORTED")
 
+    def __get_messages(db: SelectResults,
+                       end: int,
+                       start: int = 0) -> list[api.MessageResponse]:
+        """
+         Converts the database object into a list.
+
+         List contains validation Message object.
+
+         Args:
+             db: database query result
+             end: last message number
+             start: first message number
+
+        Returns:
+            list contains of validated object
+        """
+
+        _list = []
+
+        for element in db[start:end]:
+            _list.append(api.MessageResponse(
+                         uuid=element.uuid,
+                         client_id=None,
+                         text=element.text,
+                         from_user=element.user.uuid,
+                         time=element.time,
+                         from_flow=element.flow.uuid,
+                         file_picture=element.file_picture,
+                         file_video=element.file_video,
+                         file_audio=element.file_audio,
+                         file_document=element.file_document,
+                         emoji=element.emoji,
+                         edited_time=element.edited_time,
+                         edited_status=element.edited_status))
+        return _list
+
     def _check_auth(self,
                     uuid: str,
-                    auth_id: str) -> Any:
+                    auth_id: str) -> AuthStatus:
         """
         Checking user authentication every each request.
 
         Args:
             uuid: user identification number which granted moreliatalk
-                        server
+            server
+            
             auth_id: authentication token which granted moreliatalk
-                            server
+            server
 
         Returns:
-                object: object with two parameters, which contain:
+            object: object with two parameters, which contain:
 
-                        ``result``: True or False
+                ``result``: True or False
 
-                        ``error_message``: text description of the error
+                ``error_message``: text description of the error
         """
 
-        Result = namedtuple('Result', ['result',
-                                       'error_message'])
         try:
             dbquery = self._db.get_user_by_uuid(uuid)
-            logger.success("User was found in the database")
         except DatabaseReadError:
             message = "User was not authenticated"
             logger.debug(message)
-            return Result(False,
-                          message)
+            return AuthStatus(False,
+                              message)
         else:
+            logger.success("User was found in the database")
             if auth_id == dbquery.auth_id:
                 message = "Authentication User has been verified"
                 logger.success(message)
-                return Result(True,
-                              message)
+                return AuthStatus(True,
+                                  message)
             else:
                 message = "Authentication User failed"
                 logger.debug(message)
-                return Result(False,
-                              message)
-
-    def get_response(self,
-                     response: api.Response = None) -> str:
-        """
-        Generates a JSON-object containing result of an instance json.
-
-        Returns:
-            json-object which contains validated response
-        """
-
-        if response is None:
-            result = self.response.json()
-            return result
-        else:
-            result = response.json()
-            return result
+                return AuthStatus(False,
+                                  message)
 
     def _check_login(self,
                      login: str) -> bool:
@@ -433,84 +466,48 @@ class MTProtocol:
         flow_uuid = request.data.flow[0].uuid
         flow = []
         message = []
-        LIMIT_MESSAGES = self.config_option.messages
+
+        message_start = request.data.flow[0].message_start
+        message_end = request.data.flow[0].message_end
 
         if request.data.flow[0].message_start is None:
             message_start = 0
-        else:
-            message_start = request.data.flow[0].message_start
 
         if request.data.flow[0].message_end is None:
             message_end = 100
-        else:
-            message_end = request.data.flow[0].message_end
 
         message_volume = message_end - message_start
 
-        def get_messages(db: SelectResults,
-                         end: int,
-                         start: int = 0) -> list[api.MessageResponse]:
-            """
-            Converts the database object into a list.
-            List contains validation Message object.
-
-            Args:
-                db: database query result
-                end: last message number
-                start: first message number
-
-            Returns:
-                list contains of validated object
-            """
-
-            _list = []
-
-            for element in db[start:end]:
-                _list.append(api.MessageResponse(
-                             uuid=element.uuid,
-                             client_id=None,
-                             text=element.text,
-                             from_user=element.user.uuid,
-                             time=element.time,
-                             from_flow=element.flow.uuid,
-                             file_picture=element.file_picture,
-                             file_video=element.file_video,
-                             file_audio=element.file_audio,
-                             file_document=element.file_document,
-                             emoji=element.emoji,
-                             edited_time=element.edited_time,
-                             edited_status=element.edited_status))
-            return _list
         try:
             dbquery = self._db.get_message_by_more_time_and_flow(flow_uuid,
                                                                  request.data.time)  # noqa
             MESSAGE_COUNT = dbquery.count()
             dbquery[0]
-        except DatabaseReadError as flow_error:
+        except DatabaseReadError as ERROR:
             errors = MTPErrorResponse("NOT_FOUND",
-                                      str(flow_error))
+                                      str(ERROR))
         else:
-            if MESSAGE_COUNT <= LIMIT_MESSAGES:
+            if MESSAGE_COUNT <= self.LIMIT_MESSAGES:
                 flow.append(api.FlowResponse(uuid=flow_uuid))
-                message = get_messages(dbquery,
-                                       LIMIT_MESSAGES)
+                message = self.__get_messages(dbquery,
+                                              self.LIMIT_MESSAGES)
                 errors = MTPErrorResponse("OK")
                 logger.success("\'_all_messages\' executed successfully")
             else:
                 flow.append(api.FlowResponse(uuid=flow_uuid,
                                              message_start=message_start,
                                              message_end=MESSAGE_COUNT))
-                if message_volume <= LIMIT_MESSAGES:
-                    message = get_messages(dbquery,
-                                           request.data.flow[0].message_end,
-                                           request.data.flow[0].message_start)
+                if message_volume <= self.LIMIT_MESSAGES:
+                    message = self.__get_messages(dbquery,
+                                                  message_end,
+                                                  message_start)
                     logger.success("\'_all_messages\' executed successfully")
                     errors = MTPErrorResponse("PARTIAL_CONTENT")
                 else:
                     errors = MTPErrorResponse("FORBIDDEN",
                                               "Requested more messages"
                                               f" than server limit"
-                                              f" ({LIMIT_MESSAGES})")
+                                              f" ({self.LIMIT_MESSAGES})")
 
         data = api.DataResponse(time=self.get_time,
                                 flow=flow,
@@ -533,9 +530,9 @@ class MTProtocol:
         flow_type = request.data.flow[0].type
         flow = []
 
-        if flow_type not in ["chat",
+        if flow_type not in ("chat",
                              "group",
-                             "channel"]:
+                             "channel"):
             errors = MTPErrorResponse("BAD_REQUEST",
                                       "Wrong flow type")
         elif flow_type == 'chat' and len(users) != 2:
@@ -550,9 +547,9 @@ class MTProtocol:
                                   request.data.flow[0].title,
                                   request.data.flow[0].info,
                                   owner)
-            except DatabaseWriteError as flow_error:
+            except DatabaseWriteError as ERROR:
                 errors = MTPErrorResponse("NOT_FOUND",
-                                          str(flow_error))
+                                          str(ERROR))
             else:
                 flow.append(api.FlowResponse(uuid=flow_uuid,
                                              time=self.get_time,
@@ -612,17 +609,16 @@ class MTProtocol:
 
         users_volume = len(request.data.user)
         user = []
-        LIMIT_USERS = self.config_option.users
 
-        if users_volume <= LIMIT_USERS:
+        if users_volume <= self.LIMIT_USERS:
             errors = MTPErrorResponse("OK")
             for element in request.data.user[1:]:
                 try:
                     dbquery = self._db.get_user_by_uuid(element.uuid)
                 except (DatabaseReadError,
-                        DatabaseAccessError) as user_info_error:
+                        DatabaseAccessError) as ERROR:
                     errors = MTPErrorResponse("UNKNOWN_ERROR",
-                                              str(user_info_error))
+                                              str(ERROR))
                 else:
                     user.append(api.UserResponse(uuid=dbquery.uuid,
                                                  login=dbquery.login,
@@ -633,7 +629,7 @@ class MTProtocol:
             logger.success("\'_user_info\' executed successfully")
         else:
             errors = MTPErrorResponse("TOO_MANY_REQUESTS",
-                                      f"Requested more {LIMIT_USERS}"
+                                      f"Requested more {self.LIMIT_USERS}"
                                       " users than server limit")
 
         data = api.DataResponse(time=self.get_time,
@@ -701,9 +697,9 @@ class MTProtocol:
             dbquery = self._db.get_user_by_login_and_password(login,
                                                               password)
         except (DatabaseReadError,
-                DatabaseAccessError) as not_found:
+                DatabaseAccessError) as ERROR:
             errors = MTPErrorResponse("NOT_FOUND",
-                                      str(not_found))
+                                      str(ERROR))
         else:
             dbquery.login = "User deleted"
             dbquery.password = uuid
@@ -734,9 +730,9 @@ class MTProtocol:
         try:
             dbquery = self._db.get_message_by_uuid(message_uuid)
         except (DatabaseReadError,
-                DatabaseAccessError) as not_found:
+                DatabaseAccessError) as ERROR:
             errors = MTPErrorResponse("NOT_FOUND",
-                                      str(not_found))
+                                      str(ERROR))
         else:
             dbquery.text = "Message deleted"
             dbquery.file_picture = b''
@@ -766,9 +762,9 @@ class MTProtocol:
         try:
             dbquery = self._db.get_message_by_uuid(message_uuid)
         except (DatabaseReadError,
-                DatabaseAccessError) as not_found:
+                DatabaseAccessError) as ERROR:
             errors = MTPErrorResponse("NOT_FOUND",
-                                      str(not_found))
+                                      str(ERROR))
         else:
             dbquery.text = request.data.message[0].text
             dbquery.edited_time = self.get_time
@@ -797,7 +793,7 @@ class MTProtocol:
 
     def _errors(self,
                 status: str = None,
-                add_info: Union[Exception, str, None] = None,
+                add_info: Exception | str = None,
                 request: api.Request = None) -> api.Response:
         """
         Handles cases when a request to server is not recognized by it.
@@ -809,11 +805,10 @@ class MTProtocol:
             add_info: additional information which added to error message
             request: request from client in dict format
         """
+        response = "error"
 
         if request is not None:
             response = request.type
-        else:
-            response = "error"
 
         if status is None:
             status = "METHOD_NOT_ALLOWED"
@@ -837,10 +832,23 @@ class MTProtocol:
             of supported by server.
         """
 
-        MIN = self.config_option.min_version
-        MAX = self.config_option.max_version
-        version = request.jsonapi.version
-        if MIN <= version <= MAX:
+        if self.MIN <= request.jsonapi.version <= self.MAX:
             return True
         else:
             return False
+
+    def get_response(self,
+                     response: api.Response = None) -> str:
+        """
+        Generates a JSON-object containing result of an instance json.
+
+        Returns:
+            json-object which contains validated response
+        """
+
+        if response is None:
+            result = self.response.json()
+            return result
+        else:
+            result = response.json()
+            return result

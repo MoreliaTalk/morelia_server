@@ -19,10 +19,9 @@ You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from collections import namedtuple
 import inspect
 import sys
-from typing import Any, Optional
+from typing import Optional
 
 import sqlobject as orm
 from sqlobject import SQLObject

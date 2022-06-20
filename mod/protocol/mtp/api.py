@@ -20,7 +20,6 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
 from typing import Any
-from typing import List
 from typing import Optional
 
 from pydantic import BaseModel
@@ -44,7 +43,7 @@ class BaseFlow(BaseModel):
     title: Optional[str] = None
     info: Optional[str] = None
     owner: Optional[str] = None
-    users: Optional[List] = None
+    users: Optional[list] = None
     message_start: Optional[int] = None
     message_end: Optional[int] = None
 
@@ -91,7 +90,7 @@ class BaseData(BaseModel):
     """
 
     time: Optional[int] = None
-    user: Optional[List[BaseUser]] = None
+    user: Optional[list[BaseUser]] = None
     meta: Optional[Any] = None
 
 
@@ -180,8 +179,8 @@ class DataRequest(BaseData):
 
         title = 'Main data-object'
 
-    flow: Optional[List[FlowRequest]] = None
-    message: Optional[List[MessageRequest]] = None
+    flow: Optional[list[FlowRequest]] = None
+    message: Optional[list[MessageRequest]] = None
 
 
 class ErrorsRequest(BaseErrors):
@@ -288,8 +287,8 @@ class DataResponse(BaseData):
 
         title = 'Main data-object'
 
-    flow: Optional[List[FlowResponse]] = None
-    message: Optional[List[MessageResponse]] = None
+    flow: Optional[list[FlowResponse]] = None
+    message: Optional[list[MessageResponse]] = None
 
 
 class ErrorsResponse(BaseErrors):
