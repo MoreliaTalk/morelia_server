@@ -51,6 +51,10 @@ VERSION = 'v0.3'
 
 DEFAULT_CONFIG = 'config.init'
 
+DEFAULT_DB = 'db_sqlite.db'
+
+SYMBOLS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
+
 
 def get_default_backup_config_name() -> str:
     """
@@ -62,11 +66,6 @@ def get_default_backup_config_name() -> str:
     return "".join((DEFAULT_CONFIG,
                     ".BAK+",
                     str(int(time()))))
-
-
-DEFAULT_DB = 'db_sqlite.db'
-
-SYMBOLS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
 
 
 async def connect_ws_and_send(message: Request,
