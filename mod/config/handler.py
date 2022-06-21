@@ -138,7 +138,7 @@ class ConfigHandler:
             validated_conf = ConfigModel.parse_obj(IniParser.loads(data))
         except ValidationError:
             logger.error(f"Config {self._path} is not valid. "
-                          f"Default settings are used.")
+                         f"Default settings are used.")
             validated_conf = ConfigModel()
 
         return validated_conf
@@ -187,9 +187,10 @@ class ConfigHandler:
 
     def backup(self, backup_path: str = None) -> None:
         """
-        Backup current config file. If backup_path is None,
-        then backup_path is generated based on config file path and current
-        timestamp
+        Backup current config file.
+        If backup_path is None, then backup_path is generated
+        based on config file path and current timestamp.
+
         Args:
             backup_path(str | None): name new backup
         """
