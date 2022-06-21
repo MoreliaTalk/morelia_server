@@ -33,7 +33,7 @@ from mod.config.models import ConfigModel
 
 class IniParser:
     """
-    This class a layer for conveniently converting dict \
+    This class a layer for conveniently converting dict
     to string in .ini file format and back using ConfigParser.
     """
 
