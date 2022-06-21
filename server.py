@@ -144,10 +144,11 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 # Server instance creation
-app = Starlette(on_startup=[on_startup], routes=[
-    Route("/", endpoint=homepage),
-    WebSocketRoute("/ws", endpoint=websocket_endpoint)
-])
+app = Starlette(on_startup=[on_startup],
+                routes=[Route("/",
+                              endpoint=homepage),
+                        WebSocketRoute("/ws",
+                                       endpoint=websocket_endpoint)])
 
 
 if __name__ == "__main__":
