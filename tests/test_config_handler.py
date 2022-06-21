@@ -23,7 +23,7 @@ import io
 from pathlib import PurePath
 from pathlib import Path
 from unittest import TestCase
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 
 from mod.config.handler import ConfigHandler, BackupNotFoundError
 from mod.config.handler import IniParser
