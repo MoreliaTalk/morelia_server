@@ -122,7 +122,7 @@ async def websocket_endpoint(websocket: WebSocket):
             # it as a parameter. The "get_response" method generates
             # a response in JSON-object format.
             request = MainHandler(request=data,
-                                  database=db_connect,
+                                  database=db_connect,  # type: ignore
                                   protocol='mtp')
             response = await websocket.send_bytes(request.get_response())
             logger.info("Response sent to client")
