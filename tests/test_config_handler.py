@@ -65,7 +65,7 @@ class TestConfigHandler(TestCase):
 
         mock_get_path().open().__enter__().read.return_value = in_file
 
-        value_read = ConfigHandler("config.ini").read()
+        value_read = ConfigHandler("config.ini", log=False).read()
         self.assertEqual(value_read, model)
 
     @patch("mod.config.handler.ConfigHandler._get_fullpath")
@@ -73,7 +73,7 @@ class TestConfigHandler(TestCase):
         model = ConfigModel()
         expected_data = IniParser.dumps(model.dict())
 
-        ConfigHandler("config.ini").write(model, backup=False)
+        ConfigHandler("config.ini", log=False).write(model, backup=False)
         write_data = mock_get_path().open().__enter__().write.call_args[0][0]
 
         self.assertEqual(write_data, expected_data)
@@ -86,7 +86,7 @@ class TestConfigHandler(TestCase):
         in_config_file = IniParser.dumps(model.dict())
 
         mock_cfg_read.return_value = model
-        ConfigHandler("config.ini").backup("new_backup")
+        ConfigHandler("config.ini", log=False).backup("new_backup")
 
         backup_write_data = mock_open().__enter__().write.call_args[0][0]
         self.assertEqual(backup_write_data, in_config_file)
@@ -98,7 +98,7 @@ class TestConfigHandler(TestCase):
         in_backup_data = IniParser.dumps(ConfigModel().dict())
 
         mock_path().open().__enter__().read.return_value = in_backup_data
-        ConfigHandler("config.ini").restore("new_backup")
+        ConfigHandler("config.ini", log=False).restore("new_backup")
 
         self.assertEqual(mock_write_raw.call_args[0][0], in_backup_data)
 
@@ -106,13 +106,13 @@ class TestConfigHandler(TestCase):
     @patch("mod.config.handler.Path.is_file", return_value=False)
     def test_restore_backup_not_exist(self, _, __):
         with self.assertRaises(BackupNotFoundError):
-            ConfigHandler("config.ini").restore("new_backup")
+            ConfigHandler("config.ini", log=False).restore("new_backup")
 
     @patch("mod.config.handler.ConfigHandler._write_raw")
     @patch("mod.config.handler.ConfigHandler._get_fullpath")
     def test_restore_default_config(self, _, mock_write_raw):
         in_backup_data = IniParser.dumps(ConfigModel().dict())
-        ConfigHandler("config.ini").restore()
+        ConfigHandler("config.ini", log=False).restore()
         self.assertEqual(mock_write_raw.call_args[0][0], in_backup_data)
 
     @patch("mod.config.handler.ConfigHandler._get_fullpath")
@@ -123,7 +123,7 @@ class TestConfigHandler(TestCase):
         mock_get_path.return_value = mock_path
         mock_path.__str__.return_value = "config.ini"
 
-        self.assertEqual(ConfigHandler("config.ini").__str__(), "Config: config.ini")
+        self.assertEqual(ConfigHandler("config.ini", log=False).__str__(), "Config: config.ini")
 
     @patch("mod.config.handler.ConfigHandler._get_fullpath")
     @patch("pathlib.Path")
@@ -134,7 +134,7 @@ class TestConfigHandler(TestCase):
         mock_path.name = "config.ini"
         mock_path.parent = "directory"
 
-        data = ConfigHandler("config.ini").__repr__()
+        data = ConfigHandler("config.ini", log=False).__repr__()
 
         self.assertRegex(data, ConfigHandler.__name__)
         self.assertRegex(data, "config.ini")
