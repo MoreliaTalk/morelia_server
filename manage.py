@@ -56,18 +56,6 @@ DEFAULT_DB = 'db_sqlite.db'
 SYMBOLS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
 
 
-def get_default_backup_config_name() -> str:
-    """
-    Get name for a config backup based on the current time.
-
-    Returns:
-        str: config backup name
-    """
-    return "".join((DEFAULT_CONFIG,
-                    ".BAK+",
-                    str(int(time()))))
-
-
 async def connect_ws_and_send(message: Request,
                               address: str) -> None:
     """
@@ -561,7 +549,9 @@ def conf_restore(backup: bool, source: str | None):
     config = ConfigHandler(log=False)
 
     if backup:
-        config.backup(get_default_backup_config_name())
+        config.backup("".join((DEFAULT_CONFIG,
+                               ".BAK+",
+                               str(int(time())))))
 
     if source:
         try:
@@ -579,7 +569,9 @@ def conf_restore(backup: bool, source: str | None):
              help="Backup current config")
 @click.option("--backup-name",
               type=str,
-              default="".join(get_default_backup_config_name()))
+              default="".join((DEFAULT_CONFIG,
+                               ".BAK+",
+                               str(int(time())))))
 def conf_backup(backup_name: str):
     """
     Backup current config file.
