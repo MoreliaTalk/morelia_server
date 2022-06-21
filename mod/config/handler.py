@@ -18,6 +18,7 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
+
 from configparser import ConfigParser
 import io
 from pathlib import Path
