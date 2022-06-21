@@ -20,7 +20,6 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 from configparser import ConfigParser
 import io
-import logging
 from pathlib import Path
 from pathlib import PurePath
 from time import time
@@ -138,7 +137,7 @@ class ConfigHandler:
         try:
             validated_conf = ConfigModel.parse_obj(IniParser.loads(data))
         except ValidationError:
-            logging.error(f"Config {self._path} is not valid. "
+            logger.error(f"Config {self._path} is not valid. "
                           f"Default settings are used.")
             validated_conf = ConfigModel()
 
