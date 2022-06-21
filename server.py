@@ -37,11 +37,15 @@ from mod.controller import MainHandler
 from mod.db.dbhandler import DBHandler
 from mod.log_handler import add_logging
 
+db_connect: DBHandler | None = None
+
 
 def on_startup():
     """
     This function run on start up server and init server initializes it.
     """
+
+    global db_connect
 
     if config_option.logging.uvicorn_logging_disable:
         standart_logging.disable()
@@ -118,7 +122,7 @@ async def websocket_endpoint(websocket: WebSocket):
             # it as a parameter. The "get_response" method generates
             # a response in JSON-object format.
             request = MainHandler(request=data,
-                                  database=DBHandler(uri=config_option.database.url),
+                                  database=db_connect,
                                   protocol='mtp')
             response = await websocket.send_bytes(request.get_response())
             logger.info("Response sent to client")

@@ -201,8 +201,12 @@ class ConfigHandler:
 
         data = self.read()
 
-        with open(backup_path, "w") as file:
-            file.write(IniParser.dumps(data.dict()))
+        try:
+            with open(backup_path, "w") as file:
+                file.write(IniParser.dumps(data.dict()))
+
+        except PermissionError:
+            logger.error("There no permission to write to the backup file")
 
     def restore(self, backup_name: str = None) -> None:
         """
