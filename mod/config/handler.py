@@ -26,7 +26,7 @@ from pathlib import PurePath
 from time import time
 
 from loguru import logger
-import pydantic
+from pydantic import ValidationError
 
 from mod.config.models import ConfigModel
 
@@ -137,7 +137,7 @@ class ConfigHandler:
         """
         try:
             validated_conf = ConfigModel.parse_obj(IniParser.loads(data))
-        except pydantic.ValidationError:
+        except ValidationError:
             logging.error(f"Config {self._path} is not valid. "
                           f"Default settings are used.")
             validated_conf = ConfigModel()
