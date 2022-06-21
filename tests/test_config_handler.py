@@ -19,7 +19,6 @@ You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import io
 from pathlib import PurePath
 from pathlib import Path
 from unittest import TestCase
