@@ -49,7 +49,7 @@ from mod.protocol.mtp.api import Request
 
 VERSION = 'v0.3'
 
-DEFAULT_CONFIG = 'config.init'
+DEFAULT_CONFIG = 'config.ini'
 
 DEFAULT_DB = 'db_sqlite.db'
 
