@@ -187,16 +187,22 @@ class ConfigHandler:
 
         self._write_raw(IniParser.dumps(data.dict()))
 
-    def backup(self, backup_name: str) -> None:
+    def backup(self, backup_path: str = None) -> None:
         """
-        Backup current config file.
-        The new backup will be in the configuration file folder
+        Backup current config file. If backup_path is None,
+        then backup_path is generated based on config file path and current
+        timestamp
         Args:
-            backup_name(str): name new backup
+            backup_path(str | None): name new backup
         """
+        if backup_path is None:
+            backup_path = "".join((str(self._path),
+                                   ".BAK+",
+                                   str(int(time()))))
+
         data = self.read()
 
-        with open(backup_name, "w") as file:
+        with open(backup_path, "w") as file:
             file.write(IniParser.dumps(data.dict()))
 
     def restore(self, backup_name: str = None) -> None:

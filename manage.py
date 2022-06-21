@@ -549,9 +549,7 @@ def conf_restore(backup: bool, source: str | None):
     config = ConfigHandler(log=False)
 
     if backup:
-        config.backup("".join((DEFAULT_CONFIG,
-                               ".BAK+",
-                               str(int(time())))))
+        config.backup()
 
     if source:
         try:
@@ -568,16 +566,13 @@ def conf_restore(backup: bool, source: str | None):
 @run.command("conf_backup",
              help="Backup current config")
 @click.option("--backup-name",
-              type=str,
-              default="".join((DEFAULT_CONFIG,
-                               ".BAK+",
-                               str(int(time())))))
-def conf_backup(backup_name: str):
+              type=str)
+def conf_backup(backup_name: str | None):
     """
     Backup current config file.
 
     Args:
-        backup_name(str): name for new backup
+        backup_name(str | None): name for new backup
     """
     ConfigHandler(log=False).backup(backup_name)
     click.echo("Successful backup current config")
