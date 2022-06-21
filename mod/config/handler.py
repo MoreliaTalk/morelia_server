@@ -183,7 +183,7 @@ class ConfigHandler:
             backup(bool): backup this config
         """
         if backup:
-            self.backup("".join((str(self._path), ".BAK+", str(time()))))
+            self.backup()
 
         self._write_raw(IniParser.dumps(data.dict()))
 
