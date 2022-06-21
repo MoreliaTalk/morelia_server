@@ -170,8 +170,7 @@ class ConfigHandler:
         with self._path.open("w") as file:
             file.write(data)
 
-        if not self._is_exist:
-            self._is_exist = True
+        self._is_exist = True
 
     def write(self, data: ConfigModel, backup: bool = True) -> None:
         """
