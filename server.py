@@ -34,7 +34,7 @@ from starlette.websockets import WebSocketDisconnect
 
 from mod.config.instance import config_option
 from mod.controller import MainHandler
-from mod.db.instance import db_connect
+from mod.db.dbhandler import DBHandler
 from mod.log_handler import add_logging
 
 
@@ -42,6 +42,7 @@ def on_startup():
     """
     This function run on start up server and init server initializes it.
     """
+
     if config_option.logging.uvicorn_logging_disable:
         standart_logging.disable()
 
@@ -50,6 +51,9 @@ def on_startup():
 
     # Record server start time (UTC)
     server_started = datetime.now()
+
+    # Set database connection
+    db_connect = DBHandler(uri=config_option.database.url)
     db_connect.create_table()
 
     logger.info("Start server")
@@ -114,7 +118,7 @@ async def websocket_endpoint(websocket: WebSocket):
             # it as a parameter. The "get_response" method generates
             # a response in JSON-object format.
             request = MainHandler(request=data,
-                                  database=db_connect,
+                                  database=DBHandler(uri=config_option.database.url),
                                   protocol='mtp')
             response = await websocket.send_bytes(request.get_response())
             logger.info("Response sent to client")
