@@ -33,8 +33,7 @@ from mod.config.models import ConfigModel
 
 class IniParser:
     """
-    This class a layer for conveniently converting dict
-    to string in .ini file format and back using ConfigParser.
+    Layer for easy work with ConfigParser.
     """
 
     @staticmethod
