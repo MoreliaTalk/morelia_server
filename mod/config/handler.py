@@ -18,7 +18,7 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
-import configparser
+from configparser import ConfigParser
 import io
 import logging
 from pathlib import Path
@@ -47,7 +47,7 @@ class IniParser:
         Returns:
             dict: parsed object
         """
-        parser = configparser.ConfigParser()
+        parser = ConfigParser()
         parser.read_string(data)
         return dict(parser)
 
@@ -63,7 +63,7 @@ class IniParser:
         """
         io_string = io.StringIO()
 
-        parser = configparser.ConfigParser()
+        parser = ConfigParser()
         parser.read_dict(data)
 
         parser.write(io_string)
