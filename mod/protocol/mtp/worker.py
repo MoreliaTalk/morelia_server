@@ -32,7 +32,7 @@ from sqlobject.sresults import SelectResults
 
 from mod import error
 from mod import lib
-from mod.config.config import ConfigHandler
+from mod.config.instance import config_option
 from mod.db.dbhandler import DatabaseAccessError
 from mod.db.dbhandler import DatabaseReadError
 from mod.db.dbhandler import DatabaseWriteError
@@ -121,8 +121,6 @@ class MTProtocol:
                                            revision=api.REVISION)
         self.get_time = int(time())
         self._db = database
-        self.config = ConfigHandler()
-        self.config_option = self.config.read()
 
         try:
             self.request = api.Request.parse_obj(request)
@@ -433,7 +431,7 @@ class MTProtocol:
         flow_uuid = request.data.flow[0].uuid
         flow = []
         message = []
-        LIMIT_MESSAGES = self.config_option.messages
+        LIMIT_MESSAGES = config_option.limits.messages
 
         if request.data.flow[0].message_start is None:
             message_start = 0
@@ -612,7 +610,7 @@ class MTProtocol:
 
         users_volume = len(request.data.user)
         user = []
-        LIMIT_USERS = self.config_option.users
+        LIMIT_USERS = config_option.limits.users
 
         if users_volume <= LIMIT_USERS:
             errors = MTPErrorResponse("OK")
@@ -837,8 +835,8 @@ class MTProtocol:
             of supported by server.
         """
 
-        MIN = self.config_option.min_version
-        MAX = self.config_option.max_version
+        MIN = config_option.api.min_version
+        MAX = config_option.api.max_version
         version = request.jsonapi.version
         if MIN <= version <= MAX:
             return True

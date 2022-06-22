@@ -1,22 +1,22 @@
 """
-    Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the
-    full list.
+Copyright (c) 2020 - present MoreliaTalk team and other.
+Look at the file AUTHORS.md(located at the root of the project) to get the
+full list.
 
-    This file is part of Morelia Server.
+This file is part of Morelia Server.
 
-    Morelia Server is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Morelia Server is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    Morelia Server is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+Morelia Server is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Lesser General Public License
+along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import json
@@ -31,7 +31,7 @@ from mod import lib
 from mod.db.dbhandler import DBHandler
 from mod.protocol.mtp.worker import MTProtocol
 from mod.protocol.mtp.worker import MTPErrorResponse
-from mod.config.config import ConfigHandler
+from mod.config.handler import ConfigHandler
 
 # Add path to directory with code being checked
 # to variable 'PATH' to import modules from directory
@@ -398,7 +398,7 @@ class TestAllMessages(unittest.TestCase):
 
     def setUp(self):
         self.config_option = ConfigHandler().read()
-        self.limit_message = self.config_option.messages
+        self.limit_message = self.config_option.limits.messages
         self.db.create_table()
         self.db.add_user(uuid="123456",
                          login="login",

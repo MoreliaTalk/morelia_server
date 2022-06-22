@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+Copyright (c) 2020 - present MoreliaTalk team and other.
 Look at the file AUTHORS.md(located at the root of the project) to get the
 full list.
 
@@ -23,13 +23,10 @@ import sys
 
 from loguru import logger
 
-from mod.config.config import ConfigHandler
+from mod.config.instance import config_option
 
-config = ConfigHandler()
-config_option = config.read()
-
-expiration_date = config_option.expiration_date
-debug_expiration_date = config_option.debug_expiration_date
+expiration_date = config_option.logging.expiration_date
+debug_expiration_date = config_option.logging.debug_expiration_date
 
 
 def add_logging(debug_status: int) -> None:
@@ -82,14 +79,14 @@ def add_logging(debug_status: int) -> None:
     if DEBUG:
         # We connect the output to TTY, level DEBUG
         logger.add(sys.stdout,
-                   format=config_option.debug,
+                   format=config_option.logging.debug,
                    level="DEBUG",
                    enqueue=True,
                    colorize=True)
 
         # Connect the output to a file, level DEBUG
         logger.add('log/debug.log',
-                   format=config_option.debug,
+                   format=config_option.logging.debug,
                    level="DEBUG",
                    enqueue=True,
                    colorize=True,
@@ -100,14 +97,14 @@ def add_logging(debug_status: int) -> None:
     else:
         # We connect the output to TTY, level INFO
         logger.add(sys.stdout,
-                   format=config_option.info,
+                   format=config_option.logging.info,
                    level="INFO",
                    enqueue=True,
                    colorize=True)
 
     # We connect the output to a file, level ERROR
     logger.add('log/error.log',
-               format=config_option.error,
+               format=config_option.logging.error,
                level="ERROR",
                backtrace=True,
                diagnose=True,

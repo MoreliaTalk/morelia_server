@@ -34,7 +34,8 @@ import uvicorn
 from websockets import client as ws_client
 from websockets import exceptions as ws_exceptions
 
-from mod.config.config import ConfigHandler
+from mod.config.handler import BackupNotFoundError
+from mod.config.handler import ConfigHandler
 from mod.db.dbhandler import DatabaseAccessError
 from mod.db.dbhandler import DatabaseReadError
 from mod.db.dbhandler import DatabaseWriteError
@@ -46,21 +47,13 @@ from mod.protocol.mtp.api import DataRequest
 from mod.protocol.mtp.api import FlowRequest
 from mod.protocol.mtp.api import Request
 
-
 VERSION = 'v0.3'
 
 DEFAULT_CONFIG = 'config.ini'
-DEFAULT_EXAMPLE_CONFIG = 'example_config.ini'
 
 DEFAULT_DB = 'db_sqlite.db'
 
 SYMBOLS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
-
-
-class CopyConfigError(Exception):
-    """
-    Occurs when the original configuration file does not exist.
-    """
 
 
 async def connect_ws_and_send(message: Request,
@@ -105,39 +98,14 @@ def click_async(func: Callable):
     return wrapper
 
 
-def copy_config(source: str,
-                destination: str) -> None:
-    """
-    Copies the configuration file.
-
-    File example_config.ini copied to config.ini in root directory with
-    project files.
-
-    Args:
-        source: source file name, default example_config.ini
-        destination: destination file name, default config.ini
-    """
-
-    src = Path(source)
-    dst = Path(destination)
-
-    if src.is_file():
-        with open(dst.absolute(), "w+") as new_file:
-            old_file = open(src.absolute(), 'r')
-            new_file.write(old_file.read())
-            old_file.close()
-    else:
-        raise CopyConfigError(f"There is no such file={src.name}")
-
-
 def create_table() -> None:
     """
     Creates a database file and fills it with empty tables.
     """
 
-    config = ConfigHandler(log=False)
+    config = ConfigHandler()
     config_options = config.read()
-    db = DBHandler(uri=config_options.uri)
+    db = DBHandler(uri=config_options.database.url)
     db.create_table()
 
 
@@ -151,18 +119,18 @@ def create_administrator(username: str,
         password: password for new administrator user
     """
 
-    config = ConfigHandler(log=False)
+    config = ConfigHandler()
     config_read = config.read()
-    db = DBHandler(uri=config_read.uri)
+    db = DBHandler(uri=config_read.database.url)
     user_uuid = str(uuid4().int)
     db.add_admin(username=username,
                  hash_password=Hash(password, user_uuid).password_hash())
 
 
 @click.group(name="Main group for all options.",
-             help="Morelia Talk server manager.")
+             help="MoreliaTalkServer manager")
 @click.version_option(version=VERSION,
-                      package_name="MoreliaTalk server")
+                      package_name="MoreliaTalkServer")
 @click.help_option()
 def cli() -> None:
     """
@@ -481,7 +449,7 @@ async def send(login: str,
                             "fixtures",
                             "".join((type_, ".json"))))
     match type_:
-        case ("register_user",):
+        case ("register_user"):
             message.data.user[0].username = username
             message.data.user[0].password = password
         case ("get_update",
@@ -522,20 +490,8 @@ def run() -> None:
               prompt=True,
               hide_input=True,
               help="Password for new user.")
-@click.option("--source",
-              type=str,
-              show_default=True,
-              default=DEFAULT_EXAMPLE_CONFIG,
-              help="source file name")
-@click.option("--destination",
-              type=str,
-              show_default=True,
-              default=DEFAULT_CONFIG,
-              help="destination file name")
 def init(username: str,
-         password: str,
-         source: str,
-         destination: str) -> None:
+         password: str) -> None:
     """
     Preparing the MoreliaTalk server for work.
 
@@ -545,22 +501,7 @@ def init(username: str,
     Args:
         username: name for new administrator user
         password: password for new administrator user
-        source: source file name, default example_config.ini
-        destination: destination file name, default config.ini
     """
-
-    try:
-        copy_config(source,
-                    destination)
-    except (CopyConfigError, OSError):
-        click.echo("Example of config file not found, or ")
-        click.echo("no write access rights in the current directory.")
-        return
-    except Exception as err:
-        click.echo(f"Config =>x Bad. An unknown error occurred. {err}")
-        return
-    else:
-        click.echo("Config => Ok.")
 
     try:
         create_table()
@@ -587,6 +528,54 @@ def init(username: str,
         click.echo("<=====================================================>")
         click.echo("For run server in normal mode: ./manage.py run server")
         click.echo("For run server in develop mode: ./manage.py run devserver")
+
+
+@run.command("conf_restore",
+             help="Restore default configuration or backup")
+@click.option("--backup/--no-backup",
+              type=bool,
+              default=False,
+              help="Backup current config")
+@click.option("--source", type=str, default=None, help="path to backup file")
+def conf_restore(backup: bool, source: str | None):
+    """
+    Restore configuration default config file or backup.
+
+    Args:
+        backup(bool): backup current config file
+        source(str | None): path to backup file for restore,
+        if None, restore default config
+    """
+    config = ConfigHandler(log=False)
+
+    if backup:
+        config.backup()
+
+    if source:
+        try:
+            config.restore(source)
+        except BackupNotFoundError:
+            click.echo(f"Backup from {source} is not found")
+        else:
+            click.echo(f"Successful restore config from {source}")
+    else:
+        config.restore()
+        click.echo("Successful restore default config")
+
+
+@run.command("conf_backup",
+             help="Backup current config")
+@click.option("--backup-name",
+              type=str)
+def conf_backup(backup_name: str | None):
+    """
+    Backup current config file.
+
+    Args:
+        backup_name(str | None): name for new backup
+    """
+    ConfigHandler(log=False).backup(backup_name)
+    click.echo("Successful backup current config")
 
 
 @run.command("devserver",
@@ -736,13 +725,13 @@ def clean_init(config_name: str,
         os.remove(config_name)
         click.echo("Config file => deleted.")
     else:
-        click.echo("Config file => NOT deleted.")
-    
+        click.echo("Config file is not found => NOT deleted.")
+
     if Path(db_name).is_file():
         os.remove(db_name)
         click.echo("Database file => deleted.")
     else:
-        click.echo("Database file => NOT deleted.")
+        click.echo("Database file is not found => NOT deleted.")
 
 
 if __name__ == "__main__":

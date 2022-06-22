@@ -30,9 +30,11 @@ Language [EN](./README_ENG.md), [RU](./README.md)
   * /config
     * config.py - модуль отвечает за работу с конфигурационным файлом config.ini
     * validator.py - модуль для валидации конфигурационного файла
+    * instance.py - модуль содержит в себе инстанс handler-а для работы с конфигом
   * /db
     * dbhandler.py - модуль предназначен для выполнения запросов к БД
     * models.py - модуль отвечает за описание таблиц БД для работы через ОРМ.
+    * instance.py - модуль содержит в себе инстанс handler-а для работы с базой данных
   * /protocol
     * /matrix
       * api.py - модуль отвечает за описание API, а так же валидацию данных.
@@ -242,10 +244,10 @@ pipenv run python -v ./tests/test_*.py
 
 ## Лицензия ##
 
-Copyright (c) 2020 - настоящее время MoreliaTalk team
-  [NekrodNIK](https://github.com/NekrodNIK),
+Copyright (c) 2020 - настоящее время MoreliaTalk team 
+  ([NekrodNIK](https://github.com/NekrodNIK),
   [Stepan Skriabin](https://github.com/stepanskryabin),
   [rus-ai](https://github.com/rus-ai) и другие.
-  Смотрите полный список в файле AUTHORS.md.
+  Смотрите полный список в файле AUTHORS.md)
 
-Morelia Server находится под лицензией GNU Lesser General Public License версии 3 или более поздней(LGPL-3.0-or-later). Подробности смотрите в файле COPYING.LESSER.
+MoreliaTalkServer распространяется под лицензией GNU Lesser General Public License версии 3 или более поздней (LGPL-3.0-or-later). Подробности смотрите в файле COPYING.LESSER.

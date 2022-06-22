@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
+Copyright (c) 2020 - present MoreliaTalk team and other.
 Look at the file AUTHORS.md(located at the root of the project) to get the
 full list.
 
@@ -22,7 +22,6 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 from datetime import datetime
 from json import JSONDecodeError
 import logging as standart_logging
-import sys
 
 from loguru import logger
 from starlette.applications import Starlette
@@ -33,33 +32,36 @@ from starlette.routing import WebSocketRoute
 from starlette.websockets import WebSocket
 from starlette.websockets import WebSocketDisconnect
 
-from mod.config.config import ConfigHandler
+from mod.config.instance import config_option
 from mod.controller import MainHandler
 from mod.db.dbhandler import DBHandler
 from mod.log_handler import add_logging
 
+db_connect: DBHandler | None = None
 
-# Get parameters contains in config.ini
-config = ConfigHandler()
-config_option = config.read()
 
-# Unicorn logger off
-if config_option.uvicorn_logging_disable:
-    standart_logging.disable()
+def on_startup():
+    """
+    This function run on start up server and init server initializes it.
+    """
 
-# loguru logger on
-add_logging(config_option.level)
+    global db_connect
 
-# Record server start time (UTC)
-server_started = datetime.now()
+    if config_option.logging.uvicorn_logging_disable:
+        standart_logging.disable()
 
-# Set database connection
-if "unittest" in sys.modules:
-    db_connect = DBHandler()
-else:
-    db_connect = DBHandler(uri=config_option.uri)
+    # loguru logger on
+    add_logging(config_option.logging.level)
 
-db_connect.create_table()
+    # Record server start time (UTC)
+    server_started = datetime.now()
+
+    # Set database connection
+    db_connect = DBHandler(uri=config_option.database.url)
+    db_connect.create_table()
+
+    logger.info("Start server")
+    logger.info(f"Started time {server_started}")
 
 
 async def homepage(request: Request):
@@ -120,7 +122,7 @@ async def websocket_endpoint(websocket: WebSocket):
             # it as a parameter. The "get_response" method generates
             # a response in JSON-object format.
             request = MainHandler(request=data,
-                                  database=db_connect,
+                                  database=db_connect,  # type: ignore
                                   protocol='mtp')
             response = await websocket.send_bytes(request.get_response())
             logger.info("Response sent to client")
@@ -144,13 +146,13 @@ async def websocket_endpoint(websocket: WebSocket):
                 await websocket.close(CODE)
                 logger.info(f"Close with code: {CODE}")
 
-# Server instance creation
-app = Starlette(routes=[
-    Route("/", endpoint=homepage),
-    WebSocketRoute("/ws", endpoint=websocket_endpoint)
-])
 
-logger.info("Start server")
+# Server instance creation
+app = Starlette(on_startup=[on_startup],
+                routes=[Route("/",
+                              endpoint=homepage),
+                        WebSocketRoute("/ws",
+                                       endpoint=websocket_endpoint)])
 
 
 if __name__ == "__main__":

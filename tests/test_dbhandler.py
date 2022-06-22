@@ -1,22 +1,22 @@
 """
-    Copyright (c) 2020 - present NekrodNIK, Stepan Skriabin, rus-ai and other.
-    Look at the file AUTHORS.md(located at the root of the project) to get the
-    full list.
+Copyright (c) 2020 - present MoreliaTalk team and other.
+Look at the file AUTHORS.md(located at the root of the project) to get the
+full list.
 
-    This file is part of Morelia Server.
+This file is part of Morelia Server.
 
-    Morelia Server is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Morelia Server is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    Morelia Server is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+Morelia Server is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Lesser General Public License
+along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import unittest
@@ -25,11 +25,11 @@ from loguru import logger
 from sqlobject.main import SQLObject
 from sqlobject.sresults import SelectResults
 
-from mod.db.dbhandler import DBHandler  # noqa
-from mod.db import models  # noqa
-from mod.db.dbhandler import DatabaseAccessError  # noqa
-from mod.db.dbhandler import DatabaseWriteError  # noqa
-from mod.db.dbhandler import DatabaseReadError  # noqa
+from mod.db.dbhandler import DBHandler
+from mod.db import models
+from mod.db.dbhandler import DatabaseAccessError
+from mod.db.dbhandler import DatabaseWriteError
+from mod.db.dbhandler import DatabaseReadError
 
 
 class TestDBHandlerMainMethods(unittest.TestCase):

@@ -21,15 +21,17 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 
 from pathlib import PurePath
 import unittest
+from unittest.mock import patch
 from uuid import uuid4
 
 from click.testing import CliRunner
 from loguru import logger
+
 from manage import delete
 from manage import client
 from manage import create
 from manage import run
-from manage import copy_config
+from mod.config.handler import BackupNotFoundError
 
 from mod.db.dbhandler import DBHandler
 from mod.lib import Hash
@@ -113,60 +115,43 @@ class TestManage(unittest.TestCase):
         self.assertRegex(result.output,
                          "All table is deleted.")
 
-    @unittest.skip("Not working")
-    def test_clean_init(self):
-        self.runner.invoke(run,
-                           ["init",
-                            f"--username={self.username}",
-                            f"--password={self.password}"])
+    @patch('pathlib.Path.is_file', return_value=True)
+    @patch('os.remove', return_value=None)
+    def test_clean_init(self, _, __):
         result = self.runner.invoke(run,
                                     ["clean",
                                      "--yes"])
-        self.assertRegex(result.stdout, "Config file => deleted.")
-        copy_config('example_config.ini', 'config.ini')
+        self.assertEqual(result.stdout,
+                         "".join(("Config file => deleted.\n",
+                                  "Database file => deleted.\n")))
 
-    @unittest.skip("Not working")
-    def test_error_in_clean_init(self):
+    @patch('pathlib.Path.is_file', return_value=False)
+    @patch('os.remove', return_value=None)
+    def test_error_in_clean_init(self, _, __):
         result = self.runner.invoke(run,
                                     ["clean",
                                      "--yes"])
-        self.assertRegex(result.stdout, "Database file => NOT deleted.")
-        copy_config('example_config.ini', 'config.ini')
+        self.assertRegex(result.stdout, "Config file is not found")
+        self.assertRegex(result.stdout, "Database file is not found")
 
-    @unittest.skip("Not working")
-    def test_init(self):
+    @patch('manage.create_table', return_value=None)
+    @patch('manage.create_administrator', return_value=None)
+    def test_init(self, _, __):
         result = self.runner.invoke(run,
                                     ["init",
                                      f"--username={self.username}",
                                      f"--password={self.password}"])
-        self.runner.invoke(run,
-                           ["clean",
-                            "--yes"])
-        self.assertRegex(result.stdout, "For run server in develop mode:")
-        copy_config('example_config.ini', 'config.ini')
+        self.assertRegex(result.stdout, "Database => Ok")
+        self.assertRegex(result.stdout, "admin => Ok")
 
-    @unittest.skip("Not working")
-    def test_init_wrong_config_file(self):
-        result = self.runner.invoke(run,
-                                    ["init",
-                                     f"--username={self.username}",
-                                     f"--password={self.password}",
-                                     "--source=cinfig.cfg",
-                                     "--destination=setup.ini"])
-        self.runner.invoke(run,
-                           ["clean",
-                            "--config-name=setup.ini",
-                            "--db-name=db_sqlite.db"])
-        self.assertRegex(result.stdout, "Example of config file not found")
-
-    @unittest.skip("Not working")
-    def test_devserver(self):
+    @patch('uvicorn.run', return_value=None)
+    def test_devserver(self, _):
         result = self.runner.invoke(run,
                                     ["devserver"])
         self.assertRegex(result.stdout, "Develop server started at address=")
 
-    @unittest.skip("Not working")
-    def test_server(self):
+    @patch('uvicorn.run', return_value=None)
+    def test_server(self, _):
         result = self.runner.invoke(run,
                                     ["server"])
         self.assertRegex(result.stdout, "Server started at address=")
@@ -175,6 +160,25 @@ class TestManage(unittest.TestCase):
         result = self.runner.invoke(client,
                                     ["send"])
         self.assertRegex(result.stdout, "Unable to connect to the server")
+
+    @patch("mod.config.handler.ConfigHandler.restore")
+    def test_conf_restore(self, _):
+        result = self.runner.invoke(run,
+                                    ["conf_restore"])
+        self.assertRegex(result.stdout, "Successful restore default config")
+
+    @patch("mod.config.handler.ConfigHandler.restore", side_effect=BackupNotFoundError)
+    def test_conf_restore_backup_not_found(self, _):
+        result = self.runner.invoke(run,
+                                    ["conf_restore",
+                                     "--source", "file"])
+        self.assertRegex(result.stdout, "Backup from file is not found")
+
+    @patch("mod.config.handler.ConfigHandler.backup")
+    def test_conf_backup(self, _):
+        result = self.runner.invoke(run,
+                                    ["conf_backup"])
+        self.assertRegex(result.stdout, "Successful backup current config")
 
 
 if __name__ == "__main__":
