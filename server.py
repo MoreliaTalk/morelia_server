@@ -157,5 +157,5 @@ app = Starlette(on_startup=[on_startup],
 
 if __name__ == "__main__":
     print("to start the server, write the following command in the console:")
-    print("uvicorn server:app --host 0.0.0.0 --port 8000 --reload --use-colors \
-          --http h11 --ws websockets &")
+    print("uvicorn server:app --host 0.0.0.0 --port 8000 --reload \
+           --use-colors --http h11 --ws websockets &")
