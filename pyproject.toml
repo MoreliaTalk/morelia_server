@@ -16,7 +16,7 @@ websockets = "==10.3"
 pydantic = "==1.10.2"
 python-multipart = "==0.0.5"
 websocket-client = "==1.4.1"
-coverage = {extras = ["toml"], version = "^6.4.4"}
+coverage = {extras = ["toml"], version = "==6.4.4"}
 requests = "==2.28.1"
 win32-setctime = "*"
 sphinx = "==4.4.0"
