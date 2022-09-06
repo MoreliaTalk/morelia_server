@@ -2,7 +2,7 @@
 name = "morelia-server"
 version = "0.4.0"
 description = "Morelia Server - server for MoreliaTalk messenger"
-authors = ["MoreliaTalk Dev Team"]
+authors = ["MoreliaTalk Team"]
 license = "LGPL-3.0"
 readme = "README.md"
 

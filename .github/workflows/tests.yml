@@ -13,28 +13,28 @@ jobs:
       with:
         python-version: "3.10"
         
-    - name: Install pipenv
+    - name: Install poetry tool
       run: |
-        pip install pipenv
-      
+        pipx install poetry
+
     - name: Install dependencies
       run: |
-        pipenv install --dev
+        poetry install
                 
     - name: Run tests
       run: |
-        pipenv run coverage run -m unittest discover tests
+        poetry run coverage run -m unittest discover tests
 
     - name: Linting code
       run: |
-        pipenv run flake8 --config ./setup.cfg --show-source --statistics
+        poetry run flake8 --config ./setup.cfg --show-source --statistics
         
     - name: Type checking
       run: |
-        pipenv run mypy --config=./setup.cfg .
+        poetry run mypy --config=./setup.cfg .
 
     - name: Push report to coveralls.io
       env: 
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        pipenv run coveralls --service=github
+        poetry run coveralls --service=github
