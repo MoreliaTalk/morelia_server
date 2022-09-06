@@ -31,11 +31,11 @@ jobs:
 
     - name: Linting code
       run: |
-        poetry run flake8 --config ./setup.cfg --show-source --statistics
+        poetry run flake8 --show-source --statistics
         
     - name: Type checking
       run: |
-        poetry run mypy --config=./setup.cfg .
+        poetry run mypy .
 
     - name: Push report to coveralls.io
       env: 
