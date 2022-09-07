@@ -124,9 +124,8 @@ async def websocket_endpoint(websocket: WebSocket):
             request = MainHandler(request=data,
                                   database=db_connect,  # type: ignore
                                   protocol='mtp')
-            response = await websocket.send_bytes(request.get_response())
+            await websocket.send_bytes(request.get_response())
             logger.info("Response sent to client")
-            logger.debug(f"Result of processing: {response}")
         # After disconnecting the client (by the decision of the client,
         # the error) must interrupt the cycle otherwise the next clients
         # will not be able to connect.
