@@ -7,14 +7,15 @@ WORKDIR /morelia-server
 COPY Pipfile Pipfile
 COPY Pipfile.lock Pipfile.lock
 
-RUN pip3 install pipenv
-RUN pipenv install --ignore-pipfile
+RUN pip3 install pipx
+RUN pipx install poetry
+RUN poetry install --only main --sync
 
 COPY example_config.ini config.ini
 
 COPY . .
 
-CMD [ "pipenv", "run", \
+CMD [ "poetry", "run", \
     "python", "-m", \
     "uvicorn", "server:app", \
     "--host", "0.0.0.0", \

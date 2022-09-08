@@ -1,0 +1,71 @@
+[tool.poetry]
+name = "morelia_server"
+version = "0.4.0"
+description = "Morelia Server - server for MoreliaTalk messenger"
+authors = ["MoreliaTalk Team"]
+license = "LGPL-3.0"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+starlette = "==0.20.4"
+uvicorn = "==0.18.3"
+email-validator = "==1.2.1"
+sqlobject = "==3.9.1"
+loguru = "==0.6.0"
+websockets = "==10.3"
+pydantic = "==1.10.2"
+python-multipart = "==0.0.5"
+websocket-client = "==1.4.1"
+coverage = "==6.4.4"
+requests = "==2.28.1"
+win32-setctime = "*"
+sphinx = "==4.4.0"
+furo = "==2022.6.21"
+click = "==8.1.3"
+python = "^3.10"
+
+[tool.poetry.dev-dependencies]
+flake8 = "==5.0.4"
+flake8-import-order = "==0.18.1"
+flake8-docstrings = "==1.6.0"
+flake8-builtins = "==1.5.3"
+coveralls = "==3.3.1"
+mypy = "==0.971"
+Flake8-pyproject = "===1.1.0.post0"
+
+[tool.coverage.run]
+branch = true
+omit = ["*tests*"]
+
+[tool.coverage.report]
+precision = 0
+
+[tool.mypy]
+ignore_missing_imports = true
+namespace_packages = true
+explicit_package_bases = true
+
+[[tool.mypy.overrides]]
+module = 'mod.protocol.mtp.worker'
+no_strict_optional = true
+
+[tool.flake8]
+max-line-length = 79
+# D107 - Missing docstring in __init__
+# D202 - No blank lines allowed after function docstring
+# D203 - 1 blank line required before class docstring
+# D204 - 1 blank line required after class docstring
+# D205 - 1 blank line required between summary line and description
+# F721 - syntax error in doctest
+# D212 - Multi-line docstring summary should start at the first line
+# D200 - One-line docstring should fit on one line with quotes
+# W293 - blank line contains whitespace
+ignore = ["D107", "D202", "D203", "D204", "D205", "F721", "D212", "D200", "W293"]
+application-import-names = ["morelia_server", "tests", "admin", "mod"]
+import-order-style = "google"
+docstring-convention = "google"
+exclude = [".github", ".git", "__pycache__", "docs/source/conf.py", "tests"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
