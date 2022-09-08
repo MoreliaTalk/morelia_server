@@ -18,7 +18,7 @@ jobs:
 
       - name: Install pipx tool
         run: |
-          pip install pipx
+          pip list
 
       - name: Install poetry tool
         run: |
