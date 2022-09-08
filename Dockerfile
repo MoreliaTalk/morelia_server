@@ -9,7 +9,7 @@ COPY Pipfile.lock Pipfile.lock
 
 RUN pip3 install pipx
 RUN pipx install poetry
-RUN poetry install --sync
+RUN poetry install --only main --sync
 
 COPY example_config.ini config.ini
 
