@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "morelia-server"
+name = "morelia_server"
 version = "0.4.0"
 description = "Morelia Server - server for MoreliaTalk messenger"
 authors = ["MoreliaTalk Team"]
