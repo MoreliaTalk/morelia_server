@@ -1,6 +1,7 @@
 name: Build and publish docker image
 on:
   push:
+    branches: [ master, dev-fix-docker ]
     tags: ['*']
 
 env:
