@@ -4,16 +4,12 @@ FROM python:3.10.4-slim
 
 WORKDIR /morelia-server
 
-COPY Pipfile Pipfile
-COPY Pipfile.lock Pipfile.lock
+COPY . .
 
-RUN pip3 install pipx
-RUN pipx install poetry
+RUN pip3 install poetry==1.2.0
 RUN poetry install --only main --sync
 
 COPY example_config.ini config.ini
-
-COPY . .
 
 CMD [ "poetry", "run", \
     "python", "-m", \
