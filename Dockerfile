@@ -1,19 +1,19 @@
 # syntax=docker/dockerfile:1
 
-FROM python:3.10.4-slim
+FROM python:3.10.7-slim
 
 WORKDIR /morelia-server
 
-COPY Pipfile Pipfile
-COPY Pipfile.lock Pipfile.lock
+COPY . .
 
 RUN pip3 install pipx
-RUN pipx install poetry
+
+RUN pipx install poetry==1.2.0
+ENV PATH "$PATH:/root/.local/bin"
+
 RUN poetry install --only main --sync
 
 COPY example_config.ini config.ini
-
-COPY . .
 
 CMD [ "poetry", "run", \
     "python", "-m", \
