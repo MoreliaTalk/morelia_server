@@ -25,7 +25,7 @@ from unittest.mock import patch
 
 from loguru import logger
 from mod.db.dbhandler import DBHandler
-from server import app
+from server import MoreliaServer
 from starlette.testclient import TestClient, WebSocketTestSession
 from starlette.websockets import WebSocketDisconnect
 
@@ -40,7 +40,7 @@ class TestWebsocket(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         logger.remove()
-        cls.ws_client = TestClient(app)
+        cls.ws_client = TestClient(MoreliaServer().get_starlette_app())
 
     def test_normal_connect(self, _):
         with self.ws_client.websocket_connect("/ws") as connection:
@@ -71,7 +71,8 @@ class TestWebsocket(unittest.TestCase):
                                   "jsonapi": {"version": "1.0",
                                               "revision": "17"},
                                   "meta": None})
-            self.assertIsNotNone(json.loads(connection.receive_bytes()))
+
+            self.assertIsNotNone(connection.receive_json())
 
     def test_send_incorrect_message(self, _):
         with self.assertRaises(WebSocketDisconnect):
@@ -84,7 +85,7 @@ class TestWebsocket(unittest.TestCase):
 class TestMainPage(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.test_client = TestClient(app)
+        cls.test_client = TestClient(MoreliaServer().get_starlette_app())
 
     def test_main_page(self, _):
         response = self.test_client.get("/")

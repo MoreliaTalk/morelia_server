@@ -21,8 +21,7 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 
 from collections import namedtuple
 from time import time
-from typing import Any, Callable
-from typing import Optional
+from typing import Optional, Any
 from typing import Union
 from uuid import uuid4
 
@@ -32,12 +31,13 @@ from sqlobject.sresults import SelectResults
 
 from mod import error
 from mod import lib
-from mod.config.instance import config_option
+from mod.config.handler import ConfigHandler
+from mod.config.models import ConfigModel
 from mod.db.dbhandler import DatabaseAccessError
 from mod.db.dbhandler import DatabaseReadError
 from mod.db.dbhandler import DatabaseWriteError
 from mod.db.dbhandler import DBHandler
-from mod.protocol.mtp import api
+from mod.protocol import api
 
 
 class MTPErrorResponse:
@@ -114,11 +114,12 @@ class MTProtocol:
         returns class api.Response
     """
 
-    def __init__(self, request, database: DBHandler):
+    def __init__(self, request: str, database: DBHandler, config_option: ConfigModel):
         self.jsonapi = api.VersionResponse(version=api.VERSION,
                                            revision=api.REVISION)
         self._current_time = int(time())
         self._db = database
+        self._config_option = config_option
 
         try:
             self.request = api.Request.parse_obj(request)
@@ -433,7 +434,7 @@ class MTProtocol:
         flow_uuid = request.data.flow[0].uuid
         flow = []
         message = []
-        LIMIT_MESSAGES = config_option.limits.messages
+        LIMIT_MESSAGES = self._config_option.limits.messages
 
         if request.data.flow[0].message_start is None:
             message_start = 0
@@ -613,7 +614,7 @@ class MTProtocol:
 
         users_volume = len(request.data.user)
         user = []
-        LIMIT_USERS = config_option.limits.users
+        LIMIT_USERS = self._config_option.limits.users
 
         if users_volume <= LIMIT_USERS:
             errors = MTPErrorResponse("OK")
@@ -838,8 +839,8 @@ class MTProtocol:
             of supported by server.
         """
 
-        MIN = config_option.api.min_version
-        MAX = config_option.api.max_version
+        MIN = self._config_option.api.min_version
+        MAX = self._config_option.api.max_version
         version = request.jsonapi.version
         if MIN <= version <= MAX:
             return True
