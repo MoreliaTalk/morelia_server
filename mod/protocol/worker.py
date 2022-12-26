@@ -21,8 +21,7 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 
 from collections import namedtuple
 from time import time
-from typing import Any
-from typing import Optional
+from typing import Optional, Any
 from typing import Union
 from uuid import uuid4
 
@@ -32,12 +31,13 @@ from sqlobject.sresults import SelectResults
 
 from mod import error
 from mod import lib
-from mod.config.instance import config_option
+from mod.config.handler import ConfigHandler
+from mod.config.models import ConfigModel
 from mod.db.dbhandler import DatabaseAccessError
 from mod.db.dbhandler import DatabaseReadError
 from mod.db.dbhandler import DatabaseWriteError
 from mod.db.dbhandler import DBHandler
-from mod.protocol.mtp import api
+from mod.protocol import api
 
 
 class MTPErrorResponse:
@@ -114,13 +114,12 @@ class MTProtocol:
         returns class api.Response
     """
 
-    def __init__(self,
-                 request,
-                 database: DBHandler):
+    def __init__(self, request: str, database: DBHandler, config_option: ConfigModel):
         self.jsonapi = api.VersionResponse(version=api.VERSION,
                                            revision=api.REVISION)
-        self.get_time = int(time())
+        self._current_time = int(time())
         self._db = database
+        self._config_option = config_option
 
         try:
             self.request = api.Request.parse_obj(request)
@@ -130,44 +129,48 @@ class MTProtocol:
                                          str(ERROR))
             logger.debug(f"Validation failed: {ERROR}")
         else:
-            auth = self._check_auth(self.request.data.user[0].uuid,
-                                    self.request.data.user[0].auth_id)
-            version = self._check_protocol_version(self.request)
-            if version and auth.result:
-                match self.request.type:
-                    case "get_update":
-                        self.response = self._get_update(self.request)
-                    case "send_message":
-                        self.response = self._send_message(self.request)
-                    case "all_messages":
-                        self.response = self._all_messages(self.request)
-                    case "add_flow":
-                        self.response = self._add_flow(self.request)
-                    case "all_flow":
-                        self.response = self._all_flow(self.request)
-                    case "user_info":
-                        self.response = self._user_info(self.request)
-                    case "delete_user":
-                        self.response = self._delete_user(self.request)
-                    case "delete_message":
-                        self.response = self._delete_message(self.request)
-                    case "edited_message":
-                        self.response = self._edited_message(self.request)
-                    case "ping_pong":
-                        self.response = self._ping_pong(self.request)
-                    case _:
-                        self.response = self._errors("METHOD_NOT_ALLOWED")
-            elif version and auth.result is False:
-                match self.request.type:
-                    case 'register_user':
-                        self.response = self._register_user(self.request)
-                    case 'authentication':
-                        self.response = self._authentication(self.request)
-                    case _:
-                        self.response = self._errors("UNAUTHORIZED",
-                                                     auth.error_message)
-            else:
-                self.response = self._errors("VERSION_NOT_SUPPORTED")
+            self._select_method_and_set_response()
+
+    def _select_method_and_set_response(self):
+        auth = self._check_auth(self.request.data.user[0].uuid,
+                                self.request.data.user[0].auth_id)
+        version = self._check_protocol_version(self.request)
+
+        if version and auth.result:
+            match self.request.type:
+                case "get_update":
+                    self.response = self._get_update(self.request)
+                case "send_message":
+                    self.response = self._send_message(self.request)
+                case "all_messages":
+                    self.response = self._all_messages(self.request)
+                case "add_flow":
+                    self.response = self._add_flow(self.request)
+                case "all_flow":
+                    self.response = self._all_flow(self.request)
+                case "user_info":
+                    self.response = self._user_info(self.request)
+                case "delete_user":
+                    self.response = self._delete_user(self.request)
+                case "delete_message":
+                    self.response = self._delete_message(self.request)
+                case "edited_message":
+                    self.response = self._edited_message(self.request)
+                case "ping_pong":
+                    self.response = self._ping_pong(self.request)
+                case _:
+                    self.response = self._errors("METHOD_NOT_ALLOWED")
+        elif version and auth.result is False:
+            match self.request.type:
+                case 'register_user':
+                    self.response = self._register_user(self.request)
+                case 'authentication':
+                    self.response = self._authentication(self.request)
+                case _:
+                    self.response = self._errors("UNAUTHORIZED",
+                                                 auth.error_message)
+        else:
+            self.response = self._errors("VERSION_NOT_SUPPORTED")
 
     def _check_auth(self,
                     uuid: str,
@@ -284,7 +287,7 @@ class MTProtocol:
                                   username=username,
                                   is_bot=False,
                                   auth_id=auth_id,
-                                  token_ttl=self.get_time,
+                                  token_ttl=self._current_time,
                                   email=email,
                                   avatar=None,
                                   bio=None,
@@ -292,8 +295,8 @@ class MTProtocol:
                                   key=generated.get_key)
                 user.append(api.UserResponse(uuid=uuid,
                                              auth_id=auth_id,
-                                             token_ttl=self.get_time))
-                data = api.DataResponse(time=self.get_time,
+                                             token_ttl=self._current_time))
+                data = api.DataResponse(time=self._current_time,
                                         user=user)
                 errors = MTPErrorResponse("CREATED")
                 logger.success("User is register")
@@ -326,42 +329,42 @@ class MTProtocol:
         if dbquery_message.count() >= 1:
             for element in dbquery_message:
                 message.append(api.MessageResponse(
-                               uuid=element.uuid,
-                               client_id=None,
-                               text=element.text,
-                               from_user=element.user.uuid,
-                               time=element.time,
-                               from_flow=element.flow.uuid,
-                               file_picture=element.file_picture,
-                               file_video=element.file_video,
-                               file_audio=element.file_audio,
-                               file_document=element.file_document,
-                               emoji=element.emoji,
-                               edited_time=element.edited_time,
-                               edited_status=element.edited_status))
+                    uuid=element.uuid,
+                    client_id=None,
+                    text=element.text,
+                    from_user=element.user.uuid,
+                    time=element.time,
+                    from_flow=element.flow.uuid,
+                    file_picture=element.file_picture,
+                    file_video=element.file_video,
+                    file_audio=element.file_audio,
+                    file_document=element.file_document,
+                    emoji=element.emoji,
+                    edited_time=element.edited_time,
+                    edited_status=element.edited_status))
 
         if dbquery_flow.count() >= 1:
             for element in dbquery_flow:
                 flow.append(api.FlowResponse(
-                            uuid=element.uuid,
-                            time=element.time_created,
-                            type=element.flow_type,
-                            title=element.title,
-                            info=element.info,
-                            owner=element.owner,
-                            users=[item.uuid for item in element.users]))
+                    uuid=element.uuid,
+                    time=element.time_created,
+                    type=element.flow_type,
+                    title=element.title,
+                    info=element.info,
+                    owner=element.owner,
+                    users=[item.uuid for item in element.users]))
 
         if dbquery_user.count() >= 1:
             for element in dbquery_user:
                 user.append(api.UserResponse(
-                            uuid=element.uuid,
-                            username=element.username,
-                            is_bot=element.is_bot,
-                            avatar=element.avatar,
-                            bio=element.bio))
+                    uuid=element.uuid,
+                    username=element.username,
+                    is_bot=element.is_bot,
+                    avatar=element.avatar,
+                    bio=element.bio))
 
         errors = MTPErrorResponse("OK")
-        data = api.DataResponse(time=self.get_time,
+        data = api.DataResponse(time=self._current_time,
                                 flow=flow,
                                 message=message,
                                 user=user)
@@ -395,7 +398,7 @@ class MTProtocol:
             self._db.add_message(flow_uuid,
                                  user_uuid,
                                  message_uuid,
-                                 self.get_time,
+                                 self._current_time,
                                  text,
                                  picture,
                                  video,
@@ -411,7 +414,7 @@ class MTProtocol:
                                                client_id=client_id,
                                                from_user=user_uuid,
                                                from_flow=flow_uuid))
-            data = api.DataResponse(time=self.get_time,
+            data = api.DataResponse(time=self._current_time,
                                     message=message)
             logger.success("\'_send_message\' executed successfully")
             errors = MTPErrorResponse("OK")
@@ -431,7 +434,7 @@ class MTProtocol:
         flow_uuid = request.data.flow[0].uuid
         flow = []
         message = []
-        LIMIT_MESSAGES = config_option.limits.messages
+        LIMIT_MESSAGES = self._config_option.limits.messages
 
         if request.data.flow[0].message_start is None:
             message_start = 0
@@ -465,20 +468,21 @@ class MTProtocol:
 
             for element in db[start:end]:
                 _list.append(api.MessageResponse(
-                             uuid=element.uuid,
-                             client_id=None,
-                             text=element.text,
-                             from_user=element.user.uuid,
-                             time=element.time,
-                             from_flow=element.flow.uuid,
-                             file_picture=element.file_picture,
-                             file_video=element.file_video,
-                             file_audio=element.file_audio,
-                             file_document=element.file_document,
-                             emoji=element.emoji,
-                             edited_time=element.edited_time,
-                             edited_status=element.edited_status))
+                    uuid=element.uuid,
+                    client_id=None,
+                    text=element.text,
+                    from_user=element.user.uuid,
+                    time=element.time,
+                    from_flow=element.flow.uuid,
+                    file_picture=element.file_picture,
+                    file_video=element.file_video,
+                    file_audio=element.file_audio,
+                    file_document=element.file_document,
+                    emoji=element.emoji,
+                    edited_time=element.edited_time,
+                    edited_status=element.edited_status))
             return _list
+
         try:
             dbquery = self._db.get_message_by_more_time_and_flow(flow_uuid,
                                                                  request.data.time)  # noqa
@@ -510,7 +514,7 @@ class MTProtocol:
                                               f" than server limit"
                                               f" ({LIMIT_MESSAGES})")
 
-        data = api.DataResponse(time=self.get_time,
+        data = api.DataResponse(time=self._current_time,
                                 flow=flow,
                                 message=message)
 
@@ -543,7 +547,7 @@ class MTProtocol:
             try:
                 self._db.add_flow(flow_uuid,
                                   users,
-                                  self.get_time,
+                                  self._current_time,
                                   flow_type,
                                   request.data.flow[0].title,
                                   request.data.flow[0].info,
@@ -553,7 +557,7 @@ class MTProtocol:
                                           str(flow_error))
             else:
                 flow.append(api.FlowResponse(uuid=flow_uuid,
-                                             time=self.get_time,
+                                             time=self._current_time,
                                              type=request.data.flow[0].type,
                                              title=request.data.flow[0].title,
                                              info=request.data.flow[0].info,
@@ -562,7 +566,7 @@ class MTProtocol:
                 errors = MTPErrorResponse("OK")
                 logger.success("\'_add_flow\' executed successfully")
 
-        data = api.DataResponse(time=self.get_time,
+        data = api.DataResponse(time=self._current_time,
                                 flow=flow)
 
         return api.Response(type=request.type,
@@ -582,19 +586,19 @@ class MTProtocol:
         if dbquery.count():
             for element in dbquery:
                 flow.append(api.FlowResponse(
-                            uuid=element.uuid,
-                            time=element.time_created,
-                            type=element.flow_type,
-                            title=element.title,
-                            info=element.info,
-                            owner=element.owner,
-                            users=[item.uuid for item in element.users]))
+                    uuid=element.uuid,
+                    time=element.time_created,
+                    type=element.flow_type,
+                    title=element.title,
+                    info=element.info,
+                    owner=element.owner,
+                    users=[item.uuid for item in element.users]))
             errors = MTPErrorResponse("OK")
             logger.success("\'_all_flow\' executed successfully")
         else:
             errors = MTPErrorResponse("NOT_FOUND")
 
-        data = api.DataResponse(time=self.get_time,
+        data = api.DataResponse(time=self._current_time,
                                 flow=flow)
 
         return api.Response(type=request.type,
@@ -610,7 +614,7 @@ class MTProtocol:
 
         users_volume = len(request.data.user)
         user = []
-        LIMIT_USERS = config_option.limits.users
+        LIMIT_USERS = self._config_option.limits.users
 
         if users_volume <= LIMIT_USERS:
             errors = MTPErrorResponse("OK")
@@ -634,7 +638,7 @@ class MTProtocol:
                                       f"Requested more {LIMIT_USERS}"
                                       " users than server limit")
 
-        data = api.DataResponse(time=self.get_time,
+        data = api.DataResponse(time=self._current_time,
                                 user=user)
 
         return api.Response(type=request.type,
@@ -677,7 +681,7 @@ class MTProtocol:
         else:
             errors = MTPErrorResponse("NOT_FOUND")
 
-        data = api.DataResponse(time=self.get_time,
+        data = api.DataResponse(time=self._current_time,
                                 user=user)
 
         return api.Response(type=request.type,
@@ -742,7 +746,7 @@ class MTProtocol:
             dbquery.file_audio = b''
             dbquery.file_document = b''
             dbquery.emoji = b''
-            dbquery.edited_time = self.get_time
+            dbquery.edited_time = self._current_time
             dbquery.edited_status = True
             errors = MTPErrorResponse("OK")
             logger.success("\'_delete_message\' executed successfully")
@@ -769,7 +773,7 @@ class MTProtocol:
                                       str(not_found))
         else:
             dbquery.text = request.data.message[0].text
-            dbquery.edited_time = self.get_time
+            dbquery.edited_time = self._current_time
             dbquery.edited_status = True
             errors = MTPErrorResponse("OK")
             logger.success("\'_edited_message\' executed successfully")
@@ -835,8 +839,8 @@ class MTProtocol:
             of supported by server.
         """
 
-        MIN = config_option.api.min_version
-        MAX = config_option.api.max_version
+        MIN = self._config_option.api.min_version
+        MAX = self._config_option.api.max_version
         version = request.jsonapi.version
         if MIN <= version <= MAX:
             return True

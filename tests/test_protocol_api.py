@@ -26,7 +26,7 @@ from loguru import logger
 
 from pydantic.error_wrappers import ValidationError
 
-from mod.protocol.mtp import api
+from mod.protocol import api
 
 # Add path to directory with code being checked
 # to variable 'PATH' to import modules from directory

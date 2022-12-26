@@ -23,13 +23,10 @@ import sys
 
 from loguru import logger
 
-from mod.config.instance import config_option
-
-expiration_date = config_option.logging.expiration_date
-debug_expiration_date = config_option.logging.debug_expiration_date
+from mod.config.models import ConfigModel
 
 
-def add_logging(debug_status: int) -> None:
+def add_logging(config_option: ConfigModel) -> None:
     """
     Enable logging depending on start parameter uvicorn and choice their level.
     Logging information written in .log file which contains in /log folder and
@@ -72,6 +69,9 @@ def add_logging(debug_status: int) -> None:
 
             `5 - TRACE`
     """
+    expiration_date = config_option.logging.expiration_date
+    debug_expiration_date = config_option.logging.debug_expiration_date
+    debug_status = config_option.logging.level
 
     logger.remove()
     DEBUG = True if debug_status < 20 else False

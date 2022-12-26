@@ -41,11 +41,12 @@ from mod.db.dbhandler import DatabaseReadError
 from mod.db.dbhandler import DatabaseWriteError
 from mod.db.dbhandler import DBHandler
 from mod.lib import Hash
-from mod.protocol.mtp.api import BaseUser
-from mod.protocol.mtp.api import BaseVersion
-from mod.protocol.mtp.api import DataRequest
-from mod.protocol.mtp.api import FlowRequest
-from mod.protocol.mtp.api import Request
+from mod.protocol.api import BaseUser
+from mod.protocol.api import BaseVersion
+from mod.protocol.api import DataRequest
+from mod.protocol.api import FlowRequest
+from mod.protocol.api import Request
+from server import MoreliaServer
 
 VERSION = 'v0.3'
 
@@ -626,8 +627,7 @@ def devserver(host: str,
         reload: enable hot reloaded
     """
 
-    click.echo(f"Develop server started at address=https//{host}:{port}")
-    uvicorn.run("server:app",
+    uvicorn.run(MoreliaServer().get_starlette_app(),
                 host=host,
                 port=port,
                 http="h11",
@@ -636,6 +636,8 @@ def devserver(host: str,
                 use_colors=use_colors,
                 debug=True,
                 reload=reload)
+
+    click.echo(f"Develop server started at address=https//{host}:{port}")
 
 
 @run.command("server",

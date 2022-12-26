@@ -26,11 +26,11 @@ from uuid import uuid4
 
 from loguru import logger
 
-from mod.protocol.mtp import api
+from mod.protocol import api
 from mod import lib
 from mod.db.dbhandler import DBHandler
-from mod.protocol.mtp.worker import MTProtocol
-from mod.protocol.mtp.worker import MTPErrorResponse
+from mod.protocol.worker import MTProtocol
+from mod.protocol.worker import MTPErrorResponse
 from mod.config.handler import ConfigHandler
 
 # Add path to directory with code being checked
