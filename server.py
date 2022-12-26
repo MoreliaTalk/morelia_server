@@ -122,7 +122,9 @@ class MoreliaServer:
                 # create a "client" object and pass the request body to
                 # it as a parameter. The "get_response" method generates
                 # a response in JSON-object format.
-                request = MTProtocol(request=data, database=self.db_connect, config_option=self.config_option)
+                request = MTProtocol(request=data,
+                                     database=self.db_connect,
+                                     config_option=self.config_option)
                 await websocket.send_text(request.get_response())
                 logger.info("Response sent to client")
             # After disconnecting the client (by the decision of the client,
