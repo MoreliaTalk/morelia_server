@@ -13,7 +13,7 @@ ENV PATH "$PATH:/root/.local/bin"
 
 RUN poetry install --only main --sync
 
-COPY example_config.ini config.ini
+COPY example_config.toml config.toml
 
 CMD [ "poetry", "run", \
     "python", "-m", \
