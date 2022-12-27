@@ -21,25 +21,14 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 from pathlib import Path
 from pathlib import PurePath
 
+from loguru import logger
 from pydantic import ValidationError
 import tomli
 
 from mod.config.models import ConfigModel
 
-PROJECT_ROOT = PurePath(__file__).parent.parent.parent
 CONFIG_STANDARD_FILENAME = "config.toml"
-
-
-class ConfigError(Exception):
-    pass
-
-
-class ConfigNotFoundError(ConfigError):
-    pass
-
-
-class ConfigIsNotValidError(ConfigError):
-    pass
+PROJECT_ROOT = PurePath(__file__).parent.parent.parent
 
 
 def read_config(filepath: str = CONFIG_STANDARD_FILENAME) -> ConfigModel:
@@ -48,15 +37,22 @@ def read_config(filepath: str = CONFIG_STANDARD_FILENAME) -> ConfigModel:
     if not path.is_absolute():
         path = Path(PROJECT_ROOT, path)
 
-    if not path.is_file():
-        raise ConfigNotFoundError()
+    if path.is_file():
+        raw_config = path.read_text()
+        toml_parsed = tomli.loads(raw_config)
 
-    raw_config = path.read_text()
-    toml_parsed = tomli.loads(raw_config)
+        try:
+            config_option = ConfigModel.parse_obj(toml_parsed)
+        except ValidationError:
+            logger.error(f"{path} in {path.parent} not valid."
+                         f"Default settings are used.")
 
-    try:
-        validated_conf = ConfigModel.parse_obj(toml_parsed)
-    except ValidationError:
-        raise ConfigIsNotValidError
+            config_option = ConfigModel()
 
-    return validated_conf
+    else:
+        logger.warning(f"{path} in {path.parent} not found."
+                       f"Default settings are used.")
+
+        config_option = ConfigModel()
+
+    return config_option

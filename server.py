@@ -30,7 +30,7 @@ from starlette.responses import HTMLResponse
 from starlette.websockets import WebSocket
 from starlette.websockets import WebSocketDisconnect
 
-from mod.config.handler import ConfigHandler
+from mod.config.handler import read_config
 from mod.db.dbhandler import DBHandler
 from mod.log_handler import add_logging
 from mod.protocol.worker import MTProtocol
@@ -40,8 +40,7 @@ db_connect: DBHandler | None = None
 
 class MoreliaServer:
     def __init__(self):
-        config_handler = ConfigHandler()
-        self.config_option = config_handler.read()
+        self.config_option = read_config()
 
         self.db_connect = DBHandler(uri=self.config_option.database.url)
         self.db_connect.create_table()
