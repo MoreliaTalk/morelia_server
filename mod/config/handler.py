@@ -44,13 +44,13 @@ def read_config(filepath: str = CONFIG_STANDARD_FILENAME) -> ConfigModel:
         try:
             config_option = ConfigModel.parse_obj(toml_parsed)
         except ValidationError:
-            logger.error(f"{path} in {path.parent} not valid."
+            logger.error(f"Config {path.name} in {path.parent} not valid."
                          f"Default settings are used.")
 
             config_option = ConfigModel()
 
     else:
-        logger.warning(f"{path} in {path.parent} not found."
+        logger.warning(f"Config {path.name} in {path.parent} not found."
                        f"Default settings are used.")
 
         config_option = ConfigModel()
