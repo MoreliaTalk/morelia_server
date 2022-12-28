@@ -25,17 +25,17 @@ from loguru import logger
 from pydantic import ValidationError
 import tomli
 
+from const import ROOT_DIR
 from mod.config.models import ConfigModel
 
 CONFIG_STANDARD_FILENAME = "config.toml"
-PROJECT_ROOT = PurePath(__file__).parent.parent.parent
 
 
 def read_config(filepath: str = CONFIG_STANDARD_FILENAME) -> ConfigModel:
     path = Path(filepath)
 
     if not path.is_absolute():
-        path = Path(PROJECT_ROOT, path)
+        path = Path(ROOT_DIR, path)
 
     if path.is_file():
         raw_config = path.read_text()
