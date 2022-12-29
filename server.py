@@ -14,13 +14,13 @@ from mod.protocol.worker import MTProtocol
 
 class MoreliaServer:
     _starlette_app: Starlette
-    _config_option: ConfigModel
+    _config_options: ConfigModel
     _database: DBHandler
 
     def __init__(self):
         self._config_options = read_config()
 
-        add_logging(self._config_option)
+        add_logging(self._config_options)
 
         self._database = DBHandler()
         self._database.create_table()
