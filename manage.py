@@ -1,10 +1,7 @@
 from enum import Enum
-
 import rich
 import typer
 import uvicorn
-
-from server import MoreliaServer
 
 cli = typer.Typer(help="CLI for management MoreliaServer",
                   no_args_is_help=True)
@@ -21,9 +18,7 @@ def devserver(host: str = typer.Option("127.0.0.1",
               port: int = typer.Option(8080,
                                        help="Port for running server"),
               use_colors: bool = typer.Option(True, help="Enable using colors in terminal")):
-    server_instance = MoreliaServer()
-
-    uvicorn.run(server_instance.get_starlette_app(),
+    uvicorn.run("server:app",
                 host=host,
                 port=port,
                 http="h11",

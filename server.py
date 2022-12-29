@@ -40,17 +40,6 @@ db_connect: DBHandler | None = None
 
 class MoreliaServer:
     def __init__(self):
-        self.config_option = read_config()
-
-        self.db_connect = DBHandler(uri=self.config_option.database.url)
-        self.db_connect.create_table()
-
-        # TODO: move to loger module
-        if self.config_option.logging.uvicorn_logging_disable:
-            standart_logging.disable()
-
-        add_logging(self.config_option)
-
         self.starlette_app = Starlette()
 
         self.starlette_app.add_event_handler(event_type="startup", func=self._on_server_started)
@@ -61,10 +50,19 @@ class MoreliaServer:
         return self.starlette_app
 
     async def _on_server_started(self):
-        logger.info("Start server")
+        self.config_option = read_config()
 
-        server_started = datetime.now()
-        logger.info(f"Started time {server_started}")
+        # TODO: move to loger module
+        if self.config_option.logging.uvicorn_logging_disable:
+            standart_logging.disable()
+
+        add_logging(self.config_option)
+
+        logger.info("Server started")
+        logger.info(f"Started time {datetime.now()}")
+
+        self.db_connect = DBHandler(uri=self.config_option.database.url)
+        self.db_connect.create_table()
 
     async def _homepage(self, request: Request):
         """
@@ -145,6 +143,9 @@ class MoreliaServer:
                     await websocket.close(CODE)
                     logger.info(f"Close with code: {CODE}")
 
+
+_morelia_server = MoreliaServer()
+app = _morelia_server.get_starlette_app()
 
 if __name__ == "__main__":
     print("to start the server, write the following command in the console:")
