@@ -52,7 +52,7 @@ class MoreliaServer:
     async def _on_server_started(self):
         self.config_option = read_config()
 
-        # TODO: move to loger module
+        # TODO: move to logger module
         if self.config_option.logging.uvicorn_logging_disable:
             standart_logging.disable()
 
