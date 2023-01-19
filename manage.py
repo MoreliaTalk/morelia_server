@@ -1,8 +1,3 @@
-"""
-Here and below, hints like "Optional[type]" are used because typer does not currently support pep 604. TODO: написать нормальный докстринг
-"""
-import json
-from enum import Enum
 from pathlib import Path
 from time import time
 from typing import Optional
@@ -20,9 +15,6 @@ from mod.config.handler import read_config
 from mod.config.models import ConfigModel
 from mod.db.dbhandler import DBHandler, DatabaseReadError, DatabaseAccessError, DatabaseWriteError
 from mod.lib import Hash
-from mod.protocol import api
-from websockets import client as ws_client
-from websockets import exceptions as ws_exceptions
 
 cli = typer.Typer(help="CLI for management MoreliaServer",
                   no_args_is_help=True)
