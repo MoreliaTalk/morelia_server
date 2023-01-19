@@ -1,86 +1,42 @@
-"""
-Copyright (c) 2020 - present MoreliaTalk team and other.
-Look at the file AUTHORS.md(located at the root of the project) to get the
-full list.
-
-This file is part of Morelia Server.
-
-Morelia Server is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-Morelia Server is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public License
-along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
-"""
-
 from datetime import datetime
 from json import JSONDecodeError
-import logging as standart_logging
 
 from loguru import logger
 from starlette.applications import Starlette
-from starlette.requests import Request
-from starlette.responses import HTMLResponse
 from starlette.websockets import WebSocket
 from starlette.websockets import WebSocketDisconnect
-
 from mod.config.handler import read_config
+from mod.config.models import ConfigModel
 from mod.db.dbhandler import DBHandler
 from mod.log_handler import add_logging
 from mod.protocol.worker import MTProtocol
 
-db_connect: DBHandler | None = None
-
 
 class MoreliaServer:
+    _starlette_app: Starlette
+    _config_options: ConfigModel
+    _database: DBHandler
+
     def __init__(self):
-        self.config_option = read_config()
+        self._config_options = read_config()
 
-        self.db_connect = DBHandler(uri=self.config_option.database.url)
-        self.db_connect.create_table()
+        add_logging(self._config_options)
 
-        # TODO: move to loger module
-        if self.config_option.logging.uvicorn_logging_disable:
-            standart_logging.disable()
+        self._database = DBHandler(uri=self._config_options.database.url)
+        self._database.create_table()
 
-        add_logging(self.config_option)
+        self._starlette_app = Starlette()
 
-        self.starlette_app = Starlette()
+        self._starlette_app.add_websocket_route("/ws", self._ws_endpoint)
 
-        self.starlette_app.add_event_handler(event_type="startup", func=self._on_server_started)
-        self.starlette_app.add_route(path="/", route=self._homepage)
-        self.starlette_app.add_websocket_route(path="/ws", route=self._websocket_endpoint)
+    def get_starlette_app(self):
+        return self._starlette_app
 
-    def get_starlette_app(self) -> Starlette:
-        return self.starlette_app
+    def _on_start(self):
+        logger.info("Server started")
+        logger.info(f"Started time {datetime.now()}")
 
-    async def _on_server_started(self):
-        logger.info("Start server")
-
-        server_started = datetime.now()
-        logger.info(f"Started time {server_started}")
-
-    async def _homepage(self, request: Request):
-        """
-        Rendered home page where presents information about current working server.
-
-        Args:
-            request(Request): not used
-
-        Returns:
-            (text/html): rendered text to html
-
-        """
-
-        return HTMLResponse("<h1>MoreliaServer</h1>")
-
-    async def _websocket_endpoint(self, websocket: WebSocket) -> None:
+    async def _ws_endpoint(self, websocket: WebSocket):
         """
         Responsible for establishing a websocket connection.
 
@@ -122,8 +78,8 @@ class MoreliaServer:
                 # it as a parameter. The "get_response" method generates
                 # a response in JSON-object format.
                 request = MTProtocol(request=data,
-                                     database=self.db_connect,
-                                     config_option=self.config_option)
+                                     database=self._database,
+                                     config_option=self._config_options)
                 await websocket.send_text(request.get_response())
                 logger.info("Response sent to client")
             # After disconnecting the client (by the decision of the client,
@@ -140,13 +96,15 @@ class MoreliaServer:
                 break
             else:
                 if websocket.client_state.value == 0:
-                    CODE = 1000
-                    # "code=1000" - normal session termination
+                    CODE = 1000  # normal session termination
                     await websocket.close(CODE)
                     logger.info(f"Close with code: {CODE}")
 
 
-if __name__ == "__main__":
+if __name__ != "__main__":
+    _server = MoreliaServer()
+    app = _server.get_starlette_app()
+else:
     print("to start the server, write the following command in the console:")
-    print("uvicorn server:app --host 0.0.0.0 --port 8000 --reload \
-           --use-colors --http h11 --ws websockets &")
+    print("uvicorn server:app --host 0.0.0.0 --port 8000 --reload "
+          "--use-colors --http h11 --ws websockets &")

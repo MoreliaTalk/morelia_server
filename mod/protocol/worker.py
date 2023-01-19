@@ -31,7 +31,6 @@ from sqlobject.sresults import SelectResults
 
 from mod import error
 from mod import lib
-from mod.config.handler import ConfigHandler
 from mod.config.models import ConfigModel
 from mod.db.dbhandler import DatabaseAccessError
 from mod.db.dbhandler import DatabaseReadError
