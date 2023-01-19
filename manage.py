@@ -1,11 +1,14 @@
 """
 Here and below, hints like "Optional[type]" are used because typer does not currently support pep 604. TODO: написать нормальный докстринг
 """
-
+import json
+from enum import Enum
+from pathlib import Path
+from time import time
 from typing import Optional
 from uuid import uuid4
 
-
+import tomli_w
 import typer
 import uvicorn
 from faker import Faker
@@ -14,8 +17,12 @@ from rich import box
 from rich.table import Table
 
 from mod.config.handler import read_config
+from mod.config.models import ConfigModel
 from mod.db.dbhandler import DBHandler, DatabaseReadError, DatabaseAccessError, DatabaseWriteError
 from mod.lib import Hash
+from mod.protocol import api
+from websockets import client as ws_client
+from websockets import exceptions as ws_exceptions
 
 cli = typer.Typer(help="CLI for management MoreliaServer",
                   no_args_is_help=True)
@@ -48,6 +55,24 @@ def devserver(host: str = typer.Option("127.0.0.1",
 
 
 @cli.command()
+def restore_config():
+    is_confirm = typer.confirm("This action is not reversible. "
+                               "The config will be overwritten "
+                               "with default data. Continue?")
+
+    if is_confirm:
+        default_dict = ConfigModel().dict()
+        default_toml = tomli_w.dumps(default_dict)
+
+        with Path("config.toml").open("w") as config_file:
+            config_file.write(default_toml)
+
+        rich_output.print("Successful restore config")
+    else:
+        rich_output.print("Aborted!")
+
+
+@cli.command()
 def create_tables():
     database = DBHandler(config_option.database.url)
     try:
@@ -58,7 +83,21 @@ def create_tables():
         rich_output.print(f"[red]The database is unavailable, "
                           f"table not created. {err}")
     else:
-        rich_output.print("[green]Tables in db is created.")
+        rich_output.print("[green]Tables in db successful created.")
+
+
+@cli.command()
+def delete_tables():
+    database = DBHandler(config_option.database.url)
+    try:
+        database.delete_table()
+    except (DatabaseReadError,
+            DatabaseAccessError,
+            DatabaseWriteError) as err:
+        rich_output.print(f"[red]The database is unavailable, "
+                          f"table not deleted. {err}")
+    else:
+        rich_output.print("[green]Tables in db successful deleted.")
 
 
 @cli.command()
@@ -104,6 +143,26 @@ def create_user(login: str = typer.Argument(..., help="Login"),
 
         rich_output.print("User successful created:", style="bold green")
         rich_output.print(output_table)
+
+
+@cli.command()
+def create_group(owner_login: str) -> None:
+    db = DBHandler(config_option.database.url)
+
+    try:
+        user = db.get_user_by_login(login=owner_login)
+    except DatabaseWriteError:
+        rich_output.print("[red]Database write error, user not created. Check that tables is exist")
+    else:
+        new_flow = db.add_flow(uuid=str(uuid4().int),
+                               users=[user.uuid],
+                               time_created=int(time()),
+                               flow_type="group",
+                               title="Test",
+                               info="Test flow",
+                               owner=user.uuid)
+        new_flow.addUserConfig(user)
+        rich_output.print("Flow created")
 
 
 if __name__ == "__main__":
