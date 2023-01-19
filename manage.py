@@ -1,27 +1,29 @@
-import rich
+"""
+Here and below, hints like "Optional[type]" are used because typer does not currently support pep 604. TODO: написать нормальный докстринг
+"""
+
+from typing import Optional
+from uuid import uuid4
+
+
 import typer
 import uvicorn
+from faker import Faker
+from rich.console import Console
+from rich import box
+from rich.table import Table
 
 from mod.config.handler import read_config
 from mod.db.dbhandler import DBHandler, DatabaseReadError, DatabaseAccessError, DatabaseWriteError
+from mod.lib import Hash
 
 cli = typer.Typer(help="CLI for management MoreliaServer",
                   no_args_is_help=True)
 
+rich_output = Console()
+fake_data_generator = Faker()
+
 config_option = read_config()
-
-
-@cli.command()
-def create_tables(uri: str = config_option.database.url):
-    database = DBHandler(uri)
-    try:
-        database.create_table()
-    except (DatabaseReadError,
-            DatabaseAccessError,
-            DatabaseWriteError) as err:
-        rich.print(f"The database is unavailable, table not created. {err}")
-    else:
-        rich.print("Tables in db is created.")
 
 
 @cli.command()
@@ -43,6 +45,65 @@ def devserver(host: str = typer.Option("127.0.0.1",
                 log_level=log_level,
                 debug=True,
                 reload=True)
+
+
+@cli.command()
+def create_tables():
+    database = DBHandler(config_option.database.url)
+    try:
+        database.create_table()
+    except (DatabaseReadError,
+            DatabaseAccessError,
+            DatabaseWriteError) as err:
+        rich_output.print(f"[red]The database is unavailable, "
+                          f"table not created. {err}")
+    else:
+        rich_output.print("[green]Tables in db is created.")
+
+
+@cli.command()
+def create_user(login: str = typer.Argument(..., help="Login"),
+                username: Optional[str] = typer.Option(None, help="Username. If value is set to None, "
+                                                                  "generated random username is used."),
+                password: Optional[str] = typer.Option(None, help="Password. If value is set to None, "
+                                                                  "generated random password is used.")):
+    if username is None:
+        username = fake_data_generator.profile()["username"]
+
+    if password is None:
+        password = fake_data_generator.password()
+
+    db = DBHandler(config_option.database.url)
+
+    uuid = str(uuid4().int)
+
+    try:
+        db.add_user(uuid=uuid,
+                    login=login,
+                    password=password,
+                    hash_password=Hash(password, uuid).password_hash(),
+                    username=username,
+                    salt=b"salt",
+                    key=b"key")
+    except DatabaseWriteError:
+        rich_output.print("[red]Database write error, user not created. Check that tables is exist.")
+    else:
+        output_table = Table(box=box.SQUARE,
+                             header_style="bold green")
+
+        output_table.add_column("UUID", justify="center")
+        output_table.add_column("Login", justify="center")
+        output_table.add_column("Username", justify="center")
+        output_table.add_column("Password", justify="center")
+
+        output_table.add_row(f"{uuid}",
+                             f"{login}",
+                             f"{username}",
+                             f"{password}",
+                             style="bold bright_yellow")
+
+        rich_output.print("User successful created:", style="bold green")
+        rich_output.print(output_table)
 
 
 if __name__ == "__main__":

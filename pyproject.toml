@@ -26,6 +26,7 @@ setuptools = "==65.3.0"
 tomli = "^2.0.1"
 tomli-w = "^1.0.0"
 typer = {extras = ["all"], version = "^0.7.0"}
+faker = "^16.4.0"
 
 [tool.poetry.dev-dependencies]
 flake8 = "==5.0.4"

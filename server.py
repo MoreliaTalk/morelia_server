@@ -22,7 +22,7 @@ class MoreliaServer:
 
         add_logging(self._config_options)
 
-        self._database = DBHandler()
+        self._database = DBHandler(uri=self._config_options.database.url)
         self._database.create_table()
 
         self._starlette_app = Starlette()
