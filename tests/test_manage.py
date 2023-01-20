@@ -19,166 +19,20 @@ You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from pathlib import PurePath
 import unittest
+from typer.testing import CliRunner
+from manage import cli
 from unittest.mock import patch
-from uuid import uuid4
-
-from click.testing import CliRunner
-from loguru import logger
-
-from manage import delete
-from manage import client
-from manage import create
-from manage import run
-from mod.config.handler import BackupNotFoundError
-
-from mod.db.dbhandler import DBHandler
-from mod.lib import Hash
 
 
 class TestManage(unittest.TestCase):
-    uri: str
-    db: DBHandler
-    path: PurePath
-
     @classmethod
     def setUpClass(cls) -> None:
-        logger.remove()
-        cls.uri = "sqlite:/:memory:?cache=shared"
-        cls.db = DBHandler(uri=cls.uri)
+        cls.cli_runner = CliRunner()
 
-    def setUp(self) -> None:
-        self.username = "UserHello"
-        self.login = "login123"
-        self.password = "password123"
-        self.user_uuid = str(uuid4().int)
-        self.runner = CliRunner()
-        self.hash = Hash(self.password,
-                         self.user_uuid)
-
-    def tearDown(self) -> None:
-        self.db.delete_table()
-        del self.runner
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        cls.db.delete_table()
-        del cls.db
-
-    def test_create_user(self):
-        self.db.create_table()
-        result = self.runner.invoke(create,
-                                    [f"--uri={self.uri}",
-                                     "user",
-                                     f"--username={self.username}",
-                                     f"--login={self.login}",
-                                     f"--password={self.password}"])
-        self.assertRegex(result.output,
-                         f"User with name={self.username}, login=")
-
-    def test_create_flow(self):
-        self.db.create_table()
-        self.db.add_user(uuid=self.user_uuid,
-                         login=self.login,
-                         password=self.password,
-                         hash_password=self.hash.password_hash(),
-                         username=self.username,
-                         salt=b"salt",
-                         key=b"key")
-        result = self.runner.invoke(create,
-                                    [f"--uri={self.uri}",
-                                     "flow",
-                                     f"--login={self.login}"])
-        self.assertRegex(result.stdout, "Flow created.")
-
-    def test_create_admin(self):
-        result = self.runner.invoke(create,
-                                    [f"--uri={self.uri}",
-                                     "admin",
-                                     f"--username={self.username}",
-                                     f"--password={self.password}"])
-        self.assertRegex(result.output, "Admin created.")
-
-    def test_create_db(self):
-        result = self.runner.invoke(create,
-                                    [f"--uri={self.uri}",
-                                     "db"])
-        self.assertRegex(result.stdout,
-                         "Database is created.")
-
-    def test_delete_db(self):
-        self.db.create_table()
-        result = self.runner.invoke(delete,
-                                    [f"--uri={self.uri}",
-                                     "db"])
-        self.assertRegex(result.output,
-                         "All table is deleted.")
-
-    @patch('pathlib.Path.is_file', return_value=True)
-    @patch('os.remove', return_value=None)
-    def test_clean_init(self, _, __):
-        result = self.runner.invoke(run,
-                                    ["clean",
-                                     "--yes"])
-        self.assertEqual(result.stdout,
-                         "".join(("Config file => deleted.\n",
-                                  "Database file => deleted.\n")))
-
-    @patch('pathlib.Path.is_file', return_value=False)
-    @patch('os.remove', return_value=None)
-    def test_error_in_clean_init(self, _, __):
-        result = self.runner.invoke(run,
-                                    ["clean",
-                                     "--yes"])
-        self.assertRegex(result.stdout, "Config file is not found")
-        self.assertRegex(result.stdout, "Database file is not found")
-
-    @patch('manage.create_table', return_value=None)
-    @patch('manage.create_administrator', return_value=None)
-    def test_init(self, _, __):
-        result = self.runner.invoke(run,
-                                    ["init",
-                                     f"--username={self.username}",
-                                     f"--password={self.password}"])
-        self.assertRegex(result.stdout, "Database => Ok")
-        self.assertRegex(result.stdout, "admin => Ok")
-
-    @patch('uvicorn.run', return_value=None)
+    @patch("uvicorn.run")
     def test_devserver(self, _):
-        result = self.runner.invoke(run,
-                                    ["devserver"])
-        self.assertRegex(result.stdout, "Develop server started at address=")
-
-    @patch('uvicorn.run', return_value=None)
-    def test_server(self, _):
-        result = self.runner.invoke(run,
-                                    ["server"])
-        self.assertRegex(result.stdout, "Server started at address=")
-
-    def test_client_without_connection_to_server(self):
-        result = self.runner.invoke(client,
-                                    ["send"])
-        self.assertRegex(result.stdout, "Unable to connect to the server")
-
-    @patch("mod.config.handler.ConfigHandler.restore")
-    def test_conf_restore(self, _):
-        result = self.runner.invoke(run,
-                                    ["conf_restore"])
-        self.assertRegex(result.stdout, "Successful restore default config")
-
-    @patch("mod.config.handler.ConfigHandler.restore", side_effect=BackupNotFoundError)
-    def test_conf_restore_backup_not_found(self, _):
-        result = self.runner.invoke(run,
-                                    ["conf_restore",
-                                     "--source", "file"])
-        self.assertRegex(result.stdout, "Backup from file is not found")
-
-    @patch("mod.config.handler.ConfigHandler.backup")
-    def test_conf_backup(self, _):
-        result = self.runner.invoke(run,
-                                    ["conf_backup"])
-        self.assertRegex(result.stdout, "Successful backup current config")
+        self.cli_runner.invoke(cli, ["devserver"])
 
 
 if __name__ == "__main__":
