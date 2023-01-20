@@ -22,7 +22,7 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 import unittest
 from typer.testing import CliRunner
 from manage import cli
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 
 class TestManage(unittest.TestCase):
@@ -31,8 +31,10 @@ class TestManage(unittest.TestCase):
         cls.cli_runner = CliRunner()
 
     @patch("uvicorn.run")
-    def test_devserver(self, _):
+    def test_devserver(self, uvicorn_run: Mock):
         self.cli_runner.invoke(cli, ["devserver"])
+        self.assertEqual(uvicorn_run.call_count, 1)
+
 
 
 if __name__ == "__main__":
