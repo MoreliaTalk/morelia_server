@@ -30,15 +30,15 @@ def devserver(host: str = typer.Option("127.0.0.1",
                                        help="Host for running server"),
               port: int = typer.Option(8080,
                                        help="Port for running server"),
-              off_uvicorn_logger: bool = typer.Option(True,
-                                                      "--off-uvicorn-logger",
-                                                      help="Disabled uvicorn logging")):
-    if off_uvicorn_logger:
-        log_level = "critical"
-    else:
+              on_uvicorn_logger: bool = typer.Option(False,
+                                                     "--on-uvicorn-logger",
+                                                     help="Disabled uvicorn logging")):
+    if on_uvicorn_logger:
         log_level = "debug"
+    else:
+        log_level = "critical"
 
-    uvicorn.run("server:app",
+    uvicorn.run(app="server:app",
                 host=host,
                 port=port,
                 log_level=log_level,

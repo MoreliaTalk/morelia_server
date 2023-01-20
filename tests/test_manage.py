@@ -20,21 +20,45 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import unittest
+from unittest import mock
+
 from typer.testing import CliRunner
 from manage import cli
-from unittest.mock import patch, Mock
 
 
-class TestManage(unittest.TestCase):
+class TestDevServer(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.cli_runner = CliRunner()
 
-    @patch("uvicorn.run")
-    def test_devserver(self, uvicorn_run: Mock):
+    @mock.patch("uvicorn.run")
+    def test_run_with_default_params(self, uvicorn_run_mock: mock.Mock):
         self.cli_runner.invoke(cli, ["devserver"])
-        self.assertEqual(uvicorn_run.call_count, 1)
 
+        self.assertEqual(uvicorn_run_mock.call_count, 1)
+        self.assertEqual(uvicorn_run_mock.call_args,
+                         mock.call(app="server:app",
+                                   host="127.0.0.1",
+                                   port=8080,
+                                   log_level="critical",
+                                   debug=True,
+                                   reload=True))
+
+    @mock.patch("uvicorn.run")
+    def test_run_with_custom_params(self, uvicorn_run: mock.Mock):
+        self.cli_runner.invoke(cli, ("devserver",
+                                     "--host", "0.0.0.0",
+                                     "--port", 8081,
+                                     "--on-uvicorn-logger"))
+
+        self.assertEqual(uvicorn_run.call_count, 1)
+        self.assertEqual(uvicorn_run.call_args,
+                         mock.call(app="server:app",
+                                   host="0.0.0.0",
+                                   port=8081,
+                                   log_level="debug",
+                                   debug=True,
+                                   reload=True))
 
 
 if __name__ == "__main__":
