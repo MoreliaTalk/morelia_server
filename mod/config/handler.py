@@ -19,7 +19,6 @@ You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 from pathlib import Path
-from pathlib import PurePath
 
 from loguru import logger
 from pydantic import ValidationError

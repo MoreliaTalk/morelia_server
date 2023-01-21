@@ -7,6 +7,7 @@ import tomli_w
 import typer
 import uvicorn
 from faker import Faker
+from loguru import logger
 from rich.console import Console
 from rich import box
 from rich.table import Table
@@ -22,6 +23,7 @@ cli = typer.Typer(help="CLI for management MoreliaServer",
 rich_output = Console()
 fake_data_generator = Faker()
 
+logger.disable("mod.config.handler")
 config_option = read_config()
 
 
