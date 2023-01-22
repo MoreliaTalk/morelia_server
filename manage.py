@@ -63,7 +63,7 @@ def restore_config():
 
         rich_output.print("Successful restore config")
     else:
-        rich_output.print("Aborted!")
+        rich_output.print("Canceled!")
 
 
 @cli.command()

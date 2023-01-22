@@ -22,8 +22,10 @@ along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 import unittest
 from unittest import mock
 
+import tomli_w
 from typer.testing import CliRunner
 from manage import cli
+from mod.config.models import ConfigModel
 
 
 class TestDevServer(unittest.TestCase):
@@ -32,7 +34,7 @@ class TestDevServer(unittest.TestCase):
         cls.cli_runner = CliRunner()
 
     @mock.patch("uvicorn.run")
-    def test_run_with_default_params(self, uvicorn_run_mock: mock.Mock):
+    def test_run_with_default_params(self, uvicorn_run_mock: mock.Mock) -> None:
         self.cli_runner.invoke(cli, ["devserver"])
 
         self.assertEqual(uvicorn_run_mock.call_count, 1)
@@ -45,20 +47,49 @@ class TestDevServer(unittest.TestCase):
                                    reload=True))
 
     @mock.patch("uvicorn.run")
-    def test_run_with_custom_params(self, uvicorn_run: mock.Mock):
+    def test_run_with_custom_params(self, uvicorn_run_mock: mock.Mock) -> None:
         self.cli_runner.invoke(cli, ("devserver",
                                      "--host", "0.0.0.0",
                                      "--port", 8081,
                                      "--on-uvicorn-logger"))
 
-        self.assertEqual(uvicorn_run.call_count, 1)
-        self.assertEqual(uvicorn_run.call_args,
+        self.assertEqual(uvicorn_run_mock.call_count, 1)
+        self.assertEqual(uvicorn_run_mock.call_args,
                          mock.call(app="server:app",
                                    host="0.0.0.0",
                                    port=8081,
                                    log_level="debug",
                                    debug=True,
                                    reload=True))
+
+
+class TestRestoreConfig(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.cli_runner = CliRunner()
+
+    @mock.patch("pathlib.Path.open", new_callable=mock.mock_open)
+    def test_restore_config(self, file_open_mock: mock.Mock) -> None:
+        runner_result = self.cli_runner.invoke(cli, "restore-config", input="y")
+
+        default_dict = ConfigModel().dict()
+        default_toml = tomli_w.dumps(default_dict)
+
+        self.assertEqual(runner_result.output, "This action is not reversible. "
+                                               "The config will be overwritten with default data. "
+                                               "Continue? [y/N]: y\n"
+                                               "Successful restore config\n")
+
+        self.assertIn(mock.call().write(default_toml),
+                      file_open_mock.mock_calls)
+
+    def test_with_answer_no(self):
+        runner_result = self.cli_runner.invoke(cli, "restore-config", input="N")
+
+        self.assertEqual(runner_result.output, "This action is not reversible. "
+                                               "The config will be overwritten with default data. "
+                                               "Continue? [y/N]: N\n"
+                                               "Canceled!\n")
 
 
 if __name__ == "__main__":
