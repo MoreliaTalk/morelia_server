@@ -117,6 +117,27 @@ class TestCreateTables(unittest.TestCase):
                                                f"table not created. {DatabaseAccessError()}\n")
 
 
+class TestDeleteTables(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.cli_runner = CliRunner()
+
+    @mock.patch("manage.DBHandler")
+    def test_successful_delete_tables(self, dbhandler_mock: mock.Mock):
+        runner_result = self.cli_runner.invoke(cli, "delete-tables")
+
+        self.assertEqual(dbhandler_mock().delete_table.call_count, 1)
+        self.assertEqual(runner_result.output, "Tables in db successful deleted.\n")
+
+    @mock.patch("manage.DBHandler")
+    def test_database_not_available(self, dbhandler_mock: mock.Mock):
+        dbhandler_mock().delete_table.side_effect = DatabaseAccessError()
+
+        runner_result = self.cli_runner.invoke(cli, "delete-tables")
+
+        self.assertEqual(runner_result.output, f"The database is unavailable, "
+                                               f"table not deleted. {DatabaseAccessError()}\n")
+
 
 
 if __name__ == "__main__":
