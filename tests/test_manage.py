@@ -24,8 +24,11 @@ from unittest import mock
 
 import tomli_w
 from typer.testing import CliRunner
+
+import manage
 from manage import cli
 from mod.config.models import ConfigModel
+from mod.db.dbhandler import DatabaseAccessError
 
 
 class TestDevServer(unittest.TestCase):
@@ -90,6 +93,30 @@ class TestRestoreConfig(unittest.TestCase):
                                                "The config will be overwritten with default data. "
                                                "Continue? [y/N]: N\n"
                                                "Canceled!\n")
+
+
+class TestCreateTables(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.cli_runner = CliRunner()
+
+    @mock.patch("manage.DBHandler")
+    def test_successful_create_table(self, dbhandler_mock: mock.Mock):
+        runner_result = self.cli_runner.invoke(cli, "create-tables")
+
+        self.assertEqual(dbhandler_mock().create_table.call_count, 1)
+        self.assertEqual(runner_result.output, "Tables in db successful created.\n")
+
+    @mock.patch("manage.DBHandler")
+    def test_database_not_available(self, dbhandler_mock: mock.Mock):
+        dbhandler_mock().create_table.side_effect = DatabaseAccessError()
+
+        runner_result = self.cli_runner.invoke(cli, "create-tables")
+
+        self.assertEqual(runner_result.output, f"The database is unavailable, "
+                                               f"table not created. {DatabaseAccessError()}\n")
+
+
 
 
 if __name__ == "__main__":
