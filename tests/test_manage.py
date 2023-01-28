@@ -193,5 +193,32 @@ class TestCreateUser(unittest.TestCase):
                                    salt=b"salt",
                                    key=b"key"))
 
+class TestCreateGroup(unittest.TestCase):
+    @mock.patch("manage.time")
+    @mock.patch("manage.uuid4")
+    @mock.patch("manage.DBHandler")
+    def test_run_create_group(self,
+                              dbhandler_mock: mock.Mock,
+                              uuid4_mock: mock.Mock,
+                              time_mock: mock.Mock):
+        cli_runner = CliRunner()
+
+        dbhandler_mock().get_user_by_login.return_value.uuid = "123"
+        uuid4_mock().int = 123456
+        time_mock.return_value = 1000
+
+        cli_runner.invoke(cli, ["create-group", "some_owner_login"])
+
+        self.assertEqual(dbhandler_mock().add_flow.call_count, 1)
+        self.assertEqual(dbhandler_mock().add_flow.call_args,
+                         mock.call(uuid="123456",
+                                   users=["123"],
+                                   time_created=int(1000),
+                                   flow_type="group",
+                                   title="Test",
+                                   info="Test flow",
+                                   owner="123"))
+
+
 if __name__ == "__main__":
     unittest.main()
