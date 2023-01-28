@@ -7,6 +7,7 @@ import tomli_w
 import typer
 import uvicorn
 from faker import Faker
+from loguru import logger
 from rich.console import Console
 from rich import box
 from rich.table import Table
@@ -20,8 +21,9 @@ cli = typer.Typer(help="CLI for management MoreliaServer",
                   no_args_is_help=True)
 
 rich_output = Console()
-fake_data_generator = Faker()
+faker_data_generator = Faker()
 
+logger.disable("mod.config.handler")
 config_option = read_config()
 
 
@@ -30,15 +32,15 @@ def devserver(host: str = typer.Option("127.0.0.1",
                                        help="Host for running server"),
               port: int = typer.Option(8080,
                                        help="Port for running server"),
-              off_uvicorn_logger: bool = typer.Option(True,
-                                                      "--off-uvicorn-logger",
-                                                      help="Disabled uvicorn logging")):
-    if off_uvicorn_logger:
-        log_level = "critical"
-    else:
+              on_uvicorn_logger: bool = typer.Option(False,
+                                                     "--on-uvicorn-logger",
+                                                     help="Disabled uvicorn logging")):
+    if on_uvicorn_logger:
         log_level = "debug"
+    else:
+        log_level = "critical"
 
-    uvicorn.run("server:app",
+    uvicorn.run(app="server:app",
                 host=host,
                 port=port,
                 log_level=log_level,
@@ -61,7 +63,7 @@ def restore_config():
 
         rich_output.print("Successful restore config")
     else:
-        rich_output.print("Aborted!")
+        rich_output.print("Canceled!")
 
 
 @cli.command()
@@ -99,10 +101,11 @@ def create_user(login: str = typer.Argument(..., help="Login"),
                 password: Optional[str] = typer.Option(None, help="Password. If value is set to None, "
                                                                   "generated random password is used.")):
     if username is None:
-        username = fake_data_generator.profile()["username"]
+        username = faker_data_generator.profile()["username"]
 
     if password is None:
-        password = fake_data_generator.password()
+        password = faker_data_generator.password()
+
 
     db = DBHandler(config_option.database.url)
 

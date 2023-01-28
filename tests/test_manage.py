@@ -19,166 +19,205 @@ You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from pathlib import PurePath
 import unittest
-from unittest.mock import patch
-from uuid import uuid4
+from unittest import mock
 
-from click.testing import CliRunner
-from loguru import logger
+import tomli_w
+from typer.testing import CliRunner
 
-from manage import delete
-from manage import client
-from manage import create
-from manage import run
-from mod.config.handler import BackupNotFoundError
-
-from mod.db.dbhandler import DBHandler
-from mod.lib import Hash
+from manage import cli
+from mod.config.models import ConfigModel
+from mod.db.dbhandler import DatabaseAccessError
 
 
-class TestManage(unittest.TestCase):
-    uri: str
-    db: DBHandler
-    path: PurePath
-
+@mock.patch("uvicorn.run")
+class TestDevServer(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        logger.remove()
-        cls.uri = "sqlite:/:memory:?cache=shared"
-        cls.db = DBHandler(uri=cls.uri)
+        cls.cli_runner = CliRunner()
 
-    def setUp(self) -> None:
-        self.username = "UserHello"
-        self.login = "login123"
-        self.password = "password123"
-        self.user_uuid = str(uuid4().int)
-        self.runner = CliRunner()
-        self.hash = Hash(self.password,
-                         self.user_uuid)
 
-    def tearDown(self) -> None:
-        self.db.delete_table()
-        del self.runner
+    def test_run_with_default_params(self, uvicorn_run_mock: mock.Mock) -> None:
+        self.cli_runner.invoke(cli, ["devserver"])
 
+        self.assertEqual(uvicorn_run_mock.call_count, 1)
+        self.assertEqual(uvicorn_run_mock.call_args,
+                         mock.call(app="server:app",
+                                   host="127.0.0.1",
+                                   port=8080,
+                                   log_level="critical",
+                                   debug=True,
+                                   reload=True))
+
+    def test_run_with_custom_params(self, uvicorn_run_mock: mock.Mock) -> None:
+        self.cli_runner.invoke(cli, ("devserver",
+                                     "--host", "0.0.0.0",
+                                     "--port", 8081,
+                                     "--on-uvicorn-logger"))
+
+        self.assertEqual(uvicorn_run_mock.call_count, 1)
+        self.assertEqual(uvicorn_run_mock.call_args,
+                         mock.call(app="server:app",
+                                   host="0.0.0.0",
+                                   port=8081,
+                                   log_level="debug",
+                                   debug=True,
+                                   reload=True))
+
+
+class TestRestoreConfig(unittest.TestCase):
     @classmethod
-    def tearDownClass(cls) -> None:
-        cls.db.delete_table()
-        del cls.db
+    def setUpClass(cls) -> None:
+        cls.cli_runner = CliRunner()
 
-    def test_create_user(self):
-        self.db.create_table()
-        result = self.runner.invoke(create,
-                                    [f"--uri={self.uri}",
-                                     "user",
-                                     f"--username={self.username}",
-                                     f"--login={self.login}",
-                                     f"--password={self.password}"])
-        self.assertRegex(result.output,
-                         f"User with name={self.username}, login=")
+    @mock.patch("pathlib.Path.open", new_callable=mock.mock_open)
+    def test_restore_config(self, file_open_mock: mock.Mock) -> None:
+        runner_result = self.cli_runner.invoke(cli, "restore-config", input="y")
 
-    def test_create_flow(self):
-        self.db.create_table()
-        self.db.add_user(uuid=self.user_uuid,
-                         login=self.login,
-                         password=self.password,
-                         hash_password=self.hash.password_hash(),
-                         username=self.username,
-                         salt=b"salt",
-                         key=b"key")
-        result = self.runner.invoke(create,
-                                    [f"--uri={self.uri}",
-                                     "flow",
-                                     f"--login={self.login}"])
-        self.assertRegex(result.stdout, "Flow created.")
+        default_dict = ConfigModel().dict()
+        default_toml = tomli_w.dumps(default_dict)
 
-    def test_create_admin(self):
-        result = self.runner.invoke(create,
-                                    [f"--uri={self.uri}",
-                                     "admin",
-                                     f"--username={self.username}",
-                                     f"--password={self.password}"])
-        self.assertRegex(result.output, "Admin created.")
+        self.assertEqual(runner_result.output, "This action is not reversible. "
+                                               "The config will be overwritten with default data. "
+                                               "Continue? [y/N]: y\n"
+                                               "Successful restore config\n")
 
-    def test_create_db(self):
-        result = self.runner.invoke(create,
-                                    [f"--uri={self.uri}",
-                                     "db"])
-        self.assertRegex(result.stdout,
-                         "Database is created.")
+        self.assertIn(mock.call().write(default_toml),
+                      file_open_mock.mock_calls)
 
-    def test_delete_db(self):
-        self.db.create_table()
-        result = self.runner.invoke(delete,
-                                    [f"--uri={self.uri}",
-                                     "db"])
-        self.assertRegex(result.output,
-                         "All table is deleted.")
+    def test_with_answer_no(self):
+        runner_result = self.cli_runner.invoke(cli, "restore-config", input="N")
 
-    @patch('pathlib.Path.is_file', return_value=True)
-    @patch('os.remove', return_value=None)
-    def test_clean_init(self, _, __):
-        result = self.runner.invoke(run,
-                                    ["clean",
-                                     "--yes"])
-        self.assertEqual(result.stdout,
-                         "".join(("Config file => deleted.\n",
-                                  "Database file => deleted.\n")))
+        self.assertEqual(runner_result.output, "This action is not reversible. "
+                                               "The config will be overwritten with default data. "
+                                               "Continue? [y/N]: N\n"
+                                               "Canceled!\n")
 
-    @patch('pathlib.Path.is_file', return_value=False)
-    @patch('os.remove', return_value=None)
-    def test_error_in_clean_init(self, _, __):
-        result = self.runner.invoke(run,
-                                    ["clean",
-                                     "--yes"])
-        self.assertRegex(result.stdout, "Config file is not found")
-        self.assertRegex(result.stdout, "Database file is not found")
+@mock.patch("manage.DBHandler")
+class TestCreateTables(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.cli_runner = CliRunner()
 
-    @patch('manage.create_table', return_value=None)
-    @patch('manage.create_administrator', return_value=None)
-    def test_init(self, _, __):
-        result = self.runner.invoke(run,
-                                    ["init",
-                                     f"--username={self.username}",
-                                     f"--password={self.password}"])
-        self.assertRegex(result.stdout, "Database => Ok")
-        self.assertRegex(result.stdout, "admin => Ok")
+    def test_successful_create_table(self, dbhandler_mock: mock.Mock):
+        runner_result = self.cli_runner.invoke(cli, "create-tables")
 
-    @patch('uvicorn.run', return_value=None)
-    def test_devserver(self, _):
-        result = self.runner.invoke(run,
-                                    ["devserver"])
-        self.assertRegex(result.stdout, "Develop server started at address=")
+        self.assertEqual(dbhandler_mock().create_table.call_count, 1)
+        self.assertEqual(runner_result.output, "Tables in db successful created.\n")
 
-    @patch('uvicorn.run', return_value=None)
-    def test_server(self, _):
-        result = self.runner.invoke(run,
-                                    ["server"])
-        self.assertRegex(result.stdout, "Server started at address=")
+    def test_database_not_available(self, dbhandler_mock: mock.Mock):
+        dbhandler_mock().create_table.side_effect = DatabaseAccessError()
 
-    def test_client_without_connection_to_server(self):
-        result = self.runner.invoke(client,
-                                    ["send"])
-        self.assertRegex(result.stdout, "Unable to connect to the server")
+        runner_result = self.cli_runner.invoke(cli, "create-tables")
 
-    @patch("mod.config.handler.ConfigHandler.restore")
-    def test_conf_restore(self, _):
-        result = self.runner.invoke(run,
-                                    ["conf_restore"])
-        self.assertRegex(result.stdout, "Successful restore default config")
+        self.assertEqual(runner_result.output, f"The database is unavailable, "
+                                               f"table not created. {DatabaseAccessError()}\n")
 
-    @patch("mod.config.handler.ConfigHandler.restore", side_effect=BackupNotFoundError)
-    def test_conf_restore_backup_not_found(self, _):
-        result = self.runner.invoke(run,
-                                    ["conf_restore",
-                                     "--source", "file"])
-        self.assertRegex(result.stdout, "Backup from file is not found")
+@mock.patch("manage.DBHandler")
+class TestDeleteTables(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.cli_runner = CliRunner()
 
-    @patch("mod.config.handler.ConfigHandler.backup")
-    def test_conf_backup(self, _):
-        result = self.runner.invoke(run,
-                                    ["conf_backup"])
-        self.assertRegex(result.stdout, "Successful backup current config")
+    def test_successful_delete_tables(self, dbhandler_mock: mock.Mock):
+        runner_result = self.cli_runner.invoke(cli, "delete-tables")
+
+        self.assertEqual(dbhandler_mock().delete_table.call_count, 1)
+        self.assertEqual(runner_result.output, "Tables in db successful deleted.\n")
+
+    def test_database_not_available(self, dbhandler_mock: mock.Mock):
+        dbhandler_mock().delete_table.side_effect = DatabaseAccessError()
+
+        runner_result = self.cli_runner.invoke(cli, "delete-tables")
+
+        self.assertEqual(runner_result.output, f"The database is unavailable, "
+                                               f"table not deleted. {DatabaseAccessError()}\n")
+
+@mock.patch("manage.Hash")
+@mock.patch("manage.uuid4")
+@mock.patch("manage.DBHandler")
+class TestCreateUser(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.cli_runner = CliRunner()
+
+
+    @mock.patch("manage.faker_data_generator")
+    def test_run_with_default_params(self,
+                                     faker_generator_mock: mock.Mock,
+                                     dbhandler_mock: mock.Mock,
+                                     uuid4_mock: mock.Mock,
+                                     hash_class_mock: mock.Mock,):
+        uuid4_mock().int = 123456
+
+        faker_generator_mock.password.return_value = "password"
+        faker_generator_mock.profile.return_value = {
+            "username": "some_username"
+        }
+
+        hash_class_mock().password_hash.return_value = "password_hash"
+
+        self.cli_runner.invoke(cli, ["create-user", "login"])
+
+        self.assertEqual(dbhandler_mock().add_user.call_count, 1)
+        self.assertEqual(dbhandler_mock().add_user.call_args,
+                         mock.call(uuid=str(123456),
+                                   login="login",
+                                   password="password",
+                                   hash_password="password_hash",
+                                   username="some_username",
+                                   salt=b"salt",
+                                   key=b"key"))
+
+    def test_run_with_custom_params(self,
+                                    dbhandler_mock: mock.Mock,
+                                    uuid4_mock: mock.Mock,
+                                    hash_class_mock: mock.Mock):
+        uuid4_mock().int = 123456
+
+        hash_class_mock().password_hash.return_value = "password_hash"
+
+        self.cli_runner.invoke(cli, ["create-user",
+                                           "--username=some_user_123",
+                                           "--password=Hello123",
+                                           "login"
+                                           ])
+
+        self.assertEqual(dbhandler_mock().add_user.call_count, 1)
+        self.assertEqual(dbhandler_mock().add_user.call_args,
+                         mock.call(uuid=str(123456),
+                                   login="login",
+                                   password="Hello123",
+                                   hash_password="password_hash",
+                                   username="some_user_123",
+                                   salt=b"salt",
+                                   key=b"key"))
+
+class TestCreateGroup(unittest.TestCase):
+    @mock.patch("manage.time")
+    @mock.patch("manage.uuid4")
+    @mock.patch("manage.DBHandler")
+    def test_run_create_group(self,
+                              dbhandler_mock: mock.Mock,
+                              uuid4_mock: mock.Mock,
+                              time_mock: mock.Mock):
+        cli_runner = CliRunner()
+
+        dbhandler_mock().get_user_by_login.return_value.uuid = "123"
+        uuid4_mock().int = 123456
+        time_mock.return_value = 1000
+
+        cli_runner.invoke(cli, ["create-group", "some_owner_login"])
+
+        self.assertEqual(dbhandler_mock().add_flow.call_count, 1)
+        self.assertEqual(dbhandler_mock().add_flow.call_args,
+                         mock.call(uuid="123456",
+                                   users=["123"],
+                                   time_created=int(1000),
+                                   flow_type="group",
+                                   title="Test",
+                                   info="Test flow",
+                                   owner="123"))
 
 
 if __name__ == "__main__":
