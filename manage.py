@@ -21,7 +21,7 @@ cli = typer.Typer(help="CLI for management MoreliaServer",
                   no_args_is_help=True)
 
 rich_output = Console()
-fake_data_generator = Faker()
+faker_data_generator = Faker()
 
 logger.disable("mod.config.handler")
 config_option = read_config()
@@ -101,10 +101,11 @@ def create_user(login: str = typer.Argument(..., help="Login"),
                 password: Optional[str] = typer.Option(None, help="Password. If value is set to None, "
                                                                   "generated random password is used.")):
     if username is None:
-        username = fake_data_generator.profile()["username"]
+        username = faker_data_generator.profile()["username"]
 
     if password is None:
-        password = fake_data_generator.password()
+        password = faker_data_generator.password()
+
 
     db = DBHandler(config_option.database.url)
 

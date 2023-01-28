@@ -25,18 +25,18 @@ from unittest import mock
 import tomli_w
 from typer.testing import CliRunner
 
-import manage
 from manage import cli
 from mod.config.models import ConfigModel
 from mod.db.dbhandler import DatabaseAccessError
 
 
+@mock.patch("uvicorn.run")
 class TestDevServer(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.cli_runner = CliRunner()
 
-    @mock.patch("uvicorn.run")
+
     def test_run_with_default_params(self, uvicorn_run_mock: mock.Mock) -> None:
         self.cli_runner.invoke(cli, ["devserver"])
 
@@ -49,7 +49,6 @@ class TestDevServer(unittest.TestCase):
                                    debug=True,
                                    reload=True))
 
-    @mock.patch("uvicorn.run")
     def test_run_with_custom_params(self, uvicorn_run_mock: mock.Mock) -> None:
         self.cli_runner.invoke(cli, ("devserver",
                                      "--host", "0.0.0.0",
@@ -94,20 +93,18 @@ class TestRestoreConfig(unittest.TestCase):
                                                "Continue? [y/N]: N\n"
                                                "Canceled!\n")
 
-
+@mock.patch("manage.DBHandler")
 class TestCreateTables(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.cli_runner = CliRunner()
 
-    @mock.patch("manage.DBHandler")
     def test_successful_create_table(self, dbhandler_mock: mock.Mock):
         runner_result = self.cli_runner.invoke(cli, "create-tables")
 
         self.assertEqual(dbhandler_mock().create_table.call_count, 1)
         self.assertEqual(runner_result.output, "Tables in db successful created.\n")
 
-    @mock.patch("manage.DBHandler")
     def test_database_not_available(self, dbhandler_mock: mock.Mock):
         dbhandler_mock().create_table.side_effect = DatabaseAccessError()
 
@@ -116,20 +113,18 @@ class TestCreateTables(unittest.TestCase):
         self.assertEqual(runner_result.output, f"The database is unavailable, "
                                                f"table not created. {DatabaseAccessError()}\n")
 
-
+@mock.patch("manage.DBHandler")
 class TestDeleteTables(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.cli_runner = CliRunner()
 
-    @mock.patch("manage.DBHandler")
     def test_successful_delete_tables(self, dbhandler_mock: mock.Mock):
         runner_result = self.cli_runner.invoke(cli, "delete-tables")
 
         self.assertEqual(dbhandler_mock().delete_table.call_count, 1)
         self.assertEqual(runner_result.output, "Tables in db successful deleted.\n")
 
-    @mock.patch("manage.DBHandler")
     def test_database_not_available(self, dbhandler_mock: mock.Mock):
         dbhandler_mock().delete_table.side_effect = DatabaseAccessError()
 
@@ -138,7 +133,65 @@ class TestDeleteTables(unittest.TestCase):
         self.assertEqual(runner_result.output, f"The database is unavailable, "
                                                f"table not deleted. {DatabaseAccessError()}\n")
 
+@mock.patch("manage.Hash")
+@mock.patch("manage.uuid4")
+@mock.patch("manage.DBHandler")
+class TestCreateUser(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.cli_runner = CliRunner()
 
+
+    @mock.patch("manage.faker_data_generator")
+    def test_run_with_default_params(self,
+                                     faker_generator_mock: mock.Mock,
+                                     dbhandler_mock: mock.Mock,
+                                     uuid4_mock: mock.Mock,
+                                     hash_class_mock: mock.Mock,):
+        uuid4_mock().int = 123456
+
+        faker_generator_mock.password.return_value = "password"
+        faker_generator_mock.profile.return_value = {
+            "username": "some_username"
+        }
+
+        hash_class_mock().password_hash.return_value = "password_hash"
+
+        self.cli_runner.invoke(cli, ["create-user", "login"])
+
+        self.assertEqual(dbhandler_mock().add_user.call_count, 1)
+        self.assertEqual(dbhandler_mock().add_user.call_args,
+                         mock.call(uuid=str(123456),
+                                   login="login",
+                                   password="password",
+                                   hash_password="password_hash",
+                                   username="some_username",
+                                   salt=b"salt",
+                                   key=b"key"))
+
+    def test_run_with_custom_params(self,
+                                    dbhandler_mock: mock.Mock,
+                                    uuid4_mock: mock.Mock,
+                                    hash_class_mock: mock.Mock):
+        uuid4_mock().int = 123456
+
+        hash_class_mock().password_hash.return_value = "password_hash"
+
+        self.cli_runner.invoke(cli, ["create-user",
+                                           "--username=some_user_123",
+                                           "--password=Hello123",
+                                           "login"
+                                           ])
+
+        self.assertEqual(dbhandler_mock().add_user.call_count, 1)
+        self.assertEqual(dbhandler_mock().add_user.call_args,
+                         mock.call(uuid=str(123456),
+                                   login="login",
+                                   password="Hello123",
+                                   hash_password="password_hash",
+                                   username="some_user_123",
+                                   salt=b"salt",
+                                   key=b"key"))
 
 if __name__ == "__main__":
     unittest.main()
