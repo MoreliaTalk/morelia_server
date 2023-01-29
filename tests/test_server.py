@@ -25,7 +25,7 @@ from unittest.mock import patch
 
 from loguru import logger
 from mod.db.dbhandler import DBHandler
-from server import MoreliaServer
+import server.a
 from starlette.testclient import TestClient, WebSocketTestSession
 from starlette.websockets import WebSocketDisconnect
 
