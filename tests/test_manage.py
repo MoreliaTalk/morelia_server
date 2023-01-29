@@ -30,7 +30,7 @@ from manage import cli
 from mod.config.models import ConfigModel
 from mod.db.dbhandler import DatabaseAccessError
 
-manage.rich_output.no_color = True  # TODO: refactor colors disable
+manage.rich_output.no_color = True
 
 
 @mock.patch("uvicorn.run")
