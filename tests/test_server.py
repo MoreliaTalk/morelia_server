@@ -23,7 +23,6 @@ import unittest
 from unittest.mock import patch
 
 from loguru import logger
-from mod.db.dbhandler import DBHandler
 from starlette.testclient import TestClient, WebSocketTestSession
 from starlette.websockets import WebSocketDisconnect
 
