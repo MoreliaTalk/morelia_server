@@ -30,7 +30,7 @@ from mod.config.models import ConfigModel
 CONFIG_STANDARD_FILENAME = "config.toml"
 
 
-def read_config(filepath: str = CONFIG_STANDARD_FILENAME) -> ConfigModel:
+def read_config(filepath: str = ROOT_DIR / CONFIG_STANDARD_FILENAME) -> ConfigModel:
     path = Path(filepath)
 
     if not path.is_absolute():

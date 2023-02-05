@@ -25,9 +25,12 @@ from unittest import mock
 import tomli_w
 from typer.testing import CliRunner
 
+import manage
 from manage import cli
 from mod.config.models import ConfigModel
 from mod.db.dbhandler import DatabaseAccessError
+
+manage.rich_output.no_color = True
 
 
 @mock.patch("uvicorn.run")

@@ -19,6 +19,8 @@ You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
+# TODO: need refactor all module
+
 import json
 import os
 import unittest
@@ -26,12 +28,12 @@ from uuid import uuid4
 
 from loguru import logger
 
+from mod.config.models import ConfigModel
 from mod.protocol import api
 from mod import lib
 from mod.db.dbhandler import DBHandler
 from mod.protocol.worker import MTProtocol
 from mod.protocol.worker import MTPErrorResponse
-from mod.config.handler import ConfigHandler
 
 # Add path to directory with code being checked
 # to variable 'PATH' to import modules from directory
@@ -64,6 +66,7 @@ class TestCheckAuthToken(unittest.TestCase):
     def setUpClass(cls):
         logger.remove()
         cls.db = DBHandler(uri=DATABASE)
+        cls.config = ConfigModel()
 
     def setUp(self):
         self.db.create_table()
@@ -79,7 +82,8 @@ class TestCheckAuthToken(unittest.TestCase):
 
     def test_check_auth(self):
         run_method = MTProtocol('test',
-                                self.db)
+                                self.db,
+                                self.config)
         check_auth = run_method._check_auth('123456',
                                             'auth_id')
         self.assertTrue(check_auth.result)
@@ -88,7 +92,8 @@ class TestCheckAuthToken(unittest.TestCase):
 
     def test_check_wrong_uuid(self):
         run_method = MTProtocol('test',
-                                self.db)
+                                self.db,
+                                self.config)
         check_auth = run_method._check_auth('987654',
                                             'auth_id')
         self.assertFalse(check_auth.result)
@@ -97,7 +102,8 @@ class TestCheckAuthToken(unittest.TestCase):
 
     def test_check_wrong_auth_id(self):
         run_method = MTProtocol('test',
-                                self.db)
+                                self.db,
+                                self.config)
         check_auth = run_method._check_auth('123456',
                                             'wrong_auth_id')
         self.assertFalse(check_auth.result)
@@ -110,6 +116,7 @@ class TestCheckLogin(unittest.TestCase):
     def setUpClass(cls):
         logger.remove()
         cls.db = DBHandler(uri=DATABASE)
+        cls.config = ConfigModel()
 
     def setUp(self):
         self.db.create_table()
@@ -125,13 +132,15 @@ class TestCheckLogin(unittest.TestCase):
 
     def test_check_found_login(self):
         run_method = MTProtocol('test',
-                                self.db)
+                                self.db,
+                                self.config)
         result = run_method._check_login("login")
         self.assertTrue(result)
 
     def test_check_wrong_login(self):
         run_method = MTProtocol('test',
-                                self.db)
+                                self.db,
+                                self.config)
         result = run_method._check_login("wrong_login")
         self.assertFalse(result)
 
@@ -141,6 +150,7 @@ class TestRegisterUser(unittest.TestCase):
     def setUpClass(cls):
         logger.remove()
         cls.db = DBHandler(uri=DATABASE)
+        cls.config = ConfigModel()
 
     def setUp(self):
         self.db.create_table()
@@ -152,7 +162,8 @@ class TestRegisterUser(unittest.TestCase):
 
     def test_user_created(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Created")
@@ -162,20 +173,23 @@ class TestRegisterUser(unittest.TestCase):
                          login="login",
                          password="password")
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Conflict")
 
     def test_user_write_in_database(self):
         MTProtocol(self.test,
-                   self.db)
+                   self.db,
+                   self.config)
         dbquery = self.db.get_user_by_login(login="login")
         self.assertEqual(dbquery.login, "login")
 
     def test_token_ttl_write_to_database(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         dbquery = self.db.get_user_by_login(login="login")
         self.assertEqual(dbquery.token_ttl,
@@ -183,7 +197,8 @@ class TestRegisterUser(unittest.TestCase):
 
     def test_uuid_write_in_database(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         dbquery = self.db.get_user_by_login("login")
         self.assertEqual(dbquery.uuid,
@@ -191,7 +206,8 @@ class TestRegisterUser(unittest.TestCase):
 
     def test_auth_id_write_in_database(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         dbquery = self.db.get_user_by_login("login")
         self.assertEqual(dbquery.auth_id,
@@ -199,13 +215,15 @@ class TestRegisterUser(unittest.TestCase):
 
     def test_type_of_salt(self):
         MTProtocol(self.test,
-                   self.db)
+                   self.db,
+                   self.config)
         dbquery = self.db.get_user_by_login("login")
         self.assertIsInstance(dbquery.salt, bytes)
 
     def test_type_of_key(self):
         MTProtocol(self.test,
-                   self.db)
+                   self.db,
+                   self.config)
         dbquery = self.db.get_user_by_login("login")
         self.assertIsInstance(dbquery.key, bytes)
 
@@ -215,6 +233,7 @@ class TestGetUpdate(unittest.TestCase):
     def setUpClass(cls):
         logger.remove()
         cls.db = DBHandler(uri=DATABASE)
+        cls.config = ConfigModel()
 
     def setUp(self):
         self.db.create_table()
@@ -280,35 +299,40 @@ class TestGetUpdate(unittest.TestCase):
 
     def test_update(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
 
     def test_check_message_in_result(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["data"]["message"][1]["uuid"],
                          "112")
 
     def test_check_client_id_in_result(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["data"]["message"][1]["client_id"],
                          None)
 
     def test_check_flow_in_result(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["data"]["flow"][0]["owner"],
                          "123456")
 
     def test_check_user_in_result(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["data"]["user"][2]["uuid"],
                          "666555")
@@ -317,7 +341,8 @@ class TestGetUpdate(unittest.TestCase):
     def test_no_new_data_in_database(self):
         self.test.data.time = 444
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Not Found")
@@ -328,6 +353,7 @@ class TestSendMessage(unittest.TestCase):
     def setUpClass(cls):
         logger.remove()
         cls.db = DBHandler(uri=DATABASE)
+        cls.config = ConfigModel()
 
     def setUp(self):
         self.db.create_table()
@@ -348,14 +374,16 @@ class TestSendMessage(unittest.TestCase):
 
     def test_send_message(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
 
     def test_check_id_in_response(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         dbquery = self.db.get_message_by_text("Hello!")
         self.assertEqual(result["data"]["message"][0]["uuid"],
@@ -363,7 +391,8 @@ class TestSendMessage(unittest.TestCase):
 
     def test_check_client_id_in_response(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["data"]["message"][0]["client_id"],
                          123)
@@ -371,21 +400,20 @@ class TestSendMessage(unittest.TestCase):
     def test_wrong_flow(self):
         self.test.data.flow[0].uuid = "666666"
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Not Found")
 
     def test_write_text_in_database(self):
-        MTProtocol(self.test,
-                   self.db)
+        MTProtocol(self.test, self.db, self.config)
         dbquery = self.db.get_message_by_text("Hello!")
         self.assertEqual(dbquery[0].text,
                          self.test.data.message[0].text)
 
     def test_write_time_in_database(self):
-        MTProtocol(self.test,
-                   self.db)
+        MTProtocol(self.test, self.db, self.config)
         dbquery = self.db.get_message_by_text("Hello!")
         self.assertIsInstance(dbquery[0].time, int)
 
@@ -395,9 +423,10 @@ class TestAllMessages(unittest.TestCase):
     def setUpClass(cls):
         logger.remove()
         cls.db = DBHandler(uri=DATABASE)
+        cls.config = ConfigModel()
 
     def setUp(self):
-        self.config_option = ConfigHandler().read()
+        self.config_option = ConfigModel()
         self.limit_message = self.config_option.limits.messages
         self.db.create_table()
         self.db.add_user(uuid="123456",
@@ -445,7 +474,8 @@ class TestAllMessages(unittest.TestCase):
         self.test.data.flow[0].uuid = "07d950"
         check_uuid = '2715207240631768797'
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         message_found = False
         for _, item in enumerate(result["data"]["message"]):
@@ -459,7 +489,8 @@ class TestAllMessages(unittest.TestCase):
 
     def test_all_message_more_limit(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Partial Content")
@@ -467,7 +498,8 @@ class TestAllMessages(unittest.TestCase):
     def test_all_message_less_limit(self):
         self.test.data.flow[0].uuid = "07d950"
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
@@ -476,19 +508,22 @@ class TestAllMessages(unittest.TestCase):
 
     def test_message_end_in_response(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["data"]["flow"][0]["message_end"], 108)
 
     def test_message_start_in_response(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["data"]["flow"][0]["message_start"], 0)
 
     def test_check_message_in_database(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         dbquery = self.db.get_message_by_exact_time(666)
         self.assertEqual(dbquery[0].text, "Privet")
@@ -498,7 +533,8 @@ class TestAllMessages(unittest.TestCase):
     def test_wrong_message_volume(self):
         self.test.data.flow[0].message_end = 256
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Forbidden")
@@ -506,7 +542,8 @@ class TestAllMessages(unittest.TestCase):
     def test_wrong_flow_id(self):
         self.test.data.flow[0].uuid = "666666"
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Not Found")
@@ -517,6 +554,7 @@ class TestAddFlow(unittest.TestCase):
     def setUpClass(cls):
         logger.remove()
         cls.db = DBHandler(uri=DATABASE)
+        cls.config = ConfigModel()
 
     def setUp(self):
         self.db.create_table()
@@ -535,7 +573,8 @@ class TestAddFlow(unittest.TestCase):
 
     def test_add_flow_group(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
@@ -543,7 +582,8 @@ class TestAddFlow(unittest.TestCase):
     def test_add_flow_channel(self):
         self.test.data.flow[0].type = "channel"
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
@@ -552,7 +592,8 @@ class TestAddFlow(unittest.TestCase):
         error = "Wrong flow type"
         self.test.data.flow[0].type = "unknown"
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["detail"], error)
 
@@ -560,7 +601,8 @@ class TestAddFlow(unittest.TestCase):
         error = "Must be two users only"
         self.test.data.flow[0].type = "chat"
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["detail"], error)
 
@@ -568,14 +610,16 @@ class TestAddFlow(unittest.TestCase):
         self.test.data.flow[0].type = "chat"
         self.test.data.flow[0].users.extend(["666555", "888999"])
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Bad Request")
 
     def test_check_flow_in_database(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         dbquery = self.db.get_flow_by_title("title")
         self.assertEqual(dbquery[0].uuid,
@@ -587,6 +631,7 @@ class TestAllFlow(unittest.TestCase):
     def setUpClass(cls):
         logger.remove()
         cls.db = DBHandler(uri=DATABASE)
+        cls.config = ConfigModel()
 
     def setUp(self):
         self.db.create_table()
@@ -609,13 +654,15 @@ class TestAllFlow(unittest.TestCase):
                          info="info",
                          owner="123456")
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["data"]["flow"][0]["info"], "info")
 
     def test_blank_flow_table_in_database(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Not Found")
@@ -626,6 +673,7 @@ class TestUserInfo(unittest.TestCase):
     def setUpClass(cls):
         logger.remove()
         cls.db = DBHandler(uri=DATABASE)
+        cls.config = ConfigModel()
 
     def setUp(self):
         self.db.create_table()
@@ -647,14 +695,16 @@ class TestUserInfo(unittest.TestCase):
 
     def test_user_info(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
 
     def test_check_user_info(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["data"]["user"][0]["bio"], "bio")
 
@@ -662,7 +712,8 @@ class TestUserInfo(unittest.TestCase):
         users = [{'uuid': str(123456 + item)} for item in range(120)]
         self.test.data.user.extend(users)
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Too Many Requests")
@@ -673,6 +724,7 @@ class TestAuthentication(unittest.TestCase):
     def setUpClass(cls):
         logger.remove()
         cls.db = DBHandler(uri=DATABASE)
+        cls.config = ConfigModel()
 
     def setUp(self):
         gen_hash = lib.Hash("password", 123456,
@@ -693,7 +745,8 @@ class TestAuthentication(unittest.TestCase):
 
     def test_authentication(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
@@ -703,7 +756,8 @@ class TestAuthentication(unittest.TestCase):
         dbquery = self.db.get_user_by_login(login)
         dbquery.delete(dbquery.id)
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Not Found")
@@ -711,7 +765,8 @@ class TestAuthentication(unittest.TestCase):
     def test_wrong_password(self):
         self.test.data.user[0].password = "wrong_password"
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Unauthorized")
@@ -719,7 +774,8 @@ class TestAuthentication(unittest.TestCase):
     def test_write_in_database(self):
         login = self.test.data.user[0].login
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         dbquery = self.db.get_user_by_login(login)
         self.assertEqual(dbquery.auth_id,
@@ -731,6 +787,7 @@ class TestDeleteUser(unittest.TestCase):
     def setUpClass(cls):
         logger.remove()
         cls.db = DBHandler(uri=DATABASE)
+        cls.config = ConfigModel()
 
     def setUp(self):
         self.db.create_table()
@@ -746,7 +803,8 @@ class TestDeleteUser(unittest.TestCase):
 
     def test_delete_user(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
@@ -757,7 +815,8 @@ class TestDeleteUser(unittest.TestCase):
     def test_wrong_login(self):
         self.test.data.user[0].login = "wrong_login"
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Not Found")
@@ -765,7 +824,8 @@ class TestDeleteUser(unittest.TestCase):
     def test_wrong_password(self):
         self.test.data.user[0].password = "wrong_password"
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Not Found")
@@ -776,6 +836,7 @@ class TestDeleteMessage(unittest.TestCase):
     def setUpClass(cls):
         logger.remove()
         cls.db = DBHandler(uri=DATABASE)
+        cls.config = ConfigModel()
 
     def setUp(self):
         self.db.create_table()
@@ -803,27 +864,31 @@ class TestDeleteMessage(unittest.TestCase):
 
     def test_delete_message(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
 
     def test_check_delete_message_in_database(self):
         MTProtocol(self.test,
-                   self.db)
+                                self.db,
+                                self.config)
         dbquery = self.db.get_message_by_text("Hello")
         self.assertEqual(dbquery.count(), 0)
 
     def test_check_deleted_message_in_database(self):
         MTProtocol(self.test,
-                   self.db)
+                                self.db,
+                                self.config)
         dbquery = self.db.get_message_by_text("Message deleted")
         self.assertEqual(dbquery.count(), 1)
 
     def test_wrong_message_id(self):
         self.test.data.message[0].uuid = "2"
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Not Found")
@@ -834,6 +899,7 @@ class TestEditedMessage(unittest.TestCase):
     def setUpClass(cls):
         logger.remove()
         cls.db = DBHandler(uri=DATABASE)
+        cls.config = ConfigModel()
 
     def setUp(self):
         self.db.create_table()
@@ -860,21 +926,24 @@ class TestEditedMessage(unittest.TestCase):
 
     def test_edited_message(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
 
     def test_new_edited_message(self):
         MTProtocol(self.test,
-                   self.db)
+                                self.db,
+                                self.config)
         dbquery = self.db.get_message_by_uuid("1")
         self.assertEqual(dbquery.text, "New_Hello")
 
     def test_wrong_message_id(self):
         self.test.data.message[0].uuid = "3"
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Not Found")
@@ -885,6 +954,7 @@ class TestPingPong(unittest.TestCase):
     def setUpClass(cls):
         logger.remove()
         cls.db = DBHandler(uri=DATABASE)
+        cls.config = ConfigModel()
 
     def setUp(self):
         self.db.create_table()
@@ -900,7 +970,8 @@ class TestPingPong(unittest.TestCase):
 
     def test_ping_pong(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "OK")
@@ -911,6 +982,7 @@ class TestErrors(unittest.TestCase):
     def setUpClass(cls):
         logger.remove()
         cls.db = DBHandler(uri=DATABASE)
+        cls.config = ConfigModel()
 
     def setUp(self):
         self.db.create_table()
@@ -925,7 +997,8 @@ class TestErrors(unittest.TestCase):
     def test_wrong_type(self):
         self.test = api.Request.parse_file(ERRORS)
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Method Not Allowed")
@@ -933,7 +1006,8 @@ class TestErrors(unittest.TestCase):
     def test_unsupported_media_type(self):
         self.test = json.dumps(NON_VALID_ERRORS)
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Unsupported Media Type")
@@ -941,7 +1015,8 @@ class TestErrors(unittest.TestCase):
     def test_only_type_in_request(self):
         self.test = json.dumps(ERRORS_ONLY_TYPE)
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["status"],
                          "Unsupported Media Type")
@@ -968,6 +1043,7 @@ class TestJsonapi(unittest.TestCase):
     def setUpClass(cls):
         logger.remove()
         cls.db = DBHandler(uri=DATABASE)
+        cls.config = ConfigModel()
 
     def setUp(self):
         self.db.create_table()
@@ -982,7 +1058,8 @@ class TestJsonapi(unittest.TestCase):
 
     def test_api_version_and_revision(self):
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result['jsonapi']['version'], api.VERSION)
         self.assertEqual(result['jsonapi']['revision'], api.REVISION)
@@ -995,6 +1072,7 @@ class TestCheckProtocolVersion(unittest.TestCase):
     def setUpClass(cls):
         logger.remove()
         cls.db = DBHandler(uri=DATABASE)
+        cls.config = ConfigModel()
 
     def setUp(self):
         self.db.create_table()
@@ -1015,20 +1093,23 @@ class TestCheckProtocolVersion(unittest.TestCase):
     def test_check_protocol_version(self):
         self.test.jsonapi.version = "1.0"
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["type"], "error")
 
     def test_wrong_protocol_version(self):
         self.test.jsonapi.version = "0.1"
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 505)
         self.assertEqual(result["errors"]["status"], "Version Not Supported")
         self.test.jsonapi.version = "2.0"
         run_method = MTProtocol(self.test,
-                                self.db)
+                                self.db,
+                                self.config)
         result = json.loads(run_method.get_response())
         self.assertEqual(result["errors"]["code"], 505)
         self.assertEqual(result["errors"]["status"], "Version Not Supported")

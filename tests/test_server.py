@@ -19,18 +19,17 @@ You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import json
 import unittest
 from unittest.mock import patch
 
 from loguru import logger
-from mod.db.dbhandler import DBHandler
-from server import MoreliaServer
 from starlette.testclient import TestClient, WebSocketTestSession
 from starlette.websockets import WebSocketDisconnect
 
+from server import MoreliaServer
 
-@patch("server.db_connect", return_value=DBHandler("sqlite:/:memory:"))
+
+@patch("server.DBHandler")
 class TestWebsocket(unittest.TestCase):
     ws_client: TestClient
 
@@ -81,12 +80,5 @@ class TestWebsocket(unittest.TestCase):
                 connection.receive_bytes()
 
 
-@patch("server.db_connect", return_value=DBHandler("sqlite:/:memory:"))
-class TestMainPage(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.test_client = TestClient(MoreliaServer().get_starlette_app())
-
-    def test_main_page(self, _):
-        response = self.test_client.get("/")
-        self.assertEqual(response.text, "<h1>MoreliaServer</h1>")
+if __name__ == "__main__":
+    unittest.main()

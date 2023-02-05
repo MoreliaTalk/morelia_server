@@ -25,6 +25,7 @@ faker_data_generator = Faker()
 
 logger.disable("mod.config.handler")
 config_option = read_config()
+logger.enable("mod.config.handler")
 
 
 @cli.command()
@@ -34,7 +35,7 @@ def devserver(host: str = typer.Option("127.0.0.1",
                                        help="Port for running server"),
               on_uvicorn_logger: bool = typer.Option(False,
                                                      "--on-uvicorn-logger",
-                                                     help="Disabled uvicorn logging")):
+                                                     help="Enabled uvicorn logging")):
     if on_uvicorn_logger:
         log_level = "debug"
     else:

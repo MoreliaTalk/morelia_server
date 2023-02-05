@@ -1,3 +1,4 @@
+import sys
 from datetime import datetime
 from json import JSONDecodeError
 
@@ -28,6 +29,7 @@ class MoreliaServer:
         self._starlette_app = Starlette()
 
         self._starlette_app.add_websocket_route("/ws", self._ws_endpoint)
+        self._starlette_app.add_event_handler("startup", self._on_start)
 
     def get_starlette_app(self):
         return self._starlette_app
@@ -100,11 +102,14 @@ class MoreliaServer:
                     await websocket.close(CODE)
                     logger.info(f"Close with code: {CODE}")
 
-
-if __name__ != "__main__":
-    _server = MoreliaServer()
-    app = _server.get_starlette_app()
-else:
+if __name__ == "__main__":
     print("to start the server, write the following command in the console:")
     print("uvicorn server:app --host 0.0.0.0 --port 8000 --reload "
           "--use-colors --http h11 --ws websockets &")
+
+else:
+    module_that_imported_use_uvicorn = bool(sys.modules.get("uvicorn"))
+
+    if module_that_imported_use_uvicorn:
+        _server = MoreliaServer()
+        app = MoreliaServer().get_starlette_app()
