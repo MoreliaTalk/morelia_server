@@ -18,10 +18,11 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with Morelia Server. If not, see <https://www.gnu.org/licenses/>.
 """
-
-from collections import namedtuple
+import http
+from dataclasses import dataclass
+from http import HTTPStatus
 from time import time
-from typing import Optional, Any
+from typing import Optional, Callable
 from typing import Union
 from uuid import uuid4
 
@@ -39,198 +40,43 @@ from mod.db.dbhandler import DBHandler
 from mod.protocol import api
 
 
-class MTPErrorResponse:
-    """
-    Catcher errors in "try...except" content.
+class MTPDataProcessError(Exception):
+    def __new__(cls, error_key: HTTPStatus):
+        new_error_instance = super().__new__(cls)
+        new_error_instance.error_key = error_key
 
-    Returned 'api.ErrorsResponse' with information about code,
-    status, time and detailed description of error that has occurred.
+        return new_error_instance
 
-    For errors like Exception and other unrecognized errors,
-    code "520" and status "Unknown Error" are used.
 
-    Args:
-        status: Error type
-        add_info: Additional information to be added. Defaults to None.
-    """
 
+class MTPDataProcessor:
     def __init__(self,
-                 status: str,
-                 add_info: Optional[Exception | str] = None) -> None:
-        self.status = status
-        self.detail = add_info
+                 config_options: ConfigModel,
+                 database: DBHandler):
+        self.config_options = config_options
+        self.database = database
 
-    def result(self) -> api.ErrorsResponse:
-        """
-        Used for returned result which 'api.ErrorsResponse' type.
+    def _check_auth(self, decorating_function: Callable[[api.DataRequest],
+                                                         api.DataResponse]):
+        def wrapper(request: api.DataRequest):
+            uuid = request.user[0].uuid
+            auth_id = request.user[0].auth_id
 
-        Returns:
-            object (api.ErrorResponse): object with information about code,
-            status, time and detailed description of error that has occurred.
+            try:
+                dbquery = self.database.get_user_by_uuid(uuid)
+            except DatabaseReadError:
+                raise MTPDataProcessError(HTTPStatus.UNAUTHORIZED)
 
-        """
+            if dbquery.auth_id != auth_id:
+                raise MTPDataProcessError(HTTPStatus.UNAUTHORIZED)
 
-        try:
-            catch_error = error.check_error_pattern(self.status)
-        except Exception as ERROR:
-            logger.exception(str(ERROR))
-            code = 520
-            status = "Unknown Error"
-            time_ = int(time())
-            detail: Union[Exception, str] = str(ERROR)
-        else:
-            logger.debug(f"Status code({catch_error.code}):",
-                         f" {catch_error.status}")
-            code = catch_error.code
-            status = catch_error.status
-            time_ = int(time())
+            return decorating_function(request)
 
-            if self.detail is None:
-                detail = catch_error.detail
-            else:
-                detail = self.detail
+        return wrapper
 
-        return api.ErrorsResponse(code=code,
-                                  status=status,
-                                  time=time_,
-                                  detail=detail)
-
-
-class MTProtocol:
-    """
-    Processing requests and forming response according to "MTP" protocol.
-
-    See Also:
-        Read actual description of protocol:
-
-        https://github.com/MoreliaTalk/morelia_protocol/blob/master/README.md
-
-    Args:
-        request: JSON request from websocket client
-        database: object - database connection point
-        
-    Returns:
-        returns class api.Response
-    """
-
-    def __init__(self, request: str, database: DBHandler, config_option: ConfigModel):
-        self.jsonapi = api.VersionResponse(version=api.VERSION,
-                                           revision=api.REVISION)
-        self._current_time = int(time())
-        self._db = database
-        self._config_option = config_option
-
-        try:
-            self.request = api.Request.parse_obj(request)
-            logger.success("Validation was successful")
-        except ValidationError as ERROR:
-            self.response = self._errors("UNSUPPORTED_MEDIA_TYPE",
-                                         str(ERROR))
-            logger.debug(f"Validation failed: {ERROR}")
-        else:
-            self._select_method_and_set_response()
-
-    def _select_method_and_set_response(self):
-        auth = self._check_auth(self.request.data.user[0].uuid,
-                                self.request.data.user[0].auth_id)
-        version = self._check_protocol_version(self.request)
-
-        if version and auth.result:
-            match self.request.type:
-                case "get_update":
-                    self.response = self._get_update(self.request)
-                case "send_message":
-                    self.response = self._send_message(self.request)
-                case "all_messages":
-                    self.response = self._all_messages(self.request)
-                case "add_flow":
-                    self.response = self._add_flow(self.request)
-                case "all_flow":
-                    self.response = self._all_flow(self.request)
-                case "user_info":
-                    self.response = self._user_info(self.request)
-                case "delete_user":
-                    self.response = self._delete_user(self.request)
-                case "delete_message":
-                    self.response = self._delete_message(self.request)
-                case "edited_message":
-                    self.response = self._edited_message(self.request)
-                case "ping_pong":
-                    self.response = self._ping_pong(self.request)
-                case _:
-                    self.response = self._errors("METHOD_NOT_ALLOWED")
-        elif version and auth.result is False:
-            match self.request.type:
-                case 'register_user':
-                    self.response = self._register_user(self.request)
-                case 'authentication':
-                    self.response = self._authentication(self.request)
-                case _:
-                    self.response = self._errors("UNAUTHORIZED",
-                                                 auth.error_message)
-        else:
-            self.response = self._errors("VERSION_NOT_SUPPORTED")
-
-    def _check_auth(self,
-                    uuid: str,
-                    auth_id: str) -> Any:
-        """
-        Checking user authentication every each request.
-
-        Args:
-            uuid: user identification number which granted moreliatalk
-                        server
-            auth_id: authentication token which granted moreliatalk
-                            server
-
-        Returns:
-                object: object with two parameters, which contain:
-
-                        ``result``: True or False
-
-                        ``error_message``: text description of the error
-        """
-
-        Result = namedtuple('Result', ['result',
-                                       'error_message'])
-        try:
-            dbquery = self._db.get_user_by_uuid(uuid)
-            logger.success("User was found in the database")
-        except DatabaseReadError:
-            message = "User was not authenticated"
-            logger.debug(message)
-            return Result(False,
-                          message)
-        else:
-            if auth_id == dbquery.auth_id:
-                message = "Authentication User has been verified"
-                logger.success(message)
-                return Result(True,
-                              message)
-            else:
-                message = "Authentication User failed"
-                logger.debug(message)
-                return Result(False,
-                              message)
-
-    def get_response(self,
-                     response: api.Response = None) -> str:
-        """
-        Generates a JSON-object containing result of an instance json.
-
-        Returns:
-            json-object which contains validated response
-        """
-
-        if response is None:
-            result = self.response.json()
-            return result
-        else:
-            result = response.json()
-            return result
 
     def _check_login(self,
-                     login: str) -> bool:
+                     login: str) -> bool: # TODO: transfer this logic to DBHandler
         """
         Checks database for a user with the same login.
 
@@ -242,7 +88,7 @@ class MTProtocol:
         """
 
         try:
-            self._db.get_user_by_login(login)
+            self.database.get_user_by_login(login)
         except DatabaseReadError:
             logger.debug("There is no user in the database")
             return False
@@ -250,8 +96,8 @@ class MTProtocol:
             logger.success("User was found in the database")
             return True
 
-    def _register_user(self,
-                       request: api.Request) -> api.Response:
+
+    def register_user(self, request: api.DataRequest) -> api.DataResponse:
         """
         Registers user who is not in the database.
 
@@ -262,43 +108,78 @@ class MTProtocol:
             validated response
         """
 
-        uuid = str(uuid4().int)
-        password = request.data.user[0].password
-        login = request.data.user[0].login
-        username = request.data.user[0].username
-        email = request.data.user[0].email
-        user = []
-        data = None
+        response = api.DataResponse(time=time())  # TODO: refactor this
 
-        if login is None or password is None:
-            errors = MTPErrorResponse("UNAUTHORIZED")
-        else:
-            if self._check_login(login):
-                errors = MTPErrorResponse("CONFLICT")
+        user = request.user[0]
+
+        if user.login is None or user.password is None:
+            raise MTPDataProcessError(HTTPStatus.UNAUTHORIZED)
+
+        if self._check_login(user.login): # TODO: replace by check existing
+            raise MTPDataProcessError(HTTPStatus.CONFLICT)
+
+        uuid = str(uuid4().int)
+
+        generated = lib.Hash(user.password, uuid)
+
+        hash_password = generated.password_hash()
+        salt = generated.get_salt
+        key = generated.get_key
+
+        auth_id = generated.auth_id() # TODO: replace on jwt tokens
+
+        self.database.add_user(uuid=uuid,
+                               hash_password=hash_password,
+                               salt=salt,
+                               key=key,
+
+                               login=user.login,
+                               password=user.password,  # TODO: delete this, password не должен ложиться в базу, Карл!
+                               username=user.username,
+                               is_bot=user.is_bot,
+                               auth_id=auth_id,
+                               email=user.email,
+                               avatar=user.avatar,
+                               bio=user.bio)
+
+        response.user = [api.UserResponse(uuid=uuid, auth_id=auth_id)]
+
+        return response
+
+    def authentication(self, request: api.DataRequest) -> api.DataResponse:
+        """
+        Performs authentication of registered client.
+        With issuance of a unique hash number of connection session.
+        During authentication password transmitted by client
+        and password contained in server database are verified.
+        """
+
+        user = request.user[0]
+
+        if self._check_login(user.login): # TODO: !!! look up ↑
+            dbquery = self.database.get_user_by_login(login)
+            # to check password, we use same module as for its
+            # hash generation. Specify password entered by user
+            # and hash of old password as parameters.
+            # After that, hashes are compared using "check_password" method.
+            generator = lib.Hash(password,
+                                 dbquery.uuid,
+                                 dbquery.salt,
+                                 dbquery.key,
+                                 dbquery.hash_password)
+            if generator.check_password():
+                dbquery.auth_id = generator.auth_id()
+                user.append(api.UserResponse(uuid=dbquery.uuid,
+                                             auth_id=dbquery.auth_id))
+                errors = MTPErrorResponse("OK")
+                logger.success("\'_authentication\' executed successfully")
             else:
-                generated = lib.Hash(password,
-                                     uuid)
-                auth_id = generated.auth_id()
-                self._db.add_user(uuid,
-                                  login,
-                                  password,
-                                  hash_password=generated.password_hash(),
-                                  username=username,
-                                  is_bot=False,
-                                  auth_id=auth_id,
-                                  token_ttl=self._current_time,
-                                  email=email,
-                                  avatar=None,
-                                  bio=None,
-                                  salt=generated.get_salt,
-                                  key=generated.get_key)
-                user.append(api.UserResponse(uuid=uuid,
-                                             auth_id=auth_id,
-                                             token_ttl=self._current_time))
-                data = api.DataResponse(time=self._current_time,
-                                        user=user)
-                errors = MTPErrorResponse("CREATED")
-                logger.success("User is register")
+                errors = MTPErrorResponse("UNAUTHORIZED")
+        else:
+            errors = MTPErrorResponse("NOT_FOUND")
+
+        data = api.DataResponse(time=self._current_time,
+                                user=user)
 
         return api.Response(type=request.type,
                             data=data,
@@ -645,48 +526,7 @@ class MTProtocol:
                             errors=errors.result(),
                             jsonapi=self.jsonapi)
 
-    def _authentication(self,
-                        request: api.Request) -> api.Response:
-        """
-        Performs authentication of registered client.
-        With issuance of a unique hash number of connection session.
-        During authentication password transmitted by client
-        and password contained in server database are verified.
-        """
 
-        login = request.data.user[0].login
-        password = request.data.user[0].password
-        user = []
-
-        if self._check_login(login):
-            dbquery = self._db.get_user_by_login(login)
-            # to check password, we use same module as for its
-            # hash generation. Specify password entered by user
-            # and hash of old password as parameters.
-            # After that, hashes are compared using "check_password" method.
-            generator = lib.Hash(password,
-                                 dbquery.uuid,
-                                 dbquery.salt,
-                                 dbquery.key,
-                                 dbquery.hash_password)
-            if generator.check_password():
-                dbquery.auth_id = generator.auth_id()
-                user.append(api.UserResponse(uuid=dbquery.uuid,
-                                             auth_id=dbquery.auth_id))
-                errors = MTPErrorResponse("OK")
-                logger.success("\'_authentication\' executed successfully")
-            else:
-                errors = MTPErrorResponse("UNAUTHORIZED")
-        else:
-            errors = MTPErrorResponse("NOT_FOUND")
-
-        data = api.DataResponse(time=self._current_time,
-                                user=user)
-
-        return api.Response(type=request.type,
-                            data=data,
-                            errors=errors.result(),
-                            jsonapi=self.jsonapi)
 
     def _delete_user(self,
                      request: api.Request) -> api.Response:
@@ -845,3 +685,128 @@ class MTProtocol:
             return True
         else:
             return False
+
+
+
+class MTPErrorResponse:
+    """
+    Catcher errors in "try...except" content.
+
+    Returned 'api.ErrorsResponse' with information about code,
+    status, time and detailed description of error that has occurred.
+
+    For errors like Exception and other unrecognized errors,
+    code "520" and status "Unknown Error" are used.
+
+    Args:
+        status: Error type
+        add_info: Additional information to be added. Defaults to None.
+    """
+
+    def __init__(self,
+                 status: str,
+                 add_info: Optional[Exception | str] = None) -> None:
+        self.status = status
+        self.detail = add_info
+
+    def result(self) -> api.ErrorsResponse:
+        """
+        Used for returned result which 'api.ErrorsResponse' type.
+
+        Returns:
+            object (api.ErrorResponse): object with information about code,
+            status, time and detailed description of error that has occurred.
+
+        """
+
+        try:
+            catch_error = error.check_error_pattern(self.status)
+        except Exception as ERROR:
+            logger.exception(str(ERROR))
+            code = 520
+            status = "Unknown Error"
+            time_ = int(time())
+            detail: Union[Exception, str] = str(ERROR)
+        else:
+            logger.debug(f"Status code({catch_error.code}):",
+                         f" {catch_error.status}")
+            code = catch_error.code
+            status = catch_error.status
+            time_ = int(time())
+
+            if self.detail is None:
+                detail = catch_error.detail
+            else:
+                detail = self.detail
+
+        return api.ErrorsResponse(code=code,
+                                  status=status,
+                                  time=time_,
+                                  detail=detail)
+
+
+class MTProtocol:
+    def __init__(self, database: DBHandler, config_option: ConfigModel):
+        self.jsonapi = api.VersionResponse(version=api.VERSION,
+                                           revision=api.REVISION)
+
+        self._current_time = int(time())
+        self._db = database
+        self._config_option = config_option
+
+        try:
+            self.request = api.Request.parse_obj(request)
+            logger.success("Validation was successful")
+        except ValidationError as ERROR:
+            self.response = self._errors("UNSUPPORTED_MEDIA_TYPE",
+                                         str(ERROR))
+            logger.debug(f"Validation failed: {ERROR}")
+        else:
+            self._select_method_and_set_response()
+
+    def process_request(self, request):
+        response = api.Response()
+
+        method_for_data_process: Callable[[api.DataRequest], api.DataResponse]
+
+        if is_correct_protocol_version:
+            match self.request.type:
+                case "get_update":
+                    method_for_data_process = _get_update
+                case "send_message":
+                    method_for_data_process = _send_message
+                case "all_messages":
+                    self.response = self._all_messages
+                case "add_flow":
+                    self.response = self._add_flow(self.request)
+                case "all_flow":
+                    self.response = self._all_flow(self.request)
+                case "user_info":
+                    self.response = self._user_info(self.request)
+                case "delete_user":
+                    self.response = self._delete_user(self.request)
+                case "delete_message":
+                    self.response = self._delete_message(self.request)
+                case "edited_message":
+                    self.response = self._edited_message(self.request)
+                case "ping_pong":
+                    self.response = self._ping_pong(self.request)
+                case _:
+                    self.response = self._errors("METHOD_NOT_ALLOWED")
+                case 'register_user':
+                    self.response = self._register_user(self.request)
+                case 'authentication':
+                    self.response = self._authentication(self.request)
+                case _:
+                    self.response = self._errors("UNAUTHORIZED")
+
+        else:
+            self.response = self._errors("VERSION_NOT_SUPPORTED")
+
+
+
+
+    def _select_method_and_set_response(self):
+
+
+
