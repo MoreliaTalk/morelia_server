@@ -22,7 +22,7 @@ win32-setctime = "*"
 sphinx = "==4.4.0"
 furo = "==2022.6.21"
 python = "^3.10"
-setuptools = "==65.3.0"
+setuptools = "==65.5.1"
 tomli = "^2.0.1"
 tomli-w = "^1.0.0"
 typer = {extras = ["all"], version = "^0.7.0"}
